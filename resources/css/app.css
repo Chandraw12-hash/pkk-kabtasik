@@ -1,0 +1,96 @@
+@import 'tailwindcss';
+@variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+               /* Brand Colors - Kab. Tasikmalaya */
+    --color-brand-green-50: #e8f7ee;
+    --color-brand-green-100: #d1efdd;
+    --color-brand-green-200: #a3dfbc;
+    --color-brand-green-300: #75cf9a;
+    --color-brand-green-400: #47bf79;
+    --color-brand-green-500: #12a64e; /* Primary */
+    --color-brand-green-600: #0f8b41;
+    --color-brand-green-700: #0b6c32;
+    --color-brand-green-800: #084e24;
+    --color-brand-green-900: #042f16;
+
+    --color-brand-blue-50: #ebf5f7;
+    --color-brand-blue-100: #d7ebef;
+    --color-brand-blue-200: #afd7df;
+    --color-brand-blue-300: #87c3cf;
+    --color-brand-blue-400: #5fafbf;
+    --color-brand-blue-500: #0a9ab0; /* Secondary Base */
+    --color-brand-blue-600: #087d8f;
+    --color-brand-blue-700: #075463; /* Secondary Deep */
+    --color-brand-blue-800: #053e49;
+    --color-brand-blue-900: #032931;
+
+    --color-brand-yellow-50: #fff9eb;
+    --color-brand-yellow-100: #fff2d6;
+    --color-brand-yellow-200: #ffe5ad;
+    --color-brand-yellow-300: #ffd885;
+    --color-brand-yellow-400: #ffcb5c;
+    --color-brand-yellow-500: #ffc42f; /* Supporting */
+    --color-brand-yellow-600: #cc9d26;
+    --color-brand-yellow-700: #99761c;
+    --color-brand-yellow-800: #664e13;
+    --color-brand-yellow-900: #332709;
+}
+
+
+/* Custom Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/* Sidebar Custom Scrollbar */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.custom-scrollbar:hover {
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark .custom-scrollbar:hover {
+    scrollbar-color: #475569 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+/* Show thumb on hover */
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1; /* slate-300 */
+}
+
+.dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #475569; /* slate-600 */
+}
+

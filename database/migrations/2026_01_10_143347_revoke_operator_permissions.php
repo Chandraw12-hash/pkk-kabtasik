@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        $role = \Spatie\Permission\Models\Role::where('name', 'operator')->first();
+        if ($role) {
+            $role->revokePermissionTo(['create-user', 'edit-user']);
+        }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        $role = \Spatie\Permission\Models\Role::where('name', 'operator')->first();
+        if ($role) {
+            $role->givePermissionTo(['create-user', 'edit-user']);
+        }
+    }
+};
