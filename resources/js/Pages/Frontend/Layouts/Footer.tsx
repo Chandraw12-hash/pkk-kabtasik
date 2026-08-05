@@ -16,7 +16,7 @@ export default function Footer() {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="bg-slate-900 text-slate-300">
+        <footer className="bg-white text-slate-700 border-t border-slate-200">
             {/* Main Footer */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -45,29 +45,25 @@ export default function Footer() {
                             {/* PERBAIKAN: Tag <a> ditambahkan kembali */}
                             <a
                                 href="#"
-                                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
-                                aria-label="Facebook"
+                                className="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                             >
                                 <Facebook size={18} />
                             </a>
                             <a
                                 href="#"
-                                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
-                                aria-label="Instagram"
+                                className="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                             >
                                 <Instagram size={18} />
                             </a>
                             <a
                                 href="#"
-                                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
-                                aria-label="YouTube"
+                                className="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                             >
                                 <Youtube size={18} />
                             </a>
                             <a
                                 href="#"
-                                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
-                                aria-label="Twitter"
+                                className="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-110"
                             >
                                 <Twitter size={18} />
                             </a>

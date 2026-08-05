@@ -77,27 +77,24 @@ export default function Welcome({ kebijakan, chartData, domainData, year, berita
                     <img src="/assets/images/hero.jpg" alt="Hero Background PKK" className="w-full h-full object-cover bg-center" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"; }} />
                     <div className="absolute inset-0 bg-black/60"></div>
                 </div>
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-10">
-                    <div className="max-w-2xl">
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-10 flex justify-center">
+                    <div className="max-w-full mx-auto text-center">
                         <div className="inline-flex items-center space-x-2 text-[#38BDF8] font-bold tracking-widest text-xs mb-6 uppercase">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]"></span>
-                            <span>Sistem Informasi Keluarga PKK</span>
+                            
+                    
                         </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold text-white leading-[1.15] mb-6">
-                            Pemberdayaan dan <br />Kesejahteraan Keluarga (PKK) <br />
-                            <span className="text-[#38BDF8]">Sejahtera & Mandiri</span>
-                        </h1>
-                        <p className="text-gray-300 text-lg mb-10 max-w-xl leading-relaxed">
-                            Sistem pemberdayaan masyarakat Kabupaten Tasikmalaya menuju keluarga sejahtera dan mandiri melalui 10 Program Pokok PKK.
-                        </p>
-                        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                            <Link href="#program" className="bg-[#38BDF8] hover:bg-cyan-500 text-[#071330] px-8 py-3.5 rounded-full font-bold transition text-center shadow-lg shadow-cyan-500/30 text-sm flex items-center justify-center gap-2">
-                                Program &rarr;
-                            </Link>
-                            <Link href="#berita" className="bg-transparent border border-gray-400 hover:border-white hover:bg-white/10 text-white px-8 py-3.5 rounded-full font-semibold transition text-center text-sm">
-                                Berita PKK
-                            </Link>
-                        </div>
+                        <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold text-white leading-[1.15] mb-6 text-center">
+    Selamat Datang Di Website Resmi PKK Kabupaten Tasikmalaya
+</h1>
+
+<p className="text-gray-200 text-lg md:text-xl text-center max-w-3xl mx-auto leading-relaxed">
+    Media informasi resmi Tim Penggerak PKK Kabupaten Tasikmalaya 
+    dalam mendukung pemberdayaan dan kesejahteraan keluarga menuju 
+    masyarakat yang sejahtera dan mandiri.
+</p>
+
+                    
+                        
                     </div>
                 </div>
             </section>
