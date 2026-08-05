@@ -16,24 +16,34 @@ class RolePermissionSeeder extends Seeder
     {
         // 1. Buat Permission
         $permissions = [
+            // User Management
             'view-users',
             'create-user',
             'edit-user',
             'delete-user',
             'manage-roles',
 
+            // Profile
             'view-profile',
             'edit-profile',
 
+            // Eviden (SPBE - nanti bisa dihapus/dikomen)
             'view-eviden',
             'create-eviden',
             'edit-eviden',
             'delete-eviden',
 
+            // Indikator (SPBE - nanti bisa dihapus/dikomen)
             'view-indikator',
             'create-indikator',
             'edit-indikator',
             'delete-indikator',
+
+            // ===== TAMBAHAN UNTUK KADER PKK =====
+            'view-kader',
+            'create-kader',
+            'edit-kader',
+            'delete-kader',
         ];
 
         foreach ($permissions as $permission) {
@@ -46,41 +56,68 @@ class RolePermissionSeeder extends Seeder
 
         $userRole = Role::firstOrCreate(['name' => 'user']);
         $userRole->givePermissionTo([
+            // Permission untuk user biasa
             'view-eviden',
             'create-eviden',
             'edit-eviden',
             'delete-eviden',
+
+            // ===== TAMBAHAN UNTUK KADER =====
+            'view-kader',
+            'create-kader',
+            'edit-kader',
+            'delete-kader',
+        ]);
+
+        // ===== TAMBAHAN ROLE KHUSUS PKK =====
+        $pkkRole = Role::firstOrCreate(['name' => 'pkk']);
+        $pkkRole->givePermissionTo([
+            'view-kader',
+            'create-kader',
+            'edit-kader',
+            'delete-kader',
+            'view-profile',
+            'edit-profile',
         ]);
 
         // 3. Buat User Contoh & Assign Role
-        // 3. Buat User Admin IP
+        // 3.1 User Admin
         $admin = User::firstOrCreate(
-            ['username' => 'admin'], // Kunci pencarian
+            ['username' => 'admin'],
             [
-                'name' => 'Admin IP',
-                'email' => 'admin@gmail.com',
+                'name' => 'Admin PKK',
+                'email' => 'admin@pkk.tasikmalaya.go.id',
                 'password' => bcrypt('password'),
             ]
         );
         $admin->assignRole($adminRole);
-        
+
+        // 3.2 User Biasa
         $user = User::firstOrCreate(
-            ['username' => 'user'], // Kunci pencarian
+            ['username' => 'user'],
             [
-                'name' => 'User',
-                'email' => 'user@gmail.com',
+                'name' => 'User PKK',
+                'email' => 'user@pkk.tasikmalaya.go.id',
                 'password' => bcrypt('password'),
             ]
         );
         $user->assignRole($userRole);
 
-        // 4. Data User Biasa (Tanpa SKPD)
-        $users = [
+        // 3.3 User Khusus PKK (Role pkk)
+        $pkkUser = User::firstOrCreate(
+            ['username' => 'pkk'],
             [
-                'username' => 'user',
-                'password' => 'password',
-                'name' => 'User',
-            ],
+                'name' => 'Pengurus PKK',
+                'email' => 'pkk@tasikmalaya.go.id',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $pkkUser->assignRole($pkkRole);
+
+        // 4. Data User Lainnya (Komentari dulu atau hapus yang gak perlu)
+        // Ini data SPBE, bisa dikomen dulu atau dihapus total
+        /*
+        $users = [
             [
                 'username' => 'bappeda',
                 'password' => 'Bappeda@2025',
@@ -150,5 +187,6 @@ class RolePermissionSeeder extends Seeder
 
             $user->assignRole($userRole);
         }
+        */
     }
 }

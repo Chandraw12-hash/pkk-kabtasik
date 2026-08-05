@@ -39,28 +39,28 @@ export default function Dashboard() {
     // Data dummy untuk tampilan
     const stats: StatItem[] = [
         {
-            title: "Total Indikator",
-            value: "47",
+            title: "Total Kader Aktif",
+            value: "320",
             icon: FileText,
             color: "bg-indigo-500",
             className: "border-l-4 border-indigo-500",
             textColor: "white",
-            description: "SPBE 2025",
-            period: "Tahun 2025",
+            description: "Terdaftar",
+            period: "Tahun 2026",
         },
         {
-            title: "Eviden Terunggah",
-            value: "32",
+            title: "Kegiatan Dilaporkan",
+            value: "145",
             icon: CheckCircle,
             color: "bg-emerald-500",
             className: "border-l-4 border-emerald-500",
             textColor: "white",
-            description: "+5 hari ini",
+            description: "+8 minggu ini",
             period: "Bulan Ini",
         },
         {
             title: "Menunggu Verifikasi",
-            value: "10",
+            value: "8",
             icon: Clock,
             color: "bg-amber-500",
             className: "border-l-4 border-amber-500",
@@ -69,8 +69,8 @@ export default function Dashboard() {
             period: "Minggu Ini",
         },
         {
-            title: "Eviden Ditolak",
-            value: "5",
+            title: "Laporan Ditolak",
+            value: "3",
             icon: AlertCircle,
             color: "bg-rose-500",
             className: "border-l-4 border-rose-500",
@@ -82,67 +82,67 @@ export default function Dashboard() {
 
     // Dummy Data Charts
     const lineData = [
-        { name: "Jan", uploaded: 12, verified: 8 },
-        { name: "Feb", uploaded: 19, verified: 15 },
-        { name: "Mar", uploaded: 35, verified: 28 },
-        { name: "Apr", uploaded: 22, verified: 20 },
-        { name: "May", uploaded: 45, verified: 40 },
-        { name: "Jun", uploaded: 38, verified: 35 },
+        { name: "Jan", uploaded: 10, verified: 7 },
+        { name: "Feb", uploaded: 15, verified: 12 },
+        { name: "Mar", uploaded: 22, verified: 18 },
+        { name: "Apr", uploaded: 18, verified: 15 },
+        { name: "May", uploaded: 28, verified: 24 },
+        { name: "Jun", uploaded: 24, verified: 21 },
     ];
 
     const barData = [
-        { name: "Diskominfo", doc: 45 },
-        { name: "Bappeda", doc: 32 },
-        { name: "Inspektorat", doc: 28 },
-        { name: "BKPSDM", doc: 22 },
-        { name: "Dinkes", doc: 18 },
+        { name: "Pokja I", doc: 42 },
+        { name: "Pokja II", doc: 38 },
+        { name: "Pokja III", doc: 35 },
+        { name: "Pokja IV", doc: 30 },
+        { name: "Sekretariat", doc: 20 },
     ];
 
     const pieData = [
-        { name: "Terverifikasi", value: 45, color: "#10b981" },
-        { name: "Pending", value: 30, color: "#f59e0b" },
-        { name: "Ditolak", value: 15, color: "#f43f5e" },
+        { name: "Terverifikasi", value: 120, color: "#10b981" },
+        { name: "Pending", value: 8, color: "#f59e0b" },
+        { name: "Ditolak", value: 17, color: "#f43f5e" },
     ];
 
     const activities: ActivityItem[] = [
         {
-            opd: "Diskominfo",
-            action: "Mengunggah Eviden Indikator 1",
+            opd: "Pokja I",
+            action: "Melaporkan Kegiatan Gotong Royong Desa Sukamaju",
             time: "2 menit yang lalu",
         },
         {
-            opd: "Bappeda",
-            action: "Merevisi Dokumen Kebijakan",
+            opd: "Pokja II",
+            action: "Melaporkan Pelatihan Keterampilan Membatik",
             time: "1 jam yang lalu",
         },
         {
-            opd: "Inspektorat",
-            action: "Memverifikasi Data",
+            opd: "Pokja III",
+            action: "Revisi Laporan Kegiatan Pangan Bergizi",
             time: "3 jam yang lalu",
         },
         {
-            opd: "Dinkes",
-            action: "Mengunggah Laporan",
+            opd: "Pokja IV",
+            action: "Melaporkan Kegiatan Posyandu Balita",
             time: "5 jam yang lalu",
         },
         {
-            opd: "BKPSDM",
-            action: "Login ke sistem",
+            opd: "Sekretariat",
+            action: "Menambahkan Data Kader Baru",
             time: "Hari ini, 08:30",
         },
     ];
 
     return (
         <MainLayout>
-            <Head title="Dashboard SPBE" />
+            <Head title="Dashboard PKK" />
 
             {/* Header Dashboard */}
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                    Dashboard Evaluasi SPBE
+                    Dashboard PKK Kabupaten Tasikmalaya
                 </h1>
                 <p className="text-slate-500 text-sm dark:text-slate-400">
-                    Monitoring Pengumpulan Eviden Kabupaten Tasikmalaya
+                    Monitoring Program &amp; Kegiatan Tim Penggerak PKK
                 </p>
             </div>
 
@@ -161,7 +161,7 @@ export default function Dashboard() {
                     <Card className="lg:col-span-2 w-full">
                         <div className="p-6">
                             <h3 className="font-bold text-slate-800 dark:text-slate-200">
-                                Tren Pengunggahan Dokumen
+                                Tren Pelaporan Kegiatan
                             </h3>
                         </div>
                         <ChartLine
@@ -171,7 +171,7 @@ export default function Dashboard() {
                                 {
                                     key: "uploaded",
                                     color: "#6366f1",
-                                    name: "Diunggah",
+                                    name: "Dilaporkan",
                                 },
                                 {
                                     key: "verified",
@@ -218,11 +218,11 @@ export default function Dashboard() {
 
                 {/* Row 2: Bar & Pie Chart */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Bar Chart (Statistik OPD) */}
+                    {/* Bar Chart (Statistik Pokja) */}
                     <Card className="lg:col-span-2">
                         <div className="p-6">
                             <h3 className="font-bold text-slate-800 dark:text-slate-200">
-                                Statistik Dokumen per OPD
+                                Statistik Laporan per Pokja
                             </h3>
                         </div>
                         <ChartBar
@@ -232,7 +232,7 @@ export default function Dashboard() {
                                 {
                                     key: "doc",
                                     color: "#3b82f6",
-                                    name: "Total Dokumen",
+                                    name: "Total Laporan",
                                 },
                             ]}
                             height={350}

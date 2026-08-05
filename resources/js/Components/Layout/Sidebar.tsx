@@ -61,7 +61,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const user = auth?.user;
     const roles = auth?.roles || [];
     const permissions = auth?.permissions || [];
-    const appName = app_settings?.app_name || "SPBE TASIKMALAYA";
+    const appName = app_settings?.app_name || "PKK TASIKMALAYA";
 
     // User Menu & Dark Mode Logic
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -156,7 +156,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 {/* Dashboard */}
                 <Link
                     href={route("be.dashboard")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group 
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
                             route().current("be.dashboard")
                                 ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
@@ -179,11 +179,40 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     Master Data
                 </p>
 
-                {/* Data Eviden */}
+                {/* ============================================ */}
+                {/* DATA KADER - TAMPIL */}
+                {/* ============================================ */}
+                {permissions.includes("view-kader") && (
+                    <Link
+                        href={route("be.kader.index")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                        ${
+                            route().current("be.kader.*")
+                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <Users
+                            size={20}
+                            strokeWidth={2}
+                            className={`${
+                                route().current("be.kader.*")
+                                    ? "text-brand-green-600 dark:text-brand-green-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                            }`}
+                        />
+                        Data Kader
+                    </Link>
+                )}
+
+                {/* ============================================ */}
+                {/* DATA EVIDEN - SEMBUNYIKAN (DI-COMMENT) */}
+                {/* ============================================ */}
+                {/*
                 {permissions.includes("view-eviden") && (
                     <Link
                         href={route("be.eviden.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group 
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
                             route().current("be.eviden.*")
                                 ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
@@ -202,12 +231,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         Data Eviden
                     </Link>
                 )}
+                */}
 
-                {/* Data Indikator */}
+                {/* ============================================ */}
+                {/* DATA INDIKATOR - SEMBUNYIKAN (DI-COMMENT) */}
+                {/* ============================================ */}
+                {/*
                 {permissions.includes("view-indikator") && (
                     <Link
                         href={route("be.indikator.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group 
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
                             route().current("be.indikator.*")
                                 ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
@@ -226,6 +259,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         Data Indikator
                     </Link>
                 )}
+                */}
 
                 {/* User Management Dropdown */}
                 {permissions.includes("view-users") && (
@@ -414,7 +448,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </button>
 
                     {/* Pop-up Menu (Membuka ke Atas) */}
-                    {/* Gunakan bottom-full dan mb-2 agar muncul di atas footer */}
                     <div
                         className={`absolute bottom-full left-0 right-0 mb-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 transform transition-all duration-200 origin-bottom ${
                             isDropdownOpen

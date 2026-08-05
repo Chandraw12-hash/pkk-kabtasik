@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 
 interface Stats {
-    total_skpd: number;
-    total_eviden: number;
-    total_indikator: number;
+    total_kader: number;
+    total_kegiatan: number;
+    total_program: number;
     total_users: number;
     verifikasi_pending: number;
     verifikasi_valid: number;
@@ -28,7 +28,7 @@ interface Stats {
 
 interface AdminDashboardProps {
     stats: Stats;
-    lineData: any[]; // Type properly if possible
+    lineData: any[];
     barData: any[];
     pieData: any[];
     activities: any[];
@@ -41,12 +41,11 @@ export default function AdminDashboard({
     pieData,
     activities,
 }: AdminDashboardProps) {
-    // Stat Items mapping from backend stats object to UI format
     const statItems = [
         {
-            title: "Total SKPD",
-            value: stats.total_skpd.toString(),
-            icon: Building,
+            title: "Total Kader Aktif",
+            value: stats.total_kader.toString(),
+            icon: Users,
             color: "bg-indigo-500",
             className: "border-l-4 border-indigo-500",
             textColor: "white",
@@ -54,13 +53,13 @@ export default function AdminDashboard({
             period: "Total",
         },
         {
-            title: "Total Eviden",
-            value: stats.total_eviden.toString(),
+            title: "Total Laporan Kegiatan",
+            value: stats.total_kegiatan.toString(),
             icon: FileText,
             color: "bg-emerald-500",
             className: "border-l-4 border-emerald-500",
             textColor: "white",
-            description: "Dokumen diunggah",
+            description: "Kegiatan dilaporkan",
             period: "Total",
         },
         {
@@ -74,7 +73,7 @@ export default function AdminDashboard({
             period: "Saat ini",
         },
         {
-            title: "Eviden Ditolak",
+            title: "Laporan Ditolak",
             value: stats.verifikasi_ditolak.toString(),
             icon: AlertCircle,
             color: "bg-rose-500",
@@ -94,7 +93,7 @@ export default function AdminDashboard({
                     Dashboard Admin
                 </h1>
                 <p className="text-slate-500 text-sm dark:text-slate-400">
-                    Monitoring Statistik SPBE
+                    Monitoring Program &amp; Kegiatan PKK Kabupaten Tasikmalaya
                 </p>
             </div>
 
@@ -113,7 +112,7 @@ export default function AdminDashboard({
                     <Card className="lg:col-span-2 w-full">
                         <div className="p-6">
                             <h3 className="font-bold text-slate-800 dark:text-slate-200">
-                                Tren Pengunggahan Dokumen
+                                Tren Pelaporan Kegiatan
                             </h3>
                         </div>
                         <ChartLine
@@ -123,7 +122,7 @@ export default function AdminDashboard({
                                 {
                                     key: "uploaded",
                                     color: "#6366f1",
-                                    name: "Diunggah",
+                                    name: "Dilaporkan",
                                 },
                                 {
                                     key: "verified",
@@ -139,7 +138,7 @@ export default function AdminDashboard({
                     <Card>
                         <div className="p-6">
                             <h3 className="font-bold text-slate-800 dark:text-slate-200">
-                                Status Verifikasi
+                                Status Verifikasi Laporan
                             </h3>
                         </div>
                         <ChartPie data={pieData} height={350} />
@@ -148,11 +147,11 @@ export default function AdminDashboard({
 
                 {/* Row 2: Bar & Pie Chart */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Bar Chart (Statistik OPD) */}
+                    {/* Bar Chart (Statistik Pokja) */}
                     <Card className="lg:col-span-2">
                         <div className="p-6">
                             <h3 className="font-bold text-slate-800 dark:text-slate-200">
-                                Top 5 SKPD Teraktif
+                                Top 5 Pokja Teraktif
                             </h3>
                         </div>
                         <ChartBar
@@ -162,7 +161,7 @@ export default function AdminDashboard({
                                 {
                                     key: "doc",
                                     color: "#3b82f6",
-                                    name: "Total Dokumen",
+                                    name: "Total Laporan",
                                 },
                             ]}
                             height={350}

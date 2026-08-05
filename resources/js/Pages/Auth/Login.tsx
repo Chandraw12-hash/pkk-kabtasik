@@ -13,7 +13,7 @@ import {
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
-        email: '',
+        username: '',
         password: '',
         remember: false,
     });
@@ -22,26 +22,22 @@ export default function Login() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        // post(route('login')); 
-        // using standard login route, but for now we just prevent default to show UI
+        post(route('login'));
     };
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4 relative overflow-hidden font-sans">
             <Head title="Masuk - SIMPEL PKK Kabupaten Tasikmalaya" />
 
-            {/* Background Decorations */}
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#38BDF8]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#1DA599]/10 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
 
-            {/* Watermark Logo */}
             <div className="absolute bottom-8 right-8 opacity-5 pointer-events-none">
                 <Users size={200} />
             </div>
 
             <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center relative z-10">
 
-                {/* ── KIRI: INFORMASI ── */}
                 <div className="hidden lg:flex flex-col">
                     <div className="flex items-center gap-3 mb-12">
                         <div className="w-12 h-12 bg-indigo-50/80 rounded flex items-center justify-center">
@@ -75,11 +71,9 @@ export default function Login() {
                     </div>
                 </div>
 
-                {/* ── KANAN: FORM LOGIN ── */}
                 <div className="w-full max-w-md mx-auto lg:mx-0">
                     <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] border border-gray-100 relative">
 
-                        {/* Mobile Logo (Visible only on small screens) */}
                         <div className="flex lg:hidden items-center gap-3 mb-10">
                             <div className="w-10 h-10 bg-indigo-50/80 rounded flex items-center justify-center">
                                 <img src="/assets/logo/logotasik.png" alt="Logo PKK" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
@@ -97,7 +91,6 @@ export default function Login() {
 
                         <form onSubmit={submit} className="space-y-6">
 
-                            {/* Username / Email */}
                             <div>
                                 <label className="block text-xs font-bold text-[#0F172A] mb-2">
                                     Username
@@ -110,15 +103,14 @@ export default function Login() {
                                         type="text"
                                         className="block w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1DA599]/20 focus:bg-white transition-colors text-[#0F172A] font-medium"
                                         placeholder="Masukkan username"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
+                                        value={data.username}
+                                        onChange={(e) => setData('username', e.target.value)}
                                         required
                                     />
                                 </div>
-                                {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
+                                {errors.username && <div className="text-red-500 text-xs mt-1">{errors.username}</div>}
                             </div>
 
-                            {/* Password */}
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-xs font-bold text-[#0F172A]">
@@ -151,7 +143,6 @@ export default function Login() {
                                 {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
                             </div>
 
-                            {/* Remember Me */}
                             <div className="flex items-center">
                                 <input
                                     id="remember_me"
@@ -165,7 +156,6 @@ export default function Login() {
                                 </label>
                             </div>
 
-                            {/* Submit Button */}
                             <div className="pt-2">
                                 <button
                                     type="submit"
@@ -177,7 +167,6 @@ export default function Login() {
                                 </button>
                             </div>
 
-                            {/* Back to Home */}
                             <div className="text-center mt-6">
                                 <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#0F172A] transition-colors">
                                     <ArrowLeft size={14} />
@@ -187,7 +176,6 @@ export default function Login() {
                         </form>
                     </div>
 
-                    {/* Footer Text */}
                     <div className="text-center mt-8 lg:mt-10">
                         <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">
                             © 2024 TP PKK KABUPATEN TASIKMALAYA
@@ -197,4 +185,4 @@ export default function Login() {
             </div>
         </div>
     );
-}
+} 

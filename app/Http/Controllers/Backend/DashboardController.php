@@ -16,15 +16,15 @@ class DashboardController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('admin')) {
-            // Data Dummy untuk Admin System (Global Stats)
+            // Data Dummy untuk Admin (Global Stats)
             $stats = [
-                'total_skpd' => 45, // Dummy
-                'total_eviden' => 1250, // Dummy
-                'total_indikator' => 48, // Dummy
-                'total_users' => 150, // Dummy
-                'verifikasi_pending' => 15, // Dummy
-                'verifikasi_valid' => 1100, // Dummy
-                'verifikasi_ditolak' => 135, // Dummy
+                'total_kader' => 320, // Dummy
+                'total_kegiatan' => 145, // Dummy
+                'total_program' => 10, // Dummy - 10 Program Pokok
+                'total_users' => 25, // Dummy
+                'verifikasi_pending' => 8, // Dummy
+                'verifikasi_valid' => 120, // Dummy
+                'verifikasi_ditolak' => 17, // Dummy
             ];
 
             // 1. Line Chart Data (Monthly) - Dummy
@@ -33,18 +33,18 @@ class DashboardController extends Controller
             foreach ($months as $month) {
                 $lineData[] = [
                     'name' => $month,
-                    'uploaded' => rand(50, 200),
-                    'verified' => rand(30, 150),
+                    'uploaded' => rand(10, 40),
+                    'verified' => rand(5, 30),
                 ];
             }
 
-            // 2. Bar Chart Data (Top 5 SKPD) - Dummy
+            // 2. Bar Chart Data (Top 5 Pokja) - Dummy
             $barData = [
-                ['name' => 'Dinas Kominfo', 'doc' => 245],
-                ['name' => 'Bappelitbangda', 'doc' => 180],
-                ['name' => 'Dinas Pendidikan', 'doc' => 150],
-                ['name' => 'Dinas Kesehatan', 'doc' => 120],
-                ['name' => 'BKPSDM', 'doc' => 100],
+                ['name' => 'Pokja I', 'doc' => 42],
+                ['name' => 'Pokja II', 'doc' => 38],
+                ['name' => 'Pokja III', 'doc' => 35],
+                ['name' => 'Pokja IV', 'doc' => 30],
+                ['name' => 'Sekretariat', 'doc' => 20],
             ];
 
             // 3. Pie Chart Data (Status) - Dummy
@@ -57,28 +57,28 @@ class DashboardController extends Controller
             // 4. Recent Activities - Dummy
             $activities = [
                 [
-                    'opd' => 'Dinas Kominfo',
-                    'action' => 'Mengunggah Eviden Indikator 1.1',
+                    'opd' => 'Pokja I',
+                    'action' => 'Melaporkan Kegiatan Gotong Royong Desa Sukamaju',
                     'time' => '2 menit yang lalu',
                 ],
                 [
-                    'opd' => 'Bappelitbangda',
-                    'action' => 'Mengunggah Eviden Indikator 2.3',
+                    'opd' => 'Pokja II',
+                    'action' => 'Melaporkan Pelatihan Keterampilan Membatik',
                     'time' => '15 menit yang lalu',
                 ],
                 [
-                    'opd' => 'Dinas Pendidikan',
-                    'action' => 'Revisi Eviden Indikator 4.1',
+                    'opd' => 'Pokja III',
+                    'action' => 'Revisi Laporan Kegiatan Pangan Bergizi',
                     'time' => '1 jam yang lalu',
                 ],
                 [
-                    'opd' => 'Dinas Kesehatan',
-                    'action' => 'Mengunggah Eviden Indikator 3.2',
+                    'opd' => 'Pokja IV',
+                    'action' => 'Melaporkan Kegiatan Posyandu Balita',
                     'time' => '3 jam yang lalu',
                 ],
                 [
-                    'opd' => 'BKPSDM',
-                    'action' => 'Mengunggah Eviden Indikator 1.2',
+                    'opd' => 'Sekretariat',
+                    'action' => 'Menambahkan Data Kader Baru',
                     'time' => 'Kemarin',
                 ],
             ];
@@ -86,12 +86,12 @@ class DashboardController extends Controller
             return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
 
         } else {
-            // Data untuk User SKPD (Personal Stats) - Dummy
+            // Data untuk User Pokja (Personal Stats) - Dummy
             $stats = [
-                'total_eviden' => 45,
-                'verifikasi_pending' => 5,
-                'verifikasi_valid' => 35,
-                'verifikasi_ditolak' => 5,
+                'total_kegiatan' => 12,
+                'verifikasi_pending' => 2,
+                'verifikasi_valid' => 9,
+                'verifikasi_ditolak' => 1,
             ];
 
             return Inertia::render('Dashboard/SkpdDashboard', compact('stats'));
