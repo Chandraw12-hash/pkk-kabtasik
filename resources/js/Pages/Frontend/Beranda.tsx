@@ -72,43 +72,59 @@ export default function Welcome({ kebijakan, chartData, domainData, year, berita
             <Head title="PKK Kabupaten Tasikmalaya - Sejahtera & Mandiri" />
             <Navbar />
 
-            <section ref={heroAnim.ref} className={`relative h-[600px] lg:h-[700px] flex items-center overflow-hidden anim-fade-up ${heroAnim.isVisible ? 'show' : ''}`}>
+            <section ref={heroAnim.ref} className={`relative h-[600px] lg:h-[650px] flex items-center overflow-hidden anim-fade-up ${heroAnim.isVisible ? 'show' : ''}`}>
                 <div className="absolute inset-0 w-full h-full">
-                    <img src="/assets/images/hero.jpg" alt="Hero Background PKK" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"; }} />
-                    <div className="absolute inset-0 bg-slate-900/70"></div>
+                    <img src="/assets/images/hero.jpg" alt="Hero Background PKK" className="w-full h-full object-cover bg-center" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"; }} />
+                    <div className="absolute inset-0 bg-black/60"></div>
                 </div>
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                    <div className="max-w-3xl">
-                        <span className="inline-block py-1 px-3 rounded-full bg-teal-500/20 text-teal-100 text-xs font-bold tracking-wider uppercase mb-4 border border-teal-400/30">Pemberdayaan & Kesejahteraan Keluarga</span>
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">Pemberdayaan dan <br /> Kesejahteraan Keluarga (PKK) <br /> <span className="text-teal-300">Sejahtera & Mandiri</span></h1>
-                        <p className="text-lg text-slate-200 mb-8 leading-relaxed max-w-xl">Sinergi pemberdayaan masyarakat Kabupaten Tasikmalaya menuju kemajuan berbasis kearifan lokal melalui 10 Program Pokok PKK.</p>
-                        <div className="flex flex-wrap gap-4">
-                            <Link href="#program-pokok" className="inline-flex items-center px-6 py-3 bg-teal-400 hover:bg-teal-500 text-white font-semibold rounded-full transition-all">Lihat Program PKK <ChevronRight size={18} className="ml-1" /></Link>
-                            <Link href="#tentang" className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-semibold rounded-full transition-all border border-white/30">Tentang PKK</Link>
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-10">
+                    <div className="max-w-2xl">
+                        <div className="inline-flex items-center space-x-2 text-[#38BDF8] font-bold tracking-widest text-xs mb-6 uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]"></span>
+                            <span>Sistem Informasi Keluarga PKK</span>
+                        </div>
+                        <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold text-white leading-[1.15] mb-6">
+                            Pemberdayaan dan <br />Kesejahteraan Keluarga (PKK) <br />
+                            <span className="text-[#38BDF8]">Sejahtera & Mandiri</span>
+                        </h1>
+                        <p className="text-gray-300 text-lg mb-10 max-w-xl leading-relaxed">
+                            Sistem pemberdayaan masyarakat Kabupaten Tasikmalaya menuju keluarga sejahtera dan mandiri melalui 10 Program Pokok PKK.
+                        </p>
+                        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                            <Link href="#program" className="bg-[#38BDF8] hover:bg-cyan-500 text-[#071330] px-8 py-3.5 rounded-full font-bold transition text-center shadow-lg shadow-cyan-500/30 text-sm flex items-center justify-center gap-2">
+                                Program &rarr;
+                            </Link>
+                            <Link href="#berita" className="bg-transparent border border-gray-400 hover:border-white hover:bg-white/10 text-white px-8 py-3.5 rounded-full font-semibold transition text-center text-sm">
+                                Berita PKK
+                            </Link>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section ref={sambutanAnim.ref} id="tentang" className={`py-16 bg-white anim-fade-up ${sambutanAnim.isVisible ? 'show' : ''}`}>
+            <section ref={sambutanAnim.ref} id="tentang" className={`py-20 bg-blue-50/30 anim-fade-up ${sambutanAnim.isVisible ? 'show' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-12 items-center bg-slate-50 rounded-3xl p-8 lg:p-12 shadow-sm">
-                        <div className="lg:w-1/3 flex flex-col items-center">
-                            <div className="relative w-64 h-80 rounded-2xl overflow-hidden shadow-lg border-4 border-white">
-                                <img src="/assets/images/ketua-pkk.jpg" alt="Ketua PKK Kabupaten Tasikmalaya" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"; }} />
-                            </div>
-                            <div className="mt-4 text-center">
-                                <h3 className="font-bold text-lg text-slate-900">Hj. Aan Setya Siti Sugianto, S.Pd., M.M.</h3>
-                                <p className="text-sm text-teal-600 font-medium">KETUA TP PKK KABUPATEN TASIKMALAYA</p>
+                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                        <div className="w-full lg:w-5/12">
+                            <div className="relative bg-[#E5F5F4] rounded-[30px] p-6 shadow-sm border border-teal-100 overflow-hidden text-center group h-[400px] md:h-[500px] flex flex-col justify-end items-center">
+                                <img src="/assets/images/ketua-pkk.jpg" alt="Hj. Ai Diantani Sugianto" className="absolute inset-0 w-full h-full object-cover object-top z-10 opacity-90 transition-transform duration-500 group-hover:scale-105" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"; }} />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#E5F5F4] via-transparent to-transparent z-10"></div>
+                                <div className="relative z-20 mb-4 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-sm inline-block w-11/12 border border-white/50">
+                                    <h3 className="text-xl font-extrabold text-[#0F172A] mb-1">Hj. Ai Diantani Sugianto</h3>
+                                    <p className="text-[10px] font-bold text-[#1DA599] tracking-widest uppercase">Ketua TP PKK Kabupaten Tasikmalaya</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="lg:w-2/3">
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Sambutan</h4>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Sambutan Ketua PKK</h2>
-                            <div className="space-y-4 text-slate-700 leading-relaxed text-sm md:text-base border-l-4 border-teal-400 pl-6 italic">
-                                <p>"Assalamualaikum warahmatullahi wabarakatuh. Puji syukur kita panjatkan kehadirat Allah SWT, karena atas rahmat dan hidayah-Nya kita dapat terus bersinergi dalam upaya pemberdayaan dan kesejahteraan keluarga di Kabupaten Tasikmalaya."</p>
-                                <p>"Saya mengajak seluruh kader PKK dan masyarakat untuk bersama-sama melaksanakan 10 Program Pokok PKK dengan penuh semangat dan dedikasi. Mari kita wujudkan keluarga yang sehat, cerdas, dan mandiri."</p>
-                                <p className="font-semibold text-slate-900 mt-4 not-italic">Wassalamualaikum warahmatullahi wabarakatuh.</p>
+                        <div className="w-full lg:w-7/12">
+                            <div className="inline-block text-[#1DA599] font-bold tracking-widest text-xs uppercase mb-3">Salam Hangat</div>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#0F172A] mb-8">Sambutan Ketua <span className="text-[#1DA599]">PKK</span></h2>
+                            <div className="space-y-4 text-gray-600 text-[15px] leading-relaxed">
+                                <p className="italic text-gray-500 font-medium">Assalamu'alaikum Warahmatullahi Wabarakatuh,</p>
+                                <p>Dalam rangka turut menyukseskan program Pembangunan Daerah Kabupaten Tasikmalaya, selamat datang di Website Resmi TP PKK Kabupaten Tasikmalaya. Puji dan syukur kami panjatkan kepada Allah SWT atas segala nikmat yang diberikan.</p>
+                                <p>Website ini hadir sebagai media informasi dan publikasi untuk memenuhi kebutuhan informasi masyarakat mengenai berbagai kegiatan dan 10 Program Pokok PKK di Kabupaten Tasikmalaya secara transparan dan akuntabel.</p>
+                                <p>Saya mengajak seluruh pengurus, kader, dan masyarakat untuk bersama-sama memajukan PKK dalam rangka mewujudkan kesejahteraan keluarga, khususnya di wilayah Kabupaten Tasikmalaya yang kita cintai ini.</p>
+                                <p>Semoga website ini bermanfaat dalam meningkatkan kualitas layanan informasi publik. Terima kasih.</p>
+                                <p className="font-bold text-[#0F172A] pt-3">Wassalamu'alaikum Warahmatullahi Wabarakatuh.</p>
                             </div>
                         </div>
                     </div>
@@ -117,22 +133,42 @@ export default function Welcome({ kebijakan, chartData, domainData, year, berita
 
             <section ref={dataAnim.ref} className={`py-20 bg-white relative anim-fade-up ${dataAnim.isVisible ? 'show' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-14">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">DATA PKK KABUPATEN TASIKMALAYA</h2>
-                        <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-xl mx-auto">Data dan informasi seputar Program PKK di Kabupaten Tasikmalaya</p>
+                    <div className="text-center mb-12">
+                        <div className="inline-flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 rounded-full bg-[#E5F5F4] flex items-center justify-center shadow-sm">
+                                <MapPin className="text-[#1DA599]" size={24} />
+                            </div>
+                        </div>
+                        <h2 className="text-[28px] font-black text-[#0F172A] mb-2 uppercase tracking-wider">
+                            Data PKK Kabupaten Tasikmalaya
+                        </h2>
+                        <p className="text-gray-500 font-semibold text-[15px]">
+                            Pusat Informasi dan Statistik Program Pokok PKK secara Terpadu
+                        </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[/* Data Umum */].map((_, i) => (
-                            <div key={i} className="group relative h-[320px] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-slate-100">
-                                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop" alt="Data" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                <div className="absolute inset-0 bg-slate-900/70 group-hover:bg-slate-900/60 transition-colors duration-300"></div>
-                                <div className="absolute inset-0 p-8 flex flex-col items-center justify-between text-center text-white">
-                                    <div className="mt-4">
-                                        <div className="bg-[#00bcd4] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/50"><Users size={32} className="text-white" /></div>
-                                        <h3 className="font-bold text-2xl tracking-wide uppercase">Data Umum</h3>
-                                        <p className="text-white/80 text-sm mt-2 font-light leading-relaxed max-w-xs mx-auto">Data Administrasi TP PKK & Rekapitulasi Profil Kependudukan</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7 px-0 lg:px-4">
+                        {[
+                            { title: "DATA UMUM", desc: "Administrasi Tim Penggerak PKK & Rekapitulasi Profil Kependudukan", icon: Users, iconBg: "bg-[#38BDF8]", iconShadow: "shadow-cyan-500/50", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80", overlay: "bg-[#071330]/85 group-hover:bg-[#071330]/75", btnText: "Eksplorasi", link: "#", btnHover: "hover:text-[#071330]" },
+                            { title: "POKJA I", desc: "Penghayatan Pengamalan Pancasila & Pembinaan Gotong Royong", icon: Heart, iconBg: "bg-blue-500", iconShadow: "shadow-blue-500/50", img: "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=600&q=80", overlay: "bg-[#155A63]/85 group-hover:bg-[#155A63]/75", btnText: "Eksplorasi", link: "#", btnHover: "hover:text-[#155A63]" },
+                            { title: "POKJA II", desc: "Pendidikan, Keterampilan, Pengembangan Kehidupan Berkoperasi", icon: GraduationCap, iconBg: "bg-emerald-500", iconShadow: "shadow-emerald-500/50", img: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80", overlay: "bg-[#0B4B3D]/85 group-hover:bg-[#0B4B3D]/75", btnText: "Eksplorasi", link: "#", btnHover: "hover:text-[#0B4B3D]" },
+                            { title: "POKJA III", desc: "Pangan, Sandang, Perumahan dan Tata Laksana Rumah Tangga", icon: Utensils, iconBg: "bg-red-500", iconShadow: "shadow-red-500/50", img: "https://images.unsplash.com/photo-1556910103-1c02745a872e?auto=format&fit=crop&w=600&q=80", overlay: "bg-[#7B2929]/85 group-hover:bg-[#7B2929]/75", btnText: "Observasi", link: "#", btnHover: "hover:text-[#7B2929]" },
+                            { title: "POKJA IV", desc: "Kesehatan, Kelestarian Lingkungan & Perencanaan Sehat", icon: Stethoscope, iconBg: "bg-teal-500", iconShadow: "shadow-teal-500/50", img: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=600&q=80", overlay: "bg-[#164956]/85 group-hover:bg-[#164956]/75", btnText: "Eksplorasi", link: "#", btnHover: "hover:text-[#164956]" },
+                            { title: "WEBSITE UTAMA", desc: "Kembali mengakses Halaman Portal Publik Kabupaten Tasikmalaya", icon: Globe, iconBg: "bg-blue-600", iconShadow: "shadow-blue-600/50", img: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=600&q=80", overlay: "bg-[#1E2B58]/85 group-hover:bg-[#1E2B58]/75", btnText: "Kembali", link: "#", btnHover: "hover:text-[#1E2B58]" }
+                        ].map((item, i) => (
+                            <div key={i} className="group relative h-[260px] rounded-[20px] overflow-hidden shadow-lg border border-gray-100">
+                                <img src={item.img} alt={item.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <div className={`absolute inset-0 ${item.overlay} transition-colors duration-300`}></div>
+                                <div className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center">
+                                    <div className={`${item.iconBg} w-12 h-12 rounded-full flex items-center justify-center text-white mb-4 shadow-sm`}>
+                                        <item.icon size={24} />
                                     </div>
-                                    <Link href="#" className="px-6 py-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white text-sm font-medium rounded-full border border-white/20 transition-all duration-300">Eksplorasi</Link>
+                                    <h3 className="text-white font-extrabold text-[22px] mb-2 tracking-widest uppercase">{item.title}</h3>
+                                    <p className="text-gray-200 font-semibold text-[13px] mb-5 px-2 leading-relaxed">
+                                        {item.desc}
+                                    </p>
+                                    <Link href={item.link} className={`inline-block border-2 border-white/70 text-white hover:bg-white ${item.btnHover} px-7 py-2 rounded-full text-[12px] font-extrabold uppercase tracking-wider transition-colors`}>
+                                        {item.btnText}
+                                    </Link>
                                 </div>
                             </div>
                         ))}
@@ -140,25 +176,56 @@ export default function Welcome({ kebijakan, chartData, domainData, year, berita
                 </div>
             </section>
 
-            <section ref={beritaAnim.ref} className={`py-16 bg-slate-50 relative anim-fade-up ${beritaAnim.isVisible ? 'show' : ''}`}>
+            <section ref={beritaAnim.ref} className={`py-24 bg-gray-50 border-t border-gray-100 relative anim-fade-up ${beritaAnim.isVisible ? 'show' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-                        <div><h2 className="text-2xl font-bold text-slate-900 tracking-tight">Berita PKK Terkini</h2></div>
+                    <div className="flex flex-col sm:flex-row justify-between items-end mb-12">
+                        <div>
+                            <div className="inline-block text-[#1DA599] font-bold tracking-widest text-xs uppercase mb-3 border-l-[3px] border-[#1DA599] pl-3">
+                                UPDATE INFORMASI
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#0F172A]">
+                                Berita <span className="text-[#1DA599]">PKK</span> Terkini
+                            </h2>
+                        </div>
+                        <div className="flex space-x-3 mt-6 sm:mt-0">
+                            <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:text-[#1DA599] hover:border-[#1DA599] transition-colors bg-white">
+                                <ChevronRight size={18} className="rotate-180" />
+                            </button>
+                            <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:text-[#1DA599] hover:border-[#1DA599] transition-colors bg-white">
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {beritaTerbaru.map((item) => (
-                            <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
-                                <div className="h-48 overflow-hidden"><img src={item.image} alt={item.judul} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /></div>
-                                <div className="p-5">
-                                    <h3 className="font-bold text-slate-900 text-lg leading-tight mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">{item.judul}</h3>
-                                    <p className="text-slate-600 text-sm leading-relaxed line-clamp-3 mb-4">{item.deskripsi}</p>
-                                    <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                                        <span className="text-xs text-slate-400 font-medium"><Calendar size={14} className="inline mr-1" /> {item.tanggal}</span>
-                                        <Link href={item.link} className="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center">Baca Selengkapnya <ArrowRight size={14} className="ml-1" /></Link>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {beritaTerbaru.map((item, index) => {
+                            const badges = ["DATA UMUM", "POKJA II", "POKJA IV"];
+                            return (
+                                <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-xl transition-shadow duration-300 flex flex-col h-full group">
+                                    <div className="relative h-56 overflow-hidden">
+                                        <img src={item.image} alt={item.judul} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[10px] font-extrabold text-[#0F172A] shadow-sm tracking-wider">
+                                            {badges[index % badges.length]}
+                                        </div>
+                                    </div>
+                                    <div className="p-6 flex flex-col flex-grow">
+                                        <h3 className="text-[19px] font-bold text-[#0F172A] mb-3 line-clamp-2 group-hover:text-[#1DA599] transition-colors leading-tight">
+                                            {item.judul}
+                                        </h3>
+                                        <p className="text-gray-500 text-sm leading-relaxed mb-6 line-clamp-3">
+                                            {item.deskripsi}
+                                        </p>
+                                        <div className="mt-auto flex justify-between items-center pt-4 border-t border-gray-100">
+                                            <span className="text-[11px] font-semibold text-gray-400 tracking-wider">
+                                                {item.tanggal}
+                                            </span>
+                                            <Link href={item.link} className="text-xs font-bold text-[#1DA599] hover:text-teal-700 flex items-center transition-colors">
+                                                Baca Selengkapnya <ChevronRight size={14} className="ml-1" />
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </section>

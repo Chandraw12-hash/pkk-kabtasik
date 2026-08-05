@@ -66,4 +66,53 @@ class IndexController extends Controller
         ]);
     }
 
+    public function sejarah()
+    {
+        return Inertia::render('Frontend/Profil/Sejarah');
+    }
+
+    public function tugasFungsi()
+    {
+        return Inertia::render('Frontend/Profil/TugasFungsi');
+    }
+
+    public function visiMisi()
+    {
+        return Inertia::render('Frontend/Profil/VisiMisi');
+    }
+
+    public function strukturOrganisasi()
+    {
+        return Inertia::render('Frontend/Profil/StrukturOrganisasi');
+    }
+
+    public function programKerja()
+    {
+        return Inertia::render('Frontend/Program/ProgramKerja');
+    }
+
+    public function ketentuanSeragam()
+    {
+        return Inertia::render('Frontend/Profil/KetentuanSeragam');
+    }
+
+    public function galeriKegiatan()
+    {
+        return Inertia::render('Frontend/Program/GaleriKegiatan');
+    }
+
+    public function marsPkk()
+    {
+        return Inertia::render('Frontend/Program/MarsPkk');
+    }
+
+    public function dokumen()
+    {
+        return Inertia::render('Frontend/Program/Dokumen');
+    }
+
+    public function berita()
+    {
+        return Inertia::render('Frontend/Berita/Index');
+    }
 }

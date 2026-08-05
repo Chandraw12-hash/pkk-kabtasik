@@ -17,6 +17,16 @@ use App\Http\Controllers\Backend\Api\ApiEvidenceController;
 
 Route::as('fe.')->group(function () {
     Route::get('/', [IndexController::class, 'index'])->name('beranda');
+    Route::get('/profil/sejarah', [IndexController::class, 'sejarah'])->name('profil.sejarah');
+    Route::get('/profil/tugas-fungsi', [IndexController::class, 'tugasFungsi'])->name('profil.tugasFungsi');
+    Route::get('/profil/visi-misi', [IndexController::class, 'visiMisi'])->name('profil.visiMisi');
+    Route::get('/profil/struktur-organisasi', [IndexController::class, 'strukturOrganisasi'])->name('profil.strukturOrganisasi');
+    Route::get('/profil/ketentuan-seragam', [IndexController::class, 'ketentuanSeragam'])->name('profil.ketentuanSeragam');
+    Route::get('/program/program-kerja', [IndexController::class, 'programKerja'])->name('program.programKerja');
+    Route::get('/program/galeri-kegiatan', [IndexController::class, 'galeriKegiatan'])->name('program.galeriKegiatan');
+    Route::get('/program/mars-pkk', [IndexController::class, 'marsPkk'])->name('program.marsPkk');
+    Route::get('/program/dokumen', [IndexController::class, 'dokumen'])->name('program.dokumen');
+    Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
 });
 
 Route::middleware('guest')->group(function () {

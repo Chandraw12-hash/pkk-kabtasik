@@ -53,11 +53,11 @@ export default function Navbar() {
             href: "#",
             icon: User,
             submenu: [
-                { name: "Sejarah", href: "#", icon: FileText },
-                { name: "Tugas Pokok dan Fungsi", href: "#", icon: Award },
-                { name: "Visi & Misi", href: "#", icon: BookOpen },
-                { name: "Struktur Organisasi", href: "#", icon: Building2 },
-                { name: "Ketentuan Seragam", href: "#", icon: Shirt },
+                { name: "Sejarah", href: route("fe.profil.sejarah"), icon: FileText },
+                { name: "Tugas Pokok dan Fungsi", href: route("fe.profil.tugasFungsi"), icon: Award },
+                { name: "Visi & Misi", href: route("fe.profil.visiMisi"), icon: BookOpen },
+                { name: "Struktur Organisasi", href: route("fe.profil.strukturOrganisasi"), icon: Building2 },
+                { name: "Ketentuan Seragam", href: route("fe.profil.ketentuanSeragam"), icon: Shirt },
             ]
         },
         {
@@ -65,13 +65,13 @@ export default function Navbar() {
             href: "#",
             icon: BookOpen,
             submenu: [
-                { name: "Program Kerja", href: "#", icon: Briefcase },
-                { name: "Galeri Kegiatan", href: "#", icon: Image },
-                { name: "Mars PKK", href: "#", icon: Music },
-                { name: "Dokumen", href: "#", icon: FolderOpen },
+                { name: "Program Kerja", href: route("fe.program.programKerja"), icon: Briefcase },
+                { name: "Galeri Kegiatan", href: route("fe.program.galeriKegiatan"), icon: Image },
+                { name: "Mars PKK", href: route("fe.program.marsPkk"), icon: Music },
+                { name: "Dokumen", href: route("fe.program.dokumen"), icon: FolderOpen },
             ]
         },
-        { name: "Berita", href: "#", icon: Calendar },
+        { name: "Berita", href: route("fe.berita"), icon: Calendar },
     ];
 
     return (
