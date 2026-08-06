@@ -2,8 +2,11 @@ import "./bootstrap";
 import "../css/app.css";
 
 import { createRoot } from "react-dom/client";
-import { createInertiaApp } from "@inertiajs/react";
+import { createInertiaApp, router } from "@inertiajs/react";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 import { Toaster } from "sonner";
 
@@ -17,6 +20,15 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.tsx"),
         ),
     setup({ el, App, props }) {
+        AOS.init({
+            duration: 800,
+            once: true,
+        });
+
+        router.on('navigate', () => {
+            AOS.refresh();
+        });
+
         const root = createRoot(el);
         root.render(
             <>

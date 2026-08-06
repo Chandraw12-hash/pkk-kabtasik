@@ -53,6 +53,40 @@ function useScrollAnimation() {
     return { ref, isVisible };
 }
 
+function useTypewriter(text: string, speed = 40, startDelay = 600) {
+    const [displayed, setDisplayed] = useState("");
+    const [done, setDone] = useState(false);
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            let i = 0;
+            const interval = setInterval(() => {
+                setDisplayed(text.slice(0, i + 1));
+                i++;
+                if (i >= text.length) { clearInterval(interval); setDone(true); }
+            }, speed);
+            return () => clearInterval(interval);
+        }, startDelay);
+        return () => clearTimeout(timeout);
+    }, [text, speed, startDelay]);
+    return { displayed, done };
+}
+
+function useCounter(end: number, duration = 2000, isVisible = false) {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        if (!isVisible) return;
+        let start = 0;
+        const step = end / (duration / 16);
+        const timer = setInterval(() => {
+            start += step;
+            if (start >= end) { setCount(end); clearInterval(timer); }
+            else setCount(Math.floor(start));
+        }, 16);
+        return () => clearInterval(timer);
+    }, [end, duration, isVisible]);
+    return count;
+}
+
 export default function Welcome({ kebijakan, chartData, domainData, year, berita = [], }: WelcomeProps) {
     const beritaTerbaru = berita.length > 0 ? berita : [
         { id: 1, judul: "Pentingnya Pemberdayaan Perempuan dalam Keluarga", tanggal: "10 Oktober 2023", deskripsi: "Pemberdayaan perempuan merupakan salah satu langkah strategis dalam membangun keluarga yang mandiri...", link: "#", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
@@ -78,16 +112,15 @@ export default function Welcome({ kebijakan, chartData, domainData, year, berita
                     <div className="absolute inset-0 bg-black/60"></div>
                 </div>
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-10 flex justify-center">
-                    <div className="max-w-full mx-auto text-center">
+                    <div className="max-w-2xl text-center">
                         <div className="inline-flex items-center space-x-2 text-[#38BDF8] font-bold tracking-widest text-xs mb-6 uppercase">
-                            
                     
                         </div>
                         <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold text-white leading-[1.15] mb-6 text-center">
     Selamat Datang Di Website Resmi PKK Kabupaten Tasikmalaya
 </h1>
 
-<p className="text-gray-200 text-lg md:text-xl text-center max-w-3xl mx-auto leading-relaxed">
+<p className="text-gray-200 text-lg md:text-xl text-center leading-relaxed">
     Media informasi resmi Tim Penggerak PKK Kabupaten Tasikmalaya 
     dalam mendukung pemberdayaan dan kesejahteraan keluarga menuju 
     masyarakat yang sejahtera dan mandiri.
@@ -99,29 +132,68 @@ export default function Welcome({ kebijakan, chartData, domainData, year, berita
                 </div>
             </section>
 
-            <section ref={sambutanAnim.ref} id="tentang" className={`py-20 bg-blue-50/30 anim-fade-up ${sambutanAnim.isVisible ? 'show' : ''}`}>
+            <section ref={sambutanAnim.ref} id="tentang" className={`py-24 bg-gradient-to-b from-blue-50/40 to-white anim-fade-up ${sambutanAnim.isVisible ? 'show' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                        <div className="w-full lg:w-5/12">
-                            <div className="relative bg-[#E5F5F4] rounded-[30px] p-6 shadow-sm border border-teal-100 overflow-hidden text-center group h-[400px] md:h-[500px] flex flex-col justify-end items-center">
+                    <div className="flex flex-col lg:flex-row items-stretch gap-12 lg:gap-16">
+                        {/* Photo Card */}
+                        <div className="w-full lg:w-5/12 flex">
+                            <div className="relative bg-[#E5F5F4] rounded-[28px] shadow-lg border border-teal-100/60 overflow-hidden text-center group h-[420px] md:h-[520px] lg:h-full w-full flex flex-col justify-end items-center min-h-[420px]">
                                 <img src="/assets/images/ketua-pkk.jpg" alt="Hj. Ai Diantani Sugianto" className="absolute inset-0 w-full h-full object-cover object-top z-10 opacity-90 transition-transform duration-500 group-hover:scale-105" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"; }} />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#E5F5F4] via-transparent to-transparent z-10"></div>
-                                <div className="relative z-20 mb-4 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-sm inline-block w-11/12 border border-white/50">
-                                    <h3 className="text-xl font-extrabold text-[#0F172A] mb-1">Hj. Ai Diantani Sugianto</h3>
-                                    <p className="text-[10px] font-bold text-[#1DA599] tracking-widest uppercase">Ketua TP PKK Kabupaten Tasikmalaya</p>
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/70 via-[#0F172A]/10 to-transparent z-10"></div>
+                                <div className="relative z-20 mb-5 mx-4 bg-white/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-md w-[calc(100%-2rem)] border border-white/60">
+                                    <h3 className="text-lg md:text-xl font-extrabold text-[#0F172A] mb-1 leading-tight">Hj. Ai Diantani Sugianto</h3>
+                                    <p className="text-[10px] font-bold text-[#1DA599] tracking-[0.15em] uppercase">Ketua TP PKK Kabupaten Tasikmalaya</p>
                                 </div>
                             </div>
                         </div>
-                        <div className="w-full lg:w-7/12">
-                            <div className="inline-block text-[#1DA599] font-bold tracking-widest text-xs uppercase mb-3">Salam Hangat</div>
-                            <h2 className="text-3xl md:text-4xl font-extrabold text-[#0F172A] mb-8">Sambutan Ketua <span className="text-[#1DA599]">PKK</span></h2>
-                            <div className="space-y-4 text-gray-600 text-[15px] leading-relaxed">
-                                <p className="italic text-gray-500 font-medium">Assalamu'alaikum Warahmatullahi Wabarakatuh,</p>
-                                <p>Dalam rangka turut menyukseskan program Pembangunan Daerah Kabupaten Tasikmalaya, selamat datang di Website Resmi TP PKK Kabupaten Tasikmalaya. Puji dan syukur kami panjatkan kepada Allah SWT atas segala nikmat yang diberikan.</p>
-                                <p>Website ini hadir sebagai media informasi dan publikasi untuk memenuhi kebutuhan informasi masyarakat mengenai berbagai kegiatan dan 10 Program Pokok PKK di Kabupaten Tasikmalaya secara transparan dan akuntabel.</p>
-                                <p>Saya mengajak seluruh pengurus, kader, dan masyarakat untuk bersama-sama memajukan PKK dalam rangka mewujudkan kesejahteraan keluarga, khususnya di wilayah Kabupaten Tasikmalaya yang kita cintai ini.</p>
-                                <p>Semoga website ini bermanfaat dalam meningkatkan kualitas layanan informasi publik. Terima kasih.</p>
-                                <p className="font-bold text-[#0F172A] pt-3">Wassalamu'alaikum Warahmatullahi Wabarakatuh.</p>
+
+                        {/* Text Content */}
+                        <div className="w-full lg:w-7/12 flex flex-col justify-center">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-[3px] rounded-full bg-[#1DA599]"></div>
+                                <span className="text-[#1DA599] font-bold tracking-[0.2em] text-xs uppercase">Salam Hangat</span>
+                            </div>
+
+                            <h2 className="text-3xl md:text-[38px] font-extrabold text-[#0F172A] mb-2 leading-tight">
+                                Sambutan Ketua <span className="text-[#1DA599]">PKK</span>
+                            </h2>
+                            <p className="text-gray-400 text-sm font-medium mb-8">Kabupaten Tasikmalaya</p>
+
+                            <div className="relative pl-6 border-l-[3px] border-[#1DA599]/20">
+                                <Quote className="absolute -left-[14px] -top-1 text-[#1DA599]/30 bg-gradient-to-b from-blue-50/40 to-white p-0.5" size={22} />
+                                <div className="space-y-4 text-gray-600 text-[15px] leading-[1.8]">
+                                    <p className="italic text-[#1DA599]/80 font-semibold">
+                                        Assalamu'alaikum Warahmatullahi Wabarakatuh,
+                                    </p>
+                                    <p>
+                                        Dalam rangka turut menyukseskan program Pembangunan Daerah Kabupaten Tasikmalaya, selamat datang di Website Resmi TP PKK Kabupaten Tasikmalaya. Puji dan syukur kami panjatkan kepada Allah SWT atas segala nikmat yang diberikan.
+                                    </p>
+                                    <p>
+                                        Website ini hadir sebagai media informasi dan publikasi untuk memenuhi kebutuhan informasi masyarakat mengenai berbagai kegiatan dan 10 Program Pokok PKK di Kabupaten Tasikmalaya secara transparan dan akuntabel.
+                                    </p>
+                                    <p>
+                                        Saya mengajak seluruh pengurus, kader, dan masyarakat untuk bersama-sama memajukan PKK dalam rangka mewujudkan kesejahteraan keluarga, khususnya di wilayah Kabupaten Tasikmalaya yang kita cintai ini.
+                                    </p>
+                                    <p>
+                                        Semoga website ini bermanfaat dalam meningkatkan kualitas layanan informasi publik. Terima kasih.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Signature Block */}
+                            <div className="mt-8 pt-6 border-t border-gray-200/80">
+                                <p className="text-[#0F172A] font-bold text-[15px] italic mb-4">
+                                    Wassalamu'alaikum Warahmatullahi Wabarakatuh.
+                                </p>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-[#E5F5F4] flex items-center justify-center flex-shrink-0">
+                                        <UserCheck className="text-[#1DA599]" size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="font-extrabold text-[#0F172A] text-[15px] leading-tight">Hj. Ai Diantani Sugianto</p>
+                                        <p className="text-[11px] font-semibold text-gray-400 tracking-wider uppercase">Ketua TP PKK Kab. Tasikmalaya</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

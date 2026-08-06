@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import Navbar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
@@ -15,113 +15,63 @@ import {
     Users,
 } from "lucide-react";
 
-function useScrollAnimation() {
-    const ref = useRef<HTMLDivElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.unobserve(entry.target);
-                }
-            },
-            { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
-        );
-        if (ref.current) observer.observe(ref.current);
-        return () => {
-            if (ref.current) observer.unobserve(ref.current);
-        };
-    }, []);
-    return { ref, isVisible };
-}
-
 export default function MarsPkk() {
-    const heroAnim = useScrollAnimation();
-    const playerAnim = useScrollAnimation();
-    const lirikAnim = useScrollAnimation();
-    const ctaAnim = useScrollAnimation();
-
     const [isPlaying, setIsPlaying] = useState(false);
 
     return (
-        <div
-            className="min-h-screen flex flex-col bg-[#F8FAFC] font-sans text-slate-900 pt-14"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-            <style>{`::-webkit-scrollbar { display: none; } .anim-fade-up { opacity: 0; transform: translateY(28px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); } .anim-fade-up.show { opacity: 1; transform: translateY(0); }`}</style>
-
+        <div className="min-h-screen flex flex-col bg-[#FAFAFA] font-sans text-slate-900 pt-14 selection:bg-[#1DA599]/30">
             <Head title="Mars PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ── HERO ── */}
-            <section
-                ref={heroAnim.ref}
-                className={`relative pt-24 pb-20 lg:pt-32 lg:pb-28 overflow-hidden anim-fade-up ${heroAnim.isVisible ? "show" : ""}`}
-            >
-                {/* Background Blobs */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1DA599]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#38BDF8]/10 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+            {/* ── HERO MATCHED ── */}
+            <section className="relative min-h-[420px] lg:min-h-[480px] flex items-center overflow-hidden" data-aos="fade-up">
+                <div className="absolute inset-0 w-full h-full">
+                    <img
+                        src="/assets/images/hero.jpg"
+                        alt="Mars PKK"
+                        className="w-full h-full object-cover object-center"
+                        onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0B2A3B]/92 via-[#0B2A3B]/75 to-[#0B2A3B]/45"></div>
+                </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                        {/* Text */}
-                        <div className="w-full lg:w-1/2">
-                            <div className="inline-block bg-[#1DA599]/20 text-[#1DA599] text-[10px] font-extrabold tracking-widest uppercase px-3 py-1.5 rounded-full mb-5">
-                                SISTEM INFORMASI PKK
-                            </div>
-                            <h1 className="text-4xl md:text-5xl lg:text-[54px] font-extrabold text-[#0F172A] leading-[1.15] mb-6">
-                                Mars PKK <br />
-                                <span className="text-[#1DA599]">Kabupaten Tasikmalaya</span>
-                            </h1>
-                            <p className="text-gray-500 text-[15px] leading-relaxed mb-10 max-w-lg">
-                                Nyanyian pemersatu jiwa dan semangat juang kader PKK dalam 
-                                mewujudkan keluarga yang sejahtera, bertaqwa, dan mandiri di 
-                                tanah Sukapura.
-                            </p>
-                            <div className="flex flex-wrap gap-4">
-                                <a
-                                    href="#lirik"
-                                    className="inline-flex items-center gap-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold px-7 py-3 rounded-full transition-all text-sm shadow-lg shadow-slate-900/20"
-                                >
-                                    <BookOpen size={16} />
-                                    Baca Lirik
-                                </a>
-                                <a
-                                    href="#"
-                                    className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-[#1DA599] hover:text-[#1DA599] text-gray-600 font-semibold px-7 py-3 rounded-full transition-all text-sm"
-                                >
-                                    <Download size={16} />
-                                    Unduh Partitur
-                                </a>
-                            </div>
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
+                    <div className="max-w-xl">
+                        <div className="inline-flex items-center gap-2 text-[#38BDF8] text-xs font-bold tracking-widest uppercase mb-5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]"></span>
+                            <span>Lagu Kebanggaan</span>
                         </div>
-
-                        {/* Floating Card Logo */}
-                        <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
-                            <div className="bg-white rounded-[40px] p-10 shadow-2xl shadow-[#1DA599]/10 border border-gray-100 flex flex-col items-center text-center max-w-sm rotate-2 hover:rotate-0 transition-transform duration-500">
-                                <img
-                                    src="/assets/logo/logotasik.png"
-                                    alt="Logo PKK"
-                                    className="w-40 h-40 object-contain mb-6 drop-shadow-md"
-                                />
-                                <h3 className="text-xl font-extrabold text-[#0F172A] mb-2">
-                                    TP PKK Kabupaten Tasikmalaya
-                                </h3>
-                                <p className="text-gray-500 text-sm italic">
-                                    "Pemberdayaan Kesejahteraan Keluarga"
-                                </p>
-                            </div>
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-5">
+                            Mars <br className="hidden md:block"/>
+                            <span className="text-[#38BDF8]">PKK</span>
+                        </h1>
+                        <p className="text-gray-200 text-base mb-8 leading-relaxed max-w-md">
+                            Nyanyian pemersatu jiwa dan semangat juang kader PKK dalam mewujudkan keluarga yang sejahtera, bertaqwa, dan mandiri di tanah Sukapura.
+                        </p>
+                        <div className="flex flex-wrap gap-4">
+                            <a
+                                href="#lirik"
+                                className="inline-flex items-center gap-2 bg-[#1DA599] hover:bg-teal-600 text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-lg shadow-teal-600/30 text-sm"
+                            >
+                                <BookOpen size={16} />
+                                Baca Lirik
+                            </a>
+                            <a
+                                href="#"
+                                className="inline-flex items-center gap-2 bg-transparent border-2 border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-bold px-8 py-3.5 rounded-full transition-all text-sm"
+                            >
+                                <Download size={16} />
+                                Unduh Partitur
+                            </a>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* ── AUDIO PLAYER BANNER ── */}
-            <section
-                ref={playerAnim.ref}
-                className={`bg-[#0F172A] py-10 anim-fade-up ${playerAnim.isVisible ? "show" : ""}`}
-            >
+            <section className="bg-[#0F172A] py-10" data-aos="fade-up">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                         {/* Disc & Title */}
@@ -178,11 +128,7 @@ export default function MarsPkk() {
             </section>
 
             {/* ── LIRIK LAGU ── */}
-            <section
-                id="lirik"
-                ref={lirikAnim.ref}
-                className={`py-24 bg-white anim-fade-up ${lirikAnim.isVisible ? "show" : ""}`}
-            >
+            <section id="lirik" className="py-24 bg-white" data-aos="fade-up">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-14">
                         <h2 className="text-3xl md:text-4xl font-extrabold text-[#0F172A] inline-block relative">
@@ -260,10 +206,7 @@ export default function MarsPkk() {
             </section>
 
             {/* ── CTA GABUNG KADER ── */}
-            <section
-                ref={ctaAnim.ref}
-                className={`pb-24 pt-10 bg-white relative anim-fade-up ${ctaAnim.isVisible ? "show" : ""}`}
-            >
+            <section className="pb-24 pt-10 bg-white relative" data-aos="fade-up">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-white rounded-[40px] p-10 md:p-14 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 relative z-10">
                         <div className="w-16 h-16 bg-[#E5F5F4] rounded-2xl flex items-center justify-center mx-auto mb-6">
