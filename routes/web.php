@@ -7,11 +7,17 @@ use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\ConfigController;
 use App\Http\Controllers\Frontend\IndexController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Backend\IndikatorController;
-use App\Http\Controllers\Backend\EvidenController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\KaderController;
-use App\Http\Controllers\Backend\Api\ApiEvidenceController;
+use App\Http\Controllers\Backend\GaleriController;
+use App\Http\Controllers\Backend\BeritaController;
+
+// Controller Sekretariat & Pokja yang Terpisah
+use App\Http\Controllers\Backend\SekretariatController;
+use App\Http\Controllers\Backend\Pokja1Controller;
+use App\Http\Controllers\Backend\Pokja2Controller;
+use App\Http\Controllers\Backend\Pokja3Controller; // <-- Sudah ditambahkan di sini
+use App\Http\Controllers\Backend\Pokja4Controller;
 
 // ============================================
 // FRONTEND ROUTES (Public)
@@ -58,31 +64,24 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->except(['show']);
 
     // ============================================
-    // MASTER DATA - EVIDEN (SPBE - DIKOMENTAR DULU)
+    // MANAJEMEN SEKRETARIAT & POKJA (TERPISAH)
     // ============================================
-    /*
-    Route::resource('eviden', EvidenController::class)
-        ->names('eviden')
+    Route::resource('sekretariat', SekretariatController::class)->names('sekretariat')->except(['show']);
+    Route::resource('pokja1', Pokja1Controller::class)->names('pokja1')->except(['show']);
+    Route::resource('pokja2', Pokja2Controller::class)->names('pokja2')->except(['show']);
+    Route::resource('pokja3', Pokja3Controller::class)->names('pokja3')->except(['show']);
+    Route::resource('pokja4', Pokja4Controller::class)->names('pokja4')->except(['show']);
+
+    // ============================================
+    // MANAJEMEN KONTEN (Galeri & Berita)
+    // ============================================
+    Route::resource('galeri', GaleriController::class)
+        ->names('galeri')
         ->except(['show']);
 
-    Route::get('/eviden/file/{id}/download', [EvidenController::class, 'downloadFile'])->name('eviden.file.download');
-    Route::delete('/eviden/file/{id}', [EvidenController::class, 'deleteFile'])->name('eviden.file.delete');
-    */
-
-    // ============================================
-    // MASTER DATA - INDIKATOR (SPBE - DIKOMENTAR DULU)
-    // ============================================
-    /*
-    Route::get('indikator/export', [IndikatorController::class, 'export'])->name('indikator.export');
-    Route::post('indikator/import', [IndikatorController::class, 'import'])->name('indikator.import');
-    Route::resource('indikator', IndikatorController::class)
-        ->names('indikator')
-        ->except(['show', 'create', 'edit']);
-
-    // API Internal Routes
-    Route::get('/api/indikator/{id}/detail', [ApiEvidenceController::class, 'getIndikatorDetail'])
-        ->name('api.indikator.detail');
-    */
+    Route::resource('berita', BeritaController::class)
+        ->names('berita')
+        ->except(['show']);
 
     // ============================================
     // USER MANAGEMENT

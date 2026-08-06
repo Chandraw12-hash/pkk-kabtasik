@@ -1,4 +1,3 @@
-// resources/js/Components/Sidebar.tsx
 import React, {
     useState,
     Dispatch,
@@ -11,21 +10,21 @@ import {
     LayoutDashboard,
     Users,
     Settings,
-    Building2,
-    Shield,
     LogOut,
-    Menu,
     X,
     ChevronDown,
-    CircleCheck,
-    Target,
-    FileCheck,
-    FileText,
-    CircleGauge,
     Moon,
     Sun,
     User,
     Home,
+    FolderKanban,
+    Image as ImageLucide,
+    Newspaper,
+    FileText,
+    BookOpen,
+    HeartHandshake,
+    Home as HomeIcon,
+    Activity,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -39,36 +38,62 @@ interface AppSettings {
     [key: string]: unknown;
 }
 
-interface SharedProps {
-    app_settings?: AppSettings;
+interface UserType {
+    name?: string;
+    profile_photo_path?: string;
     [key: string]: unknown;
 }
 
+interface AuthType {
+    user?: UserType;
+    roles?: string[];
+    permissions?: string[];
+    [key: string]: unknown;
+}
+
+interface SharedProps {
+    app_settings?: AppSettings;
+    auth?: AuthType;
+    [key: string]: unknown;
+}
+
+declare function route(name?: string, params?: unknown): any;
+
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+    const isCurrentRoute = (name: string) => {
+        try {
+            return typeof route === "function" && route().current(name);
+        } catch {
+            return false;
+        }
+    };
+
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-        // Dropdown otomatis terbuka jika route saat ini adalah bagian dari be.users.*
+        pokjaManagement:
+            isCurrentRoute("be.sekretariat.*") ||
+            isCurrentRoute("be.pokja1.*") ||
+            isCurrentRoute("be.pokja2.*") ||
+            isCurrentRoute("be.pokja3.*") ||
+            isCurrentRoute("be.pokja4.*"),
         userManagement:
-            route().current("be.users.*") || route().current("be.roles.*"),
-        settingManagement: route().current("be.settings.*"),
+            isCurrentRoute("be.users.*") || isCurrentRoute("be.roles.*"),
+        settingManagement: isCurrentRoute("be.settings.*"),
     });
 
     const toggleMenu = (menuName: string) => {
         setOpenMenus((prev) => ({ ...prev, [menuName]: !prev[menuName] }));
     };
 
-    // Get App Settings and Auth from Inertia Shared Props
-    const { app_settings, auth } = usePage<SharedProps>().props as any;
+    const { app_settings, auth } = usePage<SharedProps>().props;
     const user = auth?.user;
     const roles = auth?.roles || [];
     const permissions = auth?.permissions || [];
     const appName = app_settings?.app_name || "PKK TASIKMALAYA";
 
-    // User Menu & Dark Mode Logic
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Initialize theme
     useEffect(() => {
         const storedTheme = localStorage.getItem("theme");
         if (
@@ -96,7 +121,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         }
     };
 
-    // Click outside handler for dropdown
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
@@ -114,42 +138,41 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     return (
         <aside
             className={`
-            fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60
-            transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0
+            fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60
+            transform transition-transform duration-200 ease-in-out md:translate-x-0
             ${isOpen ? "translate-x-0" : "-translate-x-full"}
+            w-72
             flex flex-col h-screen
         `}
         >
-            {/* Logo & Close Button */}
-            <div className="p-6 md:p-8 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                    <span className="text-base md:text-lg font-bold text-slate-800 dark:text-slate-200 tracking-wider leading-tight line-clamp-2">
+            {/* Logo & Close Button (Mobile Only) */}
+            <div className="p-6 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                    <img
+                        src="/assets/logo/logotasik.png"
+                        alt="Logo PKK Kabupaten Tasikmalaya"
+                        className="h-10 w-10 object-contain shrink-0"
+                        onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                        }}
+                    />
+                    <span className="text-base font-bold text-slate-800 dark:text-slate-200 tracking-wider leading-tight line-clamp-2">
                         {appName}
                     </span>
                 </div>
+
                 <button
                     onClick={() => setIsOpen(false)}
-                    className="md:hidden p-2 text-slate-400 dark:text-slate-500"
+                    className="md:hidden p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all shrink-0"
+                    aria-label="Tutup sidebar"
                 >
-                    <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
+                    <X size={20} />
                 </button>
             </div>
 
-            {/* Menu Navigasi - Scrollable Area */}
-            <nav className="flex-1 px-4 overflow-y-auto space-y-1 custom-scrollbar pb-6">
-                <p className="px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            {/* Menu Navigasi */}
+            <nav className="flex-1 px-3 overflow-y-auto space-y-1 custom-scrollbar pb-6">
+                <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Main Menu
                 </p>
 
@@ -158,7 +181,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     href={route("be.dashboard")}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
-                            route().current("be.dashboard")
+                            isCurrentRoute("be.dashboard")
                                 ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
@@ -166,28 +189,26 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <LayoutDashboard
                         size={20}
                         strokeWidth={2}
-                        className={`${
-                            route().current("be.dashboard")
+                        className={`shrink-0 ${
+                            isCurrentRoute("be.dashboard")
                                 ? "text-brand-green-600 dark:text-brand-green-400"
                                 : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
                         }`}
                     />
-                    Dashboard
+                    <span>Dashboard</span>
                 </Link>
 
-                <p className="px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-4">
+                <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                     Master Data
                 </p>
 
-                {/* ============================================ */}
-                {/* DATA KADER - TAMPIL */}
-                {/* ============================================ */}
+                {/* Data Kader */}
                 {permissions.includes("view-kader") && (
                     <Link
                         href={route("be.kader.index")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
-                            route().current("be.kader.*")
+                            isCurrentRoute("be.kader.*")
                                 ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
@@ -195,80 +216,188 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <Users
                             size={20}
                             strokeWidth={2}
-                            className={`${
-                                route().current("be.kader.*")
+                            className={`shrink-0 ${
+                                isCurrentRoute("be.kader.*")
                                     ? "text-brand-green-600 dark:text-brand-green-400"
                                     : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
                             }`}
                         />
-                        Data Kader
+                        <span>Data Kader</span>
                     </Link>
                 )}
 
-                {/* ============================================ */}
-                {/* DATA EVIDEN - SEMBUNYIKAN (DI-COMMENT) */}
-                {/* ============================================ */}
-                {/*
-                {permissions.includes("view-eviden") && (
-                    <Link
-                        href={route("be.eviden.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                {/* Manajemen Data Pokja & Sekretariat (Dropdown Terpadu) */}
+                <div className="mt-2">
+                    <button
+                        onClick={() => toggleMenu("pokjaManagement")}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                         ${
-                            route().current("be.eviden.*")
-                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                            isCurrentRoute("be.sekretariat.*") ||
+                            isCurrentRoute("be.pokja1.*") ||
+                            isCurrentRoute("be.pokja2.*") ||
+                            isCurrentRoute("be.pokja3.*") ||
+                            isCurrentRoute("be.pokja4.*")
+                                ? "text-brand-green-600 dark:text-brand-green-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                     >
-                        <FileText
-                            size={20}
-                            strokeWidth={2}
-                            className={`${
-                                route().current("be.eviden.*")
-                                    ? "text-brand-green-600 dark:text-brand-green-400"
-                                    : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                        <div className="flex items-center gap-3">
+                            <FolderKanban
+                                size={20}
+                                strokeWidth={2}
+                                className={`shrink-0 ${
+                                    isCurrentRoute("be.sekretariat.*") ||
+                                    isCurrentRoute("be.pokja1.*") ||
+                                    isCurrentRoute("be.pokja2.*") ||
+                                    isCurrentRoute("be.pokja3.*") ||
+                                    isCurrentRoute("be.pokja4.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400"
+                                        : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                }`}
+                            />
+                            <span>Data Pokja & Sekretariat</span>
+                        </div>
+                        <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-300 ${
+                                openMenus.pokjaManagement ? "rotate-180" : ""
                             }`}
                         />
-                        Data Eviden
-                    </Link>
-                )}
-                */}
+                    </button>
 
-                {/* ============================================ */}
-                {/* DATA INDIKATOR - SEMBUNYIKAN (DI-COMMENT) */}
-                {/* ============================================ */}
-                {/*
-                {permissions.includes("view-indikator") && (
-                    <Link
-                        href={route("be.indikator.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                        ${
-                            route().current("be.indikator.*")
-                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    <div
+                        className={`overflow-hidden transition-all duration-300 ${
+                            openMenus.pokjaManagement
+                                ? "max-h-96"
+                                : "max-h-0"
                         }`}
                     >
-                        <CircleGauge
-                            size={20}
-                            strokeWidth={2}
-                            className={`${
-                                route().current("be.indikator.*")
-                                    ? "text-brand-green-600 dark:text-brand-green-400"
-                                    : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
-                            }`}
-                        />
-                        Data Indikator
-                    </Link>
-                )}
-                */}
+                        <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
+                            {/* Sekretariat */}
+                            <Link
+                                href={route("be.sekretariat.index")}
+                                className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                    isCurrentRoute("be.sekretariat.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                }`}
+                            >
+                                <FileText size={16} />
+                                <span>Sekretariat</span>
+                            </Link>
 
-                {/* User Management Dropdown */}
+                            {/* Pokja I */}
+                            <Link
+                                href={route("be.pokja1.index")}
+                                className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                    isCurrentRoute("be.pokja1.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                }`}
+                            >
+                                <HeartHandshake size={16} />
+                                <span>Pokja I</span>
+                            </Link>
+
+                            {/* Pokja II */}
+                            <Link
+                                href={route("be.pokja2.index")}
+                                className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                    isCurrentRoute("be.pokja2.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                }`}
+                            >
+                                <BookOpen size={16} />
+                                <span>Pokja II</span>
+                            </Link>
+
+                            {/* Pokja III */}
+                            <Link
+                                href={route("be.pokja3.index")}
+                                className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                    isCurrentRoute("be.pokja3.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                }`}
+                            >
+                                <HomeIcon size={16} />
+                                <span>Pokja III</span>
+                            </Link>
+
+                            {/* Pokja IV */}
+                            <Link
+                                href={route("be.pokja4.index")}
+                                className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                    isCurrentRoute("be.pokja4.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                }`}
+                            >
+                                <Activity size={16} />
+                                <span>Pokja IV</span>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Manajemen Konten (Galeri & Berita) */}
+                <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
+                    Manajemen Konten
+                </p>
+
+                {/* Galeri Kegiatan */}
+                <Link
+                    href={route("be.galeri.index")}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                    ${
+                        isCurrentRoute("be.galeri.*")
+                            ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                >
+                    <ImageLucide
+                        size={20}
+                        strokeWidth={2}
+                        className={`shrink-0 ${
+                            isCurrentRoute("be.galeri.*")
+                                ? "text-brand-green-600 dark:text-brand-green-400"
+                                : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                        }`}
+                    />
+                    <span>Galeri Kegiatan</span>
+                </Link>
+
+                {/* Berita & Informasi */}
+                <Link
+                    href={route("be.berita.index")}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                    ${
+                        isCurrentRoute("be.berita.*")
+                            ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                >
+                    <Newspaper
+                        size={20}
+                        strokeWidth={2}
+                        className={`shrink-0 ${
+                            isCurrentRoute("be.berita.*")
+                                ? "text-brand-green-600 dark:text-brand-green-400"
+                                : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                        }`}
+                    />
+                    <span>Berita & Informasi</span>
+                </Link>
+
+                {/* User Management */}
                 {permissions.includes("view-users") && (
-                    <div>
+                    <div className="mt-4">
                         <button
                             onClick={() => toggleMenu("userManagement")}
                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                             ${
-                                route().current("be.users.*")
+                                isCurrentRoute("be.users.*")
                                     ? "text-brand-green-600 dark:text-brand-green-400"
                                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
@@ -277,13 +406,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <Users
                                     size={20}
                                     strokeWidth={2}
-                                    className={`${
-                                        route().current("be.users.*")
+                                    className={`shrink-0 ${
+                                        isCurrentRoute("be.users.*")
                                             ? "text-brand-green-600 dark:text-brand-green-400"
                                             : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
                                     }`}
                                 />
-                                User Management
+                                <span>User Management</span>
                             </div>
                             <ChevronDown
                                 size={16}
@@ -304,7 +433,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <Link
                                     href={route("be.users.index")}
                                     className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                        route().current("be.users.*")
+                                        isCurrentRoute("be.users.*")
                                             ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
                                             : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
                                     }`}
@@ -315,7 +444,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     <Link
                                         href={route("be.roles.index")}
                                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            route().current("be.roles.*")
+                                            isCurrentRoute("be.roles.*")
                                                 ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
                                                 : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
                                         }`}
@@ -330,7 +459,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                 {roles.includes("admin") && (
                     <>
-                        <p className="px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-4">
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                             Sistem
                         </p>
 
@@ -339,7 +468,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 onClick={() => toggleMenu("settingManagement")}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                                 ${
-                                    route().current("be.settings.*")
+                                    isCurrentRoute("be.settings.*")
                                         ? "text-brand-green-600 dark:text-brand-green-400"
                                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                 }`}
@@ -348,13 +477,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     <Settings
                                         size={20}
                                         strokeWidth={2}
-                                        className={`${
-                                            route().current("be.settings.*")
+                                        className={`shrink-0 ${
+                                            isCurrentRoute("be.settings.*")
                                                 ? "text-brand-green-600 dark:text-brand-green-400"
                                                 : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
                                         }`}
                                     />
-                                    Pengaturan
+                                    <span>Pengaturan</span>
                                 </div>
                                 <ChevronDown
                                     size={16}
@@ -377,8 +506,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     <Link
                                         href={route("be.settings.profile")}
                                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            route().current(
-                                                "be.settings.profile",
+                                            isCurrentRoute(
+                                                "be.settings.profile"
                                             )
                                                 ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
                                                 : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
@@ -389,7 +518,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     <Link
                                         href={route("be.settings.app")}
                                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            route().current("be.settings.app")
+                                            isCurrentRoute("be.settings.app")
                                                 ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
                                                 : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
                                         }`}
@@ -404,9 +533,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             </nav>
 
             {/* User Profile Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                 <div ref={dropdownRef} className="relative">
-                    {/* Trigger Button */}
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group cursor-pointer"
@@ -447,16 +575,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         />
                     </button>
 
-                    {/* Pop-up Menu (Membuka ke Atas) */}
                     <div
-                        className={`absolute bottom-full left-0 right-0 mb-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 transform transition-all duration-200 origin-bottom ${
+                        className={`absolute bottom-full mb-2 left-0 right-0 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 transform transition-all duration-200 origin-bottom ${
                             isDropdownOpen
                                 ? "opacity-100 scale-100 translate-y-0"
                                 : "opacity-0 scale-95 translate-y-2 pointer-events-none"
                         }`}
                     >
                         <div className="p-1 space-y-1">
-                            {/* Dark Mode Toggle Item */}
                             <button
                                 onClick={toggleTheme}
                                 className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
