@@ -7,7 +7,7 @@ import Badge from "@/Components/UI/Badge";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm, router } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import { Search, Edit2, Trash2, RotateCcw } from "lucide-react";
 import { PaginatedData, User } from "@/types/model";
 import { usePage } from "@inertiajs/react";
@@ -98,17 +98,16 @@ export default function Index({ users, filters }: IndexProps) {
 
     return (
         <MainLayout>
-            <Head title="Manajemen User" />
+            <Head title="Manajemen Pengguna & Kader" />
 
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Manajemen User
+                        Manajemen Pengguna & Kader
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola akses dan data pengguna SPBE Kabupaten
-                        Tasikmalaya
+                        Kelola akses, akun kader, dan data pengguna sistem PKK
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -116,9 +115,9 @@ export default function Index({ users, filters }: IndexProps) {
                         <Button
                             variant="primary"
                             href={route("be.users.create")}
-                            className="shadow-lg shadow-indigo-100 dark:shadow-none"
+                            className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
                         >
-                            <span>Tambah User</span>
+                            <span>Tambah Pengguna</span>
                         </Button>
                     )}
                 </div>
@@ -131,7 +130,7 @@ export default function Index({ users, filters }: IndexProps) {
                     <div className="relative w-full max-w-md">
                         <TextInput
                             iconLeft={<Search size={18} />}
-                            placeholder="Cari nama atau email..."
+                            placeholder="Cari nama atau email pengguna..."
                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             containerClassName="relative w-full"
                             value={search}
@@ -172,12 +171,12 @@ export default function Index({ users, filters }: IndexProps) {
                             },
                         },
                         {
-                            header: "User",
+                            header: "Pengguna",
                             className: "w-64",
                             headerClassName: "w-64",
                             render: (user: User | any) => (
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs border border-indigo-100 uppercase">
+                                    <div className="w-10 h-10 rounded-full bg-brand-blue-50 text-brand-blue-600 flex items-center justify-center font-bold text-xs border border-brand-blue-100 uppercase dark:bg-brand-blue-900/20 dark:border-brand-blue-800 dark:text-brand-blue-400">
                                         {user.name.substring(0, 2)}
                                     </div>
                                     <div>
@@ -191,19 +190,19 @@ export default function Index({ users, filters }: IndexProps) {
                                 </div>
                             ),
                         },
-
                         {
                             header: "Role",
                             className: "text-center w-50",
                             headerClassName: "text-center w-50",
                             render: (user: User) => (
-                                <div className="flex flex-wrap gap-1">
+                                <div className="flex flex-wrap gap-1 justify-center">
                                     {user.roles.length > 0 ? (
                                         user.roles.map((role: any) => (
                                             <Badge
                                                 key={role.id}
                                                 type={
-                                                    role.name === "admin"
+                                                    role.name === "admin" ||
+                                                    role.name === "admin-pkk"
                                                         ? "danger"
                                                         : "info"
                                                 }
@@ -232,7 +231,7 @@ export default function Index({ users, filters }: IndexProps) {
                                                 "be.users.edit",
                                                 user.id,
                                             )}
-                                            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
+                                            className="p-2.5 text-slate-400 hover:text-brand-blue-600 hover:bg-brand-blue-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center dark:hover:bg-brand-blue-900/20 dark:hover:text-brand-blue-400"
                                         >
                                             <Edit2 size={16} />
                                         </Link>
@@ -242,7 +241,7 @@ export default function Index({ users, filters }: IndexProps) {
                                             onClick={() =>
                                                 openDeleteModal(user)
                                             }
-                                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
+                                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer dark:hover:bg-rose-900/20 dark:hover:text-rose-400"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -281,7 +280,7 @@ export default function Index({ users, filters }: IndexProps) {
                             onChange={(e) =>
                                 setPerPage(parseInt(e.target.value))
                             }
-                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-3 focus:ring-indigo-500/10 focus:border-indigo-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-3 focus:ring-brand-blue-500/10 focus:border-brand-blue-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -304,7 +303,7 @@ export default function Index({ users, filters }: IndexProps) {
                 show={showDeleteModal}
                 processing={processing}
                 title="Hapus Pengguna"
-                message={`Apakah Anda yakin ingin menghapus user ini? Semua data terkait pengguna ini akan dihapus secara permanen.`}
+                message={`Apakah Anda yakin ingin menghapus pengguna ini? Semua data terkait pengguna ini akan dihapus secara permanen.`}
                 onConfirm={handleDelete}
                 onCancel={() => setShowDeleteModal(false)}
             />

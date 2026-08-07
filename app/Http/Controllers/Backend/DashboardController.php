@@ -18,16 +18,15 @@ class DashboardController extends Controller
         if ($user->hasRole('admin')) {
             // Data Dummy untuk Admin (Global Stats)
             $stats = [
-                'total_kader' => 320, // Dummy
-                'total_kegiatan' => 145, // Dummy
-                'total_program' => 10, // Dummy - 10 Program Pokok
-                'total_users' => 25, // Dummy
-                'verifikasi_pending' => 8, // Dummy
-                'verifikasi_valid' => 120, // Dummy
-                'verifikasi_ditolak' => 17, // Dummy
+                'total_kader' => 320,
+                'total_kegiatan' => 145,
+                'total_program' => 10,
+                'total_users' => 25,
+                'verifikasi_pending' => 8,
+                'verifikasi_valid' => 120,
+                'verifikasi_ditolak' => 17,
             ];
 
-            // 1. Line Chart Data (Monthly) - Dummy
             $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             $lineData = [];
             foreach ($months as $month) {
@@ -38,7 +37,6 @@ class DashboardController extends Controller
                 ];
             }
 
-            // 2. Bar Chart Data (Top 5 Pokja) - Dummy
             $barData = [
                 ['name' => 'Pokja I', 'doc' => 42],
                 ['name' => 'Pokja II', 'doc' => 38],
@@ -47,14 +45,12 @@ class DashboardController extends Controller
                 ['name' => 'Sekretariat', 'doc' => 20],
             ];
 
-            // 3. Pie Chart Data (Status) - Dummy
             $pieData = [
                 ['name' => 'Terverifikasi', 'value' => $stats['verifikasi_valid'], 'color' => '#10b981'],
                 ['name' => 'Pending', 'value' => $stats['verifikasi_pending'], 'color' => '#f59e0b'],
                 ['name' => 'Ditolak', 'value' => $stats['verifikasi_ditolak'], 'color' => '#f43f5e'],
             ];
 
-            // 4. Recent Activities - Dummy
             $activities = [
                 [
                     'opd' => 'Pokja I',
@@ -86,7 +82,7 @@ class DashboardController extends Controller
             return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
 
         } else {
-            // Data untuk User Pokja (Personal Stats) - Dummy
+            // Data untuk User PKK / User biasa
             $stats = [
                 'total_kegiatan' => 12,
                 'verifikasi_pending' => 2,
@@ -94,7 +90,18 @@ class DashboardController extends Controller
                 'verifikasi_ditolak' => 1,
             ];
 
-            return Inertia::render('Dashboard/SkpdDashboard', compact('stats'));
+            // FIX: Arahkan ke file yang ada di folder Backend atau buat komponen yang aman
+            // Sementara kita lempar ke Backend/Dashboard/Index dengan data stats versi user
+            $lineData = [];
+            $barData = [];
+            $pieData = [
+                ['name' => 'Terverifikasi', 'value' => $stats['verifikasi_valid'], 'color' => '#10b981'],
+                ['name' => 'Pending', 'value' => $stats['verifikasi_pending'], 'color' => '#f59e0b'],
+                ['name' => 'Ditolak', 'value' => $stats['verifikasi_ditolak'], 'color' => '#f43f5e'],
+            ];
+            $activities = [];
+
+            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
         }
     }
 }

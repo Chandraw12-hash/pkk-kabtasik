@@ -1,7 +1,6 @@
 import React, { FormEventHandler } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
-import SelectInput from "@/Components/Form/SelectInput";
 import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
@@ -43,22 +42,22 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
 
     return (
         <MainLayout>
-            <Head title={`Edit User - ${user.name}`} />
+            <Head title={`Edit Pengguna - ${user.name}`} />
 
             {/* Header Section */}
             <div className="flex items-center gap-4 mb-8">
                 <Link
                     href={route("be.users.index")}
-                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm dark:bg-slate-700 dark:border-slate-600"
+                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-brand-blue-600 hover:border-brand-blue-100 transition-all shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:hover:text-brand-blue-400"
                 >
                     <ChevronLeft size={20} />
                 </Link>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Edit User
+                        Edit Pengguna & Kader
                     </h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-200">
-                        Anda sedang memperbarui data akun <b>{user.name}</b>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        Anda sedang memperbarui data akun sistem PKK untuk <b>{user.name}</b>
                     </p>
                 </div>
             </div>
@@ -66,7 +65,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Essential Info */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Card as="form" onSubmit={handleSubmit}>
+                    <Card as="form" onSubmit={handleSubmit} className="dark:bg-slate-800 dark:border-slate-700">
                         <div className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Name */}
@@ -80,7 +79,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                         onChange={(e) =>
                                             setData("name", e.target.value)
                                         }
-                                        className="w-full py-2.5"
+                                        className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.name}
                                     />
                                 </div>
@@ -96,7 +95,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                         onChange={(e) =>
                                             setData("username", e.target.value)
                                         }
-                                        className="w-full py-2.5"
+                                        className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.username}
                                     />
                                 </div>
@@ -113,7 +112,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                         onChange={(e) =>
                                             setData("email", e.target.value)
                                         }
-                                        className="w-full py-2.5"
+                                        className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.email}
                                     />
                                 </div>
@@ -130,7 +129,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                         onChange={(e) =>
                                             setData("password", e.target.value)
                                         }
-                                        className="w-full py-2.5"
+                                        className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.password}
                                     />
                                 </div>
@@ -150,14 +149,14 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full py-2.5"
+                                        className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Action Footer */}
-                        <div className="p-8 bg-slate-50/30 border-t border-slate-100 flex justify-end gap-3 dark:bg-slate-700/20 dark:border-slate-600">
+                        <div className="p-8 bg-slate-50/30 border-t border-slate-100 flex justify-end gap-3 dark:bg-slate-700/20 dark:border-slate-700">
                             <Button
                                 variant="secondary"
                                 href={route("be.users.index")}
@@ -168,10 +167,10 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                 type="submit"
                                 variant="primary"
                                 disabled={processing}
-                                className="shadow-lg shadow-indigo-100 dark:shadow-none"
+                                className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
                             >
                                 <span>
-                                    {processing ? "Menyimpan" : "Perbarui"}
+                                    {processing ? "Menyimpan..." : "Perbarui"}
                                 </span>
                             </Button>
                         </div>
@@ -180,32 +179,32 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
 
                 {/* Right Column: Roles Assignment */}
                 <div className="space-y-6">
-                    <Card>
-                        <div className="p-6 border-b border-slate-100 bg-slate-50/30 dark:bg-slate-700/20 dark:border-slate-600">
+                    <Card className="dark:bg-slate-800 dark:border-slate-700">
+                        <div className="p-6 border-b border-slate-100 bg-slate-50/30 dark:bg-slate-700/20 dark:border-slate-700">
                             <h3 className="font-bold text-slate-800 dark:text-slate-200">
-                                Assign Role
+                                Assign Role PKK
                             </h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-200">
-                                Sesuaikan hak akses untuk user ini
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Sesuaikan hak akses kader atau pengguna ini
                             </p>
                         </div>
-                        <div className="p-6 space-y-4 dark:bg-slate-700/20 dark:border-slate-600">
+                        <div className="p-6 space-y-4">
                             {roles.map((role) => (
                                 <label
                                     key={role.id}
                                     className={`
-                                        flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all dark:bg-slate-700/20 dark:border-slate-600
+                                        flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all dark:bg-slate-700/20
                                         ${
                                             data.roles.includes(role.name)
-                                                ? "border-indigo-500 bg-indigo-50/50 ring-4 ring-indigo-500/5 dark:border-indigo-600 dark:bg-indigo-50/5 dark:ring-indigo-500/5"
-                                                : "border-slate-100 hover:border-slate-200"
+                                                ? "border-brand-blue-500 bg-brand-blue-50/50 ring-4 ring-brand-blue-500/5 dark:border-brand-blue-600 dark:bg-brand-blue-900/10 dark:ring-brand-blue-500/10"
+                                                : "border-slate-100 hover:border-slate-200 dark:border-slate-700 dark:hover:border-slate-600"
                                         }
                                     `}
                                 >
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="checkbox"
-                                            className="w-5 h-5 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            className="w-5 h-5 rounded-lg border-slate-300 text-brand-blue-600 focus:ring-brand-blue-500 dark:bg-slate-700 dark:border-slate-600"
                                             checked={data.roles.includes(
                                                 role.name,
                                             )}
@@ -219,14 +218,14 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                                     data.roles.includes(
                                                         role.name,
                                                     )
-                                                        ? "text-indigo-700"
-                                                        : "text-slate-700"
+                                                        ? "text-brand-blue-700 dark:text-brand-blue-400"
+                                                        : "text-slate-700 dark:text-slate-200"
                                                 }`}
                                             >
                                                 {role.name.toUpperCase()}
                                             </p>
-                                            <p className="text-xs text-slate-500">
-                                                Izin akses standar {role.name}
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                Hak akses modul {role.name}
                                             </p>
                                         </div>
                                     </div>
@@ -241,14 +240,12 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                     </Card>
 
                     {/* Information Box */}
-                    <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 dark:bg-indigo-700/20 dark:border-indigo-600">
-                        <h4 className="text-sm font-bold text-indigo-800 mb-2 dark:text-indigo-200">
-                            Informasi
+                    <div className="p-6 bg-brand-blue-50 rounded-3xl border border-brand-blue-100 dark:bg-brand-blue-900/20 dark:border-brand-blue-800/50">
+                        <h4 className="text-sm font-bold text-brand-blue-800 mb-2 dark:text-brand-blue-300">
+                            Informasi Sistem
                         </h4>
-                        <p className="text-xs text-indigo-700/80 leading-relaxed dark:text-indigo-200">
-                            Password hanya perlu diisi jika Anda ingin mengganti
-                            password user. Jika dibiarkan kosong, password lama
-                            tetap akan digunakan.
+                        <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80">
+                            Password hanya perlu diisi jika Anda ingin memperbarui sandi akun kader. Jika dibiarkan kosong, password lama tetap akan digunakan.
                         </p>
                     </div>
                 </div>

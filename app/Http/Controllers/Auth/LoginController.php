@@ -25,21 +25,32 @@ class LoginController extends Controller
      */
     public function store(Request $request)
     {
-        $credentials = $request->validate([
-            'username' => ['required', 'string'],
+        // Validasi input fleksibel: bisa menerima 'login' (bisa berupa username atau email)
+        $request->validate([
+            'login' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        // Rate limiting: max 5 percobaan per menit per kombinasi username+IP
+        $loginField = $request->input('login');
+
+        // Deteksi apakah yang diinput user berupa email atau username
+        $fieldType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [
+            $fieldType => $loginField,
+            'password' => $request->input('password'),
+        ];
+
+        // Rate limiting berdasarkan input login + IP
         $throttleKey = Str::transliterate(
-            Str::lower($request->input('username')) . '|' . $request->ip()
+            Str::lower($loginField) . '|' . $request->ip()
         );
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
 
             throw ValidationException::withMessages([
-                'username' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+                'login' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
             ]);
         }
 
@@ -54,7 +65,7 @@ class LoginController extends Controller
         RateLimiter::hit($throttleKey);
 
         throw ValidationException::withMessages([
-            'username' => trans('auth.failed'),
+            'login' => trans('auth.failed'),
         ]);
     }
 
@@ -72,4 +83,3 @@ class LoginController extends Controller
         return redirect('/');
     }
 }
-

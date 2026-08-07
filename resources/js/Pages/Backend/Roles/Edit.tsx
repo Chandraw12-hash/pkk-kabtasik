@@ -56,7 +56,7 @@ export default function Edit({ role, permissions }: EditProps) {
                         Edit Role
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Ubah detail role dan hak akses
+                        Ubah detail role dan hak akses modul PKK
                     </p>
                 </div>
             </div>
@@ -71,7 +71,7 @@ export default function Edit({ role, permissions }: EditProps) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
-                            placeholder="Contoh: staff, manager, editor"
+                            placeholder="Contoh: admin-pkk, ketua, kader"
                             className="w-full max-w-lg py-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                         />
                         {errors.name && (
@@ -101,7 +101,7 @@ export default function Edit({ role, permissions }: EditProps) {
                             {Object.entries(
                                 permissions.reduce(
                                     (acc, permission) => {
-                                        // Grouping logic
+                                        // Grouping logic disesuaikan dengan modul PKK
                                         let group = "Lainnya";
                                         const name = permission.name;
 
@@ -109,23 +109,37 @@ export default function Edit({ role, permissions }: EditProps) {
                                             name.includes("user") ||
                                             name.includes("role")
                                         )
-                                            group = "User & Role Management";
-                                        else if (name.includes("skpd"))
-                                            group = "Data SKPD";
-                                        else if (name.includes("indikator"))
-                                            group = "Manajemen Indikator";
-                                        else if (name.includes("aspek"))
-                                            group = "Manajemen Aspek";
-                                        else if (name.includes("periode"))
-                                            group = "Pengaturan Periode";
-                                        else if (name.includes("kebijakan"))
-                                            group = "Kebijakan SPBE";
-                                        else if (name.includes("indeks-spbe"))
-                                            group = "Nilai Indeks SPBE";
-                                        else if (name.includes("eviden"))
-                                            group = "Data Eviden";
+                                            group = "Manajemen Pengguna";
+                                        else if (
+                                            name.includes("warga") ||
+                                            name.includes("penduduk")
+                                        )
+                                            group = "Data Warga & Kader";
+                                        else if (
+                                            name.includes("kegiatan") ||
+                                            name.includes("agenda")
+                                        )
+                                            group = "Agenda & Kegiatan PKK";
+                                        else if (
+                                            name.includes("keuangan") ||
+                                            name.includes("kas") ||
+                                            name.includes("iuran")
+                                        )
+                                            group = "Keuangan & Kas PKK";
+                                        else if (
+                                            name.includes("surat") ||
+                                            name.includes("persuratan")
+                                        )
+                                            group = "Persuratan & Administrasi";
+                                        else if (
+                                            name.includes("inventaris") ||
+                                            name.includes("barang")
+                                        )
+                                            group = "Inventaris & Aset";
+                                        else if (name.includes("laporan"))
+                                            group = "Laporan & Rekapitulasi";
                                         else if (name.includes("profile"))
-                                            group = "Profil User";
+                                            group = "Profil Pengguna";
 
                                         if (!acc[group]) acc[group] = [];
                                         acc[group].push(permission);
@@ -260,7 +274,6 @@ export default function Edit({ role, permissions }: EditProps) {
                             disabled={processing}
                             className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
                         >
-                            {/* <Save size={18} /> */}
                             <span>Simpan Perubahan</span>
                         </Button>
                     </div>

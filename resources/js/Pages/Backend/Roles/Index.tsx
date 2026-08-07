@@ -7,7 +7,7 @@ import Badge from "@/Components/UI/Badge";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import Table from "@/Components/Data/Table";
-import { Head, Link, useForm, router, usePage } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { ShieldCheck, Edit2, Trash2, Search, RotateCcw } from "lucide-react";
 import { PaginatedData, Role } from "@/types/model";
 import axios from "axios";
@@ -38,7 +38,6 @@ export default function Index({ roles, filters }: IndexProps) {
         axios
             .get(url, { params, headers: { Accept: "application/json" } })
             .then((res) => {
-                // Pastikan response berupa data paginasi
                 if (
                     res.data &&
                     typeof res.data === "object" &&
@@ -46,7 +45,6 @@ export default function Index({ roles, filters }: IndexProps) {
                 ) {
                     setLocalRoles(res.data);
                 } else if (Array.isArray(res.data)) {
-                    // Jika hanya array, bungkus dalam struktur paginasi tiruan
                     setLocalRoles((prev) => ({
                         ...prev,
                         data: res.data,
@@ -87,7 +85,6 @@ export default function Index({ roles, filters }: IndexProps) {
             onSuccess: () => {
                 setShowDeleteModal(false);
                 setSelectedRole(null);
-                // Refresh data
                 fetchData(route("be.roles.index"), {
                     search,
                     per_page: perPage,
@@ -98,16 +95,16 @@ export default function Index({ roles, filters }: IndexProps) {
 
     return (
         <MainLayout>
-            <Head title="Manajemen Role" />
+            <Head title="Manajemen Role & Hak Akses PKK" />
 
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Manajemen Role
+                        Manajemen Role & Hak Akses PKK
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola role dan hak akses (permissions) user
+                        Kelola level akses pengguna sistem web dan integrasi mobile PKK
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -116,7 +113,7 @@ export default function Index({ roles, filters }: IndexProps) {
                         href={route("be.roles.create")}
                         className="shadow-lg shadow-indigo-100 dark:shadow-none"
                     >
-                        <span>Tambah Role</span>
+                        <span>Tambah Role Baru</span>
                     </Button>
                 </div>
             </div>
@@ -127,7 +124,7 @@ export default function Index({ roles, filters }: IndexProps) {
                     <div className="relative w-full max-w-md">
                         <TextInput
                             iconLeft={<Search size={18} />}
-                            placeholder="Cari role..."
+                            placeholder="Cari nama role (misal: Pengurus, Kader)..."
                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             containerClassName="relative w-full"
                             value={search}
@@ -168,7 +165,7 @@ export default function Index({ roles, filters }: IndexProps) {
                             },
                         },
                         {
-                            header: "Role Name",
+                            header: "Nama Role",
                             className: "w-64",
                             headerClassName: "w-64",
                             render: (role: Role) => (
@@ -185,7 +182,7 @@ export default function Index({ roles, filters }: IndexProps) {
                             ),
                         },
                         {
-                            header: "Permissions",
+                            header: "Hak Akses (Permissions)",
                             className: "w-48",
                             headerClassName: "w-48",
                             render: (role: Role) => (
@@ -193,7 +190,7 @@ export default function Index({ roles, filters }: IndexProps) {
                                     {role.permissions &&
                                     role.permissions.length > 0 ? (
                                         <Badge type="success">
-                                            {role.permissions.length} Akses
+                                            {role.permissions.length} Hak Akses
                                         </Badge>
                                     ) : (
                                         <span className="text-xs text-slate-400 italic">
@@ -212,12 +209,14 @@ export default function Index({ roles, filters }: IndexProps) {
                                     <Link
                                         href={route("be.roles.edit", role.id)}
                                         className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
+                                        title="Edit Role"
                                     >
                                         <Edit2 size={16} />
                                     </Link>
                                     <button
                                         onClick={() => openDeleteModal(role)}
                                         className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
+                                        title="Hapus Role"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -243,7 +242,7 @@ export default function Index({ roles, filters }: IndexProps) {
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                             {localRoles.total}
                         </span>{" "}
-                        data
+                        data role
                     </p>
 
                     <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -273,8 +272,8 @@ export default function Index({ roles, filters }: IndexProps) {
             <ConfirmationModal
                 show={showDeleteModal}
                 processing={processing}
-                title="Hapus Role"
-                message={`Apakah Anda yakin ingin menghapus role "${selectedRole?.name}"? User yang memiliki role ini akan kehilangan akses terkait.`}
+                title="Hapus Role PKK"
+                message={`Apakah Anda yakin ingin menghapus role "${selectedRole?.name}"? Pengguna dengan role ini akan kehilangan hak akses pada sistem web/mobile.`}
                 onConfirm={handleDelete}
                 onCancel={() => setShowDeleteModal(false)}
             />

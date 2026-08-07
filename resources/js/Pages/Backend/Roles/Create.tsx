@@ -1,4 +1,4 @@
-import React, { FormEventHandler } from "react";
+import React, { FormEventHandler, useMemo } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
@@ -16,6 +16,39 @@ export default function Create({ permissions }: CreateProps) {
         name: "",
         permissions: [] as string[],
     });
+
+    const groupedPermissions = useMemo(() => {
+        return permissions.reduce(
+            (acc, permission) => {
+                let group = "Lainnya";
+                const name = permission.name;
+
+                if (name.includes("user") || name.includes("role"))
+                    group = "User & Role Management";
+                else if (name.includes("skpd"))
+                    group = "Data SKPD";
+                else if (name.includes("indikator"))
+                    group = "Manajemen Indikator";
+                else if (name.includes("aspek"))
+                    group = "Manajemen Aspek";
+                else if (name.includes("periode"))
+                    group = "Pengaturan Periode";
+                else if (name.includes("kebijakan"))
+                    group = "Kebijakan SPBE";
+                else if (name.includes("indeks-spbe"))
+                    group = "Nilai Indeks SPBE";
+                else if (name.includes("eviden"))
+                    group = "Data Eviden";
+                else if (name.includes("profile"))
+                    group = "Profil User";
+
+                if (!acc[group]) acc[group] = [];
+                acc[group].push(permission);
+                return acc;
+            },
+            {} as Record<string, Permission[]>,
+        );
+    }, [permissions]);
 
     const handlePermissionChange = (permissionName: string) => {
         const currentPermissions = [...data.permissions];
@@ -92,146 +125,113 @@ export default function Create({ permissions }: CreateProps) {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {Object.entries(
-                                permissions.reduce(
-                                    (acc, permission) => {
-                                        // Grouping logic
-                                        let group = "Lainnya";
-                                        const name = permission.name;
-
-                                        if (
-                                            name.includes("user") ||
-                                            name.includes("role")
-                                        )
-                                            group = "User & Role Management";
-                                        else if (name.includes("skpd"))
-                                            group = "Data SKPD";
-                                        else if (name.includes("indikator"))
-                                            group = "Manajemen Indikator";
-                                        else if (name.includes("aspek"))
-                                            group = "Manajemen Aspek";
-                                        else if (name.includes("periode"))
-                                            group = "Pengaturan Periode";
-                                        else if (name.includes("kebijakan"))
-                                            group = "Kebijakan SPBE";
-                                        else if (name.includes("indeks-spbe"))
-                                            group = "Nilai Indeks SPBE";
-                                        else if (name.includes("eviden"))
-                                            group = "Data Eviden";
-                                        else if (name.includes("profile"))
-                                            group = "Profil User";
-
-                                        if (!acc[group]) acc[group] = [];
-                                        acc[group].push(permission);
-                                        return acc;
-                                    },
-                                    {} as Record<string, Permission[]>,
-                                ),
-                            ).map(([groupName, groupPermissions]) => {
-                                const groupPermissionNames =
-                                    groupPermissions.map((p) => p.name);
-                                const isAllSelected =
-                                    groupPermissionNames.every((name) =>
-                                        data.permissions.includes(name),
-                                    );
-
-                                const toggleGroup = () => {
-                                    if (isAllSelected) {
-                                        setData(
-                                            "permissions",
-                                            data.permissions.filter(
-                                                (p) =>
-                                                    !groupPermissionNames.includes(
-                                                        p,
-                                                    ),
-                                            ),
+                            {Object.entries(groupedPermissions).map(
+                                ([groupName, groupPermissions]) => {
+                                    const groupPermissionNames =
+                                        groupPermissions.map((p) => p.name);
+                                    const isAllSelected =
+                                        groupPermissionNames.every((name) =>
+                                            data.permissions.includes(name),
                                         );
-                                    } else {
-                                        const newPermissions = Array.from(
-                                            new Set([
-                                                ...data.permissions,
-                                                ...groupPermissionNames,
-                                            ]),
-                                        );
-                                        setData("permissions", newPermissions);
-                                    }
-                                };
 
-                                return (
-                                    <div
-                                        key={groupName}
-                                        className="bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden"
-                                    >
-                                        <div className="px-5 py-3 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-200">
-                                                {groupName}
-                                            </h3>
-                                            <button
-                                                type="button"
-                                                onClick={toggleGroup}
-                                                className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-all ${
-                                                    isAllSelected
-                                                        ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
-                                                        : "bg-brand-blue-50 text-brand-blue-600 dark:bg-brand-blue-500/10 dark:text-brand-blue-400"
-                                                }`}
-                                            >
-                                                {isAllSelected
-                                                    ? "Hapus Semua"
-                                                    : "Pilih Semua"}
-                                            </button>
-                                        </div>
-                                        <div className="p-4 grid grid-cols-1 gap-2">
-                                            {groupPermissions.map(
-                                                (permission) => (
-                                                    <label
-                                                        key={permission.id}
-                                                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer group"
-                                                    >
-                                                        <div className="relative flex items-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={data.permissions.includes(
-                                                                    permission.name,
-                                                                )}
-                                                                onChange={() =>
-                                                                    handlePermissionChange(
+                                    const toggleGroup = () => {
+                                        if (isAllSelected) {
+                                            setData(
+                                                "permissions",
+                                                data.permissions.filter(
+                                                    (p) =>
+                                                        !groupPermissionNames.includes(
+                                                            p,
+                                                        ),
+                                                ),
+                                            );
+                                        } else {
+                                            const newPermissions = Array.from(
+                                                new Set([
+                                                    ...data.permissions,
+                                                    ...groupPermissionNames,
+                                                ]),
+                                            );
+                                            setData("permissions", newPermissions);
+                                        }
+                                    };
+
+                                    return (
+                                        <div
+                                            key={groupName}
+                                            className="bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden"
+                                        >
+                                            <div className="px-5 py-3 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-200">
+                                                    {groupName}
+                                                </h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={toggleGroup}
+                                                    className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-all ${
+                                                        isAllSelected
+                                                            ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
+                                                            : "bg-brand-blue-50 text-brand-blue-600 dark:bg-brand-blue-500/10 dark:text-brand-blue-400"
+                                                    }`}
+                                                >
+                                                    {isAllSelected
+                                                        ? "Hapus Semua"
+                                                        : "Pilih Semua"}
+                                                </button>
+                                            </div>
+                                            <div className="p-4 grid grid-cols-1 gap-2">
+                                                {groupPermissions.map(
+                                                    (permission) => (
+                                                        <label
+                                                            key={permission.id}
+                                                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer group"
+                                                        >
+                                                            <div className="relative flex items-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={data.permissions.includes(
+                                                                        permission.name,
+                                                                    )}
+                                                                    onChange={() =>
+                                                                        handlePermissionChange(
+                                                                            permission.name,
+                                                                        )
+                                                                    }
+                                                                    className="w-4 h-4 text-brand-blue-600 border-slate-300 rounded focus:ring-brand-blue-500 dark:bg-slate-700 dark:border-slate-600"
+                                                                />
+                                                            </div>
+                                                            <span
+                                                                className={`text-sm transition-colors ${
+                                                                    data.permissions.includes(
                                                                         permission.name,
                                                                     )
-                                                                }
-                                                                className="w-4 h-4 text-brand-blue-600 border-slate-300 rounded focus:ring-brand-blue-500 dark:bg-slate-700 dark:border-slate-600"
-                                                            />
-                                                        </div>
-                                                        <span
-                                                            className={`text-sm transition-colors ${
-                                                                data.permissions.includes(
-                                                                    permission.name,
-                                                                )
-                                                                    ? "text-slate-900 font-semibold dark:text-white"
-                                                                    : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700"
-                                                            }`}
-                                                        >
-                                                            {permission.name
-                                                                .split("-")
-                                                                .map(
-                                                                    (word) =>
-                                                                        word
-                                                                            .charAt(
-                                                                                0,
-                                                                            )
-                                                                            .toUpperCase() +
-                                                                        word.slice(
-                                                                            1,
-                                                                        ),
-                                                                )
-                                                                .join(" ")}
-                                                        </span>
-                                                    </label>
-                                                ),
-                                            )}
+                                                                        ? "text-slate-900 font-semibold dark:text-white"
+                                                                        : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700"
+                                                                }`}
+                                                            >
+                                                                {permission.name
+                                                                    .split("-")
+                                                                    .map(
+                                                                        (word) =>
+                                                                            word
+                                                                                .charAt(
+                                                                                    0,
+                                                                                )
+                                                                                .toUpperCase() +
+                                                                            word.slice(
+                                                                                1,
+                                                                            ),
+                                                                    )
+                                                                    .join(" ")}
+                                                            </span>
+                                                        </label>
+                                                    ),
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                },
+                            )}
                         </div>
 
                         {permissions.length === 0 && (
@@ -254,7 +254,6 @@ export default function Create({ permissions }: CreateProps) {
                             disabled={processing}
                             className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
                         >
-                            {/* <Save size={18} /> */}
                             <span>Simpan Role</span>
                         </Button>
                     </div>
