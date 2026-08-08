@@ -25,32 +25,32 @@ class LoginController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input fleksibel: bisa menerima 'login' (bisa berupa username atau email)
+        // Validasi disesuaikan dengan form frontend yang mengirim 'username'
         $request->validate([
-            'login' => ['required', 'string'],
+            'username' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        $loginField = $request->input('login');
+        $usernameOrEmail = $request->input('username');
 
-        // Deteksi apakah yang diinput user berupa email atau username
-        $fieldType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        // Deteksi otomatis: apakah yang diketik user berupa email atau username
+        $fieldType = filter_var($usernameOrEmail, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         $credentials = [
-            $fieldType => $loginField,
+            $fieldType => $usernameOrEmail,
             'password' => $request->input('password'),
         ];
 
-        // Rate limiting berdasarkan input login + IP
+        // Rate limiting berdasarkan input username/email + IP
         $throttleKey = Str::transliterate(
-            Str::lower($loginField) . '|' . $request->ip()
+            Str::lower($usernameOrEmail) . '|' . $request->ip()
         );
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
 
             throw ValidationException::withMessages([
-                'login' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+                'username' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
             ]);
         }
 
@@ -65,7 +65,7 @@ class LoginController extends Controller
         RateLimiter::hit($throttleKey);
 
         throw ValidationException::withMessages([
-            'login' => trans('auth.failed'),
+            'username' => trans('auth.failed'),
         ]);
     }
 
