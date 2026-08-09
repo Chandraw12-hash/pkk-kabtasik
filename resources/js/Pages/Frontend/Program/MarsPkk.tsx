@@ -19,224 +19,245 @@ export default function MarsPkk() {
     const [isPlaying, setIsPlaying] = useState(false);
 
     return (
-        <div className="min-h-screen flex flex-col bg-[#FAFAFA] font-sans text-slate-900 pt-14 selection:bg-[#1DA599]/30">
+        <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
             <Head title="Mars PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ── HERO MATCHED ── */}
-            <section className="relative min-h-[420px] lg:min-h-[480px] flex items-center overflow-hidden" data-aos="fade-up">
-                <div className="absolute inset-0 w-full h-full">
+            {/* ==================== HERO ==================== */}
+            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0">
                     <img
                         src="/assets/images/hero.jpg"
                         alt="Mars PKK"
                         className="w-full h-full object-cover object-center"
                         onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
+                            e.currentTarget.src =
+                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0B2A3B]/92 via-[#0B2A3B]/75 to-[#0B2A3B]/45"></div>
+                    <div className="absolute inset-0 bg-black/55" />
                 </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
-                    <div className="max-w-xl">
-                        <div className="inline-flex items-center gap-2 text-[#38BDF8] text-xs font-bold tracking-widest uppercase mb-5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]"></span>
-                            <span>Lagu Kebanggaan</span>
-                        </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-5">
-                            Mars <br className="hidden md:block"/>
-                            <span className="text-[#38BDF8]">PKK</span>
-                        </h1>
-                        <p className="text-gray-200 text-base mb-8 leading-relaxed max-w-md">
-                            Nyanyian pemersatu jiwa dan semangat juang kader PKK dalam mewujudkan keluarga yang sejahtera, bertaqwa, dan mandiri di tanah Sukapura.
-                        </p>
-                        <div className="flex flex-wrap gap-4">
-                            <a
-                                href="#lirik"
-                                className="inline-flex items-center gap-2 bg-[#1DA599] hover:bg-teal-600 text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-lg shadow-teal-600/30 text-sm"
-                            >
-                                <BookOpen size={16} />
-                                Baca Lirik
-                            </a>
-                            <a
-                                href="#"
-                                className="inline-flex items-center gap-2 bg-transparent border-2 border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-bold px-8 py-3.5 rounded-full transition-all text-sm"
-                            >
-                                <Download size={16} />
-                                Unduh Partitur
-                            </a>
-                        </div>
+                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
+                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
+                        Lagu Kebanggaan
+                    </span>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
+                        Mars PKK
+                    </h1>
+                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-8">
+                        Nyanyian pemersatu jiwa dan semangat juang kader PKK
+                        dalam mewujudkan keluarga yang sejahtera, bertaqwa, dan
+                        mandiri.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                        <a
+                            href="#lirik"
+                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                        >
+                            <BookOpen size={15} />
+                            Baca Lirik
+                        </a>
+                        <a
+                            href="#"
+                            className="inline-flex items-center gap-2 border border-white/50 hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                        >
+                            <Download size={15} />
+                            Unduh Partitur
+                        </a>
                     </div>
                 </div>
             </section>
 
-            {/* ── AUDIO PLAYER BANNER ── */}
-            <section className="bg-[#0F172A] py-10" data-aos="fade-up">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        {/* Disc & Title */}
-                        <div className="flex items-center gap-5 w-full md:w-auto">
-                            <div className="relative w-16 h-16 rounded-full bg-[#1DA599] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#1DA599]/30">
-                                <div className={`absolute inset-1 rounded-full border-2 border-white/20 ${isPlaying ? "animate-[spin_4s_linear_infinite]" : ""}`}></div>
-                                <Music size={24} className="text-white relative z-10" />
+            {/* ==================== AUDIO PLAYER ==================== */}
+            <section className="py-8 bg-slate-50 border-b border-slate-100">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                        {/* Info */}
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
+                                <Music size={20} className="text-white" />
                             </div>
                             <div>
-                                <h3 className="text-white font-extrabold text-lg mb-1">Mars PKK</h3>
-                                <p className="text-gray-400 text-xs">
-                                    Paduan Suara TP PKK Kabupaten Tasikmalaya
+                                <h3 className="font-semibold text-slate-900 text-sm">
+                                    Mars PKK
+                                </h3>
+                                <p className="text-slate-500 text-xs">
+                                    Paduan Suara TP PKK Kab. Tasikmalaya
                                 </p>
                             </div>
                         </div>
 
-                        {/* Controls & Progress */}
-                        <div className="flex-1 w-full max-w-xl flex flex-col items-center">
-                            {/* Buttons */}
-                            <div className="flex items-center gap-6 mb-3">
-                                <button className="text-gray-400 hover:text-white transition-colors">
-                                    <SkipBack size={20} />
+                        {/* Controls */}
+                        <div className="flex-1 w-full flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-4">
+                                <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                                    <SkipBack size={18} />
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setIsPlaying(!isPlaying)}
-                                    className="w-10 h-10 rounded-full bg-[#1DA599] hover:bg-teal-500 flex items-center justify-center text-white transition-all shadow-md shadow-[#1DA599]/40"
+                                    className="w-10 h-10 rounded-full bg-teal-600 hover:bg-teal-500 flex items-center justify-center text-white transition-colors"
                                 >
-                                    {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
+                                    {isPlaying ? (
+                                        <Pause size={16} fill="currentColor" />
+                                    ) : (
+                                        <Play
+                                            size={16}
+                                            fill="currentColor"
+                                            className="ml-0.5"
+                                        />
+                                    )}
                                 </button>
-                                <button className="text-gray-400 hover:text-white transition-colors">
-                                    <SkipForward size={20} />
+                                <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                                    <SkipForward size={18} />
                                 </button>
                             </div>
-                            {/* Bar */}
-                            <div className="flex items-center gap-3 w-full">
-                                <span className="text-[10px] text-gray-500 font-medium">01:24</span>
-                                <div className="flex-1 h-1.5 bg-gray-700 rounded-full relative cursor-pointer group">
-                                    <div className="absolute top-0 left-0 h-full bg-[#1DA599] rounded-full w-[45%]"></div>
-                                    <div className="absolute top-1/2 left-[45%] -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow"></div>
+                            <div className="flex items-center gap-2 w-full max-w-sm">
+                                <span className="text-[10px] text-slate-400">
+                                    01:24
+                                </span>
+                                <div className="flex-1 h-1.5 bg-slate-200 rounded-full">
+                                    <div className="h-full bg-teal-600 rounded-full w-[45%]" />
                                 </div>
-                                <span className="text-[10px] text-gray-500 font-medium">03:15</span>
+                                <span className="text-[10px] text-slate-400">
+                                    03:15
+                                </span>
                             </div>
                         </div>
 
                         {/* Volume */}
-                        <div className="hidden lg:flex items-center gap-3 w-32">
-                            <Volume2 size={18} className="text-gray-400" />
-                            <div className="flex-1 h-1 bg-gray-700 rounded-full relative cursor-pointer">
-                                <div className="absolute top-0 left-0 h-full bg-gray-300 rounded-full w-[70%]"></div>
+                        <div className="hidden sm:flex items-center gap-2">
+                            <Volume2 size={16} className="text-slate-400" />
+                            <div className="w-20 h-1.5 bg-slate-200 rounded-full">
+                                <div className="h-full bg-slate-400 rounded-full w-[70%]" />
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── LIRIK LAGU ── */}
-            <section id="lirik" className="py-24 bg-white" data-aos="fade-up">
+            {/* ==================== LIRIK ==================== */}
+            <section id="lirik" className="py-20 lg:py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-14">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#0F172A] inline-block relative">
-                            Lirik Lagu Kebangsaan
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-1 bg-[#1DA599] rounded-full"></div>
+                    <div className="mb-12">
+                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                            Lirik Lagu
+                        </p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                            Mars PKK
                         </h2>
                     </div>
 
-                    <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
-                        {/* Foto Tim PKK */}
-                        <div className="w-full lg:w-5/12 sticky top-24">
-                            <div className="rounded-3xl overflow-hidden shadow-2xl relative">
+                    <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
+                        {/* Gambar */}
+                        <div className="w-full lg:w-5/12">
+                            <div className="rounded-xl overflow-hidden border border-slate-200">
                                 <img
                                     src="/assets/images/hero.jpg"
                                     alt="Tim PKK Kabupaten Tasikmalaya"
-                                    className="w-full aspect-[4/5] object-cover"
+                                    className="w-full h-80 object-cover"
                                     onError={(e) => {
                                         e.currentTarget.src =
                                             "https://images.unsplash.com/photo-1592424005742-8820c744f9ea?auto=format&fit=crop&w=800&q=80";
                                     }}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/40 to-transparent"></div>
-                                <div className="absolute bottom-0 left-0 right-0 p-8">
-                                    <p className="text-white/90 text-sm italic font-medium leading-relaxed">
-                                        "Membangun keluarga yang sejahtera dengan PKK..."
-                                    </p>
-                                </div>
                             </div>
+                            <p className="text-sm text-slate-500 mt-3 italic">
+                                &ldquo;Membangun keluarga yang sejahtera dengan
+                                PKK...&rdquo;
+                            </p>
                         </div>
 
                         {/* Teks Lirik */}
                         <div className="w-full lg:w-7/12">
-                            <div className="bg-[#F8FAFC] border border-gray-100 rounded-3xl p-8 md:p-12 shadow-sm">
-                                <div className="space-y-6 text-[#475569] text-base md:text-lg leading-[1.8] font-medium">
-                                    <p>
-                                        Marilah hai semua Rakyat Indonesia<br />
-                                        Membangun segara<br />
-                                        Membangun keluarga yang sejahtera<br />
-                                        Dengan PKK
-                                    </p>
-                                    <p>
-                                        Hayati dan amalkan Pancasila<br />
-                                        Untuk Negara<br />
-                                        Hidup gotong royong, makmur pangan dan sandang<br />
-                                        Rumah sehat sentosa
-                                    </p>
-                                    <p>
-                                        Tata laksana di dalam rumah tangga<br />
-                                        Rapi dan indah<br />
-                                        Didiklah putra berkepribadian bangsa<br />
-                                        Tampil dan sehat
-                                    </p>
-                                    <p>
-                                        Kembangkan koperas jagalah lingkungan<br />
-                                        Dan sekitarnya<br />
-                                        Aman dan bahagia keluarga berencana<br />
-                                        <strong className="text-[#0F172A] font-extrabold text-xl">Hidup Jaya PKK</strong>
-                                    </p>
-                                </div>
+                            <div className="space-y-5 text-slate-600 text-[15px] leading-relaxed">
+                                <p>
+                                    Marilah hai semua Rakyat Indonesia
+                                    <br />
+                                    Membangun segara
+                                    <br />
+                                    Membangun keluarga yang sejahtera
+                                    <br />
+                                    Dengan PKK
+                                </p>
+                                <p>
+                                    Hayati dan amalkan Pancasila
+                                    <br />
+                                    Untuk Negara
+                                    <br />
+                                    Hidup gotong royong, makmur pangan dan sandang
+                                    <br />
+                                    Rumah sehat sentosa
+                                </p>
+                                <p>
+                                    Tata laksana di dalam rumah tangga
+                                    <br />
+                                    Rapi dan indah
+                                    <br />
+                                    Didiklah putra berkepribadian bangsa
+                                    <br />
+                                    Tampil dan sehat
+                                </p>
+                                <p>
+                                    Kembangkan koperas jagalah lingkungan
+                                    <br />
+                                    Dan sekitarnya
+                                    <br />
+                                    Aman dan bahagia keluarga berencana
+                                    <br />
+                                    <strong className="text-slate-900 font-semibold">
+                                        Hidup Jaya PKK
+                                    </strong>
+                                </p>
+                            </div>
 
-                                <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ciptaan:</p>
-                                        <p className="text-[#0F172A] font-semibold text-sm">Tim Penggerak PKK Pusat</p>
-                                    </div>
-                                    <button className="inline-flex items-center gap-2 text-[#1DA599] hover:bg-[#1DA599]/10 px-4 py-2 rounded-full font-bold text-xs transition-colors">
-                                        <Share2 size={14} />
-                                        Bagikan Lirik
-                                    </button>
+                            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">
+                                        Ciptaan
+                                    </p>
+                                    <p className="text-sm font-semibold text-slate-900">
+                                        Tim Penggerak PKK Pusat
+                                    </p>
                                 </div>
+                                <button className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors">
+                                    <Share2 size={14} />
+                                    Bagikan Lirik
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── CTA GABUNG KADER ── */}
-            <section className="pb-24 pt-10 bg-white relative" data-aos="fade-up">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-[40px] p-10 md:p-14 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 relative z-10">
-                        <div className="w-16 h-16 bg-[#E5F5F4] rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <Users size={28} className="text-[#1DA599]" />
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#0F172A] mb-4">
-                            Ingin Bergabung Menjadi Kader?
-                        </h2>
-                        <p className="text-gray-500 text-[15px] leading-relaxed mb-10 max-w-lg mx-auto">
-                            Jadilah bagian dari perubahan untuk Kabupaten Tasikmalaya yang lebih mandiri dan sejahtera.
-                        </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link
-                                href="#"
-                                className="inline-flex items-center justify-center bg-[#1DA599] hover:bg-teal-600 text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-lg shadow-teal-600/30 text-sm w-full sm:w-auto"
-                            >
-                                Daftar Kader Sekarang
-                            </Link>
-                            <Link
-                                href="#"
-                                className="inline-flex items-center justify-center bg-[#0F172A] hover:bg-slate-800 text-white font-bold px-8 py-3.5 rounded-full transition-all text-sm w-full sm:w-auto shadow-lg shadow-slate-900/20"
-                            >
-                                Pelajari Program Pokja
-                            </Link>
-                        </div>
+            {/* ==================== CTA ==================== */}
+            <section className="py-20 lg:py-24 bg-slate-50 border-t border-slate-100">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+                    <div className="w-12 h-12 rounded-lg bg-teal-50 flex items-center justify-center mx-auto mb-4">
+                        <Users size={20} className="text-teal-600" />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+                        Ingin Bergabung Menjadi Kader?
+                    </h2>
+                    <p className="text-slate-500 text-base leading-relaxed max-w-lg mx-auto mb-8">
+                        Jadilah bagian dari perubahan untuk Kabupaten Tasikmalaya
+                        yang lebih mandiri dan sejahtera.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                        <Link
+                            href="#"
+                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                        >
+                            Daftar Kader Sekarang
+                        </Link>
+                        <Link
+                            href="#"
+                            className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                        >
+                            Pelajari Program Pokja
+                        </Link>
                     </div>
                 </div>
-
-                {/* Dekorasi BG Bawah untuk menyambung ke footer (Opsional, efek tumpuk) */}
-                <div className="absolute bottom-0 left-0 right-0 h-48 bg-[#0F172A] -z-0"></div>
             </section>
 
             <Footer />

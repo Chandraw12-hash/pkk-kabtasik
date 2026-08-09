@@ -13,6 +13,8 @@ return new class extends Migration
             $table->string('judul');
             $table->string('slug')->unique();
             $table->text('konten');
+            $table->string('kategori')->nullable();  // ← TAMBAHKAN INI
+            $table->boolean('status_publikasi')->default(true);  // ← TAMBAHKAN INI
             $table->string('foto')->nullable();
             $table->timestamps();
         });

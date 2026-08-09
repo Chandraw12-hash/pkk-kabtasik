@@ -18,7 +18,7 @@ export default function CreateBerita() {
         judul: "",
         kategori: "Kegiatan",
         konten: "",
-        gambar: null as File | null,
+        foto: null as File | null,
         status_publikasi: true as boolean,
     });
 
@@ -90,10 +90,10 @@ export default function CreateBerita() {
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setData("gambar", e.target.files ? e.target.files[0] : null)}
+                                onChange={(e) => setData("foto", e.target.files ? e.target.files[0] : null)}
                                 className={selectClass}
                             />
-                            {errors.gambar && <div className="text-red-500 text-xs mt-1">{errors.gambar}</div>}
+                            {errors.foto && <div className="text-red-500 text-xs mt-1">{errors.foto}</div>}
                         </div>
 
                         <div className="md:col-span-2">

@@ -11,21 +11,29 @@ import {
     Utensils,
     Stethoscope,
     Globe,
-    HelpCircle,
     ChevronRight,
     Calendar,
     ArrowRight,
     Target,
     Eye,
+    Newspaper,
 } from "lucide-react";
 
+// ============= INTERFACE =============
 interface BeritaItem {
     id: number;
     judul: string;
-    tanggal: string;
-    deskripsi: string;
-    link: string;
-    image: string;
+    slug?: string;
+    tanggal?: string;
+    deskripsi?: string;
+    konten?: string;
+    link?: string;
+    image?: string;
+    foto?: string;
+    foto_url?: string;
+    created_at?: string;
+    deskripsi_singkat?: string;
+    tanggal_formatted?: string;
 }
 
 interface WelcomeProps {
@@ -117,10 +125,13 @@ const misiList = [
 ];
 
 function useScrollAnimation() {
-    const ref = useRef<HTMLDivElement>(null);
+    const ref = useRef<HTMLElement | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
+        const node = ref.current;
+        if (!node) return;
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
@@ -131,10 +142,10 @@ function useScrollAnimation() {
             { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
         );
 
-        if (ref.current) observer.observe(ref.current);
+        observer.observe(node);
 
         return () => {
-            if (ref.current) observer.unobserve(ref.current);
+            observer.unobserve(node);
         };
     }, []);
 
@@ -144,38 +155,25 @@ function useScrollAnimation() {
 export default function Welcome({ year, berita = [] }: WelcomeProps) {
     const currentYear = year ?? new Date().getFullYear();
 
-    const beritaTerbaru: BeritaItem[] =
-        berita.length > 0
-            ? berita
-            : [
-                  {
-                      id: 1,
-                      judul: "Pentingnya Pemberdayaan Perempuan dalam Keluarga",
-                      tanggal: "10 Oktober 2023",
-                      deskripsi:
-                          "Pemberdayaan perempuan merupakan salah satu langkah strategis dalam membangun keluarga yang mandiri dan sejahtera.",
-                      link: "#",
-                      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                  },
-                  {
-                      id: 2,
-                      judul: "Giat Literasi dan Pembinaan Karakter Anak Sejak Dini",
-                      tanggal: "08 Oktober 2023",
-                      deskripsi:
-                          "Program literasi yang digagas oleh PKK Kabupaten Tasikmalaya bertujuan menumbuhkan minat baca anak sejak usia dini.",
-                      link: "#",
-                      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                  },
-                  {
-                      id: 3,
-                      judul: "Sinergi PKK dan Posyandu dalam Pelayanan Kesehatan Masyarakat",
-                      tanggal: "05 Oktober 2023",
-                      deskripsi:
-                          "Kolaborasi antara PKK dan Posyandu menjadi garda terdepan dalam memberikan pelayanan kesehatan dasar bagi masyarakat.",
-                      link: "#",
-                      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                  },
-              ];
+    // ============= DEBUG =============
+    useEffect(() => {
+        console.log("=== DATA BERITA DARI SERVER ===");
+        console.log("Jumlah:", berita.length);
+        console.log("Data:", berita);
+
+        if (berita.length === 0) {
+            console.warn("⚠️ TIDAK ADA DATA BERITA! Periksa database dan controller.");
+        } else {
+            console.log("✅ Data berita ditemukan!");
+            berita.forEach((item, i) => {
+                console.log(`[${i+1}] ${item.judul} | foto_url: ${item.foto_url}`);
+            });
+        }
+    }, [berita]);
+
+    // ============= HAPUS DUMMY! =============
+    // LANGSUNG PAKAI DATA DARI SERVER
+    const beritaTerbaru = berita;
 
     const heroAnim = useScrollAnimation();
     const sambutanAnim = useScrollAnimation();
@@ -288,7 +286,6 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
-                        {/* Foto Ketua */}
                         <div className="w-full lg:w-5/12">
                             <div className="rounded-xl overflow-hidden border border-slate-200">
                                 <img
@@ -312,7 +309,6 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                             </div>
                         </div>
 
-                        {/* Isi Sambutan */}
                         <div className="w-full lg:w-7/12">
                             <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
                                 Sambutan
@@ -396,14 +392,10 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-                        {/* Visi */}
                         <div>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-                                    <Eye
-                                        className="text-teal-600"
-                                        size={18}
-                                    />
+                                    <Eye className="text-teal-600" size={18} />
                                 </div>
                                 <h3 className="text-lg font-bold text-slate-900">
                                     Visi
@@ -417,7 +409,6 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                             </p>
                         </div>
 
-                        {/* Misi */}
                         <div>
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
@@ -621,7 +612,7 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                             </h2>
                         </div>
                         <Link
-                            href="#"
+                            href="/berita"
                             className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                         >
                             Lihat semua berita
@@ -630,44 +621,109 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {beritaTerbaru.map((item) => (
-                            <article
-                                key={item.id}
-                                className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full"
-                            >
-                                <div className="h-48 overflow-hidden">
-                                    <img
-                                        src={item.image}
-                                        alt={item.judul}
-                                        loading="lazy"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
+                        {beritaTerbaru.length > 0 ? (
+                            beritaTerbaru.map((item) => (
+                                <article
+                                    key={item.id}
+                                    className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full"
+                                >
+                                    {/* BAGIAN GAMBAR */}
+                                    <div className="h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
+                                        {(() => {
+                                            const imageSrc =
+                                                item.foto_url ||
+                                                (item.foto ? `/storage/${item.foto}` : null) ||
+                                                item.image ||
+                                                null;
 
-                                <div className="p-5 flex flex-col flex-grow">
-                                    <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
-                                        <Calendar size={12} />
-                                        {item.tanggal}
-                                    </p>
+                                            if (imageSrc) {
+                                                return (
+                                                    <img
+                                                        src={imageSrc}
+                                                        alt={item.judul}
+                                                        loading="lazy"
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            const target = e.currentTarget;
+                                                            const currentSrc = target.src;
 
-                                    <h3 className="text-base font-semibold text-slate-900 mb-2 leading-snug line-clamp-2">
-                                        {item.judul}
-                                    </h3>
+                                                            if (currentSrc.includes('/storage/')) {
+                                                                const newSrc = currentSrc.replace('/storage/', '/');
+                                                                if (newSrc !== currentSrc) {
+                                                                    target.src = newSrc;
+                                                                    return;
+                                                                }
+                                                            }
 
-                                    <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-3 flex-grow">
-                                        {item.deskripsi}
-                                    </p>
+                                                            target.style.display = 'none';
+                                                            const parent = target.parentElement;
+                                                            if (parent) {
+                                                                const fallback = document.createElement('div');
+                                                                fallback.className = 'flex items-center justify-center w-full h-full';
+                                                                fallback.innerHTML = `
+                                                                    <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                                                    </svg>
+                                                                `;
+                                                                parent.appendChild(fallback);
+                                                            }
+                                                        }}
+                                                    />
+                                                );
+                                            }
 
-                                    <Link
-                                        href={item.link}
-                                        className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
-                                    >
-                                        Baca selengkapnya
-                                        <ChevronRight size={14} />
-                                    </Link>
-                                </div>
-                            </article>
-                        ))}
+                                            return <Newspaper size={40} className="text-slate-400" />;
+                                        })()}
+                                    </div>
+
+                                    <div className="p-5 flex flex-col flex-grow">
+                                        {/* TANGGAL */}
+                                        <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
+                                            <Calendar size={12} />
+                                            {item.created_at
+                                                ? new Date(item.created_at).toLocaleDateString("id-ID", {
+                                                      day: "numeric",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                  })
+                                                : item.tanggal || "Tanggal tidak tersedia"}
+                                        </p>
+
+                                        {/* JUDUL */}
+                                        <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-2">
+                                            {item.judul}
+                                        </h3>
+
+                                        {/* DESKRIPSI */}
+                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-grow">
+                                            {item.deskripsi ||
+                                             item.deskripsi_singkat ||
+                                             item.konten?.replace(/<[^>]*>?/gm, '').substring(0, 150) ||
+                                             "Tidak ada deskripsi"}
+                                        </p>
+
+                                        {/* LINK */}
+                                        <Link
+                                            href={`/berita/${item.slug || item.id}`}
+                                            className="inline-flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700 mt-auto"
+                                        >
+                                            Baca selengkapnya
+                                            <ChevronRight size={14} />
+                                        </Link>
+                                    </div>
+                                </article>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <Newspaper size={48} className="text-slate-300 mx-auto mb-4" />
+                                <p className="text-slate-500 text-lg">
+                                    Belum ada berita terbaru.
+                                </p>
+                                <p className="text-slate-400 text-sm mt-1">
+                                    Silakan tambahkan berita melalui dashboard admin.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

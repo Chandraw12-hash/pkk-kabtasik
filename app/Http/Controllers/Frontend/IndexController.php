@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Frontend;
 
-
 use App\Http\Controllers\Controller;
+use App\Models\Berita;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,6 +11,20 @@ class IndexController extends Controller
 {
     public function index()
     {
+        // Ambil data berita terbaru dan sertakan accessor foto_url secara eksplisit dalam array mapping
+        $beritaTerbaru = Berita::latest()->take(3)->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'slug' => $item->slug,
+                'deskripsi' => $item->konten,
+                'foto' => $item->foto,
+                'foto_url' => $item->foto_url, // FIX: Memasukkan foto_url agar terbawa ke frontend React
+                'created_at' => $item->created_at,
+                'link' => '/berita/' . $item->slug,
+            ];
+        });
+
         // Dummy Data Kebijakan
         $kebijakan = collect([
             [
@@ -62,6 +76,7 @@ class IndexController extends Controller
             'kebijakan' => $kebijakan,
             'chartData' => $chartData,
             'domainData' => $domainData,
+            'berita' => $beritaTerbaru,
             'year' => $currentYear,
         ]);
     }
@@ -113,6 +128,22 @@ class IndexController extends Controller
 
     public function berita()
     {
-        return Inertia::render('Frontend/Berita/Index');
+        // Mengambil data berita dengan paginasi
+        $beritas = Berita::latest()->paginate(9);
+
+        return Inertia::render('Frontend/Berita/Index', [
+            'beritas' => $beritas
+        ]);
+    }
+
+    public function showBerita($slug)
+    {
+        $berita = Berita::where('slug', $slug)->firstOrFail();
+        $beritaLainnya = Berita::where('slug', '!=', $slug)->latest()->take(3)->get();
+
+        return Inertia::render('Frontend/Berita/Show', [
+            'berita' => $berita,
+            'beritaLainnya' => $beritaLainnya,
+        ]);
     }
 }

@@ -11,13 +11,10 @@ import {
     ShieldCheck,
 } from "lucide-react";
 
-// NOTE: generic changed from HTMLDivElement -> HTMLElement because this ref
-// is attached to <section> tags below. Attaching a HTMLDivElement ref to a
-// section element is a TypeScript type mismatch and was the source of the
-// red errors.
 function useScrollAnimation<T extends HTMLElement = HTMLElement>() {
     const ref = useRef<T>(null);
     const [isVisible, setIsVisible] = useState(false);
+
     useEffect(() => {
         const node = ref.current;
         const observer = new IntersectionObserver(
@@ -27,13 +24,14 @@ function useScrollAnimation<T extends HTMLElement = HTMLElement>() {
                     observer.unobserve(entry.target);
                 }
             },
-            { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+            { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
         );
         if (node) observer.observe(node);
         return () => {
             if (node) observer.unobserve(node);
         };
     }, []);
+
     return { ref, isVisible };
 }
 
@@ -47,22 +45,22 @@ const tugasPokok = [
 
 const fungsiStrategis = [
     {
-        title: "Penyuluh & motivator",
+        title: "Penyuluh & Motivator",
         desc: "Penyuluhan dan motivasi kepada masyarakat dalam melaksanakan 10 Program Pokok PKK.",
         icon: Sparkles,
     },
     {
-        title: "Penggerak program",
+        title: "Penggerak Program",
         desc: "Menggerakkan dan membina masyarakat untuk berpartisipasi aktif dalam program PKK.",
         icon: Target,
     },
     {
-        title: "Fasilitator & perencana",
+        title: "Fasilitator & Perencana",
         desc: "Memfasilitasi kegiatan dan merencanakan program strategis untuk Kabupaten Tasikmalaya.",
         icon: BarChart2,
     },
     {
-        title: "Pengendali & pembina",
+        title: "Pengendali & Pembina",
         desc: "Mengendalikan seluruh kegiatan PKK dan membina kader-kader PKK di seluruh lapisan.",
         icon: ShieldCheck,
     },
@@ -86,25 +84,37 @@ export default function TugasFungsi() {
     const rincianAnim = useScrollAnimation<HTMLElement>();
 
     return (
-        <div
-            className="min-h-screen flex flex-col bg-white font-sans text-slate-900 pt-14"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
+        <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
             <style>{`
-                ::-webkit-scrollbar { display: none; }
-                .anim-fade-up { opacity: 0; transform: translateY(28px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
-                .anim-fade-up.show { opacity: 1; transform: translateY(0); }
+                .anim-fade-up {
+                    opacity: 0;
+                    transform: translateY(24px);
+                    transition: opacity 0.7s ease, transform 0.7s ease;
+                }
+                .anim-fade-up.show {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .anim-fade-up {
+                        opacity: 1 !important;
+                        transform: none !important;
+                        transition: none !important;
+                    }
+                }
             `}</style>
 
             <Head title="Tugas Pokok & Fungsi PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ── HERO ── */}
+            {/* ==================== HERO ==================== */}
             <section
                 ref={heroAnim.ref}
-                className={`relative min-h-[420px] lg:min-h-[480px] flex items-center overflow-hidden anim-fade-up ${heroAnim.isVisible ? "show" : ""}`}
+                className={`relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden anim-fade-up ${
+                    heroAnim.isVisible ? "show" : ""
+                }`}
             >
-                <div className="absolute inset-0 w-full h-full">
+                <div className="absolute inset-0">
                     <img
                         src="/assets/images/hero.jpg"
                         alt="Tugas Pokok dan Fungsi PKK"
@@ -114,60 +124,61 @@ export default function TugasFungsi() {
                                 "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0B2A3B]/92 via-[#0B2A3B]/75 to-[#0B2A3B]/45" />
+                    <div className="absolute inset-0 bg-black/55" />
                 </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
-                    <div className="max-w-xl">
-                        <div className="inline-flex items-center gap-2 text-[#38BDF8] text-xs font-bold tracking-widest uppercase mb-5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]" />
-                            <span>Mandat & Prioritas</span>
-                        </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-5">
-                            Tugas Pokok <br />
-                            <span className="text-[#38BDF8]">&amp; Fungsi PKK</span>
-                        </h1>
-                        <p className="text-gray-200 text-base mb-8 leading-relaxed max-w-md">
-                            Memahami peran strategis Tim Penggerak PKK sebagai katalisator
-                            pemberdayaan keluarga dan mitra utama pembangunan masyarakat di
-                            Kabupaten Tasikmalaya.
-                        </p>
-                        <a
-                            href="#"
-                            className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-7 py-3 rounded-full transition-all text-sm backdrop-blur-sm"
-                        >
-                            <Download size={16} />
-                            Unduh dokumen
-                        </a>
-                    </div>
+                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
+                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
+                        Mandat &amp; Prioritas
+                    </span>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
+                        Tugas Pokok &amp; Fungsi PKK
+                    </h1>
+                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-8">
+                        Memahami peran strategis Tim Penggerak PKK sebagai
+                        katalisator pemberdayaan keluarga dan mitra utama
+                        pembangunan masyarakat di Kabupaten Tasikmalaya.
+                    </p>
+                    <a
+                        href="#"
+                        className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                    >
+                        <Download size={15} />
+                        Unduh Dokumen
+                    </a>
                 </div>
             </section>
 
-            {/* ── TUGAS POKOK + FUNGSI STRATEGIS ── */}
+            {/* ==================== TUGAS POKOK + FUNGSI ==================== */}
             <section
                 ref={mainAnim.ref}
-                className={`py-20 bg-white anim-fade-up ${mainAnim.isVisible ? "show" : ""}`}
+                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
+                    mainAnim.isVisible ? "show" : ""
+                }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Kiri: Tugas Pokok */}
-                        <div className="bg-[#0B2A3B] rounded-3xl p-8 flex flex-col gap-6 shadow-xl shadow-slate-900/10">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#38BDF8]/15 flex items-center justify-center">
-                                    <CheckCircle size={22} className="text-[#38BDF8]" />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
+                        {/* Tugas Pokok */}
+                        <div>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                    <CheckCircle
+                                        className="text-teal-600"
+                                        size={18}
+                                    />
                                 </div>
-                                <h2 className="text-2xl font-extrabold text-white">
-                                    Tugas pokok
+                                <h2 className="text-xl font-bold text-slate-900">
+                                    Tugas Pokok
                                 </h2>
                             </div>
-                            <ul className="space-y-5">
+                            <ul className="space-y-4">
                                 {tugasPokok.map((tugas, i) => (
-                                    <li key={i} className="flex items-start gap-3">
-                                        <CheckCircle
-                                            size={18}
-                                            className="text-[#38BDF8] flex-shrink-0 mt-0.5"
-                                        />
-                                        <p className="text-gray-300 text-[14px] leading-relaxed">
+                                    <li
+                                        key={i}
+                                        className="flex items-start gap-3"
+                                    >
+                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0" />
+                                        <p className="text-slate-600 text-[15px] leading-relaxed">
                                             {tugas}
                                         </p>
                                     </li>
@@ -175,29 +186,35 @@ export default function TugasFungsi() {
                             </ul>
                         </div>
 
-                        {/* Kanan: Fungsi Strategis */}
-                        <div className="bg-[#0B2A3B] rounded-3xl p-8 shadow-xl shadow-slate-900/10 flex flex-col gap-6">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#1DA599]/15 flex items-center justify-center">
-                                    <Sparkles size={22} className="text-[#1DA599]" />
+                        {/* Fungsi Strategis */}
+                        <div>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                    <Sparkles
+                                        className="text-teal-600"
+                                        size={18}
+                                    />
                                 </div>
-                                <h2 className="text-2xl font-extrabold text-white">
-                                    Fungsi strategis
+                                <h2 className="text-xl font-bold text-slate-900">
+                                    Fungsi Strategis
                                 </h2>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {fungsiStrategis.map((f, i) => (
                                     <div
                                         key={i}
-                                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-5 transition-colors"
+                                        className="border border-slate-200 rounded-xl p-5"
                                     >
-                                        <div className="w-9 h-9 rounded-lg bg-[#1DA599]/15 flex items-center justify-center mb-3">
-                                            <f.icon size={18} className="text-[#1DA599]" />
+                                        <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center mb-3">
+                                            <f.icon
+                                                size={16}
+                                                className="text-teal-600"
+                                            />
                                         </div>
-                                        <h3 className="text-white font-bold text-sm mb-1.5">
+                                        <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
                                             {f.title}
                                         </h3>
-                                        <p className="text-gray-400 text-xs leading-relaxed">
+                                        <p className="text-slate-500 text-sm leading-relaxed">
                                             {f.desc}
                                         </p>
                                     </div>
@@ -208,38 +225,39 @@ export default function TugasFungsi() {
                 </div>
             </section>
 
-            {/* ── RINCIAN OPERASIONAL ── */}
+            {/* ==================== RINCIAN OPERASIONAL ==================== */}
             <section
                 ref={rincianAnim.ref}
-                className={`py-20 bg-gray-50 border-t border-gray-100 anim-fade-up ${rincianAnim.isVisible ? "show" : ""}`}
+                className={`py-20 lg:py-24 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                    rincianAnim.isVisible ? "show" : ""
+                }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-14">
-                        <div className="inline-flex text-[#1DA599] font-bold tracking-widest text-xs uppercase mb-3 border-l-[3px] border-[#1DA599] pl-3">
-                            DETAIL PELAKSANAAN
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#0B2A3B] mb-3">
-                            Rincian operasional
+                    <div className="mb-12">
+                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                            Detail Pelaksanaan
+                        </p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
+                            Rincian Operasional
                         </h2>
-                        <p className="text-gray-500 text-[15px] max-w-lg mx-auto leading-relaxed">
-                            Sembilan poin rincian tugas dan fungsi operasional Tim Penggerak
-                            PKK sesuai tata kelola kelembagaan yang terstruktur.
+                        <p className="text-slate-500 text-base max-w-2xl leading-relaxed">
+                            Sembilan poin rincian tugas dan fungsi operasional
+                            Tim Penggerak PKK sesuai tata kelola kelembagaan yang
+                            terstruktur.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {rincianOperasional.map((item, i) => (
                             <div
                                 key={i}
-                                className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-[#1DA599]/30 transition-all duration-300 group"
+                                className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition-colors"
                             >
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#E5F5F4] group-hover:bg-[#1DA599] flex items-center justify-center transition-colors">
-                                        <span className="text-[#1DA599] group-hover:text-white font-extrabold text-sm transition-colors">
-                                            {String(i + 1).padStart(2, "0")}
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-600 text-sm leading-relaxed pt-1.5">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-teal-600 font-semibold text-sm min-w-[28px]">
+                                        {String(i + 1).padStart(2, "0")}
+                                    </span>
+                                    <p className="text-slate-600 text-sm leading-relaxed">
                                         {item}
                                     </p>
                                 </div>

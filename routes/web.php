@@ -10,13 +10,13 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\KaderController;
 use App\Http\Controllers\Backend\GaleriController;
-use App\Http\Controllers\Backend\BeritaController;
+use App\Http\Controllers\Backend\BeritaController; // ← SUDAH ADA
 
 // Controller Sekretariat & Pokja yang Terpisah
 use App\Http\Controllers\Backend\SekretariatController;
 use App\Http\Controllers\Backend\Pokja1Controller;
 use App\Http\Controllers\Backend\Pokja2Controller;
-use App\Http\Controllers\Backend\Pokja3Controller; // <-- Sudah ditambahkan di sini
+use App\Http\Controllers\Backend\Pokja3Controller;
 use App\Http\Controllers\Backend\Pokja4Controller;
 
 // ============================================
@@ -33,7 +33,11 @@ Route::as('fe.')->group(function () {
     Route::get('/program/galeri-kegiatan', [IndexController::class, 'galeriKegiatan'])->name('program.galeriKegiatan');
     Route::get('/program/mars-pkk', [IndexController::class, 'marsPkk'])->name('program.marsPkk');
     Route::get('/program/dokumen', [IndexController::class, 'dokumen'])->name('program.dokumen');
-    Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
+
+    // ============= PERBAIKI INI ↓↓↓ =============
+    // Gunakan BeritaController untuk public, bukan IndexController
+    Route::get('/berita', [BeritaController::class, 'indexPublic'])->name('berita');
+    Route::get('/berita/{slug}', [BeritaController::class, 'showPublic'])->name('berita.show');
 });
 
 // ============================================
@@ -79,9 +83,17 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->names('galeri')
         ->except(['show']);
 
+    // ============= PERBAIKI INI ↓↓↓ =============
+    // Tambahkan 'show' untuk backend agar bisa lihat detail
     Route::resource('berita', BeritaController::class)
         ->names('berita')
-        ->except(['show']);
+        ->parameters(['berita' => 'berita'])
+        ->except(['show']); // ← HAPUS 'show' dari sini jika ingin detail di backend
+
+    // Atau biarkan seperti ini untuk backend:
+    // Route::resource('berita', BeritaController::class)
+    //     ->names('berita')
+    //     ->parameters(['berita' => 'berita']);
 
     // ============================================
     // USER MANAGEMENT
