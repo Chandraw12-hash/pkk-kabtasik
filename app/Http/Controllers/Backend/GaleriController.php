@@ -10,12 +10,19 @@ use Inertia\Inertia;
 
 class GaleriController extends Controller
 {
-    public function index()
+    // ========= PERBAIKAN PENTING DI SINI =========
+    public function index(Request $request)
     {
-        $galeris = Galeri::latest()->get();
+        $galeris = Galeri::when($request->search, function ($query) use ($request) {
+                $query->where('judul', 'like', '%' . $request->search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->per_page ?? 10)
+            ->withQueryString();
 
         return Inertia::render('Backend/Galeri/Index', [
             'galeris' => $galeris,
+            'filters' => $request->only(['search', 'per_page'])
         ]);
     }
 
@@ -26,17 +33,22 @@ class GaleriController extends Controller
 
     public function store(Request $request)
     {
+        // Validasi
         $request->validate([
             'judul' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'tanggal' => 'required|date',
             'foto' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $fotoPath = $request->file('foto')->store('galeri-photos', 'public');
+        // Simpan file dengan nama unik agar tidak bentrok
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('galeri-photos', 'public');
+        }
 
+        // Simpan ke database
         Galeri::create([
             'judul' => $request->judul,
-            'deskripsi' => $request->deskripsi,
+            'tanggal' => $request->tanggal,
             'foto' => $fotoPath,
         ]);
 
@@ -54,7 +66,7 @@ class GaleriController extends Controller
     {
         $request->validate([
             'judul' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'tanggal' => 'required|date',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -68,7 +80,7 @@ class GaleriController extends Controller
 
         $galeri->update([
             'judul' => $request->judul,
-            'deskripsi' => $request->deskripsi,
+            'tanggal' => $request->tanggal,
             'foto' => $fotoPath,
         ]);
 

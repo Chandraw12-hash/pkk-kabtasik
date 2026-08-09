@@ -10,7 +10,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\KaderController;
 use App\Http\Controllers\Backend\GaleriController;
-use App\Http\Controllers\Backend\BeritaController; // ← SUDAH ADA
+use App\Http\Controllers\Backend\BeritaController;
 
 // Controller Sekretariat & Pokja yang Terpisah
 use App\Http\Controllers\Backend\SekretariatController;
@@ -24,20 +24,24 @@ use App\Http\Controllers\Backend\Pokja4Controller;
 // ============================================
 Route::as('fe.')->group(function () {
     Route::get('/', [IndexController::class, 'index'])->name('beranda');
+
+    // Profil
     Route::get('/profil/sejarah', [IndexController::class, 'sejarah'])->name('profil.sejarah');
     Route::get('/profil/tugas-fungsi', [IndexController::class, 'tugasFungsi'])->name('profil.tugasFungsi');
     Route::get('/profil/visi-misi', [IndexController::class, 'visiMisi'])->name('profil.visiMisi');
     Route::get('/profil/struktur-organisasi', [IndexController::class, 'strukturOrganisasi'])->name('profil.strukturOrganisasi');
     Route::get('/profil/ketentuan-seragam', [IndexController::class, 'ketentuanSeragam'])->name('profil.ketentuanSeragam');
+
+    // Program
     Route::get('/program/program-kerja', [IndexController::class, 'programKerja'])->name('program.programKerja');
     Route::get('/program/galeri-kegiatan', [IndexController::class, 'galeriKegiatan'])->name('program.galeriKegiatan');
     Route::get('/program/mars-pkk', [IndexController::class, 'marsPkk'])->name('program.marsPkk');
     Route::get('/program/dokumen', [IndexController::class, 'dokumen'])->name('program.dokumen');
 
-    // ============= PERBAIKI INI ↓↓↓ =============
-    // Gunakan BeritaController untuk public, bukan IndexController
+    // ============= FIX UNTUK BERITA =============
+    // CUKUP 1 ROUTE INI SAJA. HAPUS ROUTE DETAIL {slug}.
+    // Jika di Index.tsx kamu menggunakan sistem modal/state, route ini sudah cukup.
     Route::get('/berita', [BeritaController::class, 'indexPublic'])->name('berita');
-    Route::get('/berita/{slug}', [BeritaController::class, 'showPublic'])->name('berita.show');
 });
 
 // ============================================
@@ -79,21 +83,16 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     // ============================================
     // MANAJEMEN KONTEN (Galeri & Berita)
     // ============================================
+
+    // Galeri
     Route::resource('galeri', GaleriController::class)
         ->names('galeri')
         ->except(['show']);
 
-    // ============= PERBAIKI INI ↓↓↓ =============
-    // Tambahkan 'show' untuk backend agar bisa lihat detail
+    // Berita (Backend tetap full CRUD)
     Route::resource('berita', BeritaController::class)
         ->names('berita')
-        ->parameters(['berita' => 'berita'])
-        ->except(['show']); // ← HAPUS 'show' dari sini jika ingin detail di backend
-
-    // Atau biarkan seperti ini untuk backend:
-    // Route::resource('berita', BeritaController::class)
-    //     ->names('berita')
-    //     ->parameters(['berita' => 'berita']);
+        ->parameters(['berita' => 'berita']);
 
     // ============================================
     // USER MANAGEMENT

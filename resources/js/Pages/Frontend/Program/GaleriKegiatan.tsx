@@ -2,74 +2,60 @@ import React, { useState } from "react";
 import { Head } from "@inertiajs/react";
 import Navbar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
-import { Calendar, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Search, Images } from "lucide-react";
 
-const galeriData = [
-    {
-        id: 1,
-        title: "Sosialisasi Pola Asuh Anak & Remaja",
-        date: "12 Mei 2024",
-        category: "POKJA I",
-        desc: "Kegiatan pembekalan bagi kader PKK di tingkat kecamatan mengenai pola asuh.",
-        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 2,
-        title: "Pemanfaatan Tanah Pekarangan",
-        date: "10 Mei 2024",
-        category: "POKJA III",
-        desc: "Implementasi program Hatinya PKK melalui penanaman sayuran produktif.",
-        image: "https://images.unsplash.com/photo-1592424005742-8820c744f9ea?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 3,
-        title: "Pemeriksaan Kesehatan Gratis",
-        date: "08 Mei 2024",
-        category: "POKJA IV",
-        desc: "Layanan kesehatan gratis bagi lansia dan balita di wilayah Posyandu binaan.",
-        image: "https://images.unsplash.com/photo-1576091160550-2173ff9e5c52?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 4,
-        title: "Rapat Koordinasi Bulanan",
-        date: "05 Mei 2024",
-        category: "UMUM",
-        desc: "Evaluasi rutin program kerja semester pertama tahun 2024 bersama seluruh kader.",
-        image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 5,
-        title: "Pelatihan Kewirausahaan Ibu",
-        date: "01 Mei 2024",
-        category: "POKJA II",
-        desc: "Mendorong kemandirian ekonomi keluarga melalui pelatihan UMKM lokal.",
-        image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 6,
-        title: "Pameran UP2K Tingkat Kab.",
-        date: "25 Apr 2024",
-        category: "POKJA II",
-        desc: "Ajang promosi produk unggulan kelompok Usaha Peningkatan Pendapatan Keluarga.",
-        image: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=600&q=80",
-    },
-];
+// ============= INTERFACE =============
+interface GaleriItem {
+    id: number;
+    judul: string;
+    foto: string | null;
+    foto_url?: string | null;
+    created_at?: string;
+    tanggal?: string;
+}
 
-const categories = ["Semua", "Pokja I", "Pokja II", "Pokja III", "Pokja IV", "Umum"];
+interface GaleriKegiatanProps {
+    galeri?: {
+        data: GaleriItem[];
+        current_page: number;
+        last_page: number;
+        from: number;
+        to: number;
+        total: number;
+        links: any[];
+    };
+    filters?: {
+        search?: string;
+    };
+}
 
-export default function GaleriKegiatan() {
-    const [activeCategory, setActiveCategory] = useState("Semua");
-    const [searchQuery, setSearchQuery] = useState("");
+export default function GaleriKegiatan({ galeri, filters = {} }: GaleriKegiatanProps) {
+    const [searchQuery, setSearchQuery] = useState(filters.search || "");
 
-    const filteredGaleri = galeriData.filter((item) => {
-        const matchesCategory =
-            activeCategory === "Semua" ||
-            item.category === activeCategory.toUpperCase();
-        const matchesSearch =
-            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.desc.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery) {
+            window.location.href = `/program/galeri-kegiatan?search=${searchQuery}`;
+        } else {
+            window.location.href = `/program/galeri-kegiatan`;
+        }
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return "-";
+        try {
+            return new Date(dateString).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    const dataItems = galeri?.data || [];
+    const hasData = dataItems.length > 0;
 
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
@@ -108,107 +94,97 @@ export default function GaleriKegiatan() {
             {/* ==================== FILTER & SEARCH ==================== */}
             <section className="py-8 bg-white border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row items-center gap-4">
-                        {/* Kategori */}
-                        <div className="flex flex-wrap gap-2 flex-1 justify-center md:justify-start">
-                            {categories.map((cat) => (
-                                <button
-                                    key={cat}
-                                    onClick={() => setActiveCategory(cat)}
-                                    className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
-                                        activeCategory === cat
-                                            ? "bg-teal-600 text-white"
-                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`}
-                                >
-                                    {cat}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Search */}
-                        <div className="relative w-full md:w-64">
+                    <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-center gap-4">
+                        <div className="relative w-full md:w-64 ml-auto">
                             <Search
                                 size={16}
                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                             />
                             <input
                                 type="text"
-                                placeholder="Cari kegiatan..."
+                                placeholder="Cari judul kegiatan..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white text-slate-800 placeholder:text-slate-400"
                             />
                         </div>
-                    </div>
+                        <button type="submit" className="bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-teal-700 transition-colors">
+                            Cari
+                        </button>
+                    </form>
                 </div>
             </section>
 
-            {/* ==================== GRID GALERI ==================== */}
+            {/* ==================== GRID GALERI (UKURAN PAS 4:3) ==================== */}
             <section className="py-16 lg:py-20 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {filteredGaleri.length > 0 ? (
+                    {hasData ? (
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                                {filteredGaleri.map((item) => (
-                                    <article
-                                        key={item.id}
-                                        className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col"
-                                    >
-                                        <div className="h-48 overflow-hidden">
-                                            <img
-                                                src={item.image}
-                                                alt={item.title}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <div className="p-5 flex flex-col flex-grow">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 bg-teal-50 px-2.5 py-1 rounded">
-                                                    {item.category}
-                                                </span>
-                                                <span className="flex items-center gap-1.5 text-slate-400 text-xs">
-                                                    <Calendar size={12} />
-                                                    {item.date}
-                                                </span>
+                                {dataItems.map((item) => {
+                                    const imageSrc = item.foto_url || (item.foto ? `/storage/${item.foto}` : null) || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80";
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-300"
+                                        >
+                                            {/* Menggunakan aspect-[4/3] agar ukuran pas dan tidak terlalu besar */}
+                                            <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+                                                <img
+                                                    src={imageSrc}
+                                                    alt={item.judul}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+
+                                                {/* Overlay transparan untuk Judul dan Tanggal di atas gambar */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                    <h3 className="text-sm md:text-base font-semibold text-white line-clamp-1">
+                                                        {item.judul}
+                                                    </h3>
+                                                    <p className="text-xs text-white/80 flex items-center gap-1.5 mt-0.5">
+                                                        <Calendar size={14} />
+                                                        {formatDate(item.tanggal || item.created_at)}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <h3 className="text-base font-semibold text-slate-900 mb-2 leading-snug line-clamp-2">
-                                                {item.title}
-                                            </h3>
-                                            <p className="text-slate-500 text-sm leading-relaxed line-clamp-2">
-                                                {item.desc}
-                                            </p>
                                         </div>
-                                    </article>
-                                ))}
+                                    );
+                                })}
                             </div>
 
-                            {/* Pagination */}
-                            <div className="flex items-center justify-center gap-2">
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
-                                    <ChevronLeft size={16} />
-                                </button>
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center bg-teal-600 text-white text-sm font-semibold">
-                                    1
-                                </button>
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-colors">
-                                    2
-                                </button>
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-colors">
-                                    3
-                                </button>
-                                <span className="text-slate-400 px-1">...</span>
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-600 text-sm hover:bg-slate-100 transition-colors">
-                                    12
-                                </button>
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
-                                    <ChevronRight size={16} />
-                                </button>
+                            {/* ==================== PAGINATION (Tombol Geser) ==================== */}
+                            <div className="flex items-center justify-center gap-2 mt-8">
+                                {galeri?.links && galeri.links.map((link, index) => {
+                                    if (link.label === 'pagination.previous' || link.label === 'pagination.next') return null;
+
+                                    return (
+                                        <button
+                                            key={index}
+                                            disabled={!link.url}
+                                            onClick={() => {
+                                                if (link.url) {
+                                                    window.location.href = link.url;
+                                                }
+                                            }}
+                                            className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
+                                                link.active
+                                                    ? "bg-teal-600 text-white border-teal-600"
+                                                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-teal-400"
+                                            }`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    );
+                                })}
                             </div>
                         </>
                     ) : (
                         <div className="text-center py-16 text-slate-500">
-                            Tidak ada kegiatan yang ditemukan.
+                            <Images size={48} className="text-slate-300 mx-auto mb-4" />
+                            <p className="text-lg">Tidak ada foto kegiatan yang ditemukan.</p>
+                            <p className="text-sm mt-1">Silakan tambahkan galeri melalui dashboard admin.</p>
                         </div>
                     )}
                 </div>

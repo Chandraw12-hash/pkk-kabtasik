@@ -155,8 +155,12 @@ class BeritaController extends Controller
             return response()->json($beritas);
         }
 
-        return Inertia::render('Public/Berita', [
-            'beritas' => $beritas,
+        // FIX: path Inertia disesuaikan ke lokasi file React yang sebenarnya
+        //      (resources/js/Pages/Frontend/Berita/Index.tsx)
+        // FIX: nama prop diganti jadi "berita" (array item), sesuai yang
+        //      dibaca Frontend/Berita/Index.tsx — bukan "beritas" (paginator)
+        return Inertia::render('Frontend/Berita/Index', [
+            'berita' => $beritas->items(),
             'filters' => [
                 'search' => $search,
                 'per_page' => $perPage,
@@ -167,6 +171,12 @@ class BeritaController extends Controller
     /**
      * Menampilkan detail berita untuk public (frontend)
      * Route: /berita/{slug}
+     *
+     * CATATAN: route detail ini sudah SENGAJA dihapus dari web.php
+     * (lihat komentar di routes/web.php: "HAPUS ROUTE DETAIL {slug}").
+     * Detail berita sekarang dibuka lewat modal di halaman Beranda/Berita,
+     * bukan lewat halaman terpisah. Method ini aman dibiarkan menganggur,
+     * atau boleh dihapus kalau mau beres-beres kode.
      */
     public function showPublic($slug)
     {

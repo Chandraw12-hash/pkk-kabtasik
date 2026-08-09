@@ -17,6 +17,8 @@ import {
     Target,
     Eye,
     Newspaper,
+    Images,
+    X,
 } from "lucide-react";
 
 // ============= INTERFACE =============
@@ -36,10 +38,18 @@ interface BeritaItem {
     tanggal_formatted?: string;
 }
 
+interface GaleriItem {
+    id: number;
+    foto?: string;
+    foto_url?: string;
+    created_at?: string;
+    caption?: string;
+}
+
 interface WelcomeProps {
     year?: number;
     berita?: BeritaItem[];
-    galeri?: any[];
+    galeri?: GaleriItem[];
 }
 
 const dataMenu = [
@@ -124,6 +134,21 @@ const misiList = [
     "Menjaga kelestarian lingkungan hidup serta meningkatkan kualitas kehidupan keluarga yang berkelanjutan.",
 ];
 
+function getBeritaImageSrc(item: BeritaItem): string | null {
+    return item.foto_url || (item.foto ? `/storage/${item.foto}` : null) || item.image || null;
+}
+
+function formatBeritaTanggal(item: BeritaItem): string {
+    if (item.created_at) {
+        return new Date(item.created_at).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
+    }
+    return item.tanggal || "Tanggal tidak tersedia";
+}
+
 function useScrollAnimation() {
     const ref = useRef<HTMLElement | null>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -152,7 +177,7 @@ function useScrollAnimation() {
     return { ref, isVisible };
 }
 
-export default function Welcome({ year, berita = [] }: WelcomeProps) {
+export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps) {
     const currentYear = year ?? new Date().getFullYear();
 
     // ============= DEBUG =============
@@ -171,9 +196,15 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
         }
     }, [berita]);
 
-    // ============= HAPUS DUMMY! =============
-    // LANGSUNG PAKAI DATA DARI SERVER
+    // ============= DEBUG GALERI =============
+    useEffect(() => {
+        console.log("=== DATA GALERI DARI SERVER ===");
+        console.log("Jumlah:", galeri.length);
+        console.log("Data:", galeri);
+    }, [galeri]);
+
     const beritaTerbaru = berita;
+    const galeriData = galeri;
 
     const heroAnim = useScrollAnimation();
     const sambutanAnim = useScrollAnimation();
@@ -181,10 +212,21 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
     const dataAnim = useScrollAnimation();
     const faqAnim = useScrollAnimation();
     const beritaAnim = useScrollAnimation();
+    const galeriAnim = useScrollAnimation();
 
     const [openFaq, setOpenFaq] = useState<number | null>(0);
     const toggleFaq = (index: number) =>
         setOpenFaq(openFaq === index ? null : index);
+
+    const [selectedBerita, setSelectedBerita] = useState<BeritaItem | null>(null);
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setSelectedBerita(null);
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
 
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
@@ -612,7 +654,7 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                             </h2>
                         </div>
                         <Link
-                            href="/berita"
+                            href={route("fe.berita")}
                             className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                         >
                             Lihat semua berita
@@ -627,14 +669,13 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                                     key={item.id}
                                     className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full"
                                 >
-                                    {/* BAGIAN GAMBAR */}
-                                    <div className="h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedBerita(item)}
+                                        className="h-48 overflow-hidden bg-slate-100 flex items-center justify-center w-full text-left"
+                                    >
                                         {(() => {
-                                            const imageSrc =
-                                                item.foto_url ||
-                                                (item.foto ? `/storage/${item.foto}` : null) ||
-                                                item.image ||
-                                                null;
+                                            const imageSrc = getBeritaImageSrc(item);
 
                                             if (imageSrc) {
                                                 return (
@@ -674,10 +715,9 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
 
                                             return <Newspaper size={40} className="text-slate-400" />;
                                         })()}
-                                    </div>
+                                    </button>
 
                                     <div className="p-5 flex flex-col flex-grow">
-                                        {/* TANGGAL */}
                                         <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
                                             <Calendar size={12} />
                                             {item.created_at
@@ -689,12 +729,16 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                                                 : item.tanggal || "Tanggal tidak tersedia"}
                                         </p>
 
-                                        {/* JUDUL */}
                                         <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-2">
-                                            {item.judul}
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedBerita(item)}
+                                                className="hover:text-teal-600 transition-colors text-left"
+                                            >
+                                                {item.judul}
+                                            </button>
                                         </h3>
 
-                                        {/* DESKRIPSI */}
                                         <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-grow">
                                             {item.deskripsi ||
                                              item.deskripsi_singkat ||
@@ -702,14 +746,14 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                                              "Tidak ada deskripsi"}
                                         </p>
 
-                                        {/* LINK */}
-                                        <Link
-                                            href={`/berita/${item.slug || item.id}`}
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedBerita(item)}
                                             className="inline-flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700 mt-auto"
                                         >
                                             Baca selengkapnya
                                             <ChevronRight size={14} />
-                                        </Link>
+                                        </button>
                                     </div>
                                 </article>
                             ))
@@ -727,6 +771,155 @@ export default function Welcome({ year, berita = [] }: WelcomeProps) {
                     </div>
                 </div>
             </section>
+
+            {/* ==================== GALERI (PURE FOTO TANPA DESKRIPSI) ==================== */}
+            <section
+                ref={galeriAnim.ref}
+                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
+                    galeriAnim.isVisible ? "show" : ""
+                }`}
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
+                        <div>
+                            <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                                Dokumentasi
+                            </p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                                Galeri Foto Kegiatan
+                            </h2>
+                        </div>
+                        <Link
+                            href={route("fe.program.galeriKegiatan")}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                        >
+                            Lihat semua foto
+                            <ChevronRight size={15} />
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {galeriData.length > 0 ? (
+                            galeriData.map((item) => {
+                                const imageSrc = item.foto_url || (item.foto ? `/storage/${item.foto}` : null);
+
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className="group relative aspect-square bg-slate-100 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                                    >
+                                        {imageSrc ? (
+                                            <img
+                                                src={imageSrc}
+                                                alt="Kegiatan PKK"
+                                                loading="lazy"
+                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                onError={(e) => {
+                                                    const target = e.currentTarget;
+                                                    target.style.display = 'none';
+                                                    const parent = target.parentElement;
+                                                    if (parent) {
+                                                        const fallback = document.createElement('div');
+                                                        fallback.className = 'flex items-center justify-center w-full h-full bg-slate-100';
+                                                        fallback.innerHTML = `
+                                                            <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                        `;
+                                                        parent.appendChild(fallback);
+                                                    }
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="flex items-center justify-center w-full h-full bg-slate-100">
+                                                <Images size={32} className="text-slate-400" />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <Images size={48} className="text-slate-300 mx-auto mb-4" />
+                                <p className="text-slate-500 text-lg">
+                                    Belum ada foto kegiatan.
+                                </p>
+                                <p className="text-slate-400 text-sm mt-1">
+                                    Silakan tambahkan galeri foto melalui dashboard admin.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==================== MODAL DETAIL BERITA ==================== */}
+            {selectedBerita && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="berita-modal-title"
+                >
+                    <div
+                        className="absolute inset-0 bg-slate-900/60"
+                        onClick={() => setSelectedBerita(null)}
+                    />
+                    <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
+                        <button
+                            type="button"
+                            onClick={() => setSelectedBerita(null)}
+                            aria-label="Tutup"
+                            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-500 hover:text-slate-900 flex items-center justify-center shadow-md transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        {(() => {
+                            const imageSrc = getBeritaImageSrc(selectedBerita);
+                            return imageSrc ? (
+                                <div className="h-56 sm:h-72 overflow-hidden bg-slate-100">
+                                    <img
+                                        src={imageSrc}
+                                        alt={selectedBerita.judul}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = "none";
+                                        }}
+                                    />
+                                </div>
+                            ) : null;
+                        })()}
+
+                        <div className="p-6 sm:p-8">
+                            <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
+                                <Calendar size={12} />
+                                {formatBeritaTanggal(selectedBerita)}
+                            </p>
+
+                            <h2
+                                id="berita-modal-title"
+                                className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 leading-snug"
+                            >
+                                {selectedBerita.judul}
+                            </h2>
+
+                            {selectedBerita.konten ? (
+                                <div
+                                    className="text-slate-600 text-[15px] leading-relaxed space-y-4"
+                                    dangerouslySetInnerHTML={{ __html: selectedBerita.konten }}
+                                />
+                            ) : (
+                                <p className="text-slate-600 text-[15px] leading-relaxed">
+                                    {selectedBerita.deskripsi ||
+                                        selectedBerita.deskripsi_singkat ||
+                                        "Tidak ada deskripsi."}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>

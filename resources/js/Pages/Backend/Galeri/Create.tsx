@@ -1,25 +1,47 @@
-import React from "react";
+import React, { useState } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import Card from "@/Components/UI/Card";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, UploadCloud, X, Calendar } from "lucide-react";
 
 export default function CreateGaleri() {
     const { data, setData, post, processing, errors } = useForm({
         judul: "",
-        kategori: "",
-        deskripsi: "",
+        tanggal: "",
         foto: null as File | null,
     });
+
+    const [preview, setPreview] = useState<string | null>(null);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post(route("be.galeri.store"));
     };
 
-    const selectClass =
+    // Handle pemilihan file
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setData("foto", file);
+        if (file) {
+            const objectUrl = URL.createObjectURL(file);
+            setPreview(objectUrl);
+        } else {
+            setPreview(null);
+        }
+    };
+
+    // Hapus file yang sudah dipilih
+    const removeFile = () => {
+        setData("foto", null);
+        setPreview(null);
+        // Reset input file agar bisa pilih file yang sama lagi
+        const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+        if (fileInput) fileInput.value = "";
+    };
+
+    const inputClass =
         "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
 
     return (
@@ -38,7 +60,7 @@ export default function CreateGaleri() {
                         Tambah Galeri Foto
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Unggah dokumentasi foto kegiatan baru
+                        Unggah dokumentasi foto kegiatan terbaru
                     </p>
                 </div>
             </div>
@@ -51,7 +73,7 @@ export default function CreateGaleri() {
                                 Judul / Nama Kegiatan <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                placeholder="Masukkan judul foto/kegiatan"
+                                placeholder="Contoh: Pelatihan Kader PKK"
                                 value={data.judul}
                                 onChange={(e) => setData("judul", e.target.value)}
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
@@ -61,42 +83,68 @@ export default function CreateGaleri() {
 
                         <div>
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Kategori Album
+                                Tanggal Kegiatan <span className="text-rose-500">*</span>
                             </label>
-                            <TextInput
-                                placeholder="Contoh: Pelatihan, Penyuluhan, dll"
-                                value={data.kategori}
-                                onChange={(e) => setData("kategori", e.target.value)}
-                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                            />
-                            {errors.kategori && <div className="text-red-500 text-xs mt-1">{errors.kategori}</div>}
+                            <div className="relative">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                    <Calendar size={18} />
+                                </div>
+                                <input
+                                    type="date"
+                                    value={data.tanggal}
+                                    onChange={(e) => setData("tanggal", e.target.value)}
+                                    className={`${inputClass} pl-11`}
+                                />
+                            </div>
+                            {errors.tanggal && <div className="text-red-500 text-xs mt-1">{errors.tanggal}</div>}
                         </div>
 
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                File Foto <span className="text-rose-500">*</span>
+                                Upload Foto <span className="text-rose-500">*</span>
                             </label>
+
+                            {/* Input file asli disembunyikan */}
                             <input
+                                id="file-upload"
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setData("foto", e.target.files ? e.target.files[0] : null)}
-                                className={selectClass}
+                                className="hidden"
+                                onChange={handleFileChange}
                             />
-                            {errors.foto && <div className="text-red-500 text-xs mt-1">{errors.foto}</div>}
-                        </div>
 
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Deskripsi Singkat
-                            </label>
-                            <textarea
-                                value={data.deskripsi}
-                                onChange={(e) => setData("deskripsi", e.target.value)}
-                                rows={3}
-                                placeholder="Keterangan opsional tentang foto ini"
-                                className={selectClass}
-                            />
-                            {errors.deskripsi && <div className="text-red-500 text-xs mt-1">{errors.deskripsi}</div>}
+                            {!preview ? (
+                                <label
+                                    htmlFor="file-upload"
+                                    className="cursor-pointer w-full h-48 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-rose-500 hover:bg-rose-50/30 transition-all dark:border-slate-600 dark:hover:border-rose-400 dark:hover:bg-slate-700/50"
+                                >
+                                    <UploadCloud size={40} className="text-slate-400" />
+                                    <div className="text-center">
+                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Klik untuk unggah foto
+                                        </p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                                            PNG, JPG, JPEG (Maks. 2MB)
+                                        </p>
+                                    </div>
+                                </label>
+                            ) : (
+                                <div className="relative w-full h-64 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group">
+                                    <img
+                                        src={preview}
+                                        alt="Preview Foto"
+                                        className="w-full h-full object-contain bg-slate-50 dark:bg-slate-800"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={removeFile}
+                                        className="absolute top-3 right-3 p-1.5 bg-slate-900/70 hover:bg-red-500 text-white rounded-full transition-colors"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            )}
+                            {errors.foto && <div className="text-red-500 text-xs mt-1">{errors.foto}</div>}
                         </div>
                     </div>
 

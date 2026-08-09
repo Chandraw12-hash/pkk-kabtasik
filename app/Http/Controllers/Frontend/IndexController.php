@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
+use App\Models\Galeri;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,7 +12,7 @@ class IndexController extends Controller
 {
     public function index()
     {
-        // Ambil data berita terbaru dan sertakan accessor foto_url secara eksplisit dalam array mapping
+        // Ambil data berita terbaru
         $beritaTerbaru = Berita::latest()->take(3)->get()->map(function ($item) {
             return [
                 'id' => $item->id,
@@ -19,9 +20,20 @@ class IndexController extends Controller
                 'slug' => $item->slug,
                 'deskripsi' => $item->konten,
                 'foto' => $item->foto,
-                'foto_url' => $item->foto_url, // FIX: Memasukkan foto_url agar terbawa ke frontend React
+                'foto_url' => $item->foto_url,
                 'created_at' => $item->created_at,
                 'link' => '/berita/' . $item->slug,
+            ];
+        });
+
+        // Ambil data galeri terbaru (8 foto) agar muncul di Landing Page
+        $galeriTerbaru = Galeri::latest()->take(8)->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'tanggal' => $item->tanggal,
+                'foto' => $item->foto,
+                'foto_url' => $item->foto_url,
             ];
         });
 
@@ -77,6 +89,7 @@ class IndexController extends Controller
             'chartData' => $chartData,
             'domainData' => $domainData,
             'berita' => $beritaTerbaru,
+            'galeri' => $galeriTerbaru,
             'year' => $currentYear,
         ]);
     }
@@ -111,9 +124,21 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Profil/KetentuanSeragam');
     }
 
-    public function galeriKegiatan()
+    // ============= PERBAIKAN PENTING DI SINI =============
+    public function galeriKegiatan(Request $request)
     {
-        return Inertia::render('Frontend/Program/GaleriKegiatan');
+        // Tambahkan pencarian (search) berdasarkan judul
+        $galeri = Galeri::when($request->search, function ($query) use ($request) {
+                return $query->where('judul', 'like', '%' . $request->search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(12)
+            ->withQueryString();
+
+        return Inertia::render('Frontend/Program/GaleriKegiatan', [
+            'galeri' => $galeri,
+            'filters' => $request->only(['search'])
+        ]);
     }
 
     public function marsPkk()
@@ -128,9 +153,7 @@ class IndexController extends Controller
 
     public function berita()
     {
-        // Mengambil data berita dengan paginasi
         $beritas = Berita::latest()->paginate(9);
-
         return Inertia::render('Frontend/Berita/Index', [
             'beritas' => $beritas
         ]);

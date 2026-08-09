@@ -11,77 +11,59 @@ import {
     ChevronRight,
 } from "lucide-react";
 
+// ============= INTERFACE =============
+interface BeritaItem {
+    id: number;
+    judul: string;
+    slug?: string;
+    tanggal?: string;
+    deskripsi?: string;
+    konten?: string;
+    link?: string;
+    image?: string;
+    foto?: string;
+    foto_url?: string;
+    created_at?: string;
+    deskripsi_singkat?: string;
+    tanggal_formatted?: string;
+    kategori?: string;
+    author?: string;
+}
+
+interface BeritaProps {
+    berita?: BeritaItem[];
+}
+
 const filterKategori = ["Semua", "Kegiatan", "Prestasi", "Pengumuman"];
 
-const beritaData = [
-    {
-        id: 1,
-        title: "Bunda Bedas Emma Dety Bicara Tentang Hari Kartini",
-        date: "2024-05-25",
-        author: "Master Admin",
-        kategori: "Kegiatan",
-        desc: "Bunda Bedas Hj. Emma Dety Dadang Supriatna mengungkapkan tentang pelaksanaan peringatan Hari Kartini ke-145 tingkat Kabupaten...",
-        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 2,
-        title: "TP PKK Kab Tasikmalaya Bentuk TPK di Tiap Tingkatan",
-        date: "2024-05-23",
-        author: "Master Admin",
-        kategori: "Pengumuman",
-        desc: "Dalam rangka penguatan peran TP PKK untuk berpartisipasi pada program Pembangunan Keluarga, Kependudukan dan penurunan stunting...",
-        image: "https://images.unsplash.com/photo-1592424005742-8820c744f9ea?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 3,
-        title: "Bunda Literasi Emma Dety: Berlian Fest 2024 Wahana...",
-        date: "2024-05-20",
-        author: "Master Admin",
-        kategori: "Kegiatan",
-        desc: "Kabupaten Tasikmalaya - Bunda Literasi Hj. Emma Dety mengatakan kegiatan Bedas Literasi Ramadan (Berlian Fest) merupakan wahana...",
-        image: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 4,
-        title: "Persiapan Lomba Pekarangan Mandiri",
-        date: "2023-09-07",
-        author: "Master Admin",
-        kategori: "Kegiatan",
-        desc: "Koordinasi teknis persiapan pelaksanaan lomba pekarangan di tingkat desa untuk mendorong ketahanan pangan keluarga...",
-        image: "https://images.unsplash.com/photo-1576091160550-2173ff9e5c52?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 5,
-        title: "Persiapan Pelaksanaan Rakorda TP-PKK Kabupaten",
-        date: "2023-08-17",
-        author: "Master Admin",
-        kategori: "Kegiatan",
-        desc: "Persiapan Pelaksanaan Rakorda TP-PKK & Persiapan Pelaksanaan Gerakan Keluarga Sehat Tanggap dan Tangguh Bencana...",
-        image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-        id: 6,
-        title: "Pengurus TP-PKK Menghadiri Kegiatan World Cancer Day...",
-        date: "2023-08-07",
-        author: "Master Admin",
-        kategori: "Kegiatan",
-        desc: "Peringatan Hari Kanker Sedunia bertujuan untuk meningkatkan kesadaran masyarakat akan bahaya deteksi dini kanker...",
-        image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=600&q=80",
-    },
-];
-
-export default function Berita() {
+export default function Berita({ berita = [] }: BeritaProps) {
     const [activeFilter, setActiveFilter] = useState("Semua");
     const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredBerita = beritaData.filter((item) => {
+    const filteredBerita = berita.filter((item) => {
+        const itemKategori = item.kategori || "Kegiatan";
         const matchesCategory =
-            activeFilter === "Semua" || item.kategori === activeFilter;
+            activeFilter === "Semua" || itemKategori === activeFilter;
+
         const matchesSearch =
-            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.desc.toLowerCase().includes(searchQuery.toLowerCase());
+            item.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.deskripsi || item.deskripsi_singkat || "").toLowerCase().includes(searchQuery.toLowerCase());
+
         return matchesCategory && matchesSearch;
     });
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return "-";
+        try {
+            return new Date(dateString).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+        } catch {
+            return dateString;
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
@@ -159,52 +141,71 @@ export default function Berita() {
                     {filteredBerita.length > 0 ? (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                                {filteredBerita.map((item) => (
-                                    <article
-                                        key={item.id}
-                                        className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col"
-                                    >
-                                        <div className="h-48 overflow-hidden">
-                                            <img
-                                                src={item.image}
-                                                alt={item.title}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <div className="p-5 flex flex-col flex-grow">
-                                            <div className="flex items-center gap-3 mb-3 text-xs text-slate-400">
-                                                <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 bg-teal-50 px-2.5 py-1 rounded">
-                                                    {item.kategori}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar size={12} />
-                                                    {item.date}
-                                                </span>
+                                {filteredBerita.map((item) => {
+                                    const imageSrc =
+                                        item.foto_url ||
+                                        (item.foto ? `/storage/${item.foto}` : null) ||
+                                        item.image ||
+                                        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80";
+
+                                    return (
+                                        <article
+                                            key={item.id}
+                                            className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col"
+                                        >
+                                            <div className="h-48 overflow-hidden">
+                                                <img
+                                                    src={imageSrc}
+                                                    alt={item.judul}
+                                                    className="w-full h-full object-cover"
+                                                />
                                             </div>
-                                            <h3 className="text-base font-semibold text-slate-900 mb-2 leading-snug line-clamp-2">
-                                                <Link href="#">
-                                                    {item.title}
-                                                </Link>
-                                            </h3>
-                                            <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-3 flex-grow">
-                                                {item.desc}
-                                            </p>
-                                            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                                                <span className="flex items-center gap-1.5 text-xs text-slate-400">
-                                                    <User size={12} />
-                                                    {item.author}
-                                                </span>
-                                                <Link
-                                                    href="#"
-                                                    className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
-                                                >
-                                                    Selengkapnya
-                                                    <ArrowRight size={14} />
-                                                </Link>
+                                            <div className="p-5 flex flex-col flex-grow">
+                                                <div className="flex items-center gap-3 mb-3 text-xs text-slate-400">
+                                                    <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 bg-teal-50 px-2.5 py-1 rounded">
+                                                        {item.kategori || "Kegiatan"}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Calendar size={12} />
+                                                        {formatDate(item.created_at || item.tanggal)}
+                                                    </span>
+                                                </div>
+
+                                                {/* ===== SOLUSI TERBAIK: PAKAI JAVASCRIPT BIASA ===== */}
+                                                <h3 className="text-base font-semibold text-slate-900 mb-2 leading-snug line-clamp-2">
+                                                    <a
+                                                        href={`/berita/${item.slug || item.id}`}
+                                                        className="hover:text-teal-600 transition-colors"
+                                                    >
+                                                        {item.judul}
+                                                    </a>
+                                                </h3>
+
+                                                <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-3 flex-grow">
+                                                    {item.deskripsi ||
+                                                     item.deskripsi_singkat ||
+                                                     item.konten?.replace(/<[^>]*>?/gm, '').substring(0, 150) ||
+                                                     "Tidak ada deskripsi"}
+                                                </p>
+                                                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                                                    <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                                                        <User size={12} />
+                                                        {item.author || "Admin"}
+                                                    </span>
+
+                                                    {/* ===== SOLUSI TERBAIK: PAKAI JAVASCRIPT BIASA ===== */}
+                                                    <a
+                                                        href={`/berita/${item.slug || item.id}`}
+                                                        className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                                                    >
+                                                        Selengkapnya
+                                                        <ArrowRight size={14} />
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </article>
-                                ))}
+                                        </article>
+                                    );
+                                })}
                             </div>
 
                             {/* Pagination */}
