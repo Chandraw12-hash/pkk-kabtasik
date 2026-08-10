@@ -116,7 +116,7 @@ export default function StrukturOrganisasi() {
                             <div className="rounded-xl overflow-hidden border border-slate-200">
                                 <img
                                     src="/assets/images/ketua-pkk.jpg"
-                                    alt="Hj. Ai Diantani Sugianto"
+                                    alt="Hj. Retno Widyastuti, S.E"
                                     className="w-full h-[420px] md:h-[480px] object-cover object-top"
                                     onError={(e) => {
                                         e.currentTarget.src =
@@ -126,7 +126,7 @@ export default function StrukturOrganisasi() {
                             </div>
                             <div className="mt-4">
                                 <p className="text-lg font-bold text-slate-900">
-                                    Hj. Ai Diantani Sugianto
+                                    Hj. Retno Widyastuti, S.E
                                 </p>
                                 <p className="text-sm text-slate-500 mt-0.5">
                                     Ketua TP PKK Kabupaten Tasikmalaya
@@ -140,7 +140,7 @@ export default function StrukturOrganisasi() {
                                 Pimpinan Utama
                             </p>
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
-                                Hj. Ai Diantani Sugianto
+                                Hj. Retno Widyastuti, S.E
                             </h2>
 
                             <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
@@ -214,7 +214,7 @@ export default function StrukturOrganisasi() {
                                 Ketua TP PKK
                             </p>
                             <p className="font-bold text-slate-900">
-                                Hj. Ai Diantani Sugianto
+                                Hj. Retno Widyastuti, S.E
                             </p>
                         </div>
                     </div>

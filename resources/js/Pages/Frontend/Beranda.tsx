@@ -332,7 +332,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                             <div className="rounded-xl overflow-hidden border border-slate-200">
                                 <img
                                     src="/assets/images/ketua-pkk.jpg"
-                                    alt="Hj. Ai Diantani Sugianto, Ketua TP PKK Kabupaten Tasikmalaya"
+                                    alt=" Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
                                     loading="lazy"
                                     className="w-full h-[420px] md:h-[480px] object-cover object-top"
                                     onError={(e) => {
@@ -343,7 +343,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                             </div>
                             <div className="mt-4">
                                 <h3 className="text-lg font-bold text-slate-900">
-                                    Hj. Ai Diantani Sugianto
+                                    Hj. Retno Widyastuti, S.E
                                 </h3>
                                 <p className="text-sm text-slate-500 mt-0.5">
                                     Ketua TP PKK Kabupaten Tasikmalaya
@@ -400,7 +400,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
 
                             <div className="mt-8 pt-6 border-t border-slate-200">
                                 <p className="font-semibold text-slate-900">
-                                    Hj. Ai Diantani Sugianto
+                                    Hj. Retno Widyastuti, S.E
                                 </p>
                                 <p className="text-sm text-slate-500 mt-0.5">
                                     Ketua TP PKK Kabupaten Tasikmalaya
