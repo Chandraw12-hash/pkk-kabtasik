@@ -331,7 +331,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                         <div className="w-full lg:w-5/12">
                             <div className="rounded-xl overflow-hidden border border-slate-200">
                                 <img
-                                    src="/assets/images/ketua-pkk.jpg"
+                                    src="/assets/images/ketuapkk.png"
                                     alt=" Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
                                     loading="lazy"
                                     className="w-full h-[420px] md:h-[480px] object-cover object-top"
