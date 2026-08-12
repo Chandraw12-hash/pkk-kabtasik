@@ -6,16 +6,17 @@ import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { ArrowLeft, Save } from "lucide-react";
 
-export default function CreatePokja() {
+export default function CreatePokja1() {
     const { data, setData, post, processing, errors } = useForm({
-        nama_pokja: "",
-        fokus_program: "",
+        kategori: "Pokja I", // Bisa disesuaikan atau dikosongkan jika dinamis
+        judul_kegiatan: "",
         deskripsi: "",
     });
 
-    const submit = (e: React.FormEvent) => {
+    const submit = (e) => {
         e.preventDefault();
-        post(route("be.pokja.store"));
+        // Sesuaikan nama rute store dengan modul pokja yang aktif (contoh: be.pokja1.store)
+        post(route("be.pokja1.store"));
     };
 
     const selectClass =
@@ -23,54 +24,59 @@ export default function CreatePokja() {
 
     return (
         <MainLayout>
-            <Head title="Tambah Data Pokja" />
+            <Head title="Tambah Data Pokja I" />
 
             <div className="flex items-center gap-3 mb-8">
                 <Link
-                    href={route("be.pokja.index")}
+                    // Sesuaikan rute kembali ke index pokja 1
+                    href={route("be.pokja1.index")}
                     className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all dark:hover:bg-slate-700"
                 >
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Tambah Pokja Baru
+                        Tambah Data Pokja I
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Tambah kategori Kelompok Kerja (Pokja) PKK
+                        Tambah kegiatan dan program kerja baru untuk Pokja I TP PKK
                     </p>
                 </div>
             </div>
 
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
+            <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50">
                 <form onSubmit={submit} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {/* Kategori / Nama Pokja */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Nama Pokja / Sekretariat <span className="text-rose-500">*</span>
+                                Kategori <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                placeholder="Contoh: Pokja I, Pokja II, atau Sekretariat"
-                                value={data.nama_pokja}
-                                onChange={(e) => setData("nama_pokja", e.target.value)}
+                                placeholder="Pokja I"
+                                value={data.kategori}
+                                onChange={(e) => setData("kategori", e.target.value)}
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.nama_pokja && <div className="text-red-500 text-xs mt-1">{errors.nama_pokja}</div>}
+                            {errors.kategori && <div className="text-red-500 text-xs mt-1">{errors.kategori}</div>}
                         </div>
 
+                        {/* Judul Kegiatan */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Fokus Program / Kegiatan Utama
+                                Judul Kegiatan <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                placeholder="Contoh: Penghayatan dan Pengamalan Pancasila"
-                                value={data.fokus_program}
-                                onChange={(e) => setData("fokus_program", e.target.value)}
+                                placeholder="Contoh: Penyuluhan Pola Asuh Anak dan Remaja"
+                                value={data.judul_kegiatan}
+                                onChange={(e) => setData("judul_kegiatan", e.target.value)}
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.fokus_program && <div className="text-red-500 text-xs mt-1">{errors.fokus_program}</div>}
+                            {errors.judul_kegiatan && <div className="text-red-500 text-xs mt-1">{errors.judul_kegiatan}</div>}
                         </div>
 
+                        {/* Deskripsi */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
                                 Deskripsi / Keterangan
@@ -79,7 +85,7 @@ export default function CreatePokja() {
                                 value={data.deskripsi}
                                 onChange={(e) => setData("deskripsi", e.target.value)}
                                 rows={4}
-                                placeholder="Penjelasan singkat mengenai tugas dan fungsi pokja..."
+                                placeholder="Penjelasan singkat mengenai pelaksanaan kegiatan..."
                                 className={selectClass}
                             />
                             {errors.deskripsi && <div className="text-red-500 text-xs mt-1">{errors.deskripsi}</div>}
@@ -88,8 +94,8 @@ export default function CreatePokja() {
 
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <Link
-                            href={route("be.pokja.index")}
-                            className="px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+                            href={route("be.pokja1.index")}
+                            className="px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
                         >
                             Batal
                         </Link>
@@ -100,7 +106,7 @@ export default function CreatePokja() {
                             className="flex items-center gap-2"
                         >
                             <Save size={16} />
-                            <span>Simpan Pokja</span>
+                            <span>Simpan Data</span>
                         </Button>
                     </div>
                 </form>

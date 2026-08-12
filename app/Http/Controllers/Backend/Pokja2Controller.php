@@ -3,19 +3,32 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pokja;
 use Illuminate\Http\Request;
+use App\Models\Pokja2;
+use App\Imports\Pokja2Import; // <-- Pastikan file ini ada di app/Imports/
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel; // <-- Facade untuk Excel
 use Inertia\Inertia;
 
 class Pokja2Controller extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pokjas = Pokja::where('kategori', 'Pokja II')->latest()->get();
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        $pokjaData = Pokja2::when($search, function ($query, $search) {
+                $query->where('kecamatan', 'like', "%{$search}%")
+                      ->orWhere('nama_kecamatan', 'like', "%{$search}%")
+                      ->orWhere('kategori', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('Backend/Pokja2/Index', [
-            'pokjas' => $pokjas,
+            'pokjas' => $pokjaData,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
@@ -27,66 +40,55 @@ class Pokja2Controller extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kategori' => 'required|string|max:255',
+            'kecamatan' => 'required|string|max:255',
+            'nama_kecamatan' => 'nullable|string|max:255',
         ]);
 
-        $fotoPath = null;
-        if ($request->hasFile('foto')) {
-            $fotoPath = $request->file('foto')->store('pokja2-photos', 'public');
-        }
-
-        Pokja::create([
-            'kategori' => 'Pokja II',
-            'judul_kegiatan' => $request->judul_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'foto' => $fotoPath,
-        ]);
+        Pokja2::create($request->all());
 
         return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil ditambahkan.');
     }
 
-    public function edit(Pokja $pokja)
+    public function edit(Pokja2 $pokja2)
     {
-        return Inertia::render('Backend/Pokja2/Edit', [
-            'pokja' => $pokja,
-        ]);
+        return Inertia::render('Backend/Pokja2/Edit', ['pokja' => $pokja2]);
     }
 
-    public function update(Request $request, Pokja $pokja)
+    public function update(Request $request, Pokja2 $pokja2)
     {
         $request->validate([
-            'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kategori' => 'required|string|max:255',
+            'kecamatan' => 'required|string|max:255',
         ]);
 
-        $fotoPath = $pokja->foto;
-        if ($request->hasFile('foto')) {
-            if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
-                Storage::disk('public')->delete($fotoPath);
-            }
-            $fotoPath = $request->file('foto')->store('pokja2-photos', 'public');
-        }
-
-        $pokja->update([
-            'judul_kegiatan' => $request->judul_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'foto' => $fotoPath,
-        ]);
+        $pokja2->update($request->all());
 
         return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil diperbarui.');
     }
 
-    public function destroy(Pokja $pokja)
+    public function destroy(Pokja2 $pokja2)
     {
-        if ($pokja->foto && Storage::disk('public')->exists($pokja->foto)) {
-            Storage::disk('public')->delete($pokja->foto);
-        }
-
-        $pokja->delete();
+        $pokja2->delete();
 
         return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil dihapus.');
+    }
+
+    /**
+     * Method tambahan untuk menangani import file Excel Pokja II.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new Pokja2Import, $request->file('file'));
+
+            return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan saat import data: ' . $e->getMessage()]);
+        }
     }
 }

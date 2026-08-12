@@ -2,6 +2,7 @@ import React, { useState, ReactNode, memo } from "react";
 import SidebarComponent from "@/Components/Layout/Sidebar";
 import Navbar from "@/Components/Layout/Navbar";
 import Toast from "@/Components/UI/Toast";
+import { usePage } from "@inertiajs/react";
 
 // Memoisasi Sidebar agar tidak re-render berat saat toggle collapse
 const Sidebar = memo(SidebarComponent);
@@ -14,8 +15,25 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
 
+    // Mengambil shared props 'app_settings' dari Laravel Middleware
+    const { app_settings } = usePage().props as {
+        app_settings?: {
+            primary_color?: string;
+            app_name?: string;
+            app_logo?: string;
+        };
+    };
+
+    // Warna fallback jika pengaturan belum ada
+    const primaryColor = app_settings?.primary_color || "#10b981";
+
     return (
-        <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+        <div
+            className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300"
+            style={{
+                "--primary": primaryColor,
+            } as React.CSSProperties}
+        >
             <Toast />
 
             {/* Backdrop untuk perangkat mobile */}

@@ -5,16 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pokja extends Model
+class Pokja4 extends Model
 {
     use HasFactory;
 
-    protected $table = 'pokjas';
+    protected $table = 'pokja_fours';
 
     protected $fillable = [
         'kategori',
-        'judul_kegiatan',
-        'deskripsi',
-        'foto',
+        'kecamatan',
+        'nama_kecamatan',
+        'posyandu',
+        'akseptor_kb',
+        'phbs',
+        'jamban_keluarga',
     ];
 }

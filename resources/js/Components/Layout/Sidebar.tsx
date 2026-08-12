@@ -226,7 +226,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </Link>
                 )}
 
-                {/* Manajemen Data Pokja & Sekretariat (Dropdown Terpadu) */}
+                {/* Manajemen Data Pokja & Sekretariat */}
                 <div className="mt-2">
                     <button
                         onClick={() => toggleMenu("pokjaManagement")}
@@ -341,7 +341,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </div>
                 </div>
 
-                {/* Manajemen Konten (Galeri & Berita) */}
+                {/* Manajemen Konten */}
                 <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                     Manajemen Konten
                 </p>

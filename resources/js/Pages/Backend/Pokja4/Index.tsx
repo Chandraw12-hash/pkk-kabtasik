@@ -8,14 +8,14 @@ import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus } from "lucide-react";
-import { usePage } from "@inertiajs/react";
+import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X } from "lucide-react";
 import axios from "axios";
 
 export default function Index({ pokjas, filters = {} }) {
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
 
     const [localPokjas, setLocalPokjas] = useState({
@@ -26,6 +26,10 @@ export default function Index({ pokjas, filters = {} }) {
     const isFirstRender = React.useRef(true);
 
     const { delete: destroy, processing } = useForm({});
+
+    const importForm = useForm({
+        file: null,
+    });
 
     const fetchData = (url, params = {}) => {
         setIsLoading(true);
@@ -72,6 +76,17 @@ export default function Index({ pokjas, filters = {} }) {
         });
     };
 
+    const handleImportSubmit = (e) => {
+        e.preventDefault();
+        importForm.post(route("be.pokja4.import"), {
+            onSuccess: () => {
+                setShowImportModal(false);
+                importForm.reset();
+                fetchData(route("be.pokja4.index"), { search, per_page: perPage });
+            },
+        });
+    };
+
     return (
         <MainLayout>
             <Head title="Manajemen Data Pokja IV" />
@@ -82,17 +97,26 @@ export default function Index({ pokjas, filters = {} }) {
                         Manajemen Data Pokja IV
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola data kegiatan dan program kerja Pokja IV TP PKK
+                        Kelola data rekapitulasi kesehatan, posyandu, dan keluarga berencana Pokja IV TP PKK
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setShowImportModal(true)}
+                        className="flex items-center gap-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                    >
+                        <Upload size={16} />
+                        <span>Import Excel</span>
+                    </Button>
                     <Button
                         variant="primary"
                         href={route("be.pokja4.create")}
                         className="shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2"
                     >
                         <Plus size={16} />
-                        <span>Tambah Pokja IV</span>
+                        <span>Tambah Data</span>
                     </Button>
                 </div>
             </div>
@@ -102,7 +126,7 @@ export default function Index({ pokjas, filters = {} }) {
                     <div className="relative w-full max-w-md">
                         <TextInput
                             iconLeft={<Search size={18} />}
-                            placeholder="Cari judul kegiatan..."
+                            placeholder="Cari nama kecamatan..."
                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             containerClassName="relative w-full"
                             value={search}
@@ -121,74 +145,106 @@ export default function Index({ pokjas, filters = {} }) {
                     )}
                 </div>
 
-                <Table
-                    isLoading={isLoading}
-                    columns={[
-                        {
-                            header: "#",
-                            className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                            headerClassName: "text-center w-16",
-                            render: (_, index) => {
-                                const currentPage = localPokjas.current_page ?? 1;
-                                const perPageVal = localPokjas.per_page ?? 10;
-                                return (currentPage - 1) * perPageVal + index + 1;
+                <div className="overflow-x-auto">
+                    <Table
+                        isLoading={isLoading}
+                        columns={[
+                            {
+                                header: "#",
+                                className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
+                                headerClassName: "text-center w-16",
+                                render: (_, index) => {
+                                    const currentPage = localPokjas.current_page ?? 1;
+                                    const perPageVal = localPokjas.per_page ?? 10;
+                                    return (currentPage - 1) * perPageVal + index + 1;
+                                },
                             },
-                        },
-                        {
-                            header: "Kategori",
-                            className: "text-center w-36",
-                            headerClassName: "text-center w-36",
-                            render: (item) => (
-                                <div className="flex justify-center">
-                                    <Badge type="info">{item.kategori}</Badge>
-                                </div>
-                            ),
-                        },
-                        {
-                            header: "Judul Kegiatan & Deskripsi",
-                            className: "w-auto",
-                            headerClassName: "w-auto",
-                            render: (item) => (
-                                <div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                        {item.judul_kegiatan}
-                                    </p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                        {item.deskripsi || "Tidak ada deskripsi"}
-                                    </p>
-                                </div>
-                            ),
-                        },
-                        {
-                            header: "Aksi",
-                            headerClassName: "text-center w-32",
-                            className: "text-center w-32",
-                            render: (item) => (
-                                <div className="flex items-center justify-center gap-2">
-                                    <Link
-                                        href={route("be.pokja4.edit", item.id)}
-                                        className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
-                                    >
-                                        <Edit2 size={16} />
-                                    </Link>
-                                    <button
-                                        onClick={() => openDeleteModal(item)}
-                                        className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ),
-                        },
-                    ]}
-                    data={localPokjas.data}
-                />
+                            {
+                                header: "Nama Kecamatan",
+                                className: "font-bold text-slate-700 dark:text-slate-200 min-w-[160px]",
+                                headerClassName: "min-w-[160px]",
+                                render: (item) => (
+                                    <div>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-200">
+                                            {item.nama_kecamatan || item.kecamatan}
+                                        </p>
+                                        <span className="text-xs text-slate-400">
+                                            Kategori: {item.kategori || 'Umum'}
+                                        </span>
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: "Posyandu",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item) => (
+                                    <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        {item.posyandu ?? 0}
+                                    </span>
+                                ),
+                            },
+                            {
+                                header: "Akseptor KB",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item) => (
+                                    <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        {item.akseptor_kb ?? 0}
+                                    </span>
+                                ),
+                            },
+                            {
+                                header: "PHBS",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item) => (
+                                    <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        {item.phbs ?? 0}
+                                    </span>
+                                ),
+                            },
+                            {
+                                header: "Jamban Keluarga",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item) => (
+                                    <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        {item.jamban_keluarga ?? 0}
+                                    </span>
+                                ),
+                            },
+                            {
+                                header: "Aksi",
+                                headerClassName: "text-center w-32",
+                                className: "text-center w-32",
+                                render: (item) => (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Link
+                                            href={route("be.pokja4.edit", item.id)}
+                                            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
+                                        >
+                                            <Edit2 size={16} />
+                                        </Link>
+                                        <button
+                                            onClick={() => openDeleteModal(item)}
+                                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ),
+                            },
+                        ]}
+                        data={localPokjas.data}
+                    />
+                </div>
 
                 <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
                     <p className="text-sm text-slate-500 dark:text-slate-200">
                         Menampilkan <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.from ?? 0}</span> sampai{" "}
                         <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.to ?? 0}</span> dari{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.total}</span> data
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.total ?? 0}</span> data
                     </p>
 
                     <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -209,11 +265,64 @@ export default function Index({ pokjas, filters = {} }) {
                 </div>
             </Card>
 
+            {/* Modal Import Excel Pokja IV */}
+            {showImportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md shadow-xl border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                                Import Data Excel Pokja IV
+                            </h3>
+                            <button
+                                onClick={() => setShowImportModal(false)}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleImportSubmit}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Pilih File Excel (.xlsx, .xls, .csv)
+                                </label>
+                                <input
+                                    type="file"
+                                    accept=".xlsx, .xls, .csv"
+                                    onChange={(e) => importForm.setData("file", e.target.files[0])}
+                                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-700 dark:file:text-indigo-400 cursor-pointer border border-slate-200 dark:border-slate-700 rounded-xl p-2"
+                                />
+                                {importForm.errors.file && (
+                                    <p className="text-sm text-rose-500 mt-1">{importForm.errors.file}</p>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-6">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => setShowImportModal(false)}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={importForm.processing}
+                                >
+                                    {importForm.processing ? "Mengimport..." : "Upload & Import"}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <ConfirmationModal
                 show={showDeleteModal}
                 processing={processing}
                 title="Hapus Data Pokja IV"
-                message="Apakah Anda yakin ingin menghapus data kegiatan Pokja IV ini? Data yang dihapus tidak dapat dikembalikan."
+                message="Apakah Anda yakin ingin menghapus data rekapitulasi Pokja IV ini? Data yang dihapus tidak dapat dikembalikan."
                 onConfirm={handleDelete}
                 onCancel={() => setShowDeleteModal(false)}
             />

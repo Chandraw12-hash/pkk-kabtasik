@@ -1,45 +1,53 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import ConfirmationModal from "@/Components/UI/ConfirmationModal";
-import Badge from "@/Components/UI/Badge";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus } from "lucide-react";
-import { usePage } from "@inertiajs/react";
+import { Head, Link, useForm, router } from "@inertiajs/react";
+import {
+    Search,
+    Edit2,
+    Trash2,
+    RotateCcw,
+    Plus,
+    Upload,
+    FileSpreadsheet,
+    X,
+} from "lucide-react";
 import axios from "axios";
 
-export default function Index({ pokjas, filters = {} }) {
-    const { auth } = usePage().props;
+export default function Index({ sekretariats, filters = {} }: any) {
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
+    const [selectedItem, setSelectedItem] = useState<any>(null);
 
-    const [localPokjas, setLocalPokjas] = useState({
-        ...pokjas,
-        data: pokjas?.data || [],
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [importing, setImporting] = useState(false);
+
+    const [localData, setLocalData] = useState({
+        ...sekretariats,
+        data: sekretariats?.data || [],
     });
     const [isLoading, setIsLoading] = useState(false);
-    const isFirstRender = React.useRef(true);
+    const isFirstRender = useRef(true);
 
     const { delete: destroy, processing } = useForm({});
 
-    const fetchData = (url, params = {}) => {
+    const fetchData = (url: string, params: any = {}) => {
         setIsLoading(true);
         axios
             .get(url, { params, headers: { Accept: "application/json" } })
             .then((res) => {
                 if (res.data && typeof res.data === "object" && "data" in res.data) {
-                    setLocalPokjas(res.data);
-                } else if (Array.isArray(res.data)) {
-                    setLocalPokjas((prev) => ({ ...prev, data: res.data }));
+                    setLocalData(res.data);
                 }
             })
-            .catch((err) => console.error("Error fetching data:", err))
+            .catch((err) => console.error(err))
             .finally(() => setIsLoading(false));
     };
 
@@ -48,28 +56,62 @@ export default function Index({ pokjas, filters = {} }) {
             isFirstRender.current = false;
             return;
         }
-
         const timeout = setTimeout(() => {
-            fetchData(route("be.sekretariat.index"), { search, per_page: perPage });
+            fetchData(route("be.sekretariat.index"), {
+                search,
+                per_page: perPage,
+            });
         }, 300);
-
         return () => clearTimeout(timeout);
     }, [search, perPage]);
 
-    const openDeleteModal = (item) => {
+    useEffect(() => {
+        if (sekretariats) {
+            setLocalData({
+                ...sekretariats,
+                data: sekretariats?.data || [],
+            });
+        }
+    }, [sekretariats]);
+
+    const openDeleteModal = (item: any) => {
         setSelectedItem(item);
         setShowDeleteModal(true);
     };
 
     const handleDelete = () => {
         if (!selectedItem) return;
-
         destroy(route("be.sekretariat.destroy", selectedItem.id), {
             onSuccess: () => {
                 setShowDeleteModal(false);
                 setSelectedItem(null);
-                fetchData(route("be.sekretariat.index"), { search, per_page: perPage });
+                fetchData(route("be.sekretariat.index"), {
+                    search,
+                    per_page: perPage,
+                });
             },
+        });
+    };
+
+    const handleImport = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!importFile) return;
+
+        const formData = new FormData();
+        formData.append("file", importFile);
+        setImporting(true);
+
+        router.post(route("be.sekretariat.import"), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowImportModal(false);
+                setImportFile(null);
+                fetchData(route("be.sekretariat.index"), {
+                    search,
+                    per_page: perPage,
+                });
+            },
+            onFinish: () => setImporting(false),
         });
     };
 
@@ -83,27 +125,35 @@ export default function Index({ pokjas, filters = {} }) {
                         Manajemen Data Sekretariat
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola data kegiatan dan program kerja Sekretariat TP PKK
+                        Kelola data statistik Sekretariat per kecamatan
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
+                        variant="secondary"
+                        onClick={() => setShowImportModal(true)}
+                        className="flex items-center gap-2"
+                    >
+                        <Upload size={16} />
+                        <span>Import Excel</span>
+                    </Button>
+                    <Button
                         variant="primary"
                         href={route("be.sekretariat.create")}
-                        className="shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2"
+                        className="flex items-center gap-2"
                     >
                         <Plus size={16} />
-                        <span>Tambah Sekretariat</span>
+                        <span>Tambah Data</span>
                     </Button>
                 </div>
             </div>
 
-            <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50">
+            <Card className="dark:bg-slate-800 dark:border-slate-700">
                 <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex items-center gap-4">
                     <div className="relative w-full max-w-md">
                         <TextInput
                             iconLeft={<Search size={18} />}
-                            placeholder="Cari judul kegiatan..."
+                            placeholder="Cari kecamatan..."
                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             containerClassName="relative w-full"
                             value={search}
@@ -113,7 +163,10 @@ export default function Index({ pokjas, filters = {} }) {
                     {search && (
                         <Button
                             variant="danger"
-                            onClick={() => { setSearch(""); setPerPage(10); }}
+                            onClick={() => {
+                                setSearch("");
+                                setPerPage(10);
+                            }}
                             className="flex items-center gap-2"
                         >
                             <RotateCcw size={16} />
@@ -127,54 +180,76 @@ export default function Index({ pokjas, filters = {} }) {
                     columns={[
                         {
                             header: "#",
-                            className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                            headerClassName: "text-center w-16",
-                            render: (_, index) => {
-                                const currentPage = localPokjas.current_page ?? 1;
-                                const perPageVal = localPokjas.per_page ?? 10;
+                            className: "text-center w-14",
+                            headerClassName: "text-center w-14",
+                            render: (_: any, index: number) => {
+                                const currentPage = localData.current_page ?? 1;
+                                const perPageVal = localData.per_page ?? 10;
                                 return (currentPage - 1) * perPageVal + index + 1;
                             },
                         },
                         {
-                            header: "Kategori",
-                            className: "text-center w-36",
-                            headerClassName: "text-center w-36",
-                            render: (item) => (
-                                <div className="flex justify-center">
-                                    <Badge type="info">{item.kategori}</Badge>
-                                </div>
+                            header: "Kecamatan",
+                            render: (item: any) => (
+                                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                    {item.kecamatan || "-"}
+                                </span>
                             ),
                         },
                         {
-                            header: "Judul Kegiatan & Deskripsi",
-                            className: "w-auto",
-                            headerClassName: "w-auto",
-                            render: (item) => (
-                                <div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                        {item.judul_kegiatan}
-                                    </p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                        {item.deskripsi || "Tidak ada deskripsi"}
-                                    </p>
-                                </div>
-                            ),
+                            header: "PKK RW",
+                            className: "text-center",
+                            headerClassName: "text-center",
+                            render: (item: any) => item.jumlah_pkk_rw ?? 0,
+                        },
+                        {
+                            header: "PKK RT",
+                            className: "text-center",
+                            headerClassName: "text-center",
+                            render: (item: any) => item.jumlah_pkk_rt ?? 0,
+                        },
+                        {
+                            header: "Dasawisma",
+                            className: "text-center",
+                            headerClassName: "text-center",
+                            render: (item: any) => item.jumlah_dasa_wisma ?? 0,
+                        },
+                        {
+                            header: "KK",
+                            className: "text-center",
+                            headerClassName: "text-center",
+                            render: (item: any) => item.jumlah_kk ?? 0,
+                        },
+                        {
+                            header: "Jiwa (L/P)",
+                            className: "text-center",
+                            headerClassName: "text-center",
+                            render: (item: any) =>
+                                `${item.jiwa_l ?? 0} / ${item.jiwa_p ?? 0}`,
+                        },
+                        {
+                            header: "Kader Umum",
+                            className: "text-center",
+                            headerClassName: "text-center",
+                            render: (item: any) =>
+                                (item.kader_umum_l ?? 0) + (item.kader_umum_p ?? 0),
                         },
                         {
                             header: "Aksi",
-                            headerClassName: "text-center w-32",
-                            className: "text-center w-32",
-                            render: (item) => (
+                            headerClassName: "text-center w-28",
+                            className: "text-center w-28",
+                            render: (item: any) => (
                                 <div className="flex items-center justify-center gap-2">
                                     <Link
                                         href={route("be.sekretariat.edit", item.id)}
-                                        className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
+                                        className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all"
                                     >
                                         <Edit2 size={16} />
                                     </Link>
                                     <button
+                                        type="button"
                                         onClick={() => openDeleteModal(item)}
-                                        className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
+                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -182,22 +257,32 @@ export default function Index({ pokjas, filters = {} }) {
                             ),
                         },
                     ]}
-                    data={localPokjas.data}
+                    data={localData.data}
                 />
 
-                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
-                    <p className="text-sm text-slate-500 dark:text-slate-200">
-                        Menampilkan <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.from ?? 0}</span> sampai{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.to ?? 0}</span> dari{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.total}</span> data
+                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-slate-500">
+                        Menampilkan{" "}
+                        <span className="font-bold text-slate-800">
+                            {localData.from ?? 0}
+                        </span>{" "}
+                        sampai{" "}
+                        <span className="font-bold text-slate-800">
+                            {localData.to ?? 0}
+                        </span>{" "}
+                        dari{" "}
+                        <span className="font-bold text-slate-800">
+                            {localData.total ?? 0}
+                        </span>{" "}
+                        data
                     </p>
 
-                    <div className="flex items-center gap-3 text-sm text-slate-400">
+                    <div className="flex items-center gap-3 text-sm text-slate-500">
                         <span>Tampilkan</span>
                         <select
                             value={perPage}
                             onChange={(e) => setPerPage(parseInt(e.target.value))}
-                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-3 focus:ring-indigo-500/10 focus:border-indigo-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl py-1.5 px-3 outline-none cursor-pointer"
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -206,15 +291,84 @@ export default function Index({ pokjas, filters = {} }) {
                         </select>
                     </div>
 
-                    <Pagination links={localPokjas.links} onPageChange={(url) => fetchData(url)} />
+                    <Pagination
+                        links={localData.links}
+                        onPageChange={(url: string) => fetchData(url)}
+                    />
                 </div>
             </Card>
+
+            {/* Modal Import Excel */}
+            {showImportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                                Import Data Excel
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowImportModal(false)}
+                                className="text-slate-400 hover:text-slate-600"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-slate-500 mb-4">
+                            Upload file <strong>.xlsx</strong> / <strong>.csv</strong>.
+                            Baris pertama harus berisi header kolom.
+                        </p>
+
+                        <form onSubmit={handleImport} className="space-y-4">
+                            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-6 cursor-pointer hover:border-teal-400 transition-colors">
+                                <FileSpreadsheet
+                                    size={28}
+                                    className="text-teal-600 mb-2"
+                                />
+                                <span className="text-sm text-slate-600 text-center">
+                                    {importFile
+                                        ? importFile.name
+                                        : "Pilih file Excel"}
+                                </span>
+                                <input
+                                    type="file"
+                                    accept=".xlsx,.xls,.csv"
+                                    className="hidden"
+                                    onChange={(e) =>
+                                        setImportFile(e.target.files?.[0] || null)
+                                    }
+                                />
+                            </label>
+
+                            <div className="flex gap-3 justify-end">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => setShowImportModal(false)}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={!importFile || importing}
+                                    className="flex items-center gap-2"
+                                >
+                                    <Upload size={16} />
+                                    {importing ? "Mengimpor..." : "Import Sekarang"}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <ConfirmationModal
                 show={showDeleteModal}
                 processing={processing}
                 title="Hapus Data Sekretariat"
-                message="Apakah Anda yakin ingin menghapus data kegiatan Sekretariat ini? Data yang dihapus tidak dapat dikembalikan."
+                message="Apakah Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan."
                 onConfirm={handleDelete}
                 onCancel={() => setShowDeleteModal(false)}
             />

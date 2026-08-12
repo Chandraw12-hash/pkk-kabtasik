@@ -50,7 +50,7 @@ class HandleInertiaRequests extends Middleware
             'app_settings' => function () {
                 return \Illuminate\Support\Facades\Cache::remember('app_settings', 3600, function () {
                     return \Illuminate\Support\Facades\DB::table('settings')
-                        ->whereIn('key', ['app_name', 'app_logo'])
+                        ->whereIn('key', ['app_name', 'app_logo', 'primary_color']) // Ditambahkan primary_color di sini
                         ->pluck('value', 'key');
                 });
             },

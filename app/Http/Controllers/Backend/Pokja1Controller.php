@@ -3,19 +3,34 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pokja;
 use Illuminate\Http\Request;
+use App\Models\Pokja1;
+use App\Imports\Pokja1Import;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Inertia\Inertia;
 
 class Pokja1Controller extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pokjas = Pokja::where('kategori', 'Pokja I')->latest()->get();
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        $pokjaData = Pokja1::when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('judul_kegiatan', 'like', "%{$search}%")
+                      ->orWhere('deskripsi', 'like', "%{$search}%")
+                      ->orWhere('kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('Backend/Pokja1/Index', [
-            'pokjas' => $pokjas,
+            'pokjas' => $pokjaData,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
@@ -26,67 +41,104 @@ class Pokja1Controller extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'deskripsi'      => 'nullable|string',
+            'kategori'       => 'nullable|string|max:100',
+            'kecamatan'      => 'nullable|string|max:100',
+            'pkbn_l'         => 'nullable|integer|min:0',
+            'pkbn_p'         => 'nullable|integer|min:0',
+            'pkdrt_l'        => 'nullable|integer|min:0',
+            'pkdrt_p'        => 'nullable|integer|min:0',
+            'pola_asuh_l'    => 'nullable|integer|min:0',
+            'pola_asuh_p'    => 'nullable|integer|min:0',
+            'lansia_l'       => 'nullable|integer|min:0',
+            'lansia_p'       => 'nullable|integer|min:0',
+            'kader_pokja1_l' => 'nullable|integer|min:0',
+            'kader_pokja1_p' => 'nullable|integer|min:0',
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $fotoPath = null;
         if ($request->hasFile('foto')) {
-            $fotoPath = $request->file('foto')->store('pokja1-photos', 'public');
+            $validated['foto'] = $request->file('foto')->store('pokja1-photos', 'public');
         }
 
-        Pokja::create([
-            'kategori' => 'Pokja I',
-            'judul_kegiatan' => $request->judul_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'foto' => $fotoPath,
-        ]);
+        // Sinkronkan kolom nama_kecamatan (duplikat historis) dengan kecamatan
+        $validated['nama_kecamatan'] = $validated['kecamatan'] ?? null;
+
+        Pokja1::create($validated);
 
         return redirect()->route('be.pokja1.index')->with('success', 'Data Pokja I berhasil ditambahkan.');
     }
 
-    public function edit(Pokja $pokja)
+    public function edit(Pokja1 $pokja1)
     {
         return Inertia::render('Backend/Pokja1/Edit', [
-            'pokja' => $pokja,
+            'pokja' => $pokja1,
         ]);
     }
 
-    public function update(Request $request, Pokja $pokja)
+    public function update(Request $request, Pokja1 $pokja1)
     {
-        $request->validate([
+        $validated = $request->validate([
             'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'deskripsi'      => 'nullable|string',
+            'kategori'       => 'nullable|string|max:100',
+            'kecamatan'      => 'nullable|string|max:100',
+            'pkbn_l'         => 'nullable|integer|min:0',
+            'pkbn_p'         => 'nullable|integer|min:0',
+            'pkdrt_l'        => 'nullable|integer|min:0',
+            'pkdrt_p'        => 'nullable|integer|min:0',
+            'pola_asuh_l'    => 'nullable|integer|min:0',
+            'pola_asuh_p'    => 'nullable|integer|min:0',
+            'lansia_l'       => 'nullable|integer|min:0',
+            'lansia_p'       => 'nullable|integer|min:0',
+            'kader_pokja1_l' => 'nullable|integer|min:0',
+            'kader_pokja1_p' => 'nullable|integer|min:0',
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $fotoPath = $pokja->foto;
         if ($request->hasFile('foto')) {
-            if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
-                Storage::disk('public')->delete($fotoPath);
+            if ($pokja1->foto && Storage::disk('public')->exists($pokja1->foto)) {
+                Storage::disk('public')->delete($pokja1->foto);
             }
-            $fotoPath = $request->file('foto')->store('pokja1-photos', 'public');
+            $validated['foto'] = $request->file('foto')->store('pokja1-photos', 'public');
+        } else {
+            // Tidak upload foto baru -> pertahankan foto lama
+            unset($validated['foto']);
         }
 
-        $pokja->update([
-            'judul_kegiatan' => $request->judul_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'foto' => $fotoPath,
-        ]);
+        // Sinkronkan kolom nama_kecamatan (duplikat historis) dengan kecamatan
+        $validated['nama_kecamatan'] = $validated['kecamatan'] ?? $pokja1->nama_kecamatan;
+
+        $pokja1->update($validated);
 
         return redirect()->route('be.pokja1.index')->with('success', 'Data Pokja I berhasil diperbarui.');
     }
 
-    public function destroy(Pokja $pokja)
+    public function destroy(Pokja1 $pokja1)
     {
-        if ($pokja->foto && Storage::disk('public')->exists($pokja->foto)) {
-            Storage::disk('public')->delete($pokja->foto);
+        if ($pokja1->foto && Storage::disk('public')->exists($pokja1->foto)) {
+            Storage::disk('public')->delete($pokja1->foto);
         }
 
-        $pokja->delete();
+        $pokja1->delete();
 
         return redirect()->route('be.pokja1.index')->with('success', 'Data Pokja I berhasil dihapus.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new Pokja1Import, $request->file('file'));
+
+            return redirect()->route('be.pokja1.index')->with('success', 'Data Pokja I berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan saat import data: ' . $e->getMessage()]);
+        }
     }
 }

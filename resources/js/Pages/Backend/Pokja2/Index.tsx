@@ -8,8 +8,7 @@ import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus } from "lucide-react";
-import { usePage } from "@inertiajs/react";
+import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X } from "lucide-react";
 import axios from "axios";
 
 export default function Index({ pokjas, filters = {} }) {
@@ -17,6 +16,12 @@ export default function Index({ pokjas, filters = {} }) {
     const [perPage, setPerPage] = useState(filters.per_page || 10);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+
+    // State untuk Modal Import Excel
+    const [showImportModal, setShowImportModal] = useState(false);
+    const { data: importData, setData: setImportData, post, processing: importProcessing, reset: resetImport, errors: importErrors } = useForm({
+        file: null,
+    });
 
     const [localPokjas, setLocalPokjas] = useState({
         ...pokjas,
@@ -72,6 +77,18 @@ export default function Index({ pokjas, filters = {} }) {
         });
     };
 
+    // Handler untuk Submit Import Excel Pokja 2
+    const handleImportSubmit = (e) => {
+        e.preventDefault();
+        post(route("be.pokja2.import"), {
+            onSuccess: () => {
+                setShowImportModal(false);
+                resetImport();
+                fetchData(route("be.pokja2.index"), { search, per_page: perPage });
+            },
+        });
+    };
+
     return (
         <MainLayout>
             <Head title="Manajemen Data Pokja II" />
@@ -86,6 +103,16 @@ export default function Index({ pokjas, filters = {} }) {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* Tombol Trigger Modal Import Excel */}
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowImportModal(true)}
+                        className="flex items-center gap-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                    >
+                        <Upload size={16} />
+                        <span>Import Excel</span>
+                    </Button>
+
                     <Button
                         variant="primary"
                         href={route("be.pokja2.create")}
@@ -140,7 +167,7 @@ export default function Index({ pokjas, filters = {} }) {
                             headerClassName: "text-center w-36",
                             render: (item) => (
                                 <div className="flex justify-center">
-                                    <Badge type="info">{item.kategori}</Badge>
+                                    <Badge type="info">{item.kategori || 'Pokja II'}</Badge>
                                 </div>
                             ),
                         },
@@ -151,10 +178,10 @@ export default function Index({ pokjas, filters = {} }) {
                             render: (item) => (
                                 <div>
                                     <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                        {item.judul_kegiatan}
+                                        {item.judul_kegiatan || item.kecamatan}
                                     </p>
                                     <p className="text-xs text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                        {item.deskripsi || "Tidak ada deskripsi"}
+                                        {item.deskripsi || "Kecamatan: " + (item.kecamatan || "-")}
                                     </p>
                                 </div>
                             ),
@@ -188,7 +215,7 @@ export default function Index({ pokjas, filters = {} }) {
                     <p className="text-sm text-slate-500 dark:text-slate-200">
                         Menampilkan <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.from ?? 0}</span> sampai{" "}
                         <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.to ?? 0}</span> dari{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.total}</span> data
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.total ?? 0}</span> data
                     </p>
 
                     <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -209,6 +236,7 @@ export default function Index({ pokjas, filters = {} }) {
                 </div>
             </Card>
 
+            {/* Modal Konfirmasi Hapus */}
             <ConfirmationModal
                 show={showDeleteModal}
                 processing={processing}
@@ -217,6 +245,66 @@ export default function Index({ pokjas, filters = {} }) {
                 onConfirm={handleDelete}
                 onCancel={() => setShowDeleteModal(false)}
             />
+
+            {/* Modal Import Excel Pokja II */}
+            {showImportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 dark:border-slate-700 relative animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <Upload size={20} className="text-indigo-600" />
+                                Import Data Excel Pokja II
+                            </h3>
+                            <button
+                                onClick={() => { setShowImportModal(false); resetImport(); }}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleImportSubmit} className="space-y-4 pt-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Pilih File Excel (.xlsx, .xls, .csv)
+                                </label>
+                                <input
+                                    type="file"
+                                    accept=".xlsx, .xls, .csv"
+                                    onChange={(e) => setImportData("file", e.target.files[0])}
+                                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-700 dark:file:text-slate-200 cursor-pointer border border-slate-200 dark:border-slate-600 rounded-xl"
+                                />
+                                {importErrors.file && (
+                                    <p className="text-xs text-rose-500 mt-1.5">{importErrors.file}</p>
+                                )}
+                            </div>
+
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-3 text-xs text-amber-800 dark:text-amber-300">
+                                Pastikan format kolom file Excel Anda sudah sesuai dengan struktur database Pokja II.
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => { setShowImportModal(false); resetImport(); }}
+                                    className="dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={importProcessing}
+                                    className="flex items-center gap-2"
+                                >
+                                    {importProcessing ? "Mengunggah..." : "Upload & Import"}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </MainLayout>
     );
 }

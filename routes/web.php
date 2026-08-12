@@ -12,8 +12,8 @@ use App\Http\Controllers\Backend\KaderController;
 use App\Http\Controllers\Backend\GaleriController;
 use App\Http\Controllers\Backend\BeritaController;
 
-// Controller Sekretariat & Pokja yang Terpisah
-use App\Http\Controllers\Backend\SekretariatController;
+// Controller Sekretariat & Pokja
+use App\Http\Controllers\Backend\DataUmumSekretariatController;
 use App\Http\Controllers\Backend\Pokja1Controller;
 use App\Http\Controllers\Backend\Pokja2Controller;
 use App\Http\Controllers\Backend\Pokja3Controller;
@@ -32,16 +32,21 @@ Route::as('fe.')->group(function () {
     Route::get('/profil/struktur-organisasi', [IndexController::class, 'strukturOrganisasi'])->name('profil.strukturOrganisasi');
     Route::get('/profil/ketentuan-seragam', [IndexController::class, 'ketentuanSeragam'])->name('profil.ketentuanSeragam');
 
-    // Program
+    // Program & Data Publik
     Route::get('/program/program-kerja', [IndexController::class, 'programKerja'])->name('program.programKerja');
     Route::get('/program/galeri-kegiatan', [IndexController::class, 'galeriKegiatan'])->name('program.galeriKegiatan');
     Route::get('/program/mars-pkk', [IndexController::class, 'marsPkk'])->name('program.marsPkk');
     Route::get('/program/dokumen', [IndexController::class, 'dokumen'])->name('program.dokumen');
 
-    // ============= FIX UNTUK BERITA =============
-    // CUKUP 1 ROUTE INI SAJA. HAPUS ROUTE DETAIL {slug}.
-    // Jika di Index.tsx kamu menggunakan sistem modal/state, route ini sudah cukup.
+    // Berita Publik
     Route::get('/berita', [BeritaController::class, 'indexPublic'])->name('berita');
+
+    // Data Publik Sekretariat & Pokja
+    Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
+    Route::get('/pokja-1', [IndexController::class, 'pokja1Public'])->name('pokja1');
+    Route::get('/pokja-2', [IndexController::class, 'pokja2Public'])->name('pokja2');
+    Route::get('/pokja-3', [IndexController::class, 'pokja3Public'])->name('pokja3');
+    Route::get('/pokja-4', [IndexController::class, 'pokja4Public'])->name('pokja4');
 });
 
 // ============================================
@@ -59,44 +64,57 @@ Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->mid
 // ============================================
 Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function () {
 
-    // ============================================
-    // DASHBOARD
-    // ============================================
+    // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // ============================================
-    // MASTER DATA - KADER PKK
-    // ============================================
+    // Master Data - Kader
     Route::resource('kader', KaderController::class)
         ->names('kader')
         ->except(['show']);
 
     // ============================================
-    // MANAJEMEN SEKRETARIAT & POKJA (TERPISAH)
+    // SEKRETARIAT & POKJA + IMPORT EXCEL
     // ============================================
-    Route::resource('sekretariat', SekretariatController::class)->names('sekretariat')->except(['show']);
-    Route::resource('pokja1', Pokja1Controller::class)->names('pokja1')->except(['show']);
-    Route::resource('pokja2', Pokja2Controller::class)->names('pokja2')->except(['show']);
-    Route::resource('pokja3', Pokja3Controller::class)->names('pokja3')->except(['show']);
-    Route::resource('pokja4', Pokja4Controller::class)->names('pokja4')->except(['show']);
+    Route::resource('sekretariat', DataUmumSekretariatController::class)
+        ->names('sekretariat')
+        ->except(['show']);
+    Route::post('sekretariat/import', [DataUmumSekretariatController::class, 'import'])
+        ->name('sekretariat.import');
 
-    // ============================================
-    // MANAJEMEN KONTEN (Galeri & Berita)
-    // ============================================
+    Route::resource('pokja1', Pokja1Controller::class)
+        ->names('pokja1')
+        ->except(['show']);
+    Route::post('pokja1/import', [Pokja1Controller::class, 'import'])
+        ->name('pokja1.import');
 
-    // Galeri
+    Route::resource('pokja2', Pokja2Controller::class)
+        ->names('pokja2')
+        ->except(['show']);
+    Route::post('pokja2/import', [Pokja2Controller::class, 'import'])
+        ->name('pokja2.import');
+
+    Route::resource('pokja3', Pokja3Controller::class)
+        ->names('pokja3')
+        ->except(['show']);
+    Route::post('pokja3/import', [Pokja3Controller::class, 'import'])
+        ->name('pokja3.import');
+
+    Route::resource('pokja4', Pokja4Controller::class)
+        ->names('pokja4')
+        ->except(['show']);
+    Route::post('pokja4/import', [Pokja4Controller::class, 'import'])
+        ->name('pokja4.import');
+
+    // Galeri & Berita
     Route::resource('galeri', GaleriController::class)
         ->names('galeri')
         ->except(['show']);
 
-    // Berita (Backend tetap full CRUD)
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
 
-    // ============================================
-    // USER MANAGEMENT
-    // ============================================
+    // User Management
     Route::resource('users', UserController::class)
         ->names('users')
         ->except(['show']);
@@ -105,23 +123,15 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->names('roles')
         ->except(['show']);
 
-    // ============================================
-    // SETTINGS
-    // ============================================
+    // Settings
     Route::prefix('settings')->name('settings.')->group(function () {
-
-        // Profile Settings (Admin only)
         Route::middleware('role:admin')->group(function () {
             Route::get('/profile', [ConfigController::class, 'profile'])->name('profile');
             Route::patch('/profile', [ConfigController::class, 'updateProfile'])->name('profile.update');
             Route::put('/password', [ConfigController::class, 'updatePassword'])->name('password.update');
-        });
 
-        // App Settings (Admin only)
-        Route::middleware('role:admin')->group(function () {
             Route::get('/app', [ConfigController::class, 'app'])->name('app');
             Route::post('/app', [ConfigController::class, 'updateApp'])->name('app.update');
         });
     });
-
 });

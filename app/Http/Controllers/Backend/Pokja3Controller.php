@@ -3,92 +3,129 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pokja;
+use App\Imports\Pokja3Import;
+use App\Models\Pokja3;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
+use Maatwebsite\Excel\Facades\Excel;
 
 class Pokja3Controller extends Controller
 {
-    public function index(): Response
+    public function index(Request $request)
     {
-        $pokjas = Pokja::where('kategori', 'Pokja III')->latest()->get();
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        $pokjaData = Pokja3::when($search, function ($query, $search) {
+                $query->where('nama_kecamatan', 'like', "%{$search}%")
+                      ->orWhere('kecamatan', 'like', "%{$search}%")
+                      ->orWhere('kategori', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('Backend/Pokja3/Index', [
-            'pokjas' => $pokjas,
+            'pokjas' => $pokjaData,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
-    public function create(): Response
+    public function create()
     {
         return Inertia::render('Backend/Pokja3/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        $request->validate([
-            'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        $validated = $request->validate([
+            'kategori'                => 'nullable|string|max:50',
+            'kecamatan'               => 'required|string|max:100',
+            'nama_kecamatan'          => 'required|string|max:100',
+            'rumah_sehat'             => 'nullable|numeric|min:0',
+            'rumah_tidak_sehat'       => 'nullable|numeric|min:0',
+            'pemanfaatan_pekarangan'  => 'nullable|numeric|min:0',
+            'industri_rumah_tangga'   => 'nullable|numeric|min:0',
         ]);
 
-        $fotoPath = null;
-        if ($request->hasFile('foto')) {
-            $fotoPath = $request->file('foto')->store('pokja3-photos', 'public');
-        }
+        $validated['kategori'] = $validated['kategori'] ?? 'Umum';
 
-        Pokja::create([
-            'kategori' => 'Pokja III',
-            'judul_kegiatan' => $request->judul_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'foto' => $fotoPath,
-        ]);
+        Pokja3::create($validated);
 
         return redirect()->route('be.pokja3.index')->with('success', 'Data Pokja III berhasil ditambahkan.');
     }
 
-    public function edit(Pokja $pokja): Response
+    public function edit(Pokja3 $pokja3)
     {
-        return Inertia::render('Backend/Pokja3/Edit', [
-            'pokja' => $pokja,
-        ]);
+        return Inertia::render('Backend/Pokja3/Edit', ['pokja' => $pokja3]);
     }
 
-    public function update(Request $request, Pokja $pokja): RedirectResponse
+    public function update(Request $request, Pokja3 $pokja3)
     {
-        $request->validate([
-            'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        $validated = $request->validate([
+            'kategori'                => 'nullable|string|max:50',
+            'kecamatan'               => 'required|string|max:100',
+            'nama_kecamatan'          => 'required|string|max:100',
+            'rumah_sehat'             => 'nullable|numeric|min:0',
+            'rumah_tidak_sehat'       => 'nullable|numeric|min:0',
+            'pemanfaatan_pekarangan'  => 'nullable|numeric|min:0',
+            'industri_rumah_tangga'   => 'nullable|numeric|min:0',
         ]);
 
-        $fotoPath = $pokja->foto;
-        if ($request->hasFile('foto')) {
-            if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
-                Storage::disk('public')->delete($fotoPath);
-            }
-            $fotoPath = $request->file('foto')->store('pokja3-photos', 'public');
-        }
+        $validated['kategori'] = $validated['kategori'] ?? 'Umum';
 
-        $pokja->update([
-            'judul_kegiatan' => $request->judul_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'foto' => $fotoPath,
-        ]);
+        $pokja3->update($validated);
 
         return redirect()->route('be.pokja3.index')->with('success', 'Data Pokja III berhasil diperbarui.');
     }
 
-    public function destroy(Pokja $pokja): RedirectResponse
+    public function destroy(Pokja3 $pokja3)
     {
-        if ($pokja->foto && Storage::disk('public')->exists($pokja->foto)) {
-            Storage::disk('public')->delete($pokja->foto);
-        }
-
-        $pokja->delete();
+        $pokja3->delete();
 
         return redirect()->route('be.pokja3.index')->with('success', 'Data Pokja III berhasil dihapus.');
+    }
+
+    /**
+     * Handle upload & import file Excel/CSV untuk data Pokja III.
+     * Dipanggil oleh route be.pokja3.import
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // maks 5MB
+        ]);
+
+        $import = new Pokja3Import();
+
+        try {
+            Excel::import($import, $request->file('file'));
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal memproses file: ' . $e->getMessage(),
+            ], 422);
+        }
+
+        $failures = $import->failures();
+
+        $failuresFormatted = $failures->map(function ($failure) {
+            return [
+                'row'    => $failure->row(),
+                'errors' => $failure->errors(),
+            ];
+        })->values();
+
+        if ($import->importedCount === 0 && $failuresFormatted->count() > 0) {
+            return response()->json([
+                'message'  => 'Import gagal. Tidak ada baris yang berhasil disimpan. Periksa format header file Anda.',
+                'failures' => $failuresFormatted,
+            ], 422);
+        }
+
+        return response()->json([
+            'message'  => "Import selesai. {$import->importedCount} baris berhasil disimpan.",
+            'imported' => $import->importedCount,
+            'failures' => $failuresFormatted,
+        ]);
     }
 }

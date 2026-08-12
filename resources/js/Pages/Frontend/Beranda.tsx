@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Head, Link } from "@inertiajs/react";
 
 import Navbar from "./Layouts/Navbar";
@@ -21,7 +21,10 @@ import {
     X,
 } from "lucide-react";
 
-// ============= INTERFACE =============
+// ============================================================
+// 1. TYPE DEFINITIONS & CONSTANTS (Dipindahkan ke luar komponen)
+// ============================================================
+
 interface BeritaItem {
     id: number;
     judul: string;
@@ -52,14 +55,18 @@ interface WelcomeProps {
     galeri?: GaleriItem[];
 }
 
-const dataMenu = [
+// ============================================================
+// 2. DATA STATIS (Dipisahkan untuk maintainability)
+// ============================================================
+
+const DATA_MENU = [
     {
         title: "Data Umum",
         desc: "Administrasi Tim Penggerak PKK & rekapitulasi profil kependudukan.",
         icon: Users,
         accent: "#0EA5E9",
         overlay: "#0F172A",
-        link: "#",
+        link: "/sekretariat",
     },
     {
         title: "Pokja I",
@@ -67,7 +74,7 @@ const dataMenu = [
         icon: Heart,
         accent: "#3B82F6",
         overlay: "#0F172A",
-        link: "#",
+        link: "/pokja-1",
     },
     {
         title: "Pokja II",
@@ -75,7 +82,7 @@ const dataMenu = [
         icon: GraduationCap,
         accent: "#10B981",
         overlay: "#0F172A",
-        link: "#",
+        link: "/pokja-2",
     },
     {
         title: "Pokja III",
@@ -83,7 +90,7 @@ const dataMenu = [
         icon: Utensils,
         accent: "#EF4444",
         overlay: "#0F172A",
-        link: "#",
+        link: "/pokja-3",
     },
     {
         title: "Pokja IV",
@@ -91,7 +98,7 @@ const dataMenu = [
         icon: Stethoscope,
         accent: "#14B8A6",
         overlay: "#0F172A",
-        link: "#",
+        link: "/pokja-4",
     },
     {
         title: "Website Utama",
@@ -103,7 +110,7 @@ const dataMenu = [
     },
 ];
 
-const faqList = [
+const FAQ_LIST = [
     {
         q: "Apa itu PKK dan apa tujuannya?",
         a: "PKK (Pemberdayaan dan Kesejahteraan Keluarga) adalah gerakan nasional yang tumbuh dari, oleh, dan untuk masyarakat, dengan tujuan mewujudkan keluarga yang beriman dan bertaqwa kepada Tuhan Yang Maha Esa, berakhlak mulia, sehat sejahtera, maju, dan mandiri.",
@@ -126,7 +133,7 @@ const faqList = [
     },
 ];
 
-const misiList = [
+const MISI_LIST = [
     "Meningkatkan kualitas sumber daya manusia melalui pendidikan, keterampilan, dan pembinaan karakter keluarga.",
     "Mewujudkan keluarga yang sehat, sejahtera, dan mandiri melalui 10 Program Pokok PKK.",
     "Memperkuat gotong royong dan kepedulian sosial di seluruh jenjang masyarakat.",
@@ -134,22 +141,48 @@ const misiList = [
     "Menjaga kelestarian lingkungan hidup serta meningkatkan kualitas kehidupan keluarga yang berkelanjutan.",
 ];
 
-function getBeritaImageSrc(item: BeritaItem): string | null {
-    return item.foto_url || (item.foto ? `/storage/${item.foto}` : null) || item.image || null;
-}
+const FALLBACK_IMAGES = {
+    hero: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    ketua: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    berita: "/assets/images/default-berita.jpg",
+    galeri: "/assets/images/default-galeri.jpg",
+};
 
-function formatBeritaTanggal(item: BeritaItem): string {
-    if (item.created_at) {
-        return new Date(item.created_at).toLocaleDateString("id-ID", {
+// ============================================================
+// 3. UTILITY FUNCTIONS
+// ============================================================
+
+const getBeritaImageSrc = (item: BeritaItem): string | null => {
+    return item.foto_url || (item.foto ? `/storage/${item.foto}` : null) || item.image || null;
+};
+
+const formatTanggal = (date: string | undefined): string => {
+    if (!date) return "Tanggal tidak tersedia";
+    try {
+        return new Date(date).toLocaleDateString("id-ID", {
             day: "numeric",
             month: "long",
             year: "numeric",
         });
+    } catch {
+        return "Tanggal tidak tersedia";
     }
-    return item.tanggal || "Tanggal tidak tersedia";
-}
+};
 
-function useScrollAnimation() {
+const stripHtml = (html: string | undefined): string => {
+    if (!html) return "";
+    return html.replace(/<[^>]*>?/gm, "").substring(0, 150);
+};
+
+const getImageFallback = (type: 'hero' | 'ketua' | 'berita' | 'galeri'): string => {
+    return FALLBACK_IMAGES[type];
+};
+
+// ============================================================
+// 4. CUSTOM HOOKS
+// ============================================================
+
+const useScrollAnimation = () => {
     const ref = useRef<HTMLElement | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -168,44 +201,37 @@ function useScrollAnimation() {
         );
 
         observer.observe(node);
-
-        return () => {
-            observer.unobserve(node);
-        };
+        return () => observer.unobserve(node);
     }, []);
 
     return { ref, isVisible };
-}
+};
+
+const useEscapeKey = (callback: () => void) => {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") callback();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [callback]);
+};
+
+// ============================================================
+// 5. MAIN COMPONENT
+// ============================================================
 
 export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps) {
-    const currentYear = year ?? new Date().getFullYear();
+    // ===== STATE =====
+    const [openFaq, setOpenFaq] = useState<number | null>(0);
+    const [selectedBerita, setSelectedBerita] = useState<BeritaItem | null>(null);
+    const [isProduction] = useState(() => process.env.NODE_ENV === 'production');
 
-    // ============= DEBUG =============
-    useEffect(() => {
-        console.log("=== DATA BERITA DARI SERVER ===");
-        console.log("Jumlah:", berita.length);
-        console.log("Data:", berita);
+    // ===== MEMOIZED DATA =====
+    const beritaTerbaru = useMemo(() => berita.slice(0, 6), [berita]);
+    const galeriTerbaru = useMemo(() => galeri.slice(0, 8), [galeri]);
 
-        if (berita.length === 0) {
-            console.warn("⚠️ TIDAK ADA DATA BERITA! Periksa database dan controller.");
-        } else {
-            console.log("✅ Data berita ditemukan!");
-            berita.forEach((item, i) => {
-                console.log(`[${i+1}] ${item.judul} | foto_url: ${item.foto_url}`);
-            });
-        }
-    }, [berita]);
-
-    // ============= DEBUG GALERI =============
-    useEffect(() => {
-        console.log("=== DATA GALERI DARI SERVER ===");
-        console.log("Jumlah:", galeri.length);
-        console.log("Data:", galeri);
-    }, [galeri]);
-
-    const beritaTerbaru = berita;
-    const galeriData = galeri;
-
+    // ===== ANIMATION HOOKS =====
     const heroAnim = useScrollAnimation();
     const sambutanAnim = useScrollAnimation();
     const visiMisiAnim = useScrollAnimation();
@@ -214,19 +240,161 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
     const beritaAnim = useScrollAnimation();
     const galeriAnim = useScrollAnimation();
 
-    const [openFaq, setOpenFaq] = useState<number | null>(0);
-    const toggleFaq = (index: number) =>
-        setOpenFaq(openFaq === index ? null : index);
-
-    const [selectedBerita, setSelectedBerita] = useState<BeritaItem | null>(null);
-
+    // ===== EFFECTS =====
+    // Debug hanya di development
     useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setSelectedBerita(null);
-        };
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
+        if (!isProduction) {
+            console.log("📊 [DEBUG] Data Berita:", berita.length, "items");
+            console.log("📊 [DEBUG] Data Galeri:", galeri.length, "items");
+        }
+    }, [berita, galeri, isProduction]);
+
+    // Escape key handler
+    useEscapeKey(() => setSelectedBerita(null));
+
+    // ===== HANDLERS =====
+    const toggleFaq = useCallback((index: number) => {
+        setOpenFaq(prev => prev === index ? null : index);
     }, []);
+
+    const handleBeritaClick = useCallback((item: BeritaItem) => {
+        setSelectedBerita(item);
+        // Lock body scroll ketika modal terbuka
+        document.body.style.overflow = 'hidden';
+    }, []);
+
+    const handleCloseModal = useCallback(() => {
+        setSelectedBerita(null);
+        document.body.style.overflow = 'unset';
+    }, []);
+
+    // ===== RENDER HELPERS =====
+    const renderBeritaCard = (item: BeritaItem) => {
+        const imageSrc = getBeritaImageSrc(item);
+        const tanggal = formatTanggal(item.created_at || item.tanggal);
+        const deskripsi = item.deskripsi || item.deskripsi_singkat || stripHtml(item.konten) || "Tidak ada deskripsi";
+
+        return (
+            <article
+                key={item.id}
+                className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full"
+            >
+                <button
+                    type="button"
+                    onClick={() => handleBeritaClick(item)}
+                    className="h-48 overflow-hidden bg-slate-100 flex items-center justify-center w-full text-left relative group"
+                    aria-label={`Baca berita: ${item.judul}`}
+                >
+                    {imageSrc ? (
+                        <img
+                            src={imageSrc}
+                            alt={item.judul}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== FALLBACK_IMAGES.berita) {
+                                    target.src = FALLBACK_IMAGES.berita;
+                                } else {
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                        const fallback = document.createElement('div');
+                                        fallback.className = 'flex items-center justify-center w-full h-full bg-slate-100';
+                                        fallback.innerHTML = `
+                                            <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                            </svg>
+                                        `;
+                                        parent.appendChild(fallback);
+                                    }
+                                }
+                            }}
+                        />
+                    ) : (
+                        <Newspaper size={40} className="text-slate-400" />
+                    )}
+                </button>
+
+                <div className="p-5 flex flex-col flex-grow">
+                    <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
+                        <Calendar size={12} />
+                        {tanggal}
+                    </p>
+
+                    <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-2">
+                        <button
+                            type="button"
+                            onClick={() => handleBeritaClick(item)}
+                            className="hover:text-teal-600 transition-colors text-left"
+                        >
+                            {item.judul}
+                        </button>
+                    </h3>
+
+                    <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-grow">
+                        {deskripsi}
+                    </p>
+
+                    <button
+                        type="button"
+                        onClick={() => handleBeritaClick(item)}
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700 mt-auto group"
+                    >
+                        Baca selengkapnya
+                        <ChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    </button>
+                </div>
+            </article>
+        );
+    };
+
+    const renderGaleriItem = (item: GaleriItem) => {
+        const imageSrc = item.foto_url || (item.foto ? `/storage/${item.foto}` : null);
+
+        return (
+            <div
+                key={item.id}
+                className="group relative aspect-square bg-slate-100 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+            >
+                {imageSrc ? (
+                    <img
+                        src={imageSrc}
+                        alt={item.caption || "Kegiatan PKK"}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                            const target = e.currentTarget;
+                            if (target.src !== FALLBACK_IMAGES.galeri) {
+                                target.src = FALLBACK_IMAGES.galeri;
+                            } else {
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                    const fallback = document.createElement('div');
+                                    fallback.className = 'flex items-center justify-center w-full h-full bg-slate-100';
+                                    fallback.innerHTML = `
+                                        <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    `;
+                                    parent.appendChild(fallback);
+                                }
+                            }
+                        }}
+                    />
+                ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-slate-100">
+                        <Images size={32} className="text-slate-400" />
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // ============================================================
+    // 6. RENDER
+    // ============================================================
 
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
@@ -250,35 +418,73 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
             `}</style>
 
             <Head>
-                <title>
-                    PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri
-                </title>
+                {/* Title & Description */}
+                <title>PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri</title>
                 <meta
                     name="description"
                     content="Situs resmi Tim Penggerak PKK Kabupaten Tasikmalaya: informasi program kerja, data, kebijakan, dan berita seputar pemberdayaan dan kesejahteraan keluarga."
                 />
+                <meta name="robots" content="index, follow" />
+                <meta name="language" content="id" />
+
+                {/* Open Graph */}
+                <meta property="og:title" content="PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri" />
+                <meta property="og:description" content="Situs resmi Tim Penggerak PKK Kabupaten Tasikmalaya: informasi program kerja, data, kebijakan, dan berita seputar pemberdayaan dan kesejahteraan keluarga." />
+                <meta property="og:image" content="/assets/images/og-image.jpg" />
+                <meta property="og:url" content="https://pkk.tasikmalayakab.go.id" />
+                <meta property="og:type" content="website" />
+                <meta property="og:locale" content="id_ID" />
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri" />
+                <meta name="twitter:description" content="Situs resmi Tim Penggerak PKK Kabupaten Tasikmalaya" />
+
+                {/* Structured Data JSON-LD */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Organization",
+                        "name": "TP PKK Kabupaten Tasikmalaya",
+                        "description": "Tim Penggerak Pemberdayaan dan Kesejahteraan Keluarga Kabupaten Tasikmalaya",
+                        "url": "https://pkk.tasikmalayakab.go.id",
+                        "logo": "https://pkk.tasikmalayakab.go.id/assets/images/logo.png",
+                        "contactPoint": {
+                            "@type": "ContactPoint",
+                            "contactType": "Administrasi",
+                            "availableLanguage": ["Indonesian"]
+                        },
+                        "sameAs": [
+                            "https://www.instagram.com/pkk_tasikmalaya",
+                            "https://www.youtube.com/pkk_tasikmalaya"
+                        ]
+                    })}
+                </script>
             </Head>
 
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
+            {/* ==========================================================
+                HERO SECTION
+                ========================================================== */}
             <section
                 ref={heroAnim.ref}
                 className={`relative h-[580px] lg:h-[640px] flex items-center justify-center overflow-hidden anim-fade-up ${
                     heroAnim.isVisible ? "show" : ""
                 }`}
+                aria-label="Hero section"
             >
                 <div className="absolute inset-0">
                     <img
                         src="/assets/images/hero.jpg"
                         alt="Kegiatan Tim Penggerak PKK Kabupaten Tasikmalaya"
                         className="w-full h-full object-cover object-center"
+                        loading="eager"
                         onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80";
+                            e.currentTarget.src = getImageFallback('hero');
                         }}
                     />
-                    <div className="absolute inset-0 bg-black/55" />
+                    <div className="absolute inset-0 bg-black/55" aria-hidden="true" />
                 </div>
 
                 <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
@@ -303,14 +509,14 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                     <div className="flex flex-wrap items-center justify-center gap-3">
                         <Link
                             href="#tentang"
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors focus:ring-2 focus:ring-teal-400 focus:outline-none"
                         >
                             Jelajahi Program
                             <ArrowRight size={15} />
                         </Link>
                         <Link
                             href="#data"
-                            className="inline-flex items-center gap-2 border border-white/50 hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                            className="inline-flex items-center gap-2 border border-white/50 hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors focus:ring-2 focus:ring-white/50 focus:outline-none"
                         >
                             Lihat Data PKK
                         </Link>
@@ -318,13 +524,16 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== SAMBUTAN KETUA ==================== */}
+            {/* ==========================================================
+                SAMBUTAN KETUA
+                ========================================================== */}
             <section
                 ref={sambutanAnim.ref}
                 id="tentang"
                 className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     sambutanAnim.isVisible ? "show" : ""
                 }`}
+                aria-labelledby="sambutan-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
@@ -332,12 +541,11 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                             <div className="rounded-xl overflow-hidden border border-slate-200">
                                 <img
                                     src="/assets/images/ketuapkk.png"
-                                    alt=" Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
+                                    alt="Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
                                     loading="lazy"
                                     className="w-full h-[420px] md:h-[480px] object-cover object-top"
                                     onError={(e) => {
-                                        e.currentTarget.src =
-                                            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80";
+                                        e.currentTarget.src = getImageFallback('ketua');
                                     }}
                                 />
                             </div>
@@ -355,14 +563,13 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                             <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
                                 Sambutan
                             </p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
+                            <h2 id="sambutan-title" className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
                                 Sambutan Ketua PKK
                             </h2>
 
                             <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
                                 <p className="italic text-slate-700">
-                                    Assalamu&apos;alaikum Warahmatullahi
-                                    Wabarakatuh,
+                                    Assalamu&apos;alaikum Warahmatullahi Wabarakatuh,
                                 </p>
                                 <p>
                                     Dalam rangka turut menyukseskan program
@@ -393,8 +600,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                                     publik. Terima kasih.
                                 </p>
                                 <p className="italic text-slate-700 pt-2">
-                                    Wassalamu&apos;alaikum Warahmatullahi
-                                    Wabarakatuh.
+                                    Wassalamu&apos;alaikum Warahmatullahi Wabarakatuh.
                                 </p>
                             </div>
 
@@ -411,19 +617,22 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== VISI & MISI ==================== */}
+            {/* ==========================================================
+                VISI & MISI
+                ========================================================== */}
             <section
                 ref={visiMisiAnim.ref}
                 className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     visiMisiAnim.isVisible ? "show" : ""
                 }`}
+                aria-labelledby="visi-misi-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-12">
                         <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
                             Arah Gerakan
                         </p>
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
+                        <h2 id="visi-misi-title" className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
                             Visi &amp; Misi PKK
                         </h2>
                         <p className="text-slate-500 text-base max-w-2xl leading-relaxed">
@@ -436,12 +645,10 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
                         <div>
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center" aria-hidden="true">
                                     <Eye className="text-teal-600" size={18} />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900">
-                                    Visi
-                                </h3>
+                                <h3 className="text-lg font-bold text-slate-900">Visi</h3>
                             </div>
                             <p className="text-slate-600 text-[15px] leading-relaxed pl-12">
                                 Terwujudnya keluarga yang beriman dan bertaqwa
@@ -453,18 +660,13 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
 
                         <div>
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
-                                    <Target
-                                        className="text-teal-600"
-                                        size={18}
-                                    />
+                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center" aria-hidden="true">
+                                    <Target className="text-teal-600" size={18} />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900">
-                                    Misi
-                                </h3>
+                                <h3 className="text-lg font-bold text-slate-900">Misi</h3>
                             </div>
                             <ol className="space-y-3 pl-12">
-                                {misiList.map((item, index) => (
+                                {MISI_LIST.map((item, index) => (
                                     <li
                                         key={index}
                                         className="flex gap-3 text-slate-600 text-[15px] leading-relaxed"
@@ -481,28 +683,30 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== DATA / POKJA ==================== */}
+            {/* ==========================================================
+                DATA / POKJA
+                ========================================================== */}
             <section
                 ref={dataAnim.ref}
                 id="data"
                 className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     dataAnim.isVisible ? "show" : ""
                 }`}
+                aria-labelledby="data-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                        <h2 id="data-title" className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
                             Data PKK Kabupaten Tasikmalaya
                         </h2>
-                        <div className="w-12 h-0.5 bg-teal-600 mx-auto mb-4" />
+                        <div className="w-12 h-0.5 bg-teal-600 mx-auto mb-4" aria-hidden="true" />
                         <p className="text-slate-500 text-base max-w-xl mx-auto">
-                            Pusat Informasi dan Statistik Program Pokok PKK
-                            secara Terpadu
+                            Pusat Informasi dan Statistik Program Pokok PKK secara Terpadu
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {dataMenu.map((item, i) => (
+                        {DATA_MENU.map((item, i) => (
                             <div
                                 key={i}
                                 className="group relative h-[280px] rounded-2xl overflow-hidden"
@@ -510,15 +714,15 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                                 <div
                                     className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
                                     style={{ backgroundColor: item.overlay }}
+                                    aria-hidden="true"
                                 />
-                                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/45 transition-colors duration-300" />
+                                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/45 transition-colors duration-300" aria-hidden="true" />
 
                                 <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
                                     <div
                                         className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4 shadow-md"
-                                        style={{
-                                            backgroundColor: item.accent,
-                                        }}
+                                        style={{ backgroundColor: item.accent }}
+                                        aria-hidden="true"
                                     >
                                         <item.icon size={22} />
                                     </div>
@@ -536,14 +740,14 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                                             href={item.link}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-block bg-white/15 hover:bg-white text-white hover:text-slate-900 border border-white/40 px-5 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200"
+                                            className="inline-block bg-white/15 hover:bg-white text-white hover:text-slate-900 border border-white/40 px-5 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 focus:ring-2 focus:ring-white/50 focus:outline-none"
                                         >
                                             Eksplorasi
                                         </a>
                                     ) : (
                                         <Link
                                             href={item.link}
-                                            className="inline-block bg-white/15 hover:bg-white text-white hover:text-slate-900 border border-white/40 px-5 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200"
+                                            className="inline-block bg-white/15 hover:bg-white text-white hover:text-slate-900 border border-white/40 px-5 py-2 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 focus:ring-2 focus:ring-white/50 focus:outline-none"
                                         >
                                             Eksplorasi
                                         </Link>
@@ -555,19 +759,22 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== FAQ ==================== */}
+            {/* ==========================================================
+                FAQ
+                ========================================================== */}
             <section
                 ref={faqAnim.ref}
                 className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     faqAnim.isVisible ? "show" : ""
                 }`}
+                aria-labelledby="faq-title"
             >
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
                             Pertanyaan Umum
                         </p>
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
+                        <h2 id="faq-title" className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
                             Pertanyaan yang Sering Diajukan
                         </h2>
                         <p className="text-slate-500 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
@@ -577,7 +784,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                     </div>
 
                     <div className="space-y-3">
-                        {faqList.map((faq, index) => {
+                        {FAQ_LIST.map((faq, index) => {
                             const isOpen = openFaq === index;
                             const panelId = `faq-panel-${index}`;
                             const buttonId = `faq-button-${index}`;
@@ -609,6 +816,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                                                         ? "bg-teal-600 text-white rotate-90"
                                                         : "bg-slate-100 text-slate-500"
                                                 }`}
+                                                aria-hidden="true"
                                             >
                                                 <ChevronRight size={16} />
                                             </span>
@@ -636,12 +844,15 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== BERITA ==================== */}
+            {/* ==========================================================
+                BERITA
+                ========================================================== */}
             <section
                 ref={beritaAnim.ref}
                 className={`py-20 lg:py-24 bg-slate-50 border-t border-slate-100 anim-fade-up ${
                     beritaAnim.isVisible ? "show" : ""
                 }`}
+                aria-labelledby="berita-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
@@ -649,117 +860,25 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                             <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
                                 Update Informasi
                             </p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                            <h2 id="berita-title" className="text-2xl md:text-3xl font-bold text-slate-900">
                                 Berita PKK Terkini
                             </h2>
                         </div>
                         <Link
                             href={route("fe.berita")}
-                            className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors group"
                         >
                             Lihat semua berita
-                            <ChevronRight size={15} />
+                            <ChevronRight size={15} className="transition-transform group-hover:translate-x-1" />
                         </Link>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {beritaTerbaru.length > 0 ? (
-                            beritaTerbaru.map((item) => (
-                                <article
-                                    key={item.id}
-                                    className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full"
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedBerita(item)}
-                                        className="h-48 overflow-hidden bg-slate-100 flex items-center justify-center w-full text-left"
-                                    >
-                                        {(() => {
-                                            const imageSrc = getBeritaImageSrc(item);
-
-                                            if (imageSrc) {
-                                                return (
-                                                    <img
-                                                        src={imageSrc}
-                                                        alt={item.judul}
-                                                        loading="lazy"
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            const target = e.currentTarget;
-                                                            const currentSrc = target.src;
-
-                                                            if (currentSrc.includes('/storage/')) {
-                                                                const newSrc = currentSrc.replace('/storage/', '/');
-                                                                if (newSrc !== currentSrc) {
-                                                                    target.src = newSrc;
-                                                                    return;
-                                                                }
-                                                            }
-
-                                                            target.style.display = 'none';
-                                                            const parent = target.parentElement;
-                                                            if (parent) {
-                                                                const fallback = document.createElement('div');
-                                                                fallback.className = 'flex items-center justify-center w-full h-full';
-                                                                fallback.innerHTML = `
-                                                                    <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                                                                    </svg>
-                                                                `;
-                                                                parent.appendChild(fallback);
-                                                            }
-                                                        }}
-                                                    />
-                                                );
-                                            }
-
-                                            return <Newspaper size={40} className="text-slate-400" />;
-                                        })()}
-                                    </button>
-
-                                    <div className="p-5 flex flex-col flex-grow">
-                                        <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
-                                            <Calendar size={12} />
-                                            {item.created_at
-                                                ? new Date(item.created_at).toLocaleDateString("id-ID", {
-                                                      day: "numeric",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                  })
-                                                : item.tanggal || "Tanggal tidak tersedia"}
-                                        </p>
-
-                                        <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedBerita(item)}
-                                                className="hover:text-teal-600 transition-colors text-left"
-                                            >
-                                                {item.judul}
-                                            </button>
-                                        </h3>
-
-                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-grow">
-                                            {item.deskripsi ||
-                                             item.deskripsi_singkat ||
-                                             item.konten?.replace(/<[^>]*>?/gm, '').substring(0, 150) ||
-                                             "Tidak ada deskripsi"}
-                                        </p>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedBerita(item)}
-                                            className="inline-flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700 mt-auto"
-                                        >
-                                            Baca selengkapnya
-                                            <ChevronRight size={14} />
-                                        </button>
-                                    </div>
-                                </article>
-                            ))
+                            beritaTerbaru.map(renderBeritaCard)
                         ) : (
                             <div className="col-span-full text-center py-12">
-                                <Newspaper size={48} className="text-slate-300 mx-auto mb-4" />
+                                <Newspaper size={48} className="text-slate-300 mx-auto mb-4" aria-hidden="true" />
                                 <p className="text-slate-500 text-lg">
                                     Belum ada berita terbaru.
                                 </p>
@@ -772,12 +891,15 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== GALERI (PURE FOTO TANPA DESKRIPSI) ==================== */}
+            {/* ==========================================================
+                GALERI
+                ========================================================== */}
             <section
                 ref={galeriAnim.ref}
                 className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     galeriAnim.isVisible ? "show" : ""
                 }`}
+                aria-labelledby="galeri-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
@@ -785,62 +907,25 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                             <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
                                 Dokumentasi
                             </p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                            <h2 id="galeri-title" className="text-2xl md:text-3xl font-bold text-slate-900">
                                 Galeri Foto Kegiatan
                             </h2>
                         </div>
                         <Link
                             href={route("fe.program.galeriKegiatan")}
-                            className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors group"
                         >
                             Lihat semua foto
-                            <ChevronRight size={15} />
+                            <ChevronRight size={15} className="transition-transform group-hover:translate-x-1" />
                         </Link>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {galeriData.length > 0 ? (
-                            galeriData.map((item) => {
-                                const imageSrc = item.foto_url || (item.foto ? `/storage/${item.foto}` : null);
-
-                                return (
-                                    <div
-                                        key={item.id}
-                                        className="group relative aspect-square bg-slate-100 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                                    >
-                                        {imageSrc ? (
-                                            <img
-                                                src={imageSrc}
-                                                alt="Kegiatan PKK"
-                                                loading="lazy"
-                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                                onError={(e) => {
-                                                    const target = e.currentTarget;
-                                                    target.style.display = 'none';
-                                                    const parent = target.parentElement;
-                                                    if (parent) {
-                                                        const fallback = document.createElement('div');
-                                                        fallback.className = 'flex items-center justify-center w-full h-full bg-slate-100';
-                                                        fallback.innerHTML = `
-                                                            <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                        `;
-                                                        parent.appendChild(fallback);
-                                                    }
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="flex items-center justify-center w-full h-full bg-slate-100">
-                                                <Images size={32} className="text-slate-400" />
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })
+                        {galeriTerbaru.length > 0 ? (
+                            galeriTerbaru.map(renderGaleriItem)
                         ) : (
                             <div className="col-span-full text-center py-12">
-                                <Images size={48} className="text-slate-300 mx-auto mb-4" />
+                                <Images size={48} className="text-slate-300 mx-auto mb-4" aria-hidden="true" />
                                 <p className="text-slate-500 text-lg">
                                     Belum ada foto kegiatan.
                                 </p>
@@ -853,7 +938,9 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                 </div>
             </section>
 
-            {/* ==================== MODAL DETAIL BERITA ==================== */}
+            {/* ==========================================================
+                MODAL BERITA
+                ========================================================== */}
             {selectedBerita && (
                 <div
                     className="fixed inset-0 z-[100] flex items-center justify-center p-4"
@@ -862,15 +949,16 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                     aria-labelledby="berita-modal-title"
                 >
                     <div
-                        className="absolute inset-0 bg-slate-900/60"
-                        onClick={() => setSelectedBerita(null)}
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        onClick={handleCloseModal}
+                        aria-hidden="true"
                     />
-                    <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
+                    <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200">
                         <button
                             type="button"
-                            onClick={() => setSelectedBerita(null)}
-                            aria-label="Tutup"
-                            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-500 hover:text-slate-900 flex items-center justify-center shadow-md transition-colors"
+                            onClick={handleCloseModal}
+                            aria-label="Tutup detail berita"
+                            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-500 hover:text-slate-900 flex items-center justify-center shadow-md transition-colors focus:ring-2 focus:ring-teal-400 focus:outline-none"
                         >
                             <X size={18} />
                         </button>
@@ -894,7 +982,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
                         <div className="p-6 sm:p-8">
                             <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
                                 <Calendar size={12} />
-                                {formatBeritaTanggal(selectedBerita)}
+                                {formatTanggal(selectedBerita.created_at || selectedBerita.tanggal)}
                             </p>
 
                             <h2
@@ -906,7 +994,7 @@ export default function Welcome({ year, berita = [], galeri = [] }: WelcomeProps
 
                             {selectedBerita.konten ? (
                                 <div
-                                    className="text-slate-600 text-[15px] leading-relaxed space-y-4"
+                                    className="text-slate-600 text-[15px] leading-relaxed space-y-4 prose prose-slate max-w-none"
                                     dangerouslySetInnerHTML={{ __html: selectedBerita.konten }}
                                 />
                             ) : (

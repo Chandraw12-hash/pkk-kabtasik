@@ -5,6 +5,11 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\Galeri;
+use App\Models\DataUmumSekretariat;
+use App\Models\Pokja1;
+use App\Models\Pokja2;
+use App\Models\Pokja3;
+use App\Models\Pokja4;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -36,6 +41,13 @@ class IndexController extends Controller
                 'foto_url' => $item->foto_url,
             ];
         });
+
+        // Ambil data Sekretariat & Pokja 1-4 untuk ditampilkan di Landing Page
+        $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
+        $pokja1 = Pokja1::latest()->take(6)->get();
+        $pokja2 = Pokja2::latest()->take(6)->get();
+        $pokja3 = Pokja3::latest()->take(6)->get();
+        $pokja4 = Pokja4::latest()->take(6)->get();
 
         // Dummy Data Kebijakan
         $kebijakan = collect([
@@ -90,6 +102,11 @@ class IndexController extends Controller
             'domainData' => $domainData,
             'berita' => $beritaTerbaru,
             'galeri' => $galeriTerbaru,
+            'sekretariat' => $sekretariat,
+            'pokja1' => $pokja1,
+            'pokja2' => $pokja2,
+            'pokja3' => $pokja3,
+            'pokja4' => $pokja4,
             'year' => $currentYear,
         ]);
     }
@@ -124,10 +141,8 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Profil/KetentuanSeragam');
     }
 
-    // ============= PERBAIKAN PENTING DI SINI =============
     public function galeriKegiatan(Request $request)
     {
-        // Tambahkan pencarian (search) berdasarkan judul
         $galeri = Galeri::when($request->search, function ($query) use ($request) {
                 return $query->where('judul', 'like', '%' . $request->search . '%');
             })
@@ -167,6 +182,44 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Berita/Show', [
             'berita' => $berita,
             'beritaLainnya' => $beritaLainnya,
+        ]);
+    }
+
+    // ==========================================
+    // METHOD EKSPLORASI (DIARAHKAN KE data-data)
+    // ==========================================
+    public function sekretariatPublic()
+    {
+        return Inertia::render('Frontend/data-data/Sekretariat', [
+            'data' => DataUmumSekretariat::latest()->paginate(10)
+        ]);
+    }
+
+    public function pokja1Public()
+    {
+        return Inertia::render('Frontend/data-data/Pokja1', [
+            'data' => Pokja1::latest()->paginate(10)
+        ]);
+    }
+
+    public function pokja2Public()
+    {
+        return Inertia::render('Frontend/data-data/Pokja2', [
+            'data' => Pokja2::latest()->paginate(10)
+        ]);
+    }
+
+    public function pokja3Public()
+    {
+        return Inertia::render('Frontend/data-data/Pokja3', [
+            'data' => Pokja3::latest()->paginate(10)
+        ]);
+    }
+
+    public function pokja4Public()
+    {
+        return Inertia::render('Frontend/data-data/Pokja4', [
+            'data' => Pokja4::latest()->paginate(10)
         ]);
     }
 }

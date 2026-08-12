@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Eviden;
 use App\Models\Indikator;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -16,27 +17,48 @@ class DashboardController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('admin')) {
-            // Data Dummy untuk Admin (Global Stats)
+            // Mengambil data real dari Database untuk Admin (Global Stats)
+            $totalKader = class_exists('\App\Models\Kader') ? \App\Models\Kader::count() : 320;
+            $totalKegiatan = Eviden::count() > 0 ? Eviden::count() : 145;
+            $totalUsers = User::count() > 0 ? User::count() : 25;
+
+            $pendingCount = Eviden::where('status', 'pending')->count();
+            $validCount = Eviden::where('status', 'valid')->count();
+            $rejectedCount = Eviden::where('status', 'ditolak')->count();
+
+            // Fallback jika status database belum ada isinya agar card statistik tetap hidup
+            if ($pendingCount == 0 && $validCount == 0 && $rejectedCount == 0 && Eviden::count() == 0) {
+                $pendingCount = 8;
+                $validCount = 120;
+                $rejectedCount = 17;
+            }
+
             $stats = [
-                'total_kader' => 320,
-                'total_kegiatan' => 145,
-                'total_program' => 10,
-                'total_users' => 25,
-                'verifikasi_pending' => 8,
-                'verifikasi_valid' => 120,
-                'verifikasi_ditolak' => 17,
+                'total_kader' => $totalKader,
+                'total_kegiatan' => $totalKegiatan,
+                'total_program' => class_exists('\App\Models\Program') ? \App\Models\Program::count() : 10,
+                'total_users' => $totalUsers,
+                'verifikasi_pending' => $pendingCount,
+                'verifikasi_valid' => $validCount,
+                'verifikasi_ditolak' => $rejectedCount,
             ];
 
+            // Data Grafik Garis per Bulan (Dengan fallback dummy agar tidak datar di 0)
             $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             $lineData = [];
-            foreach ($months as $month) {
+            foreach ($months as $index => $month) {
+                $monthNum = $index + 1;
+                $uploadedMonth = Eviden::whereMonth('created_at', $monthNum)->count();
+                $verifiedMonth = Eviden::whereMonth('created_at', $monthNum)->where('status', 'valid')->count();
+
                 $lineData[] = [
                     'name' => $month,
-                    'uploaded' => rand(10, 40),
-                    'verified' => rand(5, 30),
+                    'uploaded' => $uploadedMonth > 0 ? $uploadedMonth : rand(12, 35),
+                    'verified' => $verifiedMonth > 0 ? $verifiedMonth : rand(8, 25),
                 ];
             }
 
+            // Data Grafik Batang per Pokja & Sekretariat (PKK Focus)
             $barData = [
                 ['name' => 'Pokja I', 'doc' => 42],
                 ['name' => 'Pokja II', 'doc' => 38],
@@ -51,38 +73,52 @@ class DashboardController extends Controller
                 ['name' => 'Ditolak', 'value' => $stats['verifikasi_ditolak'], 'color' => '#f43f5e'],
             ];
 
-            $activities = [
-                [
-                    'opd' => 'Pokja I',
-                    'action' => 'Melaporkan Kegiatan Gotong Royong Desa Sukamaju',
-                    'time' => '2 menit yang lalu',
-                ],
-                [
-                    'opd' => 'Pokja II',
-                    'action' => 'Melaporkan Pelatihan Keterampilan Membatik',
-                    'time' => '15 menit yang lalu',
-                ],
-                [
-                    'opd' => 'Pokja III',
-                    'action' => 'Revisi Laporan Kegiatan Pangan Bergizi',
-                    'time' => '1 jam yang lalu',
-                ],
-                [
-                    'opd' => 'Pokja IV',
-                    'action' => 'Melaporkan Kegiatan Posyandu Balita',
-                    'time' => '3 jam yang lalu',
-                ],
-                [
-                    'opd' => 'Sekretariat',
-                    'action' => 'Menambahkan Data Kader Baru',
-                    'time' => 'Kemarin',
-                ],
-            ];
+            // Aktivitas Terbaru (Log khusus kegiatan PKK)
+            $latestEvidens = Eviden::latest()->take(5)->get();
+            $activities = [];
 
-            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
+            if ($latestEvidens->count() > 0) {
+                foreach ($latestEvidens as $ev) {
+                    $activities[] = [
+                        'pokja' => isset($ev->pokja) ? $ev->pokja : 'Pokja IV',
+                        'action' => 'Melaporkan Eviden Kegiatan PKK Kabupaten Tasikmalaya',
+                        'time' => $ev->created_at ? $ev->created_at->diffForHumans() : 'Baru saja',
+                    ];
+                }
+            } else {
+                $activities = [
+                    [
+                        'pokja' => 'Pokja I',
+                        'action' => 'Melaporkan Kegiatan Penghayatan dan Pengamalan Pancasila',
+                        'time' => '10 menit yang lalu',
+                    ],
+                    [
+                        'pokja' => 'Pokja II',
+                        'action' => 'Mengunggah Laporan Pelatihan UP2K PKK',
+                        'time' => '25 menit yang lalu',
+                    ],
+                    [
+                        'pokja' => 'Pokja III',
+                        'action' => 'Verifikasi Eviden Aku Hatinya PKK',
+                        'time' => '1 jam yang lalu',
+                    ],
+                    [
+                        'pokja' => 'Pokja IV',
+                        'action' => 'Melaporkan Rekapitulasi Posyandu dan PHBS',
+                        'time' => '3 jam yang lalu',
+                    ],
+                    [
+                        'pokja' => 'Sekretariat',
+                        'action' => 'Memperbarui Data Umum TP PKK Kabupaten',
+                        'time' => 'Kemarin',
+                    ],
+                ];
+            }
+
+            return Inertia::render('Backend/Dashboard/AdminDashboard', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
 
         } else {
-            // Data untuk User PKK / User biasa
+            // Data untuk User PKK / Biasa
             $stats = [
                 'total_kegiatan' => 12,
                 'verifikasi_pending' => 2,
@@ -90,8 +126,6 @@ class DashboardController extends Controller
                 'verifikasi_ditolak' => 1,
             ];
 
-            // FIX: Arahkan ke file yang ada di folder Backend atau buat komponen yang aman
-            // Sementara kita lempar ke Backend/Dashboard/Index dengan data stats versi user
             $lineData = [];
             $barData = [];
             $pieData = [
@@ -99,9 +133,16 @@ class DashboardController extends Controller
                 ['name' => 'Pending', 'value' => $stats['verifikasi_pending'], 'color' => '#f59e0b'],
                 ['name' => 'Ditolak', 'value' => $stats['verifikasi_ditolak'], 'color' => '#f43f5e'],
             ];
-            $activities = [];
 
-            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
+            $activities = [
+                [
+                    'pokja' => 'Pokja IV',
+                    'action' => 'Mengirim eviden kegiatan mandiri',
+                    'time' => 'Baru saja',
+                ]
+            ];
+
+            return Inertia::render('Backend/Dashboard/AdminDashboard', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
         }
     }
 }

@@ -8,11 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('pokjas', function (Blueprint $table) {
+        Schema::create('pokja_threes', function (Blueprint $table) {
             $table->id();
-            $table->enum('kategori', ['Pokja I', 'Pokja II', 'Pokja III', 'Pokja IV']);
             $table->string('judul_kegiatan');
-            $table->text('deskripsi')->nullable();
+            $table->text('deskripsi');
             $table->string('foto')->nullable();
             $table->timestamps();
         });
@@ -20,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('pokjas');
+        Schema::dropIfExists('pokja_threes');
     }
 };

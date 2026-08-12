@@ -27,8 +27,8 @@ export default function Login() {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-            
-            <Head title="Masuk - SIMPEL PKK Kabupaten Tasikmalaya" />
+
+            <Head title="Masuk - TP PKK Kabupaten Tasikmalaya" />
 
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#38BDF8]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#1DA599]/10 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
@@ -39,13 +39,13 @@ export default function Login() {
 
             <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center relative z-10">
 
-                <div className="hidden lg:flex flex-col" data-aos="fade-right">
+                <div className="hidden lg:flex flex-col">
                     <div className="flex items-center gap-3 mb-12">
                         <div className="w-12 h-12 bg-indigo-50/80 rounded flex items-center justify-center">
                             <img src="/assets/logo/logotasik.png" alt="Logo PKK" className="w-8 h-8 object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                         </div>
                         <div>
-                            <h2 className="text-[#0F172A] font-extrabold text-xl tracking-tight leading-none">SIMPEL PKK</h2>
+                            <h2 className="text-[#0F172A] font-extrabold text-xl tracking-tight leading-none">TP PKK</h2>
                             <p className="text-gray-500 text-[10px] font-bold tracking-widest uppercase mt-0.5">Kabupaten Tasikmalaya</p>
                         </div>
                     </div>
@@ -72,7 +72,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                <div className="w-full max-w-md mx-auto lg:mx-0" data-aos="fade-up" data-aos-delay="200">
+                <div className="w-full max-w-md mx-auto lg:mx-0">
                     <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] border border-gray-100 relative">
 
                         <div className="flex lg:hidden items-center gap-3 mb-10">
@@ -80,7 +80,7 @@ export default function Login() {
                                 <img src="/assets/logo/logotasik.png" alt="Logo PKK" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                             </div>
                             <div>
-                                <h2 className="text-[#0F172A] font-extrabold text-lg tracking-tight leading-none">SIMPEL PKK</h2>
+                                <h2 className="text-[#0F172A] font-extrabold text-lg tracking-tight leading-none">TP PKK</h2>
                                 <p className="text-gray-500 text-[9px] font-bold tracking-widest uppercase mt-0.5">Kab. Tasikmalaya</p>
                             </div>
                         </div>
@@ -179,11 +179,11 @@ export default function Login() {
 
                     <div className="text-center mt-8 lg:mt-10">
                         <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">
-                            © 2024 TP PKK KABUPATEN TASIKMALAYA
+                            © 2026 TP PKK KABUPATEN TASIKMALAYA
                         </p>
                     </div>
                 </div>
             </div>
         </div>
     );
-} 
+}
