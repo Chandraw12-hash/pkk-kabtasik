@@ -6,7 +6,7 @@ import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { Search, Edit2, Trash2, RotateCcw, Plus, Newspaper } from "lucide-react";
 import { PaginatedData } from "@/types/model";
 import axios from "axios";
@@ -47,7 +47,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
     const { auth } = usePage<any>().props;
     const permissions: string[] = auth?.permissions || [];
 
-    const canCreate = permissions.includes("berita.create") || true; // sesuaikan permission
+    const canCreate = permissions.includes("berita.create") || true;
     const canEdit = permissions.includes("berita.edit") || true;
     const canDelete = permissions.includes("berita.delete") || true;
 
@@ -66,15 +66,20 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
 
     const { delete: destroy, processing } = useForm({});
 
-    // Sync props saat Inertia reload
     useEffect(() => {
         if (beritas?.data) {
             setLocalBeritas(beritas);
         }
     }, [beritas]);
 
-    const fetchData = (url: string, params: Record<string, any> = {}) => {
+    const fetchData = () => {
         setIsLoading(true);
+
+        const url = route("be.berita.index");
+        const params = {
+            search: search || undefined,
+            per_page: perPage,
+        };
 
         axios
             .get(url, {
@@ -98,7 +103,6 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
             .finally(() => setIsLoading(false));
     };
 
-    // Debounce search & perPage
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
@@ -106,10 +110,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
         }
 
         const timeout = setTimeout(() => {
-            fetchData(route("be.berita.index"), {
-                search: search || undefined,
-                per_page: perPage,
-            });
+            fetchData();
         }, 350);
 
         return () => clearTimeout(timeout);
@@ -128,12 +129,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
             onSuccess: () => {
                 setShowDeleteModal(false);
                 setSelectedBerita(null);
-
-                // Refresh list
-                fetchData(route("be.berita.index"), {
-                    search: search || undefined,
-                    per_page: perPage,
-                });
+                fetchData();
             },
             onError: () => {
                 // optional: toast error
@@ -146,16 +142,29 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
         setPerPage(10);
     };
 
-    const stripHtml = (html: string) => {
-        if (!html) return "";
-        return html.replace(/<[^>]*>?/gm, "").trim();
+    const handlePageChange = (url: string | null) => {
+        if (!url) return;
+
+        setIsLoading(true);
+        axios
+            .get(url, {
+                headers: { Accept: "application/json" },
+            })
+            .then((res) => {
+                if (res.data && typeof res.data === "object" && "data" in res.data) {
+                    setLocalBeritas(res.data);
+                }
+            })
+            .catch((err) => {
+                console.error("Error fetching page:", err);
+            })
+            .finally(() => setIsLoading(false));
     };
 
     return (
         <MainLayout>
             <Head title="Manajemen Berita & Informasi" />
 
-            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
@@ -178,9 +187,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                 )}
             </div>
 
-            {/* Card */}
-            <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50">
-                {/* Search */}
+            <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50 overflow-hidden">
                 <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex items-center gap-4">
                     <div className="relative w-full max-w-md">
                         <TextInput
@@ -205,99 +212,96 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                     )}
                 </div>
 
-                {/* Table */}
-                <Table
-                    isLoading={isLoading}
-                    columns={[
-                        {
-                            header: "#",
-                            className:
-                                "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                            headerClassName: "text-center w-16",
-                            render: (_: Berita, index: number) => {
-                                const currentPage =
-                                    localBeritas.current_page ?? 1;
-                                const perPageVal = localBeritas.per_page ?? 10;
-                                return (
-                                    (currentPage - 1) * perPageVal + index + 1
-                                );
+                <div className="overflow-x-hidden">
+                    <Table
+                        isLoading={isLoading}
+                        columns={[
+                            {
+                                header: "#",
+                                className:
+                                    "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
+                                headerClassName: "text-center w-16",
+                                render: (_: Berita, index: number) => {
+                                    const currentPage =
+                                        localBeritas.current_page ?? 1;
+                                    const perPageVal = localBeritas.per_page ?? 10;
+                                    return (
+                                        (currentPage - 1) * perPageVal + index + 1
+                                    );
+                                },
                             },
-                        },
-                        {
-                            header: "Foto",
-                            className: "w-24 text-center",
-                            headerClassName: "text-center w-24",
-                            render: (berita: Berita) => (
-                                <div className="flex justify-center">
-                                    {berita.foto ? (
-                                        <img
-                                            src={`/storage/${berita.foto}`}
-                                            alt={berita.judul}
-                                            className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display =
-                                                    "none";
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
-                                            <Newspaper size={20} />
-                                        </div>
-                                    )}
-                                </div>
-                            ),
-                        },
-                        {
-                            header: "Judul & Konten",
-                            className: "w-auto",
-                            headerClassName: "w-auto",
-                            render: (berita: Berita) => (
-                                <div className="min-w-0">
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
-                                        {berita.judul}
-                                    </p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                        {stripHtml(berita.konten)}
-                                    </p>
-                                </div>
-                            ),
-                        },
-                        {
-                            header: "Aksi",
-                            headerClassName: "text-center w-32",
-                            className: "text-center w-32",
-                            render: (berita: Berita) => (
-                                <div className="flex items-center justify-center gap-2">
-                                    {canEdit && (
-                                        <Link
-                                            href={route(
-                                                "be.berita.edit",
-                                                berita.id
-                                            )}
-                                            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center dark:hover:bg-indigo-900/30"
-                                        >
-                                            <Edit2 size={16} />
-                                        </Link>
-                                    )}
-                                    {canDelete && (
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                openDeleteModal(berita)
-                                            }
-                                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer dark:hover:bg-rose-900/30"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            ),
-                        },
-                    ]}
-                    data={localBeritas.data || []}
-                />
+                            {
+                                header: "Foto",
+                                className: "w-24 text-center",
+                                headerClassName: "text-center w-24",
+                                render: (berita: Berita) => (
+                                    <div className="flex justify-center">
+                                        {berita.foto ? (
+                                            <img
+                                                src={`/storage/${berita.foto}`}
+                                                alt={berita.judul}
+                                                className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display =
+                                                        "none";
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
+                                                <Newspaper size={20} />
+                                            </div>
+                                        )}
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: "Judul",
+                                className: "w-auto",
+                                headerClassName: "w-auto",
+                                render: (berita: Berita) => (
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                                            {berita.judul}
+                                        </p>
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: "Aksi",
+                                headerClassName: "text-center w-32",
+                                className: "text-center w-32",
+                                render: (berita: Berita) => (
+                                    <div className="flex items-center justify-center gap-2">
+                                        {canEdit && (
+                                            <Link
+                                                href={route(
+                                                    "be.berita.edit",
+                                                    berita.id
+                                                )}
+                                                className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center dark:hover:bg-indigo-900/30"
+                                            >
+                                                <Edit2 size={16} />
+                                            </Link>
+                                        )}
+                                        {canDelete && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    openDeleteModal(berita)
+                                                }
+                                                className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer dark:hover:bg-rose-900/30"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                ),
+                            },
+                        ]}
+                        data={localBeritas.data || []}
+                    />
+                </div>
 
-                {/* Pagination */}
                 <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
                     <p className="text-sm text-slate-500 dark:text-slate-200">
                         Menampilkan{" "}
@@ -333,9 +337,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
 
                     <Pagination
                         links={localBeritas.links || []}
-                        onPageChange={(url: string) => {
-                            if (url) fetchData(url);
-                        }}
+                        onPageChange={handlePageChange}
                     />
                 </div>
             </Card>

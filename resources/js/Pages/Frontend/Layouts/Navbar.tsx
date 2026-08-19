@@ -20,10 +20,28 @@ import {
     Briefcase,
 } from "lucide-react";
 
+type SubLink = {
+    name: string;
+    href: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+};
+
+type NavLink = {
+    name: string;
+    href: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    submenu?: SubLink[];
+};
+
 export default function Navbar() {
     const { auth } = usePage().props as any;
+    const currentUrl = usePage().url;
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [openMobileSubmenu, setOpenMobileSubmenu] = useState<string | null>(
+        null
+    );
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -31,37 +49,87 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    // Tutup menu saat pindah halaman
     useEffect(() => {
         setIsMobileMenuOpen(false);
-    }, [usePage().url]);
+        setOpenMobileSubmenu(null);
+    }, [currentUrl]);
 
-    const navLinks = [
+    // Kunci scroll body saat menu mobile terbuka
+    useEffect(() => {
+        document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isMobileMenuOpen]);
+
+    const navLinks: NavLink[] = [
         { name: "Beranda", href: route("fe.beranda"), icon: Home },
         {
             name: "Profil",
             href: "#",
             icon: User,
             submenu: [
-                { name: "Sejarah", href: route("fe.profil.sejarah"), icon: FileText },
-                { name: "Tugas Pokok dan Fungsi", href: route("fe.profil.tugasFungsi"), icon: Award },
-                { name: "Visi & Misi", href: route("fe.profil.visiMisi"), icon: BookOpen },
-                { name: "Struktur Organisasi", href: route("fe.profil.strukturOrganisasi"), icon: Building2 },
-                { name: "Ketentuan Seragam", href: route("fe.profil.ketentuanSeragam"), icon: Shirt },
-            ]
+                {
+                    name: "Sejarah",
+                    href: route("fe.profil.sejarah"),
+                    icon: FileText,
+                },
+                {
+                    name: "Tugas Pokok dan Fungsi",
+                    href: route("fe.profil.tugasFungsi"),
+                    icon: Award,
+                },
+                {
+                    name: "Visi & Misi",
+                    href: route("fe.profil.visiMisi"),
+                    icon: BookOpen,
+                },
+                {
+                    name: "Struktur Organisasi",
+                    href: route("fe.profil.strukturOrganisasi"),
+                    icon: Building2,
+                },
+                {
+                    name: "Ketentuan Seragam",
+                    href: route("fe.profil.ketentuanSeragam"),
+                    icon: Shirt,
+                },
+            ],
         },
         {
             name: "Program",
             href: "#",
             icon: BookOpen,
             submenu: [
-                { name: "Program Kerja", href: route("fe.program.programKerja"), icon: Briefcase },
-                { name: "Galeri Kegiatan", href: route("fe.program.galeriKegiatan"), icon: Image },
-                { name: "Mars PKK", href: route("fe.program.marsPkk"), icon: Music },
-                { name: "Dokumen", href: route("fe.program.dokumen"), icon: FolderOpen },
-            ]
+                {
+                    name: "Program Kerja",
+                    href: route("fe.program.programKerja"),
+                    icon: Briefcase,
+                },
+                {
+                    name: "Galeri Kegiatan",
+                    href: route("fe.program.galeriKegiatan"),
+                    icon: Image,
+                },
+                {
+                    name: "Mars PKK",
+                    href: route("fe.program.marsPkk"),
+                    icon: Music,
+                },
+                {
+                    name: "Dokumen",
+                    href: route("fe.program.dokumen"),
+                    icon: FolderOpen,
+                },
+            ],
         },
         { name: "Berita", href: route("fe.berita"), icon: Calendar },
     ];
+
+    const toggleMobileSubmenu = (name: string) => {
+        setOpenMobileSubmenu((prev) => (prev === name ? null : name));
+    };
 
     return (
         <nav
@@ -72,50 +140,64 @@ export default function Navbar() {
             }`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
-                    <Link href={route("fe.beranda")} className="flex-shrink-0">
-                        <div className="flex items-center gap-3">
+                <div className="flex justify-between items-center h-14 sm:h-16">
+                    {/* Logo */}
+                    <Link
+                        href={route("fe.beranda")}
+                        className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-lg"
+                    >
+                        <div className="flex items-center gap-2.5 sm:gap-3">
                             <img
                                 src="/assets/logo/logotasik.png"
                                 alt="Logo Kab. Tasikmalaya"
-                                className="h-9 w-auto"
+                                className="h-8 sm:h-9 w-auto"
                             />
                             <div className="flex flex-col leading-tight">
-                                <span className="text-base font-bold text-slate-900 tracking-tight">
+                                <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                                     TP PKK
                                 </span>
-                                <span className="text-[10px] font-medium text-teal-700 tracking-[0.12em] uppercase">
+                                <span className="text-[9px] sm:text-[10px] font-medium text-teal-700 tracking-[0.1em] uppercase">
                                     Kab. Tasikmalaya
                                 </span>
                             </div>
                         </div>
                     </Link>
 
+                    {/* Desktop nav */}
                     <div className="hidden lg:flex items-center gap-0.5 ml-auto">
                         {navLinks.map((link) => {
-                            const hasSubmenu = link.submenu && link.submenu.length > 0;
+                            const hasSubmenu =
+                                link.submenu && link.submenu.length > 0;
 
                             return (
                                 <div key={link.name} className="relative group">
-                                    <Link
-                                        href={link.href}
-                                        className={`flex items-center gap-1 px-4 py-2 text-[14px] font-medium text-slate-600 hover:text-teal-700 transition-colors duration-200 ${
-                                            hasSubmenu ? "cursor-pointer" : ""
-                                        }`}
-                                    >
-                                        <span>{link.name}</span>
-                                        {hasSubmenu && (
-                                            <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-600 transition-transform duration-200 group-hover:rotate-180" />
-                                        )}
-                                    </Link>
+                                    {hasSubmenu ? (
+                                        <button
+                                            type="button"
+                                            className="flex items-center gap-1 px-4 py-2 text-[14px] font-medium text-slate-600 hover:text-teal-700 transition-colors"
+                                            aria-haspopup="true"
+                                        >
+                                            <span>{link.name}</span>
+                                            <ChevronDown
+                                                size={14}
+                                                className="text-slate-400 group-hover:text-teal-600 transition-transform duration-200 group-hover:rotate-180"
+                                            />
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            href={link.href}
+                                            className="flex items-center gap-1 px-4 py-2 text-[14px] font-medium text-slate-600 hover:text-teal-700 transition-colors"
+                                        >
+                                            <span>{link.name}</span>
+                                        </Link>
+                                    )}
 
-                                    {/* Garis bawah halus saat hover, tanpa background block */}
                                     <span className="absolute left-4 right-4 -bottom-px h-px bg-teal-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center" />
 
                                     {hasSubmenu && (
-                                        <div className="absolute left-0 mt-1 w-60 bg-white rounded-lg shadow-lg shadow-slate-900/10 border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-left translate-y-1 group-hover:translate-y-0">
+                                        <div className="absolute left-0 mt-1 w-64 bg-white rounded-lg shadow-lg shadow-slate-900/10 border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-1 group-hover:translate-y-0">
                                             <div className="py-2">
-                                                {link.submenu.map((sub) => {
+                                                {link.submenu!.map((sub) => {
                                                     const SubIcon = sub.icon;
                                                     return (
                                                         <Link
@@ -123,8 +205,13 @@ export default function Navbar() {
                                                             href={sub.href}
                                                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-teal-700 hover:bg-slate-50 transition-colors"
                                                         >
-                                                            <SubIcon size={15} className="text-slate-400 flex-shrink-0" />
-                                                            <span>{sub.name}</span>
+                                                            <SubIcon
+                                                                size={15}
+                                                                className="text-slate-400 flex-shrink-0"
+                                                            />
+                                                            <span>
+                                                                {sub.name}
+                                                            </span>
                                                         </Link>
                                                     );
                                                 })}
@@ -136,63 +223,165 @@ export default function Navbar() {
                         })}
                     </div>
 
-                    <div className="flex items-center gap-3 ml-6">
+                    {/* Desktop login + mobile toggle */}
+                    <div className="flex items-center gap-2 sm:gap-3 ml-2 sm:ml-6">
                         <div className="hidden sm:block">
-                            {auth.user ? (
+                            {auth?.user ? (
                                 <Link
                                     href={route("be.dashboard")}
-                                    className="inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-md transition-colors duration-200"
+                                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors"
                                 >
-                                    <LayoutDashboard size={16} /> Dashboard
+                                    <LayoutDashboard size={16} />
+                                    Dashboard
                                 </Link>
                             ) : (
                                 <Link
                                     href={route("login")}
-                                    className="inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-md transition-colors duration-200"
+                                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors"
                                 >
-                                    <LogIn size={16} /> Login
+                                    <LogIn size={16} />
+                                    Login
                                 </Link>
                             )}
                         </div>
+
                         <button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            aria-label="Buka menu navigasi"
-                            className="lg:hidden p-2 rounded-md text-slate-600 hover:text-teal-700 hover:bg-slate-50 transition-colors duration-200"
+                            type="button"
+                            onClick={() =>
+                                setIsMobileMenuOpen(!isMobileMenuOpen)
+                            }
+                            aria-label={
+                                isMobileMenuOpen
+                                    ? "Tutup menu navigasi"
+                                    : "Buka menu navigasi"
+                            }
+                            aria-expanded={isMobileMenuOpen}
+                            className="lg:hidden p-2.5 rounded-lg text-slate-600 hover:text-teal-700 hover:bg-slate-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                         >
-                            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                            {isMobileMenuOpen ? (
+                                <X size={22} />
+                            ) : (
+                                <Menu size={22} />
+                            )}
                         </button>
                     </div>
                 </div>
+            </div>
 
-                <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}>
-                    <div className="py-3 border-t border-slate-100 space-y-0.5">
-                        {navLinks.map((link) => (
+            {/* Mobile menu overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 top-14 sm:top-16 bg-slate-900/40 z-40"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
+
+            {/* Mobile panel */}
+            <div
+                className={`lg:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-lg transition-all duration-300 ease-out ${
+                    isMobileMenuOpen
+                        ? "opacity-100 translate-y-0 visible"
+                        : "opacity-0 -translate-y-2 invisible pointer-events-none"
+                }`}
+            >
+                <div className="max-h-[calc(100vh-3.5rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto px-4 py-3 space-y-1">
+                    {navLinks.map((link) => {
+                        const hasSubmenu =
+                            link.submenu && link.submenu.length > 0;
+                        const isOpen = openMobileSubmenu === link.name;
+                        const Icon = link.icon;
+
+                        if (!hasSubmenu) {
+                            return (
+                                <Link
+                                    key={link.name}
+                                    href={link.href}
+                                    className="flex items-center gap-3 min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition-colors"
+                                >
+                                    <Icon
+                                        size={18}
+                                        className="text-slate-400 flex-shrink-0"
+                                    />
+                                    <span>{link.name}</span>
+                                </Link>
+                            );
+                        }
+
+                        return (
+                            <div key={link.name} className="rounded-xl">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        toggleMobileSubmenu(link.name)
+                                    }
+                                    aria-expanded={isOpen}
+                                    className="w-full flex items-center justify-between min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition-colors"
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <Icon
+                                            size={18}
+                                            className="text-slate-400 flex-shrink-0"
+                                        />
+                                        {link.name}
+                                    </span>
+                                    <ChevronDown
+                                        size={16}
+                                        className={`text-slate-400 transition-transform duration-200 ${
+                                            isOpen ? "rotate-180" : ""
+                                        }`}
+                                    />
+                                </button>
+
+                                <div
+                                    className={`overflow-hidden transition-all duration-200 ${
+                                        isOpen
+                                            ? "max-h-96 opacity-100"
+                                            : "max-h-0 opacity-0"
+                                    }`}
+                                >
+                                    <div className="ml-3 pl-3 border-l border-slate-200 space-y-0.5 py-1 mb-1">
+                                        {link.submenu!.map((sub) => {
+                                            const SubIcon = sub.icon;
+                                            return (
+                                                <Link
+                                                    key={sub.name}
+                                                    href={sub.href}
+                                                    className="flex items-center gap-3 min-h-[44px] px-3 py-2 text-sm text-slate-600 hover:text-teal-700 hover:bg-slate-50 rounded-lg transition-colors"
+                                                >
+                                                    <SubIcon
+                                                        size={15}
+                                                        className="text-slate-400 flex-shrink-0"
+                                                    />
+                                                    <span>{sub.name}</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {/* Login di mobile */}
+                    <div className="pt-3 mt-2 border-t border-slate-100">
+                        {auth?.user ? (
                             <Link
-                                key={link.name}
-                                href={link.href}
-                                className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-slate-50 rounded-md transition-colors duration-200"
+                                href={route("be.dashboard")}
+                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl transition-colors"
                             >
-                                <link.icon size={18} className="text-slate-400" />
-                                <span>{link.name}</span>
+                                <LayoutDashboard size={18} />
+                                Dashboard
                             </Link>
-                        ))}
-                        <div className="pt-2 mt-2 border-t border-slate-100">
-                            {auth.user ? (
-                                <Link
-                                    href={route("be.dashboard")}
-                                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-md transition-colors duration-200"
-                                >
-                                    <LayoutDashboard size={18} /> Dashboard
-                                </Link>
-                            ) : (
-                                <Link
-                                    href={route("login")}
-                                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-md transition-colors duration-200"
-                                >
-                                    <LogIn size={18} /> Login
-                                </Link>
-                            )}
-                        </div>
+                        ) : (
+                            <Link
+                                href={route("login")}
+                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl transition-colors"
+                            >
+                                <LogIn size={18} />
+                                Login
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>

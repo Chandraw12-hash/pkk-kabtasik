@@ -17,39 +17,40 @@ class IndexController extends Controller
 {
     public function index()
     {
-        // Ambil data berita terbaru
-        $beritaTerbaru = Berita::latest()->take(3)->get()->map(function ($item) {
+        $beritaTerbaru = Berita::latest()->take(6)->get()->map(function ($item) {
             return [
                 'id' => $item->id,
                 'judul' => $item->judul,
                 'slug' => $item->slug,
                 'deskripsi' => $item->konten,
+                'konten' => $item->konten,
                 'foto' => $item->foto,
-                'foto_url' => $item->foto_url,
+                'foto_url' => $item->foto_url ?? null,
                 'created_at' => $item->created_at,
-                'link' => '/berita/' . $item->slug,
+                'link' => $item->slug
+                    ? '/berita/' . $item->slug
+                    : '/berita/' . $item->id,
             ];
         });
 
-        // Ambil data galeri terbaru (8 foto) agar muncul di Landing Page
         $galeriTerbaru = Galeri::latest()->take(8)->get()->map(function ($item) {
             return [
                 'id' => $item->id,
-                'judul' => $item->judul,
-                'tanggal' => $item->tanggal,
+                'judul' => $item->judul ?? null,
+                'caption' => $item->judul ?? $item->caption ?? null,
+                'tanggal' => $item->tanggal ?? null,
                 'foto' => $item->foto,
-                'foto_url' => $item->foto_url,
+                'foto_url' => $item->foto_url ?? null,
+                'created_at' => $item->created_at,
             ];
         });
 
-        // Ambil data Sekretariat & Pokja 1-4 untuk ditampilkan di Landing Page
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
         $pokja3 = Pokja3::latest()->take(6)->get();
         $pokja4 = Pokja4::latest()->take(6)->get();
 
-        // Dummy Data Kebijakan
         $kebijakan = collect([
             [
                 'id' => 1,
@@ -72,11 +73,8 @@ class IndexController extends Controller
                 'file_path' => '#',
                 'urutan' => 3,
             ],
-        ])->map(function ($item) {
-            return (object) $item;
-        });
+        ])->map(fn ($item) => (object) $item);
 
-        // Dummy Data Chart (Tren Indeks SPBE)
         $chartData = collect([
             ['year' => '2019', 'value' => 1.8],
             ['year' => '2020', 'value' => 2.1],
@@ -86,15 +84,12 @@ class IndexController extends Controller
             ['year' => '2024', 'value' => 3.5],
         ]);
 
-        // Dummy Data Domain
         $domainData = collect([
             ['id' => 1, 'title' => 'Domain Kebijakan SPBE', 'nilai' => 3.5],
             ['id' => 2, 'title' => 'Domain Tata Kelola SPBE', 'nilai' => 3.2],
             ['id' => 3, 'title' => 'Domain Manajemen SPBE', 'nilai' => 3.0],
             ['id' => 4, 'title' => 'Domain Layanan SPBE', 'nilai' => 3.8],
         ]);
-
-        $currentYear = date('Y');
 
         return Inertia::render('Frontend/Beranda', [
             'kebijakan' => $kebijakan,
@@ -107,7 +102,7 @@ class IndexController extends Controller
             'pokja2' => $pokja2,
             'pokja3' => $pokja3,
             'pokja4' => $pokja4,
-            'year' => $currentYear,
+            'year' => (int) date('Y'),
         ]);
     }
 
@@ -152,7 +147,7 @@ class IndexController extends Controller
 
         return Inertia::render('Frontend/Program/GaleriKegiatan', [
             'galeri' => $galeri,
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -166,18 +161,64 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Program/Dokumen');
     }
 
-    public function berita()
+    // ===== LIST BERITA =====
+    // FIX:
+    // 1. Prop diganti dari 'beritas' -> 'berita', sesuai yang dibaca
+    //    Frontend/Berita/Index.tsx (interface BeritaProps { berita }).
+    //    Nama prop yang tidak cocok bikin React selalu jatuh ke default
+    //    array kosong, walau datanya sebenarnya ada di database.
+    // 2. Data dikirim sebagai array polos (->get(), bukan ->paginate()),
+    //    karena Berita.tsx mengharapkan berita: BeritaItem[], bukan
+    //    objek paginator {data, links, ...}.
+    // 3. Ditambahkan filter status_publikasi supaya berita yang belum
+    //    dipublikasikan tidak ikut tampil ke publik.
+    public function berita(Request $request)
     {
-        $beritas = Berita::latest()->paginate(9);
+        $search = $request->get('search');
+
+        $query = Berita::where('status_publikasi', true)->latest();
+
+        if ($search) {
+            $query->where('judul', 'like', '%' . $search . '%');
+        }
+
+        $beritas = $query->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'slug' => $item->slug,
+                'deskripsi' => $item->konten,
+                'konten' => $item->konten,
+                'kategori' => $item->kategori,
+                'foto' => $item->foto,
+                'foto_url' => $item->foto_url ?? null,
+                'created_at' => $item->created_at,
+            ];
+        });
+
         return Inertia::render('Frontend/Berita/Index', [
-            'beritas' => $beritas
+            'berita' => $beritas,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
+    // ===== DETAIL BERITA (slug ATAU id) =====
     public function showBerita($slug)
     {
-        $berita = Berita::where('slug', $slug)->firstOrFail();
-        $beritaLainnya = Berita::where('slug', '!=', $slug)->latest()->take(3)->get();
+        $berita = Berita::query()
+            ->where('slug', $slug)
+            ->when(is_numeric($slug), function ($q) use ($slug) {
+                $q->orWhere('id', $slug);
+            })
+            ->firstOrFail();
+
+        $beritaLainnya = Berita::where('id', '!=', $berita->id)
+            ->where('status_publikasi', true)
+            ->latest()
+            ->take(5)
+            ->get();
 
         return Inertia::render('Frontend/Berita/Show', [
             'berita' => $berita,
@@ -185,41 +226,39 @@ class IndexController extends Controller
         ]);
     }
 
-    // ==========================================
-    // METHOD EKSPLORASI (DIARAHKAN KE data-data)
-    // ==========================================
+    // ===== DATA PUBLIK =====
     public function sekretariatPublic()
     {
         return Inertia::render('Frontend/data-data/Sekretariat', [
-            'data' => DataUmumSekretariat::latest()->paginate(10)
+            'data' => DataUmumSekretariat::orderBy('kecamatan')->paginate(15),
         ]);
     }
 
     public function pokja1Public()
     {
         return Inertia::render('Frontend/data-data/Pokja1', [
-            'data' => Pokja1::latest()->paginate(10)
+            'data' => Pokja1::orderBy('kecamatan')->paginate(15),
         ]);
     }
 
     public function pokja2Public()
     {
         return Inertia::render('Frontend/data-data/Pokja2', [
-            'data' => Pokja2::latest()->paginate(10)
+            'data' => Pokja2::orderBy('kecamatan')->paginate(15),
         ]);
     }
 
     public function pokja3Public()
     {
         return Inertia::render('Frontend/data-data/Pokja3', [
-            'data' => Pokja3::latest()->paginate(10)
+            'data' => Pokja3::orderBy('kecamatan')->paginate(15),
         ]);
     }
 
     public function pokja4Public()
     {
         return Inertia::render('Frontend/data-data/Pokja4', [
-            'data' => Pokja4::latest()->paginate(10)
+            'data' => Pokja4::orderBy('kecamatan')->paginate(15),
         ]);
     }
 }

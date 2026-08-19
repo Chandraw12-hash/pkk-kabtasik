@@ -38,8 +38,9 @@ Route::as('fe.')->group(function () {
     Route::get('/program/mars-pkk', [IndexController::class, 'marsPkk'])->name('program.marsPkk');
     Route::get('/program/dokumen', [IndexController::class, 'dokumen'])->name('program.dokumen');
 
-    // Berita Publik
-    Route::get('/berita', [BeritaController::class, 'indexPublic'])->name('berita');
+    // Berita Publik (list + detail)
+    Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
+    Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
     // Data Publik Sekretariat & Pokja
     Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
