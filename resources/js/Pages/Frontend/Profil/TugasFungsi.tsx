@@ -9,6 +9,7 @@ import {
     Target,
     BarChart2,
     ShieldCheck,
+    Layers,
 } from "lucide-react";
 
 function useScrollAnimation<T extends HTMLElement = HTMLElement>() {
@@ -36,34 +37,46 @@ function useScrollAnimation<T extends HTMLElement = HTMLElement>() {
 }
 
 const tugasPokok = [
-    "Merencanakan, melaksanakan dan membina pelaksanaan program kerja TP PKK sesuai kebijakan setempat.",
-    "Menghimpun, menggerakkan dan membina potensi masyarakat, khususnya keluarga untuk melaksanakan program PKK.",
-    "Memberikan bimbingan, motivasi dan membina Tim Penggerak PKK serta para kader secara berjenjang.",
-    "Menyampaikan laporan pelaksanaan tugas PKK kepada Ketua Pembina dan Tim Penggerak PKK setingkat di atasnya.",
-    "Melaksanakan Monitoring, Evaluasi, dan Pelaporan (SMELP) terhadap pelaksanaan program-program PKK.",
+    "Merencanakan program kerja sesuai dengan hasil Rapat Kerja Daerah (Rakerda) dan kebutuhan masyarakat.",
+    "Menggerakkan dan membina potensi masyarakat, khususnya para kader di tingkat kecamatan dan desa/kelurahan.",
+    "Memantau, mengevaluasi, dan melaporkan pelaksanaan rangkaian program PKK secara berjenjang kepada Bupati selaku Ketua Pembina dan TP PKK tingkat provinsi.",
+    "Memberikan bimbingan teknis, penyuluhan, serta pendampingan langsung kepada TP PKK Kecamatan.",
 ];
 
 const fungsiStrategis = [
     {
-        title: "Penyuluh & Motivator",
-        desc: "Penyuluhan dan motivasi kepada masyarakat dalam melaksanakan 10 Program Pokok PKK.",
+        title: "Pemberdayaan Keluarga",
+        desc: "Sebagai wadah pemberdayaan masyarakat yang berfokus pada kesejahteraan keluarga.",
         icon: Sparkles,
     },
     {
-        title: "Penggerak Program",
-        desc: "Menggerakkan dan membina masyarakat untuk berpartisipasi aktif dalam program PKK.",
+        title: "Perencana & Pengendali",
+        desc: "Sebagai perencana dan pengendali pelaksana 10 Program PKK di wilayah kabupaten.",
         icon: Target,
     },
     {
-        title: "Fasilitator & Perencana",
-        desc: "Memfasilitasi kegiatan dan merencanakan program strategis untuk Kabupaten Tasikmalaya.",
+        title: "Fasilitator Aspirasi",
+        desc: "Sebagai fasilitator penampung serta penyalur aspirasi masyarakat bawah terkait isu keluarga.",
         icon: BarChart2,
     },
     {
-        title: "Pengendali & Pembina",
-        desc: "Mengendalikan seluruh kegiatan PKK dan membina kader-kader PKK di seluruh lapisan.",
+        title: "Mitra Kerja Pemerintah",
+        desc: "Menghimpun dan menggerakkan potensi masyarakat untuk meningkatkan kesejahteraan keluarga sebagai mitra kerja pemerintah daerah.",
         icon: ShieldCheck,
     },
+];
+
+const programPokok = [
+    "Penghayatan dan Pengamalan Pancasila",
+    "Gotong Royong",
+    "Pangan",
+    "Sandang",
+    "Perumahan dan Tata Laksana Rumah Tangga",
+    "Pendidikan dan Keterampilan",
+    "Kesehatan",
+    "Pengembangan Kehidupan Berkoperasi",
+    "Kelestarian Lingkungan Hidup",
+    "Perencanaan Sehat",
 ];
 
 const rincianOperasional = [
@@ -81,6 +94,7 @@ const rincianOperasional = [
 export default function TugasFungsi() {
     const heroAnim = useScrollAnimation<HTMLElement>();
     const mainAnim = useScrollAnimation<HTMLElement>();
+    const programAnim = useScrollAnimation<HTMLElement>();
     const rincianAnim = useScrollAnimation<HTMLElement>();
 
     return (
@@ -168,7 +182,7 @@ export default function TugasFungsi() {
                                     />
                                 </div>
                                 <h2 className="text-xl font-bold text-slate-900">
-                                    Tugas Pokok
+                                    Tugas Pokok TP PKK Kabupaten Tasikmalaya
                                 </h2>
                             </div>
                             <ul className="space-y-4">
@@ -196,7 +210,7 @@ export default function TugasFungsi() {
                                     />
                                 </div>
                                 <h2 className="text-xl font-bold text-slate-900">
-                                    Fungsi Strategis
+                                    Fungsi TP PKK Kabupaten Tasikmalaya
                                 </h2>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,10 +239,50 @@ export default function TugasFungsi() {
                 </div>
             </section>
 
+            {/* ==================== 10 PROGRAM POKOK PKK ==================== */}
+            <section
+                ref={programAnim.ref}
+                className={`py-20 lg:py-24 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                    programAnim.isVisible ? "show" : ""
+                }`}
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="mb-12">
+                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                            Pilar Utama Gerakan
+                        </p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
+                            10 Program Pokok PKK
+                        </h2>
+                        <p className="text-slate-500 text-base max-w-2xl leading-relaxed">
+                            Sepuluh program utama yang menjadi landasan operasional
+                            gerakan PKK dalam mewujudkan keluarga yang berdaya dan
+                            sejahtera di Kabupaten Tasikmalaya.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {programPokok.map((prog, i) => (
+                            <div
+                                key={i}
+                                className="bg-white border border-slate-200 rounded-xl p-5 hover:border-teal-300 transition-colors flex flex-col justify-between"
+                            >
+                                <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 font-bold text-xs mb-3">
+                                    {String(i + 1).padStart(2, "0")}
+                                </div>
+                                <h3 className="text-slate-800 text-sm font-semibold leading-snug">
+                                    {prog}
+                                </h3>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ==================== RINCIAN OPERASIONAL ==================== */}
             <section
                 ref={rincianAnim.ref}
-                className={`py-20 lg:py-24 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     rincianAnim.isVisible ? "show" : ""
                 }`}
             >
@@ -251,7 +305,7 @@ export default function TugasFungsi() {
                         {rincianOperasional.map((item, i) => (
                             <div
                                 key={i}
-                                className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition-colors"
+                                className="bg-slate-50 border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition-colors"
                             >
                                 <div className="flex items-start gap-3">
                                     <span className="text-teal-600 font-semibold text-sm min-w-[28px]">

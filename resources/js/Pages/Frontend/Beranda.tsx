@@ -796,98 +796,87 @@ export default function Welcome({
             </section>
 
             {/* ==========================================================
-                SAMBUTAN KETUA
-            ========================================================== */}
-            <section
-                ref={sambutanAnim.ref}
-                id="tentang"
-                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
-                    sambutanAnim.isVisible ? "show" : ""
-                }`}
-                aria-labelledby="sambutan-title"
-            >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
-                        <div className="w-full lg:w-5/12">
-                            <div className="rounded-lg overflow-hidden border border-slate-200">
-                                <img
-                                    src="/assets/images/ketuapkk.png"
-                                    alt="Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
-                                    loading="lazy"
-                                    className="w-full h-[420px] md:h-[480px] object-cover object-top"
-                                    onError={(e) => {
-                                        e.currentTarget.src = getImageFallback("ketua");
-                                    }}
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <h3 className="text-lg font-semibold text-slate-900">
-                                    Hj. Retno Widyastuti, S.E
-                                </h3>
-                                <p className="text-sm text-slate-500 mt-0.5">
-                                    Ketua TP PKK Kabupaten Tasikmalaya
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="w-full lg:w-7/12">
-                            <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
-                                Sambutan
-                            </p>
-                            <h2
-                                id="sambutan-title"
-                                className="text-2xl md:text-3xl font-semibold text-slate-900 mb-6"
-                            >
-                                Sambutan Ketua PKK
-                            </h2>
-                            <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
-                                <p className="italic text-slate-700">
-                                    Assalamu&apos;alaikum Warahmatullahi Wabarakatuh,
-                                </p>
-                                <p>
-                                    Dalam rangka turut menyukseskan program
-                                    Pembangunan Daerah Kabupaten Tasikmalaya,
-                                    selamat datang di Website Resmi TP PKK
-                                    Kabupaten Tasikmalaya. Puji dan syukur kami
-                                    panjatkan kepada Allah SWT atas segala
-                                    nikmat yang diberikan.
-                                </p>
-                                <p>
-                                    Website ini hadir sebagai media informasi
-                                    dan publikasi untuk memenuhi kebutuhan
-                                    informasi masyarakat mengenai berbagai
-                                    kegiatan dan 10 Program Pokok PKK di
-                                    Kabupaten Tasikmalaya secara transparan dan
-                                    akuntabel.
-                                </p>
-                                <p>
-                                    Saya mengajak seluruh pengurus, kader, dan
-                                    masyarakat untuk bersama-sama memajukan PKK
-                                    dalam rangka mewujudkan kesejahteraan
-                                    keluarga, khususnya di wilayah Kabupaten
-                                    Tasikmalaya yang kita cintai ini.
-                                </p>
-                                <p>
-                                    Semoga website ini bermanfaat dalam
-                                    meningkatkan kualitas layanan informasi
-                                    publik. Terima kasih.
-                                </p>
-                                <p className="italic text-slate-700 pt-2">
-                                    Wassalamu&apos;alaikum Warahmatullahi Wabarakatuh.
-                                </p>
-                            </div>
-                            <div className="mt-8 pt-6 border-t border-slate-200">
-                                <p className="font-semibold text-slate-900">
-                                    Hj. Retno Widyastuti, S.E
-                                </p>
-                                <p className="text-sm text-slate-500 mt-0.5">
-                                    Ketua TP PKK Kabupaten Tasikmalaya
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            SAMBUTAN KETUA
+========================================================== */}
+<section
+    ref={sambutanAnim.ref}
+    id="tentang"
+    className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
+        sambutanAnim.isVisible ? "show" : ""
+    }`}
+    aria-labelledby="sambutan-title"
+>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
+            <div className="w-full lg:w-5/12">
+                <div className="rounded-lg overflow-hidden border border-slate-200">
+                    <img
+                        src="/assets/images/ketuapkk.png"
+                        alt="Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
+                        loading="lazy"
+                        className="w-full h-[420px] md:h-[480px] object-cover object-top"
+                        onError={(e) => {
+                            e.currentTarget.src = getImageFallback("ketua");
+                        }}
+                    />
                 </div>
-            </section>
+                <div className="mt-4">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                        Hj. Retno Widyastuti, S.E
+                    </h3>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Ketua TP PKK Kabupaten Tasikmalaya
+                    </p>
+                </div>
+            </div>
+
+            <div className="w-full lg:w-7/12">
+                <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
+                    Sambutan
+                </p>
+                <h2
+                    id="sambutan-title"
+                    className="text-2xl md:text-3xl font-semibold text-slate-900 mb-6"
+                >
+                    Sambutan Ketua TP PKK Kabupaten Tasikmalaya
+                </h2>
+                <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
+                    <p className="italic text-slate-700">
+                        Assalaamu’alaikum wa rahmatullah wa barakaatuh,
+                        <br />
+                        Sampurasun,
+                    </p>
+                    <p>
+                        Puji dan Syukur Kami Panjatkan Kepada Allah SWT karena atas rahmat dan karunia-Nya, kita dapat hadir dan meluncurkan website resmi Tim Penggerak PKK Kabupaten Tasikmalaya.
+                    </p>
+                    <p>
+                        Kami menyambut baik kehadiran website ini sebagai sarana komunikasi, informasi, dan transparansi kegiatan PKK kepada masyarakat luas. Melalui media digital ini, kami berharap 10 program kerja Pokok PKK dapat diakses dengan mudah serta memberikan manfaat nyata bagi pembinaan kesejahteraan keluarga di wilayah Kabupaten Tasikmalaya.
+                    </p>
+                    <p>
+                        Gerakan PKK berfokus pada pemberdayaan keluarga demi mewujudkan masyarakat yang maju, mandiri, dan sejahtera. Oleh karena itu, dukungan serta kerja sama dari seluruh pengurus, kader, dan instansi pemerintah sangat kami harapkan untuk menyukseskan setiap program yang kami laksanakan.
+                    </p>
+                    <p>
+                        Tujuan utama pembuatan website PKK Kabupaten adalah untuk mengoptimalkan pengelolaan data, mempercepat pelaporan 10 program pokok PKK, serta meningkatkan transparansi dan penyebaran informasi kegiatan pemberdayaan keluarga kepada masyarakat khususnya Kabupaten Tasikmalaya secara digital.
+                    </p>
+                    <p>
+                        Akhir kata, semoga website ini dapat bermanfaat dan berguna bagi banyak pihak terutama untuk meningkatkan kualitas informasi publik di Kabupaten Tasikmalaya. Terima kasih.
+                    </p>
+                    <p className="italic text-slate-700 pt-2">
+                        Wassalamu’alaikum warahmatullahi wa barakatuh.
+                    </p>
+                </div>
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                    <p className="font-semibold text-slate-900">
+                        Hj. Retno Widyastuti, S.E
+                    </p>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Ketua Tim Penggerak PKK Kabupaten Tasikmalaya
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 {/* ==========================================================
     DATA POKJA
@@ -976,7 +965,7 @@ export default function Welcome({
 
 
 
-         {/* ==========================================================
+      {/* ==========================================================
     10 PROGRAM POKOK PKK
 ========================================================== */}
 <section

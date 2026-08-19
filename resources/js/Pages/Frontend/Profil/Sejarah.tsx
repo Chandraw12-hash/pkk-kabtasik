@@ -89,42 +89,27 @@ export default function Sejarah() {
                                 Jejak Langkah Sejarah
                             </p>
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
-                                Sejarah Singkat PKK
+                                Sejarah Singkat Gerakan PKK
                             </h2>
 
                             <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
                                 <p>
-                                    Gerakan Pemberdayaan dan Kesejahteraan
-                                    Keluarga (PKK) merupakan gerakan nasional
-                                    yang tumbuh dan berkembang dari bawah,
-                                    dikelola oleh masyarakat dengan perempuan
-                                    sebagai penggerak untuk membangun keluarga
-                                    yang berakhlak mulia, sehat, sejahtera, maju,
-                                    dan mandiri.
+                                    PKK yang merupakan gerakan pembangunan masyarakat bermula dari Seminar <em>Home Economic</em> di Bogor pada tahun 1957, yang menghasilkan rumusan 10 Segi Kehidupan Keluarga.
                                 </p>
                                 <p>
-                                    Sejarah PKK dimulai pada tahun 1960-an sebagai
-                                    inisiatif pemberdayaan masyarakat dalam
-                                    meningkatkan kualitas hidup keluarga di
-                                    bidang pendidikan, kesehatan, ekonomi, dan
-                                    sosial budaya.
+                                    Kemudian ditindak lanjuti oleh Kementrian Pendidikan, Pengajaran dan Kebudayaan pada tahun 1961 yang menetapkan 10 Segi Kehidupan Keluarga sebagai Kurikulum Pendidikan Kesejahteraan Keluarga yang diajarkan di sekolah-sekolah oleh Pendidikan Masyarakat (PENMAS).
                                 </p>
                                 <p>
-                                    Seiring perkembangan zaman, PKK terus menjadi
-                                    mitra strategis pemerintah dalam implementasi
-                                    10 Program Pokok PKK yang bertujuan
-                                    meningkatkan kesejahteraan masyarakat dan
-                                    memperkuat ketahanan keluarga secara
-                                    menyeluruh.
+                                    Pada bulan Mei tahun 1962 di Desa Salaman Kabupaten Magelang, Provinsi Jawa Tengah, didirikan Pusat Latihan Pendidikan Masyarakat (PLPM) untuk menyebarluaskan 10 Segi Kehidupan Keluarga.
                                 </p>
                                 <p>
-                                    Di Kabupaten Tasikmalaya, PKK hadir sebagai
-                                    bagian dari sistem pemberdayaan masyarakat,
-                                    serta menjangkau seluruh lapisan masyarakat
-                                    dari tingkat kabupaten hingga desa, untuk
-                                    mewujudkan Kabupaten Tasikmalaya yang
-                                    sejahtera, maju, dan berkeadilan bagi seluruh
-                                    masyarakatnya.
+                                    Sekitar tahun 1967 kehidupan sebagian masyarakat Jawa Tengah sangat menyedihkan, khususnya di daerah Dieng Kabupaten Wonosobo diantara mereka banyak yang menderita <em>Honger Odeem</em> (HO). Kenyataan ini menyentuh hati Ibu Isriati Moenadi, sebagai Isteri Gubernur Jawa Tengah saat itu. Beliau merasa bertanggung jawab terhadap kesejahteraan masyarakatnya dan berinisiatif membentuk PKK di Jawa Tengah, dari tingkat Provinsi sampai ketingkat Desa dan Kelurahan, dengan susunan pengurus terdiri dari unsur-unsur Isteri Pimpinan Daerah, Tokoh-tokoh masyarakat, perempuan dan laki-laki untuk melaksanakan 10 Pokok PKK secara intensif.
+                                </p>
+                                <p>
+                                    Dari keberhasilan PKK di Jawa Tengah, maka Presiden RI menganjurkan kepada Menteri Dalam Negeri agar PKK dilaksanakan di daerah-daerah seluruh Indonesia.
+                                </p>
+                                <p>
+                                    Pada tanggal 27 Desember 1972 Menteri Dalam Negeri mengirimkan Surat Kawat Nomor SUS 3/6/12 tanggal 27 Desember 1972 kepada Gubernur Jawa Tengah untuk merubah nama Pendidikan Kesejahteraan Keluarga menjadi Pembinaan Kesejahteraan Keluarga, tembusan disampaikan kepada Gubernur seluruh Indonesia.
                                 </p>
                             </div>
                         </div>
@@ -132,93 +117,7 @@ export default function Sejarah() {
                 </div>
             </section>
 
-            {/* ==================== INOVASI ==================== */}
-            <section className="py-20 lg:py-24 bg-slate-50 border-t border-slate-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10">
-                        <div>
-                            <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
-                                Program Unggulan
-                            </p>
-                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
-                                Inovasi Kabupaten Tasikmalaya
-                            </h2>
-                            <p className="text-slate-500 text-sm mt-2 max-w-lg leading-relaxed">
-                                Berbagai inovasi yang menjadi bagian dari sejarah
-                                dan langkah nyata untuk kemajuan Tasikmalaya.
-                            </p>
-                        </div>
-                        <Link
-                            href="#"
-                            className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors whitespace-nowrap"
-                        >
-                            Lihat Program PKK
-                            <ChevronRight size={15} />
-                        </Link>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                title: "Penanganan Stunting",
-                                desc: "Program prioritas intervensi gizi keluarga untuk menurunkan angka stunting di Kabupaten Tasikmalaya.",
-                                icon: Shield,
-                                img: "/assets/images/hero.jpg",
-                            },
-                            {
-                                title: "Pemberdayaan Ekonomi",
-                                desc: "Pelatihan usaha, koperasi, dan pemberdayaan ekonomi keluarga melalui berbagai program PKK.",
-                                icon: TrendingUp,
-                                img: "https://images.unsplash.com/photo-1556910103-1c02745a872e?auto=format&fit=crop&w=600&q=80",
-                            },
-                            {
-                                title: "Ketahanan Pangan",
-                                desc: "Inovasi lahan pangan keluarga dan program ketahanan pangan rumah tangga untuk Tasikmalaya.",
-                                icon: Sprout,
-                                img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80",
-                            },
-                        ].map((item, i) => (
-                            <article
-                                key={i}
-                                className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full"
-                            >
-                                <div className="h-44 overflow-hidden">
-                                    <img
-                                        src={item.img}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            e.currentTarget.src =
-                                                "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=600&q=80";
-                                        }}
-                                    />
-                                </div>
-                                <div className="p-5 flex flex-col flex-grow">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <item.icon
-                                            size={16}
-                                            className="text-teal-600"
-                                        />
-                                        <h3 className="text-base font-semibold text-slate-900">
-                                            {item.title}
-                                        </h3>
-                                    </div>
-                                    <p className="text-slate-500 text-sm leading-relaxed flex-grow">
-                                        {item.desc}
-                                    </p>
-                                    <Link
-                                        href="#"
-                                        className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
-                                    >
-                                        Selengkapnya
-                                        <ArrowRight size={14} />
-                                    </Link>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             <Footer />
         </div>
