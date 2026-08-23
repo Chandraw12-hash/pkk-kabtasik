@@ -25,6 +25,8 @@ import {
     HeartHandshake,
     Home as HomeIcon,
     Activity,
+    CalendarDays,
+    ClipboardList,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -59,6 +61,24 @@ interface SharedProps {
 
 declare function route(name?: string, params?: unknown): any;
 
+/** Aman: kalau route belum ada di Ziggy, jangan crash */
+const safeRoute = (name: string, params?: unknown): string => {
+    try {
+        return route(name, params as any);
+    } catch {
+        return "#";
+    }
+};
+
+const routeExists = (name: string): boolean => {
+    try {
+        route(name);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const isCurrentRoute = (name: string) => {
         try {
@@ -67,6 +87,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             return false;
         }
     };
+
+    const hasAgenda = routeExists("be.agenda.index");
+    const hasLaporan = routeExists("be.laporan-kegiatan.index");
 
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
         pokjaManagement:
@@ -145,7 +168,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             flex flex-col h-screen
         `}
         >
-            {/* Logo & Close Button (Mobile Only) */}
             <div className="p-6 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                     <img
@@ -170,13 +192,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </button>
             </div>
 
-            {/* Menu Navigasi */}
             <nav className="flex-1 px-3 overflow-y-auto space-y-1 custom-scrollbar pb-6">
                 <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Main Menu
                 </p>
 
-                {/* Dashboard */}
                 <Link
                     href={route("be.dashboard")}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
@@ -202,7 +222,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     Master Data
                 </p>
 
-                {/* Data Kader */}
                 {permissions.includes("view-kader") && (
                     <Link
                         href={route("be.kader.index")}
@@ -226,9 +245,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </Link>
                 )}
 
-                {/* Manajemen Data Pokja & Sekretariat */}
                 <div className="mt-2">
                     <button
+                        type="button"
                         onClick={() => toggleMenu("pokjaManagement")}
                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                         ${
@@ -267,13 +286,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                     <div
                         className={`overflow-hidden transition-all duration-300 ${
-                            openMenus.pokjaManagement
-                                ? "max-h-96"
-                                : "max-h-0"
+                            openMenus.pokjaManagement ? "max-h-96" : "max-h-0"
                         }`}
                     >
                         <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
-                            {/* Sekretariat */}
                             <Link
                                 href={route("be.sekretariat.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
@@ -285,8 +301,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <FileText size={16} />
                                 <span>Sekretariat</span>
                             </Link>
-
-                            {/* Pokja I */}
                             <Link
                                 href={route("be.pokja1.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
@@ -298,8 +312,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <HeartHandshake size={16} />
                                 <span>Pokja I</span>
                             </Link>
-
-                            {/* Pokja II */}
                             <Link
                                 href={route("be.pokja2.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
@@ -311,8 +323,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <BookOpen size={16} />
                                 <span>Pokja II</span>
                             </Link>
-
-                            {/* Pokja III */}
                             <Link
                                 href={route("be.pokja3.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
@@ -324,8 +334,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <HomeIcon size={16} />
                                 <span>Pokja III</span>
                             </Link>
-
-                            {/* Pokja IV */}
                             <Link
                                 href={route("be.pokja4.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
@@ -341,12 +349,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </div>
                 </div>
 
-                {/* Manajemen Konten */}
                 <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                     Manajemen Konten
                 </p>
 
-                {/* Galeri Kegiatan */}
                 <Link
                     href={route("be.galeri.index")}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
@@ -368,7 +374,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <span>Galeri Kegiatan</span>
                 </Link>
 
-                {/* Berita & Informasi */}
                 <Link
                     href={route("be.berita.index")}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
@@ -390,10 +395,63 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <span>Berita & Informasi</span>
                 </Link>
 
-                {/* User Management */}
+                {/* Agenda — hanya tampil kalau route sudah terdaftar */}
+                {hasAgenda && (
+                    <Link
+                        href={safeRoute("be.agenda.index")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                        ${
+                            isCurrentRoute("be.agenda.*")
+                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <CalendarDays
+                            size={20}
+                            strokeWidth={2}
+                            className={`shrink-0 ${
+                                isCurrentRoute("be.agenda.*")
+                                    ? "text-brand-green-600 dark:text-brand-green-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                            }`}
+                        />
+                        <span>Agenda</span>
+                    </Link>
+                )}
+
+                {/* Laporan Kegiatan — hanya tampil kalau route sudah terdaftar */}
+                {hasLaporan && (
+                    <>
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
+                            Mobile & Lapangan
+                        </p>
+                        <Link
+                            href={safeRoute("be.laporan-kegiatan.index")}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                            ${
+                                isCurrentRoute("be.laporan-kegiatan.*")
+                                    ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            }`}
+                        >
+                            <ClipboardList
+                                size={20}
+                                strokeWidth={2}
+                                className={`shrink-0 ${
+                                    isCurrentRoute("be.laporan-kegiatan.*")
+                                        ? "text-brand-green-600 dark:text-brand-green-400"
+                                        : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                }`}
+                            />
+                            <span>Laporan Kegiatan</span>
+                        </Link>
+                    </>
+                )}
+
                 {permissions.includes("view-users") && (
                     <div className="mt-4">
                         <button
+                            type="button"
                             onClick={() => toggleMenu("userManagement")}
                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                             ${
@@ -465,6 +523,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                         <div>
                             <button
+                                type="button"
                                 onClick={() => toggleMenu("settingManagement")}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                                 ${
@@ -532,10 +591,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 )}
             </nav>
 
-            {/* User Profile Footer */}
             <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                 <div ref={dropdownRef} className="relative">
                     <button
+                        type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group cursor-pointer"
                     >
@@ -584,6 +643,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     >
                         <div className="p-1 space-y-1">
                             <button
+                                type="button"
                                 onClick={toggleTheme}
                                 className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                             >

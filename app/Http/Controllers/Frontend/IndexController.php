@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\Galeri;
+use App\Models\Agenda;
 use App\Models\DataUmumSekretariat;
 use App\Models\Pokja1;
 use App\Models\Pokja2;
@@ -17,33 +18,62 @@ class IndexController extends Controller
 {
     public function index()
     {
-        $beritaTerbaru = Berita::latest()->take(6)->get()->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'judul' => $item->judul,
-                'slug' => $item->slug,
-                'deskripsi' => $item->konten,
-                'konten' => $item->konten,
-                'foto' => $item->foto,
-                'foto_url' => $item->foto_url ?? null,
-                'created_at' => $item->created_at,
-                'link' => $item->slug
-                    ? '/berita/' . $item->slug
-                    : '/berita/' . $item->id,
-            ];
-        });
+        $beritaTerbaru = Berita::where('status_publikasi', true)
+            ->latest()
+            ->take(6)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'judul' => $item->judul,
+                    'slug' => $item->slug,
+                    'deskripsi' => $item->konten,
+                    'konten' => $item->konten,
+                    'foto' => $item->foto,
+                    'foto_url' => $item->foto_url ?? null,
+                    'created_at' => $item->created_at,
+                    'link' => $item->slug
+                        ? '/berita/' . $item->slug
+                        : '/berita/' . $item->id,
+                ];
+            });
 
-        $galeriTerbaru = Galeri::latest()->take(8)->get()->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'judul' => $item->judul ?? null,
-                'caption' => $item->judul ?? $item->caption ?? null,
-                'tanggal' => $item->tanggal ?? null,
-                'foto' => $item->foto,
-                'foto_url' => $item->foto_url ?? null,
-                'created_at' => $item->created_at,
-            ];
-        });
+        $galeriTerbaru = Galeri::latest()
+            ->take(8)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'judul' => $item->judul ?? null,
+                    'caption' => $item->judul ?? $item->caption ?? null,
+                    'tanggal' => $item->tanggal ?? null,
+                    'foto' => $item->foto,
+                    'foto_url' => $item->foto_url ?? null,
+                    'created_at' => $item->created_at,
+                ];
+            });
+
+        // ✅ AMBIL DATA AGENDA UNTUK LANDING PAGE
+        $agendaTerbaru = Agenda::where('status', '!=', 'cancelled')
+            ->whereDate('tanggal', '>=', now()->subDays(1))
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('waktu', 'asc')
+            ->limit(10)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'judul' => $item->judul,
+                    'deskripsi' => $item->deskripsi,
+                    'tanggal' => $item->tanggal instanceof \DateTime ? $item->tanggal->format('Y-m-d') : $item->tanggal,
+                    'waktu' => $item->waktu ? (method_exists($item->waktu, 'format') ? $item->waktu->format('H:i') : substr($item->waktu, 0, 5)) : null,
+                    'lokasi' => $item->lokasi,
+                    'status' => $item->status,
+                ];
+            });
+
+        // ✅ AMBIL DATA VIDEO (jika ada tabelnya)
+        $videos = collect([]); // Kosongkan dulu, nanti bisa ditambahkan
 
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
@@ -97,6 +127,8 @@ class IndexController extends Controller
             'domainData' => $domainData,
             'berita' => $beritaTerbaru,
             'galeri' => $galeriTerbaru,
+            'agenda' => $agendaTerbaru,     // ✅ KIRIM AGENDA
+            'videos' => $videos,            // ✅ KIRIM VIDEOS
             'sekretariat' => $sekretariat,
             'pokja1' => $pokja1,
             'pokja2' => $pokja2,
@@ -162,16 +194,6 @@ class IndexController extends Controller
     }
 
     // ===== LIST BERITA =====
-    // FIX:
-    // 1. Prop diganti dari 'beritas' -> 'berita', sesuai yang dibaca
-    //    Frontend/Berita/Index.tsx (interface BeritaProps { berita }).
-    //    Nama prop yang tidak cocok bikin React selalu jatuh ke default
-    //    array kosong, walau datanya sebenarnya ada di database.
-    // 2. Data dikirim sebagai array polos (->get(), bukan ->paginate()),
-    //    karena Berita.tsx mengharapkan berita: BeritaItem[], bukan
-    //    objek paginator {data, links, ...}.
-    // 3. Ditambahkan filter status_publikasi supaya berita yang belum
-    //    dipublikasikan tidak ikut tampil ke publik.
     public function berita(Request $request)
     {
         $search = $request->get('search');

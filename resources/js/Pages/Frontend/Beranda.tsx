@@ -18,7 +18,6 @@ import {
     Eye,
     Newspaper,
     Megaphone,
-    // ⬇️ tambah ini
     X,
     Sparkles,
     Handshake,
@@ -28,6 +27,10 @@ import {
     Building2,
     Trees,
     ClipboardList,
+    CalendarDays,
+    Images,
+    Youtube,
+    Play,
 } from "lucide-react";
 
 // ============================================================
@@ -72,6 +75,8 @@ interface AgendaItem {
     tanggal: string;
     waktu?: string;
     lokasi?: string;
+    kategori?: string;
+    deskripsi?: string;
 }
 
 interface PengumumanItem {
@@ -137,8 +142,6 @@ const DATA_MENU = [
         link: "https://tasikmalayakab.go.id/",
     },
 ];
-
-
 
 const PROGRAM_POKOK = [
     {
@@ -465,10 +468,12 @@ export default function Welcome({
         return () => clearInterval(timer);
     }, []);
 
-    // ⬇️ TARUH DI SINI (setelah openFaq)
     const [selectedProgram, setSelectedProgram] = useState<
         (typeof PROGRAM_POKOK)[number] | null
     >(null);
+
+    // Agenda yang sedang dibuka pada modal detail
+    const [selectedAgenda, setSelectedAgenda] = useState<AgendaItem | null>(null);
 
     const agendaDay = now.toLocaleDateString("id-ID", { day: "2-digit" });
     const agendaMonth = now
@@ -501,6 +506,7 @@ export default function Welcome({
     const faqAnim = useScrollAnimation();
     const kabarAnim = useScrollAnimation();
     const beritaListAnim = useScrollAnimation();
+    const agendaAnim = useScrollAnimation();
 
     // FAQ Toggle
     const toggleFaq = useCallback((index: number) => {
@@ -797,375 +803,941 @@ export default function Welcome({
 
             {/* ==========================================================
             SAMBUTAN KETUA
-========================================================== */}
-<section
-    ref={sambutanAnim.ref}
-    id="tentang"
-    className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
-        sambutanAnim.isVisible ? "show" : ""
-    }`}
-    aria-labelledby="sambutan-title"
->
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
-            <div className="w-full lg:w-5/12">
-                <div className="rounded-lg overflow-hidden border border-slate-200">
-                    <img
-                        src="/assets/images/ketuapkk.png"
-                        alt="Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
-                        loading="lazy"
-                        className="w-full h-[420px] md:h-[480px] object-cover object-top"
-                        onError={(e) => {
-                            e.currentTarget.src = getImageFallback("ketua");
-                        }}
-                    />
-                </div>
-                <div className="mt-4">
-                    <h3 className="text-lg font-semibold text-slate-900">
-                        Hj. Retno Widyastuti, S.E
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-0.5">
-                        Ketua TP PKK Kabupaten Tasikmalaya
-                    </p>
-                </div>
-            </div>
-
-            <div className="w-full lg:w-7/12">
-                <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
-                    Sambutan
-                </p>
-                <h2
-                    id="sambutan-title"
-                    className="text-2xl md:text-3xl font-semibold text-slate-900 mb-6"
-                >
-                    Sambutan Ketua TP PKK Kabupaten Tasikmalaya
-                </h2>
-                <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
-                    <p className="italic text-slate-700">
-                        Assalaamu’alaikum wa rahmatullah wa barakaatuh,
-                        <br />
-                        Sampurasun,
-                    </p>
-                    <p>
-                        Puji dan Syukur Kami Panjatkan Kepada Allah SWT karena atas rahmat dan karunia-Nya, kita dapat hadir dan meluncurkan website resmi Tim Penggerak PKK Kabupaten Tasikmalaya.
-                    </p>
-                    <p>
-                        Kami menyambut baik kehadiran website ini sebagai sarana komunikasi, informasi, dan transparansi kegiatan PKK kepada masyarakat luas. Melalui media digital ini, kami berharap 10 program kerja Pokok PKK dapat diakses dengan mudah serta memberikan manfaat nyata bagi pembinaan kesejahteraan keluarga di wilayah Kabupaten Tasikmalaya.
-                    </p>
-                    <p>
-                        Gerakan PKK berfokus pada pemberdayaan keluarga demi mewujudkan masyarakat yang maju, mandiri, dan sejahtera. Oleh karena itu, dukungan serta kerja sama dari seluruh pengurus, kader, dan instansi pemerintah sangat kami harapkan untuk menyukseskan setiap program yang kami laksanakan.
-                    </p>
-                    <p>
-                        Tujuan utama pembuatan website PKK Kabupaten adalah untuk mengoptimalkan pengelolaan data, mempercepat pelaporan 10 program pokok PKK, serta meningkatkan transparansi dan penyebaran informasi kegiatan pemberdayaan keluarga kepada masyarakat khususnya Kabupaten Tasikmalaya secara digital.
-                    </p>
-                    <p>
-                        Akhir kata, semoga website ini dapat bermanfaat dan berguna bagi banyak pihak terutama untuk meningkatkan kualitas informasi publik di Kabupaten Tasikmalaya. Terima kasih.
-                    </p>
-                    <p className="italic text-slate-700 pt-2">
-                        Wassalamu’alaikum warahmatullahi wa barakatuh.
-                    </p>
-                </div>
-                <div className="mt-8 pt-6 border-t border-slate-200">
-                    <p className="font-semibold text-slate-900">
-                        Hj. Retno Widyastuti, S.E
-                    </p>
-                    <p className="text-sm text-slate-500 mt-0.5">
-                        Ketua Tim Penggerak PKK Kabupaten Tasikmalaya
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-{/* ==========================================================
-    DATA POKJA
-========================================================== */}
-<section
-    ref={dataAnim.ref}
-    id="data"
-    className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${
-        dataAnim.isVisible ? "show" : ""
-    }`}
-    aria-labelledby="data-title"
->
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-11">
-            <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
-                Sistem Informasi
-            </p>
-            <h2
-                id="data-title"
-                className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2"
+            ========================================================== */}
+            <section
+                ref={sambutanAnim.ref}
+                id="tentang"
+                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
+                    sambutanAnim.isVisible ? "show" : ""
+                }`}
+                aria-labelledby="sambutan-title"
             >
-                Data PKK Kabupaten Tasikmalaya
-            </h2>
-            <div className="w-10 h-0.5 bg-teal-600 mx-auto mb-3" />
-            <p className="text-slate-500 text-sm md:text-base max-w-lg mx-auto">
-                Pusat informasi dan statistik program pokok PKK secara terpadu
-            </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {DATA_MENU.map((item, i) => {
-                const isExternal = item.link.startsWith("http");
-
-                const CardInner = (
-                    <div className="flex flex-col items-center text-center h-full">
-                        <div className="w-12 h-12 rounded-lg bg-teal-50 group-hover:bg-white/20 flex items-center justify-center mb-5 transition-colors">
-                            <item.icon
-                                size={22}
-                                className="text-teal-600 group-hover:text-white transition-colors"
-                                strokeWidth={1.75}
-                            />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
+                        <div className="w-full lg:w-5/12">
+                            <div className="rounded-lg overflow-hidden border border-slate-200">
+                                <img
+                                    src="/assets/images/ketuapkk.png"
+                                    alt="Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
+                                    loading="lazy"
+                                    className="w-full h-[420px] md:h-[480px] object-cover object-top"
+                                    onError={(e) => {
+                                        e.currentTarget.src = getImageFallback("ketua");
+                                    }}
+                                />
+                            </div>
+                            <div className="mt-4">
+                                <h3 className="text-lg font-semibold text-slate-900">
+                                    Hj. Retno Widyastuti, S.E
+                                </h3>
+                                <p className="text-sm text-slate-500 mt-0.5">
+                                    Ketua TP PKK Kabupaten Tasikmalaya
+                                </p>
+                            </div>
                         </div>
 
-                        <h3 className="text-slate-900 group-hover:text-white font-semibold text-base mb-2 transition-colors">
-                            {item.title}
-                        </h3>
-
-                        <p className="text-slate-500 group-hover:text-white/85 text-sm leading-relaxed mb-6 flex-grow transition-colors">
-                            {item.desc}
-                        </p>
-
-                        <span className="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium
-                            bg-teal-600 text-white
-                            group-hover:bg-white group-hover:text-teal-700
-                            transition-colors">
-                            Selengkapnya
-                        </span>
-                    </div>
-                );
-
-                const cardClass =
-                    "group block h-full bg-white rounded-xl border border-slate-200 px-6 py-8 shadow-sm " +
-                    "transition-all duration-200 " +
-                    "hover:bg-teal-600 hover:border-teal-600 hover:shadow-md " +
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2";
-
-                return isExternal ? (
-                    <a
-                        key={i}
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cardClass}
-                    >
-                        {CardInner}
-                    </a>
-                ) : (
-                    <Link key={i} href={item.link} className={cardClass}>
-                        {CardInner}
-                    </Link>
-                );
-            })}
-        </div>
-    </div>
-</section>
-
-
-
-      {/* ==========================================================
-    10 PROGRAM POKOK PKK
-========================================================== */}
-<section
-    ref={beritaListAnim.ref}
-    className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
-        beritaListAnim.isVisible ? "show" : ""
-    }`}
-    aria-labelledby="program-pokok-title"
->
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-teal-100 bg-teal-50/80 p-6 sm:p-8 lg:p-10">
-            <h2
-                id="program-pokok-title"
-                className="text-center text-xl md:text-2xl font-bold text-slate-800 mb-8"
-            >
-                10 Program Pokok PKK
-            </h2>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-                {PROGRAM_POKOK.map((item) => (
-                    <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedProgram(item)}
-                        className="flex flex-col items-center text-center rounded-xl p-4 sm:p-5 bg-white/70 hover:bg-white hover:shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-                    >
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-yellow-400 bg-white flex items-center justify-center mb-3">
-                            <item.icon
-                                size={26}
-                                className="text-teal-700"
-                                strokeWidth={1.6}
-                            />
+                        <div className="w-full lg:w-7/12">
+                            <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
+                                Sambutan
+                            </p>
+                            <h2
+                                id="sambutan-title"
+                                className="text-2xl md:text-3xl font-semibold text-slate-900 mb-6"
+                            >
+                                Sambutan Ketua TP PKK Kabupaten Tasikmalaya
+                            </h2>
+                            <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
+                                <p className="italic text-slate-700">
+                                    Assalaamu'alaikum wa rahmatullah wa barakaatuh,
+                                    <br />
+                                    Sampurasun,
+                                </p>
+                                <p>
+                                    Puji dan Syukur Kami Panjatkan Kepada Allah SWT karena atas rahmat dan karunia-Nya, kita dapat hadir dan meluncurkan website resmi Tim Penggerak PKK Kabupaten Tasikmalaya.
+                                </p>
+                                <p>
+                                    Kami menyambut baik kehadiran website ini sebagai sarana komunikasi, informasi, dan transparansi kegiatan PKK kepada masyarakat luas. Melalui media digital ini, kami berharap 10 program kerja Pokok PKK dapat diakses dengan mudah serta memberikan manfaat nyata bagi pembinaan kesejahteraan keluarga di wilayah Kabupaten Tasikmalaya.
+                                </p>
+                                <p>
+                                    Gerakan PKK berfokus pada pemberdayaan keluarga demi mewujudkan masyarakat yang maju, mandiri, dan sejahtera. Oleh karena itu, dukungan serta kerja sama dari seluruh pengurus, kader, dan instansi pemerintah sangat kami harapkan untuk menyukseskan setiap program yang kami laksanakan.
+                                </p>
+                                <p>
+                                    Tujuan utama pembuatan website PKK Kabupaten adalah untuk mengoptimalkan pengelolaan data, mempercepat pelaporan 10 program pokok PKK, serta meningkatkan transparansi dan penyebaran informasi kegiatan pemberdayaan keluarga kepada masyarakat khususnya Kabupaten Tasikmalaya secara digital.
+                                </p>
+                                <p>
+                                    Akhir kata, semoga website ini dapat bermanfaat dan berguna bagi banyak pihak terutama untuk meningkatkan kualitas informasi publik di Kabupaten Tasikmalaya. Terima kasih.
+                                </p>
+                                <p className="italic text-slate-700 pt-2">
+                                    Wassalamu'alaikum warahmatullahi wa barakatuh.
+                                </p>
+                            </div>
+                            <div className="mt-8 pt-6 border-t border-slate-200">
+                                <p className="font-semibold text-slate-900">
+                                    Hj. Retno Widyastuti, S.E
+                                </p>
+                                <p className="text-sm text-slate-500 mt-0.5">
+                                    Ketua Tim Penggerak PKK Kabupaten Tasikmalaya
+                                </p>
+                            </div>
                         </div>
-                        <span className="text-xs sm:text-[13px] font-medium text-teal-800 leading-snug">
-                            {item.nama}
-                        </span>
-                    </button>
-                ))}
-            </div>
-        </div>
-    </div>
-
-    {selectedProgram && (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            role="dialog"
-            aria-modal="true"
-        >
-            <button
-                type="button"
-                className="absolute inset-0 bg-slate-900/40"
-                aria-label="Tutup"
-                onClick={() => setSelectedProgram(null)}
-            />
-            <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-                <button
-                    type="button"
-                    onClick={() => setSelectedProgram(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700"
-                    aria-label="Tutup"
-                >
-                    <X size={16} />
-                </button>
-                <div className="flex flex-col items-center text-center mb-5">
-                    <div className="w-16 h-16 rounded-full border-[3px] border-yellow-400 flex items-center justify-center mb-3">
-                        <selectedProgram.icon
-                            size={30}
-                            className="text-teal-700"
-                            strokeWidth={1.6}
-                        />
                     </div>
-                    <h3 className="text-lg font-semibold text-teal-700">
-                        {selectedProgram.nama}
-                    </h3>
                 </div>
-                <p className="text-sm text-slate-500 mb-3">
-                    Dilaksanakan paling sedikit dengan cara:
-                </p>
-                <ol className="space-y-2.5 text-sm text-slate-600">
-                    {selectedProgram.poin.map((p, i) => (
-                        <li key={i} className="flex gap-2">
-                            <span className="text-teal-700 font-medium shrink-0">
-                                {String.fromCharCode(97 + i)}.
-                            </span>
-                            <span>{p}</span>
-                        </li>
-                    ))}
-                </ol>
-            </div>
-        </div>
-    )}
-</section>
+            </section>
 
             {/* ==========================================================
-        KABAR BERITA
-    ========================================================== */}
-    <section
-        ref={kabarAnim.ref}
-        className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
-            kabarAnim.isVisible ? "show" : ""
-        }`}
-        aria-labelledby="kabar-berita-title"
-    >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Judul */}
-            <div className="text-center mb-10">
-                <h2
-                    id="kabar-berita-title"
-                    className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide uppercase"
-                >
-                    Kabar Berita
-                </h2>
-                <div className="w-10 h-1 bg-teal-600 rounded-full mx-auto mt-3" />
-            </div>
+                DATA POKJA
+            ========================================================== */}
+            <section
+                ref={dataAnim.ref}
+                id="data"
+                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                    dataAnim.isVisible ? "show" : ""
+                }`}
+                aria-labelledby="data-title"
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-11">
+                        <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                            Sistem Informasi
+                        </p>
+                        <h2
+                            id="data-title"
+                            className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2"
+                        >
+                            Data PKK Kabupaten Tasikmalaya
+                        </h2>
+                        <div className="w-10 h-0.5 bg-teal-600 mx-auto mb-3" />
+                        <p className="text-slate-500 text-sm md:text-base max-w-lg mx-auto">
+                            Pusat informasi dan statistik program pokok PKK secara terpadu
+                        </p>
+                    </div>
 
-            {/* Grid berita */}
-            {beritaTerbaru.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
-                    {beritaTerbaru.slice(0, 6).map((item) => {
-                        const imageSrc =
-                            item.foto_url ||
-                            (item.foto ? `/storage/${item.foto}` : null) ||
-                            item.image ||
-                            null;
-                        const href = item.slug
-                            ? `/berita/${item.slug}`
-                            : `/berita/${item.id}`;
-                        const tanggal = item.created_at
-                            ? new Date(item.created_at).toLocaleDateString("id-ID", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                            })
-                            : item.tanggal || "-";
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {DATA_MENU.map((item, i) => {
+                            const isExternal = item.link.startsWith("http");
 
-                        return (
-                            <article
-                                key={item.id}
-                                className="group bg-white rounded-xl overflow-hidden border border-slate-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
-                            >
-                                <Link
-                                    href={href}
-                                    className="relative block aspect-[16/10] bg-slate-100 overflow-hidden"
-                                >
-                                    {imageSrc ? (
-                                        <img
-                                            src={imageSrc}
-                                            alt=""
-                                            loading="lazy"
-                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display = "none";
-                                            }}
+                            const CardInner = (
+                                <div className="flex flex-col items-center text-center h-full">
+                                    <div className="w-12 h-12 rounded-lg bg-teal-50 group-hover:bg-white/20 flex items-center justify-center mb-5 transition-colors">
+                                        <item.icon
+                                            size={22}
+                                            className="text-teal-600 group-hover:text-white transition-colors"
+                                            strokeWidth={1.75}
                                         />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                            <Newspaper size={36} />
-                                        </div>
-                                    )}
-                                </Link>
+                                    </div>
 
-                                <div className="p-5 flex flex-col flex-grow text-center">
-                                    <h3 className="text-[15px] sm:text-base font-semibold text-slate-900 leading-snug mb-2 line-clamp-2">
+                                    <h3 className="text-slate-900 group-hover:text-white font-semibold text-base mb-2 transition-colors">
+                                        {item.title}
+                                    </h3>
+
+                                    <p className="text-slate-500 group-hover:text-white/85 text-sm leading-relaxed mb-6 flex-grow transition-colors">
+                                        {item.desc}
+                                    </p>
+
+                                    <span className="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium
+                                        bg-teal-600 text-white                                        group-hover:bg-white group-hover:text-teal-700 transition-colors">
+                                        Selengkapnya
+                                    </span>
+                                </div>
+                            );
+
+                            const cardClass =
+                                "group block h-full bg-white rounded-xl border border-slate-200 px-6 py-8 shadow-sm " +
+                                "transition-all duration-200 " +
+                                "hover:bg-teal-600 hover:border-teal-600 hover:shadow-md " +
+                                "focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2";
+
+                            return isExternal ? (
+                                <a
+                                    key={i}
+                                    href={item.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={cardClass}
+                                >
+                                    {CardInner}
+                                </a>
+                            ) : (
+                                <Link key={i} href={item.link} className={cardClass}>
+                                    {CardInner}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==========================================================
+            10 PROGRAM POKOK PKK
+            ========================================================== */}
+            <section
+                ref={beritaListAnim.ref}
+                className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
+                    beritaListAnim.isVisible ? "show" : ""
+                }`}
+                aria-labelledby="program-pokok-title"
+            >
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="rounded-2xl border border-teal-100 bg-teal-50/80 p-6 sm:p-8 lg:p-10">
+                        <h2
+                            id="program-pokok-title"
+                            className="text-center text-xl md:text-2xl font-bold text-slate-800 mb-8"
+                        >
+                            10 Program Pokok PKK
+                        </h2>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                            {PROGRAM_POKOK.map((item) => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => setSelectedProgram(item)}
+                                    className="flex flex-col items-center text-center rounded-xl p-4 sm:p-5 bg-white/70 hover:bg-white hover:shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                                >
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-yellow-400 bg-white flex items-center justify-center mb-3">
+                                        <item.icon
+                                            size={26}
+                                            className="text-teal-700"
+                                            strokeWidth={1.6}
+                                        />
+                                    </div>
+                                    <span className="text-xs sm:text-[13px] font-medium text-teal-800 leading-snug">
+                                        {item.nama}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {selectedProgram && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        role="dialog"
+                        aria-modal="true"
+                    >
+                        <button
+                            type="button"
+                            className="absolute inset-0 bg-slate-900/40"
+                            aria-label="Tutup"
+                            onClick={() => setSelectedProgram(null)}
+                        />
+                        <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedProgram(null)}
+                                className="absolute top-4 right-4 w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700"
+                                aria-label="Tutup"
+                            >
+                                <X size={16} />
+                            </button>
+                            <div className="flex flex-col items-center text-center mb-5">
+                                <div className="w-16 h-16 rounded-full border-[3px] border-yellow-400 flex items-center justify-center mb-3">
+                                    <selectedProgram.icon
+                                        size={30}
+                                        className="text-teal-700"
+                                        strokeWidth={1.6}
+                                    />
+                                </div>
+                                <h3 className="text-lg font-semibold text-teal-700">
+                                    {selectedProgram.nama}
+                                </h3>
+                            </div>
+                            <p className="text-sm text-slate-500 mb-3">
+                                Dilaksanakan paling sedikit dengan cara:
+                            </p>
+                            <ol className="space-y-2.5 text-sm text-slate-600">
+                                {selectedProgram.poin.map((p, i) => (
+                                    <li key={i} className="flex gap-2">
+                                        <span className="text-teal-700 font-medium shrink-0">
+                                            {String.fromCharCode(97 + i)}.
+                                        </span>
+                                        <span>{p}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    </div>
+                )}
+            </section>
+
+            {/* ==========================================================
+                KABAR BERITA
+            ========================================================== */}
+            <section
+                ref={kabarAnim.ref}
+                className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
+                    kabarAnim.isVisible ? "show" : ""
+                }`}
+                aria-labelledby="kabar-berita-title"
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-10">
+                        <h2
+                            id="kabar-berita-title"
+                            className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide uppercase"
+                        >
+                            Kabar Berita
+                        </h2>
+                        <div className="w-10 h-1 bg-teal-600 rounded-full mx-auto mt-3" />
+                    </div>
+
+                    {beritaTerbaru.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
+                            {beritaTerbaru.slice(0, 6).map((item) => {
+                                const imageSrc =
+                                    item.foto_url ||
+                                    (item.foto ? `/storage/${item.foto}` : null) ||
+                                    item.image ||
+                                    null;
+                                const href = item.slug
+                                    ? `/berita/${item.slug}`
+                                    : `/berita/${item.id}`;
+                                const tanggal = item.created_at
+                                    ? new Date(item.created_at).toLocaleDateString("id-ID", {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                    })
+                                    : item.tanggal || "-";
+
+                                return (
+                                    <article
+                                        key={item.id}
+                                        className="group bg-white rounded-xl overflow-hidden border border-slate-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
+                                    >
                                         <Link
                                             href={href}
-                                            className="hover:text-teal-700 transition-colors"
+                                            className="relative block aspect-[16/10] bg-slate-100 overflow-hidden"
                                         >
-                                            {item.judul}
+                                            {imageSrc ? (
+                                                <img
+                                                    src={imageSrc}
+                                                    alt=""
+                                                    loading="lazy"
+                                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = "none";
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                    <Newspaper size={36} />
+                                                </div>
+                                            )}
                                         </Link>
-                                    </h3>
-                                    <p className="text-xs text-slate-400 mt-auto">
-                                        {tanggal}
+
+                                        <div className="p-5 flex flex-col flex-grow text-center">
+                                            <h3 className="text-[15px] sm:text-base font-semibold text-slate-900 leading-snug mb-2 line-clamp-2">
+                                                <Link
+                                                    href={href}
+                                                    className="hover:text-teal-700 transition-colors"
+                                                >
+                                                    {item.judul}
+                                                </Link>
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-auto">
+                                                {tanggal}
+                                            </p>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="text-center py-14 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <Newspaper size={36} className="text-slate-300 mx-auto mb-3" />
+                            <p className="text-slate-500 text-sm">Belum ada berita.</p>
+                        </div>
+                    )}
+
+                    {beritaTerbaru.length > 0 && (
+                        <div className="text-center mt-10">
+                            <Link
+                                href="/berita"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-800 transition-colors"
+                            >
+                                Lihat semua berita
+                                <ChevronRight size={16} />
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+           {/* ==========================================================
+    AGENDA KEGIATAN - STANDAR WEBSITE DINAS / INSTANSI
+    ========================================================== */}
+<section
+    ref={agendaAnim.ref}
+    className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+        agendaAnim.isVisible ? "show" : ""
+    }`}
+>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Heading */}
+        <div className="text-center mb-10">
+            <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                Informasi Kegiatan
+            </p>
+
+            <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 tracking-tight">
+                Agenda Kegiatan
+            </h2>
+
+            <div className="w-10 h-0.5 bg-teal-600 mx-auto mt-3 mb-3" />
+
+            <p className="text-slate-500 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                Informasi agenda dan kegiatan TP PKK Kabupaten Tasikmalaya
+                pada bulan berjalan.
+            </p>
+        </div>
+
+        {agenda.length > 0 ? (
+            <div className="grid lg:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+
+                {/* ======================================================
+                    KOLOM KIRI - KALENDER
+                    ====================================================== */}
+                <div className="border-b lg:border-b-0 lg:border-r border-slate-200">
+
+                    {/* Calendar Header */}
+                    <div className="px-5 py-4 border-b border-slate-100 bg-white">
+                        <div className="flex items-center justify-between">
+
+                            <div>
+                                <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-0.5">
+                                    Kalender
+                                </p>
+
+                                <h3 className="text-base font-bold text-slate-800 capitalize">
+                                    {now.toLocaleDateString("id-ID", {
+                                        month: "long",
+                                        year: "numeric",
+                                    })}
+                                </h3>
+                            </div>
+
+                            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-teal-50 border border-teal-100">
+                                <CalendarDays
+                                    size={18}
+                                    className="text-teal-700"
+                                />
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {/* Calendar */}
+                    <div className="p-5">
+
+                        {/* Hari */}
+                        <div className="grid grid-cols-7 mb-2">
+                            {[
+                                "Min",
+                                "Sen",
+                                "Sel",
+                                "Rab",
+                                "Kam",
+                                "Jum",
+                                "Sab",
+                            ].map((day) => (
+                                <div
+                                    key={day}
+                                    className="text-center text-[9px] font-bold uppercase tracking-wide text-slate-400 py-1"
+                                >
+                                    {day}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Tanggal */}
+                        <div className="grid grid-cols-7 gap-y-1">
+                            {(() => {
+                                const today = new Date(now);
+
+                                const year = today.getFullYear();
+                                const month = today.getMonth();
+
+                                const firstDay = new Date(
+                                    year,
+                                    month,
+                                    1
+                                );
+
+                                const lastDay = new Date(
+                                    year,
+                                    month + 1,
+                                    0
+                                );
+
+                                const startDayOfWeek =
+                                    firstDay.getDay();
+
+                                const daysInMonth =
+                                    lastDay.getDate();
+
+                                const agendaMap = new Map<
+                                    number,
+                                    any[]
+                                >();
+
+                                agenda.forEach((item) => {
+                                    try {
+                                        const d = new Date(item.tanggal);
+
+                                        if (
+                                            d.getMonth() === month &&
+                                            d.getFullYear() === year
+                                        ) {
+                                            const dayNum =
+                                                d.getDate();
+
+                                            if (
+                                                !agendaMap.has(dayNum)
+                                            ) {
+                                                agendaMap.set(
+                                                    dayNum,
+                                                    []
+                                                );
+                                            }
+
+                                            agendaMap
+                                                .get(dayNum)!
+                                                .push(item);
+                                        }
+                                    } catch {}
+                                });
+
+                                const cells = [];
+
+                                {/* Empty sebelum tanggal 1 */}
+                                for (
+                                    let i = 0;
+                                    i < startDayOfWeek;
+                                    i++
+                                ) {
+                                    cells.push(
+                                        <div
+                                            key={`empty-${i}`}
+                                            className="h-9"
+                                        />
+                                    );
+                                }
+
+                                {/* Tanggal */}
+                                for (
+                                    let day = 1;
+                                    day <= daysInMonth;
+                                    day++
+                                ) {
+                                    const dateObj = new Date(
+                                        year,
+                                        month,
+                                        day
+                                    );
+
+                                    const isToday =
+                                        dateObj.toDateString() ===
+                                        today.toDateString();
+
+                                    const hasAgenda =
+                                        agendaMap.has(day);
+
+                                    cells.push(
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            onClick={() => {
+                                                const agendaHari = agendaMap.get(day);
+                                                if (agendaHari?.length) {
+                                                    setSelectedAgenda(agendaHari[0]);
+                                                }
+                                            }}
+                                            disabled={!hasAgenda}
+                                            aria-label={
+                                                hasAgenda
+                                                    ? `Lihat agenda tanggal ${day}`
+                                                    : `Tanggal ${day}`
+                                            }
+                                            className={`h-9 w-full flex flex-col items-center justify-center rounded-md transition-colors ${
+                                                hasAgenda
+                                                    ? "cursor-pointer hover:bg-teal-50"
+                                                    : "cursor-default"
+                                            }`}
+                                        >
+                                            <div
+                                                className={`
+                                                    relative
+                                                    w-7 h-7
+                                                    flex items-center justify-center
+                                                    rounded-full
+                                                    text-[10px]
+                                                    font-medium
+                                                    transition-colors
+                                                    ${
+                                                        isToday
+                                                            ? "bg-teal-700 text-white font-bold"
+                                                            : hasAgenda
+                                                            ? "text-teal-700 font-bold"
+                                                            : "text-slate-600"
+                                                    }
+                                                `}
+                                            >
+                                                {day}
+
+                                                {hasAgenda && !isToday && (
+                                                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-teal-600" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                }
+
+                                {/* Empty setelah akhir bulan */}
+                                const totalCells =
+                                    startDayOfWeek +
+                                    daysInMonth;
+
+                                const remainingCells =
+                                    (7 - (totalCells % 7)) % 7;
+
+                                for (
+                                    let i = 0;
+                                    i < remainingCells;
+                                    i++
+                                ) {
+                                    cells.push(
+                                        <div
+                                            key={`empty-end-${i}`}
+                                            className="h-9"
+                                        />
+                                    );
+                                }
+
+                                return cells;
+                            })()}
+                        </div>
+
+                        {/* Legend */}
+                        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-4">
+
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-teal-700" />
+                                <span className="text-[9px] text-slate-500">
+                                    Ada kegiatan
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-slate-300" />
+                                <span className="text-[9px] text-slate-500">
+                                    Hari berjalan
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                {/* ======================================================
+                    KOLOM KANAN - DAFTAR AGENDA
+                    ====================================================== */}
+                <div className="flex flex-col">
+
+                    {/* Header Agenda */}
+                    <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50/70">
+
+                        <div className="flex items-center justify-between gap-4">
+
+                            <div>
+                                <p className="text-[10px] font-semibold text-teal-700 uppercase tracking-[0.15em] mb-1">
+                                    Jadwal Kegiatan
+                                </p>
+
+                                <h3 className="text-base font-bold text-slate-800">
+                                    Agenda Bulan Ini
+                                </h3>
+                            </div>
+
+                            <div className="flex-shrink-0 px-2.5 py-1 rounded-md bg-white border border-slate-200">
+                                <span className="text-[10px] font-semibold text-slate-600">
+                                    {agenda.length} Kegiatan
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {/* List */}
+                    <div className="p-4 sm:p-5 flex-1">
+
+                        <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+
+                            {agenda.slice(0, 8).map((item) => {
+
+                                let formattedDate = "";
+                                let formattedDay = "";
+
+                                try {
+                                    const d = new Date(item.tanggal);
+
+                                    formattedDate =
+                                        d.toLocaleDateString(
+                                            "id-ID",
+                                            {
+                                                day: "2-digit",
+                                                month: "short",
+                                            }
+                                        );
+
+                                    formattedDay =
+                                        d.toLocaleDateString(
+                                            "id-ID",
+                                            {
+                                                weekday: "short",
+                                            }
+                                        );
+                                } catch {}
+
+                                return (
+                                    <button
+                                        type="button"
+                                        key={item.id}
+                                        onClick={() => setSelectedAgenda(item)}
+                                        className="group w-full text-left flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-white hover:border-teal-100 hover:bg-teal-50/30 transition-all cursor-pointer"
+                                    >
+
+                                        {/* Tanggal */}
+                                        <div className="flex-shrink-0 w-11 text-center">
+
+                                            <div className="text-sm font-bold text-teal-700 leading-none">
+                                                {formattedDate.split(" ")[0]}
+                                            </div>
+
+                                            <div className="text-[8px] uppercase font-semibold text-slate-400 mt-1">
+                                                {formattedDate
+                                                    .split(" ")
+                                                    .slice(1)
+                                                    .join(" ")}
+                                            </div>
+
+                                        </div>
+
+                                        {/* Divider */}
+                                        <div className="w-px h-8 bg-slate-200" />
+
+                                        {/* Informasi */}
+                                        <div className="min-w-0 flex-1">
+
+                                            <p className="text-[11px] sm:text-xs font-semibold text-slate-700 leading-snug line-clamp-2">
+                                                {item.judul}
+                                            </p>
+
+                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+
+                                                <span className="text-[8px] text-slate-400">
+                                                    {formattedDay}
+                                                </span>
+
+                                                {item.waktu && (
+                                                    <>
+                                                        <span className="w-0.5 h-0.5 rounded-full bg-slate-300" />
+
+                                                        <span className="text-[8px] text-slate-400">
+                                                            {item.waktu}
+                                                        </span>
+                                                    </>
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                        {/* Indicator */}
+                                        <div className="flex-shrink-0">
+                                            <span className="block w-1.5 h-1.5 rounded-full bg-teal-600 opacity-70 group-hover:opacity-100" />
+                                        </div>
+
+                                    </button>
+                                );
+                            })}
+
+                            {agenda.length > 8 && (
+                                <div className="pt-1 text-center">
+                                    <span className="text-[9px] font-medium text-slate-400">
+                                        +{agenda.length - 8} agenda lainnya
+                                    </span>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-5 py-3 border-t border-slate-200 bg-white flex items-center justify-between">
+
+                        <span className="text-[9px] text-slate-400">
+                            Informasi agenda kegiatan
+                        </span>
+
+                        <Link
+                            href="/agenda"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-700 hover:text-teal-800 transition-colors"
+                        >
+                            Lihat seluruh agenda
+                            <ChevronRight size={12} />
+                        </Link>
+
+                    </div>
+
+                </div>
+            </div>
+        ) : (
+            <div className="bg-white border border-slate-200 rounded-xl py-12 px-5 text-center shadow-sm">
+
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
+                    <CalendarDays
+                        size={22}
+                        className="text-slate-300"
+                    />
+                </div>
+
+                <h3 className="text-sm font-semibold text-slate-600">
+                    Belum Ada Agenda Kegiatan
+                </h3>
+
+                <p className="mt-1 text-[10px] sm:text-xs text-slate-400">
+                    Belum terdapat agenda kegiatan yang dijadwalkan pada bulan ini.
+                </p>
+
+            </div>
+        )}
+    </div>
+</section>
+
+
+
+            {/* ==========================================================
+                MODAL DETAIL AGENDA
+                ========================================================== */}
+            {selectedAgenda && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="agenda-modal-title"
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setSelectedAgenda(null);
+                        }
+                    }}
+                >
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px]" />
+
+                    {/* Modal */}
+                    <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-100">
+
+                        {/* Header */}
+                        <div className="px-6 sm:px-8 pt-6 sm:pt-7">
+                            <div className="flex items-start justify-between gap-4">
+
+                                <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-100 px-3 py-1 text-[10px] sm:text-xs font-semibold text-teal-700">
+                                    {selectedAgenda.kategori || "Kegiatan"}
+                                </span>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedAgenda(null)}
+                                    aria-label="Tutup detail agenda"
+                                    className="flex-shrink-0 w-9 h-9 rounded-full border border-slate-300 bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 hover:border-slate-400 hover:bg-slate-50 transition-colors"
+                                >
+                                    <X size={17} strokeWidth={1.8} />
+                                </button>
+
+                            </div>
+
+                            <h3
+                                id="agenda-modal-title"
+                                className="mt-5 text-xl sm:text-2xl lg:text-[28px] font-bold leading-tight text-slate-900 tracking-tight"
+                            >
+                                {selectedAgenda.judul}
+                            </h3>
+                        </div>
+
+                        {/* Detail */}
+                        <div className="px-6 sm:px-8 py-6 space-y-3">
+
+                            <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3.5">
+                                <p className="text-[10px] sm:text-xs font-bold text-slate-800 mb-1">
+                                    Tanggal
+                                </p>
+                                <p className="text-xs sm:text-sm text-slate-500">
+                                    {(() => {
+                                        try {
+                                            return new Date(
+                                                selectedAgenda.tanggal
+                                            ).toLocaleDateString("id-ID", {
+                                                weekday: "long",
+                                                day: "numeric",
+                                                month: "long",
+                                                year: "numeric",
+                                            });
+                                        } catch {
+                                            return selectedAgenda.tanggal;
+                                        }
+                                    })()}
+                                </p>
+                            </div>
+
+                            {selectedAgenda.waktu && (
+                                <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3.5">
+                                    <p className="text-[10px] sm:text-xs font-bold text-slate-800 mb-1">
+                                        Waktu
+                                    </p>
+                                    <p className="text-xs sm:text-sm text-slate-500">
+                                        {selectedAgenda.waktu}
                                     </p>
                                 </div>
-                            </article>
-                        );
-                    })}
-                </div>
-            ) : (
-                <div className="text-center py-14 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <Newspaper size={36} className="text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 text-sm">Belum ada berita.</p>
+                            )}
+
+                            {selectedAgenda.lokasi && (
+                                <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3.5">
+                                    <p className="text-[10px] sm:text-xs font-bold text-slate-800 mb-1">
+                                        Lokasi
+                                    </p>
+                                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                        {selectedAgenda.lokasi}
+                                    </p>
+                                </div>
+                            )}
+
+                            {selectedAgenda.deskripsi && (
+                                <div className="pt-2">
+                                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed whitespace-pre-line">
+                                        {selectedAgenda.deskripsi}
+                                    </p>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedAgenda(null)}
+                                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 transition-colors"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
             )}
-
-            {/* CTA */}
-            {beritaTerbaru.length > 0 && (
-                <div className="text-center mt-10">
-                    <Link
-                        href="/berita"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-800 transition-colors"
-                    >
-                        Lihat semua berita
-                        <ChevronRight size={16} />
-                    </Link>
-                </div>
-            )}
-        </div>
-    </section>
-
             <Footer />
         </div>
     );

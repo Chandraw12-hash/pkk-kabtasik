@@ -19,6 +19,10 @@ use App\Http\Controllers\Backend\Pokja2Controller;
 use App\Http\Controllers\Backend\Pokja3Controller;
 use App\Http\Controllers\Backend\Pokja4Controller;
 
+// Agenda & Laporan Kegiatan (mobile)
+use App\Http\Controllers\Backend\AgendaController;
+use App\Http\Controllers\Backend\LaporanKegiatanController;
+
 // ============================================
 // FRONTEND ROUTES (Public)
 // ============================================
@@ -114,6 +118,36 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
+
+    // ============================================
+    // AGENDA - FIX: Tambahkan show route secara manual
+    // ============================================
+    Route::resource('agenda', AgendaController::class)
+        ->names('agenda')
+        ->except(['show']); // Show di-handle manual di bawah
+
+    // Route untuk show agenda (manual)
+    Route::get('agenda/{agenda}', [AgendaController::class, 'show'])
+        ->name('agenda.show');
+
+    // Custom routes untuk agenda
+    Route::delete('agenda/bulk-destroy', [AgendaController::class, 'bulkDestroy'])
+        ->name('agenda.bulk-destroy');
+    Route::put('agenda/bulk-update-status', [AgendaController::class, 'bulkUpdateStatus'])
+        ->name('agenda.bulk-update-status');
+    Route::get('agenda/export', [AgendaController::class, 'export'])
+        ->name('agenda.export');
+    Route::get('agenda/calendar/data', [AgendaController::class, 'calendar'])
+        ->name('agenda.calendar');
+    Route::post('agenda/auto-update-status', [AgendaController::class, 'autoUpdateStatus'])
+        ->name('agenda.auto-update-status');
+
+    // Laporan Kegiatan (dari kader mobile)
+    Route::resource('laporan-kegiatan', LaporanKegiatanController::class)
+        ->names('laporan-kegiatan')
+        ->only(['index', 'show', 'destroy']);
+    Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])
+        ->name('laporan-kegiatan.review');
 
     // User Management
     Route::resource('users', UserController::class)

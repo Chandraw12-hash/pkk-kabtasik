@@ -9,111 +9,121 @@ use Inertia\Inertia;
 
 class KaderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $kaders = Kader::latest()->get();
+        $search  = $request->input('search');
+        $perPage = (int) $request->input('per_page', 10);
+
+        $kaders = Kader::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%")
+                        ->orWhere('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('desa_kelurahan', 'like', "%{$search}%")
+                        ->orWhere('nik', 'like', "%{$search}%")
+                        ->orWhere('jabatan', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // JSON hanya untuk axios — JANGAN untuk navigasi Inertia
+        if (
+            !$request->header('X-Inertia') &&
+            ($request->wantsJson() || $request->ajax())
+        ) {
+            return response()->json($kaders);
+        }
 
         return Inertia::render('Backend/Kader/Index', [
-            'kaders' => $kaders
+            'kaders'  => $kaders,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return Inertia::render('Backend/Kader/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'nik' => 'nullable|string|max:20|unique:kader,nik',
-            'jabatan' => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
-            'pokja' => 'nullable|in:I,II,III,IV,Sekretariat',
-            'kecamatan' => 'nullable|string|max:255',
-            'desa_kelurahan' => 'nullable|string|max:255',
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'foto' => 'nullable|string|max:255',
-            'status_aktif' => 'boolean',
+        $validated = $request->validate([
+            'nama'              => 'required|string|max:255',
+            'nik'               => 'nullable|string|max:20|unique:kader,nik',
+            'jabatan'           => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
+            'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat',
+            'kecamatan'         => 'nullable|string|max:255',
+            'desa_kelurahan'    => 'nullable|string|max:255',
+            'no_hp'             => 'nullable|string|max:20',
+            'alamat'            => 'nullable|string',
+            'foto'              => 'nullable|string|max:255',
+            'status_aktif'      => 'boolean',
             'tanggal_bergabung' => 'nullable|date',
         ]);
 
-        Kader::create($request->all());
+        $validated['status_aktif'] = $request->boolean('status_aktif', true);
 
-        return redirect()->route('be.kader.index')
+        Kader::create($validated);
+
+        return redirect()
+            ->route('be.kader.index')
             ->with('success', 'Data kader berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $kader = Kader::findOrFail($id);
 
         return Inertia::render('Backend/Kader/Show', [
-            'kader' => $kader
+            'kader' => $kader,
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $kader = Kader::findOrFail($id);
 
         return Inertia::render('Backend/Kader/Edit', [
-            'kader' => $kader
+            'kader' => $kader,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $kader = Kader::findOrFail($id);
 
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'nik' => 'nullable|string|max:20|unique:kader,nik,' . $id,
-            'jabatan' => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
-            'pokja' => 'nullable|in:I,II,III,IV,Sekretariat',
-            'kecamatan' => 'nullable|string|max:255',
-            'desa_kelurahan' => 'nullable|string|max:255',
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'foto' => 'nullable|string|max:255',
-            'status_aktif' => 'boolean',
+        $validated = $request->validate([
+            'nama'              => 'required|string|max:255',
+            'nik'               => 'nullable|string|max:20|unique:kader,nik,' . $id,
+            'jabatan'           => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
+            'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat',
+            'kecamatan'         => 'nullable|string|max:255',
+            'desa_kelurahan'    => 'nullable|string|max:255',
+            'no_hp'             => 'nullable|string|max:20',
+            'alamat'            => 'nullable|string',
+            'foto'              => 'nullable|string|max:255',
+            'status_aktif'      => 'boolean',
             'tanggal_bergabung' => 'nullable|date',
         ]);
 
-        $kader->update($request->all());
+        $validated['status_aktif'] = $request->boolean('status_aktif', $kader->status_aktif);
 
-        return redirect()->route('be.kader.index')
+        $kader->update($validated);
+
+        return redirect()
+            ->route('be.kader.index')
             ->with('success', 'Data kader berhasil diupdate!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $kader = Kader::findOrFail($id);
         $kader->delete();
 
-        return redirect()->route('be.kader.index')
+        return redirect()
+            ->route('be.kader.index')
             ->with('success', 'Data kader berhasil dihapus!');
     }
 }

@@ -45,7 +45,11 @@
     --color-brand-yellow-900: #332709;
 }
 
-/* Custom Scrollbar Utilities */
+
+/* ============================================================
+   CUSTOM SCROLLBAR UTILITIES
+   ============================================================ */
+
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -55,7 +59,11 @@
     scrollbar-width: none;
 }
 
-/* Sidebar Custom Scrollbar */
+
+/* ============================================================
+   SIDEBAR CUSTOM SCROLLBAR
+   ============================================================ */
+
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
@@ -92,9 +100,62 @@
     background-color: #475569;
 }
 
+
 /* ============================================================
-   Aksesibilitas (AccessibilityWidget)
+   GLOBAL SCROLLBAR
+   CLEAN & ELEGANT
    ============================================================ */
+
+/* Firefox */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Chrome / Edge / Safari */
+html::-webkit-scrollbar {
+    width: 7px;
+}
+
+html::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* ============================================================
+   DARK MODE SCROLLBAR
+   ============================================================ */
+
+.dark {
+    scrollbar-color: #475569 transparent;
+}
+
+.dark::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dark::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+
+/* ============================================================
+   AKSESIBILITAS (AccessibilityWidget)
+   ============================================================ */
+
 html.a11y-text-lg {
     font-size: 112.5%;
 }
