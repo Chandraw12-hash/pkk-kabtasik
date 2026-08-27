@@ -9,6 +9,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 import { Toaster } from "sonner";
+import WelcomeGreeting from "./Pages/Frontend/Layouts/WelcomeGreeting";
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 
@@ -41,6 +42,7 @@ createInertiaApp({
                         style: { zIndex: 9999 },
                     }}
                 />
+                <WelcomeGreeting />
                 <App {...props} />
             </>,
         );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Accessibility,
     X,
@@ -11,9 +11,12 @@ import {
     Volume2,
     VolumeX,
     Circle,
+    Music,
+    Pause,
 } from "lucide-react";
 
 const STORAGE_KEY = "pkk-a11y";
+const MARS_PKK_SRC = "/sound/mars-pkk.mp3";
 
 type Settings = {
     fontScale: number;
@@ -36,16 +39,19 @@ const defaultSettings: Settings = {
 export default function AccessibilityWidget() {
     const [open, setOpen] = useState(false);
     const [s, setS] = useState<Settings>(defaultSettings);
+    const [isPlayingMars, setIsPlayingMars] = useState(false);
 
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // ─── Load preferensi ───────────────────────────────────────────────────────
     useEffect(() => {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) setS({ ...defaultSettings, ...JSON.parse(raw) });
-        } catch {
-            /* ignore */
-        }
+        } catch { /* ignore */ }
     }, []);
 
+    // ─── Terapkan kelas aksesibilitas ──────────────────────────────────────────
     useEffect(() => {
         const root = document.documentElement;
         root.classList.toggle("a11y-text-lg", s.fontScale === 1);
@@ -58,16 +64,54 @@ export default function AccessibilityWidget() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
     }, [s]);
 
-    const update = (patch: Partial<Settings>) =>
-        setS((prev) => ({ ...prev, ...patch }));
+    // ─── Inisialisasi Audio element ────────────────────────────────────────────
+    useEffect(() => {
+        const audio = new Audio(MARS_PKK_SRC);
+        audio.loop = false;
+        audio.preload = "auto";
+        audio.addEventListener("ended", () => setIsPlayingMars(false));
+        audioRef.current = audio;
 
-    const reset = () => setS(defaultSettings);
+        return () => {
+            audio.pause();
+            audio.src = "";
+            audioRef.current = null;
+        };
+    }, []);
 
+    // ─── Play / Pause Mars PKK ─────────────────────────────────────────────────
+    const toggleMars = () => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        if (isPlayingMars) {
+            audio.pause();
+            setIsPlayingMars(false);
+        } else {
+            // Hentikan text-to-speech jika aktif
+            if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+            audio.play().then(() => {
+                setIsPlayingMars(true);
+            }).catch(() => {
+                // Gagal diputar (file tidak ada / format tidak didukung)
+                setIsPlayingMars(false);
+            });
+        }
+    };
+
+    const stopMars = () => {
+        audioRef.current?.pause();
+        if (audioRef.current) audioRef.current.currentTime = 0;
+        setIsPlayingMars(false);
+    };
+
+    // ─── Text-to-speech ───────────────────────────────────────────────────────
     const speakPage = () => {
         if (!("speechSynthesis" in window)) {
             alert("Browser tidak mendukung pembacaan teks.");
             return;
         }
+        stopMars();
         window.speechSynthesis.cancel();
         const text = document.body?.innerText?.slice(0, 3000) || "";
         const u = new SpeechSynthesisUtterance(text);
@@ -78,6 +122,12 @@ export default function AccessibilityWidget() {
     const stopSpeak = () => {
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+    const update = (patch: Partial<Settings>) =>
+        setS((prev) => ({ ...prev, ...patch }));
+
+    const reset = () => setS(defaultSettings);
 
     const actionBtn = (active?: boolean) =>
         `flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-[13px] font-medium border transition-colors text-left ${
@@ -113,16 +163,13 @@ export default function AccessibilityWidget() {
                         aria-modal="true"
                         aria-labelledby="a11y-title"
                     >
-                        {/* Header selaras tema PKK */}
+                        {/* Header */}
                         <div className="bg-teal-800 px-5 py-4 flex items-start justify-between gap-3">
                             <div>
                                 <p className="text-[10px] font-semibold tracking-[0.14em] uppercase text-teal-200/90 mb-0.5">
                                     Fitur disabilitas
                                 </p>
-                                <h2
-                                    id="a11y-title"
-                                    className="text-base font-semibold text-white"
-                                >
+                                <h2 id="a11y-title" className="text-base font-semibold text-white">
                                     Aksesibilitas Website
                                 </h2>
                             </div>
@@ -137,19 +184,11 @@ export default function AccessibilityWidget() {
                         </div>
 
                         <div className="p-4 grid grid-cols-2 gap-2">
-                            <button
-                                type="button"
-                                className={actionBtn()}
-                                onClick={speakPage}
-                            >
+                            <button type="button" className={actionBtn()} onClick={speakPage}>
                                 <Volume2 size={16} className="text-teal-700 shrink-0" />
                                 Baca halaman
                             </button>
-                            <button
-                                type="button"
-                                className={actionBtn()}
-                                onClick={stopSpeak}
-                            >
+                            <button type="button" className={actionBtn()} onClick={stopSpeak}>
                                 <VolumeX size={16} className="text-slate-500 shrink-0" />
                                 Stop suara
                             </button>
@@ -157,11 +196,7 @@ export default function AccessibilityWidget() {
                             <button
                                 type="button"
                                 className={actionBtn(s.fontScale > 0)}
-                                onClick={() =>
-                                    update({
-                                        fontScale: Math.min(2, s.fontScale + 1),
-                                    })
-                                }
+                                onClick={() => update({ fontScale: Math.min(2, s.fontScale + 1) })}
                             >
                                 <Plus size={16} className="text-teal-700 shrink-0" />
                                 Perbesar teks
@@ -169,11 +204,7 @@ export default function AccessibilityWidget() {
                             <button
                                 type="button"
                                 className={actionBtn()}
-                                onClick={() =>
-                                    update({
-                                        fontScale: Math.max(0, s.fontScale - 1),
-                                    })
-                                }
+                                onClick={() => update({ fontScale: Math.max(0, s.fontScale - 1) })}
                             >
                                 <Minus size={16} className="text-slate-500 shrink-0" />
                                 Perkecil teks
@@ -182,9 +213,7 @@ export default function AccessibilityWidget() {
                             <button
                                 type="button"
                                 className={actionBtn(s.highContrast)}
-                                onClick={() =>
-                                    update({ highContrast: !s.highContrast })
-                                }
+                                onClick={() => update({ highContrast: !s.highContrast })}
                             >
                                 <Contrast size={16} className="text-teal-700 shrink-0" />
                                 Kontras tinggi
@@ -192,9 +221,7 @@ export default function AccessibilityWidget() {
                             <button
                                 type="button"
                                 className={actionBtn(s.grayscale)}
-                                onClick={() =>
-                                    update({ grayscale: !s.grayscale })
-                                }
+                                onClick={() => update({ grayscale: !s.grayscale })}
                             >
                                 <Circle size={16} className="text-slate-400 shrink-0" />
                                 Abu-abu
@@ -203,9 +230,7 @@ export default function AccessibilityWidget() {
                             <button
                                 type="button"
                                 className={actionBtn(s.underlineLinks)}
-                                onClick={() =>
-                                    update({ underlineLinks: !s.underlineLinks })
-                                }
+                                onClick={() => update({ underlineLinks: !s.underlineLinks })}
                             >
                                 <Underline size={16} className="text-teal-700 shrink-0" />
                                 Garis link
@@ -213,11 +238,7 @@ export default function AccessibilityWidget() {
                             <button
                                 type="button"
                                 className={actionBtn(s.comfortableSpace)}
-                                onClick={() =>
-                                    update({
-                                        comfortableSpace: !s.comfortableSpace,
-                                    })
-                                }
+                                onClick={() => update({ comfortableSpace: !s.comfortableSpace })}
                             >
                                 <Type size={16} className="text-teal-700 shrink-0" />
                                 Spasi nyaman
@@ -231,15 +252,46 @@ export default function AccessibilityWidget() {
                                 <Type size={16} className="text-teal-700 shrink-0" />
                                 Font mudah baca
                             </button>
-                            <button
-                                type="button"
-                                className={actionBtn()}
-                                onClick={reset}
-                            >
+                            <button type="button" className={actionBtn()} onClick={reset}>
                                 <RotateCcw size={16} className="text-slate-500 shrink-0" />
                                 Reset
                             </button>
+
+                            {/* Tombol Mars PKK — full width */}
+                            <button
+                                type="button"
+                                className={`${actionBtn(isPlayingMars)} col-span-2`}
+                                onClick={toggleMars}
+                            >
+                                {isPlayingMars ? (
+                                    <Pause size={16} className="text-teal-700 shrink-0" />
+                                ) : (
+                                    <Music size={16} className="text-teal-700 shrink-0" />
+                                )}
+                                {isPlayingMars ? "Jeda Mars PKK" : "Putar Mars PKK"}
+                            </button>
                         </div>
+
+                        {/* Indikator sedang memutar */}
+                        {isPlayingMars && (
+                            <div className="mx-4 mb-3 px-3 py-2 rounded-lg bg-teal-50 border border-teal-100 flex items-center gap-2.5">
+                                <span className="flex items-end gap-[3px] h-4 shrink-0">
+                                    {[0.6, 1.0, 0.4, 0.8].map((h, i) => (
+                                        <span
+                                            key={i}
+                                            className="w-[3px] rounded-full bg-teal-500"
+                                            style={{
+                                                height: `${h * 100}%`,
+                                                animation: `marsEq ${0.55 + i * 0.18}s ease-in-out infinite alternate`,
+                                            }}
+                                        />
+                                    ))}
+                                </span>
+                                <p className="text-[11px] text-teal-700 font-medium">
+                                    Sedang memutar Mars PKK…
+                                </p>
+                            </div>
+                        )}
 
                         <p className="px-4 pb-4 text-[11px] text-slate-400 leading-relaxed">
                             Text reader membaca teks halaman. Preferensi disimpan di
@@ -248,6 +300,13 @@ export default function AccessibilityWidget() {
                     </div>
                 </div>
             )}
+
+            <style>{`
+                @keyframes marsEq {
+                    from { transform: scaleY(0.3); }
+                    to   { transform: scaleY(1); }
+                }
+            `}</style>
         </>
     );
 }
