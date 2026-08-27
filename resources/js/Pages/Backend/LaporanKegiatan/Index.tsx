@@ -15,6 +15,9 @@ import {
     ClipboardList,
     Eye,
     CheckCircle,
+    XCircle,
+    ThumbsUp,
+    ThumbsDown,
 } from "lucide-react";
 import axios from "axios";
 
@@ -30,6 +33,8 @@ interface Laporan {
     foto_url?: string | null;
     created_at?: string;
     user?: { id: number; name: string } | null;
+    reviewer?: { id: number; name: string } | null;
+    reviewed_at?: string | null;
 }
 
 interface Paginated<T> {
@@ -66,6 +71,16 @@ const formatTanggal = (d?: string) => {
     }
 };
 
+const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; type: "default" | "success" | "warning" | "danger" | "info" }> = {
+        pending: { label: "Menunggu", type: "warning" },
+        reviewed: { label: "Sudah Direview", type: "info" },
+        approved: { label: "Disetujui ✅", type: "success" },
+        rejected: { label: "Ditolak ❌", type: "danger" },
+    };
+    return statusMap[status] || { label: status, type: "default" };
+};
+
 export default function Index({ laporans, filters = {} }: Props) {
     const [search, setSearch] = useState(filters.search || "");
     const [status, setStatus] = useState(filters.status || "");
@@ -75,6 +90,9 @@ export default function Index({ laporans, filters = {} }: Props) {
     const [isLoading, setIsLoading] = useState(false);
     const [showDelete, setShowDelete] = useState(false);
     const [selected, setSelected] = useState<Laporan | null>(null);
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [actionTarget, setActionTarget] = useState<Laporan | null>(null);
     const first = useRef(true);
 
     const { delete: destroy, processing, post } = useForm({});
@@ -133,11 +151,71 @@ export default function Index({ laporans, filters = {} }: Props) {
         router.patch(
             route("be.laporan-kegiatan.review", item.id),
             {},
-            { preserveScroll: true }
+            { preserveScroll: true, onSuccess: () => refreshData() }
         );
     };
 
+    const handleApprove = (item: Laporan) => {
+        setActionTarget(item);
+        setShowApproveModal(true);
+    };
+
+    const handleReject = (item: Laporan) => {
+        setActionTarget(item);
+        setShowRejectModal(true);
+    };
+
+    const confirmApprove = () => {
+        if (!actionTarget) return;
+        router.patch(
+            route("be.laporan-kegiatan.approve", actionTarget.id),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowApproveModal(false);
+                    setActionTarget(null);
+                    refreshData();
+                },
+            }
+        );
+    };
+
+    const confirmReject = () => {
+        if (!actionTarget) return;
+        router.patch(
+            route("be.laporan-kegiatan.reject", actionTarget.id),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowRejectModal(false);
+                    setActionTarget(null);
+                    refreshData();
+                },
+            }
+        );
+    };
+
+    const refreshData = () => {
+        fetchData(route("be.laporan-kegiatan.index"), {
+            search: search || undefined,
+            status: status || undefined,
+            pokja: pokja || undefined,
+            per_page: perPage,
+        });
+    };
+
     const rows = local.data || [];
+
+    // Status options untuk filter
+    const statusOptions = [
+        { value: "", label: "Semua status" },
+        { value: "pending", label: "Menunggu" },
+        { value: "reviewed", label: "Sudah Direview" },
+        { value: "approved", label: "Disetujui" },
+        { value: "rejected", label: "Ditolak" },
+    ];
 
     return (
         <MainLayout>
@@ -168,9 +246,11 @@ export default function Index({ laporans, filters = {} }: Props) {
                         onChange={(e) => setStatus(e.target.value)}
                         className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm px-3 py-2.5"
                     >
-                        <option value="">Semua status</option>
-                        <option value="pending">Belum direview</option>
-                        <option value="reviewed">Sudah direview</option>
+                        {statusOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
                     </select>
                     <select
                         value={pokja}
@@ -254,23 +334,18 @@ export default function Index({ laporans, filters = {} }: Props) {
                             header: "Status",
                             className: "text-center w-32",
                             headerClassName: "text-center",
-                            render: (item: Laporan) => (
-                                <Badge
-                                    type={
-                                        item.status === "reviewed"
-                                            ? "success"
-                                            : "default"
-                                    }
-                                >
-                                    {item.status === "reviewed"
-                                        ? "Direview"
-                                        : "Baru"}
-                                </Badge>
-                            ),
+                            render: (item: Laporan) => {
+                                const statusInfo = getStatusBadge(item.status);
+                                return (
+                                    <Badge type={statusInfo.type}>
+                                        {statusInfo.label}
+                                    </Badge>
+                                );
+                            },
                         },
                         {
                             header: "Aksi",
-                            className: "text-center w-36",
+                            className: "text-center w-52",
                             headerClassName: "text-center",
                             render: (item: Laporan) => (
                                 <div className="flex items-center justify-center gap-1">
@@ -284,16 +359,44 @@ export default function Index({ laporans, filters = {} }: Props) {
                                     >
                                         <Eye size={15} />
                                     </Link>
-                                    {item.status !== "reviewed" && (
+
+                                    {/* Tombol Approve - hanya untuk pending */}
+                                    {item.status === "pending" && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleApprove(item)}
+                                            className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                                            title="Setujui"
+                                        >
+                                            <ThumbsUp size={15} />
+                                        </button>
+                                    )}
+
+                                    {/* Tombol Reject - hanya untuk pending */}
+                                    {item.status === "pending" && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleReject(item)}
+                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                            title="Tolak"
+                                        >
+                                            <ThumbsDown size={15} />
+                                        </button>
+                                    )}
+
+                                    {/* Tombol Review - untuk pending juga (opsional) */}
+                                    {item.status === "pending" && (
                                         <button
                                             type="button"
                                             onClick={() => markReviewed(item)}
                                             className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"
-                                            title="Tandai direview"
+                                            title="Tandai sudah direview"
                                         >
                                             <CheckCircle size={15} />
                                         </button>
                                     )}
+
+                                    {/* Tombol Hapus */}
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -352,6 +455,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                 </div>
             </Card>
 
+            {/* Modal Konfirmasi Hapus */}
             <ConfirmationModal
                 show={showDelete}
                 processing={processing}
@@ -366,6 +470,46 @@ export default function Index({ laporans, filters = {} }: Props) {
                     setShowDelete(false);
                     setSelected(null);
                 }}
+            />
+
+            {/* Modal Konfirmasi Approve */}
+            <ConfirmationModal
+                show={showApproveModal}
+                processing={false}
+                title="Setujui Laporan"
+                message={
+                    actionTarget
+                        ? `Anda yakin ingin menyetujui laporan "${actionTarget.judul}"? Data akan masuk ke statistik Pokja ${actionTarget.kategori_pokja}.`
+                        : "Setujui laporan ini?"
+                }
+                onConfirm={confirmApprove}
+                onCancel={() => {
+                    setShowApproveModal(false);
+                    setActionTarget(null);
+                }}
+                confirmText="Setujui"
+                cancelText="Batal"
+                confirmVariant="success"
+            />
+
+            {/* Modal Konfirmasi Reject */}
+            <ConfirmationModal
+                show={showRejectModal}
+                processing={false}
+                title="Tolak Laporan"
+                message={
+                    actionTarget
+                        ? `Anda yakin ingin menolak laporan "${actionTarget.judul}"?`
+                        : "Tolak laporan ini?"
+                }
+                onConfirm={confirmReject}
+                onCancel={() => {
+                    setShowRejectModal(false);
+                    setActionTarget(null);
+                }}
+                confirmText="Tolak"
+                cancelText="Batal"
+                confirmVariant="danger"
             />
         </MainLayout>
     );

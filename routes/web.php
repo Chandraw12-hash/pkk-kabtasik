@@ -46,12 +46,23 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
-    // Data Publik Sekretariat & Pokja
+    // Data Publik Sekretariat & Pokja (Inertia)
     Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
     Route::get('/pokja-1', [IndexController::class, 'pokja1Public'])->name('pokja1');
     Route::get('/pokja-2', [IndexController::class, 'pokja2Public'])->name('pokja2');
     Route::get('/pokja-3', [IndexController::class, 'pokja3Public'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Public'])->name('pokja4');
+});
+
+// ============================================
+// API ROUTES (JSON untuk AJAX/Axios)
+// ============================================
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/sekretariat', [IndexController::class, 'sekretariatJson'])->name('sekretariat');
+    Route::get('/pokja-1', [IndexController::class, 'pokja1Json'])->name('pokja1');
+    Route::get('/pokja-2', [IndexController::class, 'pokja2Json'])->name('pokja2');
+    Route::get('/pokja-3', [IndexController::class, 'pokja3Json'])->name('pokja3');
+    Route::get('/pokja-4', [IndexController::class, 'pokja4Json'])->name('pokja4');
 });
 
 // ============================================
@@ -124,7 +135,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     // ============================================
     Route::resource('agenda', AgendaController::class)
         ->names('agenda')
-        ->except(['show']); // Show di-handle manual di bawah
+        ->except(['show']);
 
     // Route untuk show agenda (manual)
     Route::get('agenda/{agenda}', [AgendaController::class, 'show'])
@@ -142,12 +153,22 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::post('agenda/auto-update-status', [AgendaController::class, 'autoUpdateStatus'])
         ->name('agenda.auto-update-status');
 
-    // Laporan Kegiatan (dari kader mobile)
+    // ============================================
+    // LAPORAN KEGIATAN (dari kader mobile)
+    // ============================================
     Route::resource('laporan-kegiatan', LaporanKegiatanController::class)
         ->names('laporan-kegiatan')
         ->only(['index', 'show', 'destroy']);
+
+    // Review laporan (mark as reviewed)
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])
         ->name('laporan-kegiatan.review');
+
+    // ✅ TAMBAHKAN ROUTE APPROVE & REJECT
+    Route::patch('laporan-kegiatan/{laporan_kegiatan}/approve', [LaporanKegiatanController::class, 'approve'])
+        ->name('laporan-kegiatan.approve');
+    Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])
+        ->name('laporan-kegiatan.reject');
 
     // User Management
     Route::resource('users', UserController::class)

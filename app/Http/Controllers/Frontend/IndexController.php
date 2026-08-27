@@ -73,7 +73,7 @@ class IndexController extends Controller
             });
 
         // ✅ AMBIL DATA VIDEO (jika ada tabelnya)
-        $videos = collect([]); // Kosongkan dulu, nanti bisa ditambahkan
+        $videos = collect([]);
 
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
@@ -127,8 +127,8 @@ class IndexController extends Controller
             'domainData' => $domainData,
             'berita' => $beritaTerbaru,
             'galeri' => $galeriTerbaru,
-            'agenda' => $agendaTerbaru,     // ✅ KIRIM AGENDA
-            'videos' => $videos,            // ✅ KIRIM VIDEOS
+            'agenda' => $agendaTerbaru,
+            'videos' => $videos,
             'sekretariat' => $sekretariat,
             'pokja1' => $pokja1,
             'pokja2' => $pokja2,
@@ -248,39 +248,216 @@ class IndexController extends Controller
         ]);
     }
 
-    // ===== DATA PUBLIK =====
-    public function sekretariatPublic()
+    // ============================================================
+    // DATA PUBLIK - (HANYA UNTUK INERTIA, BUKAN JSON)
+    // ============================================================
+
+    public function sekretariatPublic(Request $request)
     {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = DataUmumSekretariat::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Frontend/data-data/Sekretariat', [
-            'data' => DataUmumSekretariat::orderBy('kecamatan')->paginate(15),
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
-    public function pokja1Public()
+    public function pokja1Public(Request $request)
     {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja1::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Frontend/data-data/Pokja1', [
-            'data' => Pokja1::orderBy('kecamatan')->paginate(15),
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
-    public function pokja2Public()
+    public function pokja2Public(Request $request)
     {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja2::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Frontend/data-data/Pokja2', [
-            'data' => Pokja2::orderBy('kecamatan')->paginate(15),
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
-    public function pokja3Public()
+    public function pokja3Public(Request $request)
     {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja3::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Frontend/data-data/Pokja3', [
-            'data' => Pokja3::orderBy('kecamatan')->paginate(15),
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
-    public function pokja4Public()
+    public function pokja4Public(Request $request)
     {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja4::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Frontend/data-data/Pokja4', [
-            'data' => Pokja4::orderBy('kecamatan')->paginate(15),
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
+    }
+
+    // ============================================================
+    // API JSON UNTUK AJAX / AXIOS (SEARCH & PAGINATION)
+    // ============================================================
+
+    public function sekretariatJson(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = DataUmumSekretariat::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json($data);
+    }
+
+    public function pokja1Json(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja1::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json($data);
+    }
+
+    public function pokja2Json(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja2::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json($data);
+    }
+
+    public function pokja3Json(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja3::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json($data);
+    }
+
+    public function pokja4Json(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = Pokja4::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json($data);
     }
 }

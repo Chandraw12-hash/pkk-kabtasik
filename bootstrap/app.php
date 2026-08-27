@@ -28,7 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->expectsJson()) {
+            // Selain cek header Accept, cek juga apakah request-nya lewat
+            // prefix /api/ — supaya client (Postman, app mobile) yang lupa
+            // set header "Accept: application/json" tetap dapat response
+            // JSON, bukan halaman HTML penuh yang sulit di-parse.
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['message' => 'Not Found'], 404);
             }
 
