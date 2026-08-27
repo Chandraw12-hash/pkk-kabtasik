@@ -12,7 +12,9 @@ import {
     Newspaper,
     Mail,
     CheckCircle2,
+    MapPin,
 } from "lucide-react";
+import axios from "axios";
 
 // ============================================================
 // INTERFACE
@@ -32,11 +34,25 @@ interface BeritaItem {
     deskripsi_singkat?: string;
     tanggal_formatted?: string;
     kategori?: string;
+    kecamatan?: string;
     author?: string;
 }
 
 interface BeritaProps {
     berita?: BeritaItem[];
+    pagination?: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
+    filters?: {
+        search?: string;
+        kategori?: string;
+        kecamatan?: string;
+        per_page?: number;
+    };
+    kecamatanList?: string[];
 }
 
 const DEFAULT_KATEGORI = "Kegiatan";
@@ -82,52 +98,87 @@ const getDeskripsi = (item: BeritaItem): string => {
     );
 };
 
-export default function Berita({ berita = [] }: BeritaProps) {
-    const [activeFilter, setActiveFilter] = useState("Semua");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [newsletterEmail, setNewsletterEmail] = useState("");
-    const [newsletterStatus, setNewsletterStatus] = useState<
-        "idle" | "loading" | "success" | "error"
-    >("idle");
+export default function Berita({
+    berita = [],
+    pagination: initialPagination,
+    filters: initialFilters = {},
+    kecamatanList: initialKecamatanList = [],
+}: BeritaProps) {
+    // State untuk filter
+    const [activeFilter, setActiveFilter] = useState(initialFilters.kategori || "Semua");
+    const [selectedKecamatan, setSelectedKecamatan] = useState(initialFilters.kecamatan || "");
+    const [searchQuery, setSearchQuery] = useState(initialFilters.search || "");
+    const [currentPage, setCurrentPage] = useState(initialPagination?.current_page || 1);
 
-    // Kategori diambil otomatis dari data yang ada, bukan hardcode,
-    // jadi kalau ada kategori baru dari admin, filter ikut update sendiri.
+    // State untuk data (bisa diisi dari API atau props)
+    const [beritaData, setBeritaData] = useState<BeritaItem[]>(berita);
+    const [kecamatanList, setKecamatanList] = useState<string[]>(initialKecamatanList);
+    const [isLoading, setIsLoading] = useState(false);
+    const [pagination, setPagination] = useState(initialPagination || null);
+
+    const [newsletterEmail, setNewsletterEmail] = useState("");
+    const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+    // Kategori diambil otomatis dari data yang ada
     const filterKategori = useMemo(() => {
         const kategoriSet = new Set<string>();
-        berita.forEach((item) => kategoriSet.add(item.kategori || DEFAULT_KATEGORI));
+        beritaData.forEach((item) => kategoriSet.add(item.kategori || DEFAULT_KATEGORI));
         return ["Semua", ...Array.from(kategoriSet).sort()];
-    }, [berita]);
+    }, [beritaData]);
 
-    const filteredBerita = useMemo(() => {
-        const query = searchQuery.trim().toLowerCase();
-        return berita.filter((item) => {
-            const itemKategori = item.kategori || DEFAULT_KATEGORI;
-            const matchesCategory =
-                activeFilter === "Semua" || itemKategori === activeFilter;
+    // Fetch data dari API dengan filter
+    const fetchBerita = () => {
+        setIsLoading(true);
+        axios
+            .get("/api/berita", {
+                params: {
+                    search: searchQuery || undefined,
+                    kategori: activeFilter !== "Semua" ? activeFilter : undefined,
+                    kecamatan: selectedKecamatan || undefined,
+                    page: currentPage,
+                    limit: ITEMS_PER_PAGE,
+                },
+                headers: { Accept: "application/json" },
+            })
+            .then((res) => {
+                if (res.data?.data) {
+                    setBeritaData(res.data.data.data || []);
+                    setPagination({
+                        current_page: res.data.data.current_page,
+                        last_page: res.data.data.last_page,
+                        per_page: res.data.data.per_page,
+                        total: res.data.data.total,
+                    });
+                    if (res.data.filters?.kecamatan) {
+                        setKecamatanList(res.data.filters.kecamatan);
+                    }
+                }
+            })
+            .catch((err) => console.error("Error fetching berita:", err))
+            .finally(() => setIsLoading(false));
+    };
 
-            if (!query) return matchesCategory;
+    // Fetch saat filter atau page berubah
+    useEffect(() => {
+        fetchBerita();
+    }, [searchQuery, activeFilter, selectedKecamatan, currentPage]);
 
-            const matchesSearch =
-                item.judul.toLowerCase().includes(query) ||
-                getDeskripsi(item).toLowerCase().includes(query);
-
-            return matchesCategory && matchesSearch;
-        });
-    }, [berita, activeFilter, searchQuery]);
-
-    // Reset ke halaman 1 setiap kali filter atau pencarian berubah,
-    // biar gak nyangkut di halaman 3 padahal hasil filter cuma 1 halaman.
+    // Reset ke halaman 1 setiap kali filter berubah
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeFilter, searchQuery]);
+    }, [activeFilter, searchQuery, selectedKecamatan]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredBerita.length / ITEMS_PER_PAGE));
+    const filteredBerita = beritaData;
+
+    const totalPages = pagination?.last_page || Math.max(1, Math.ceil(filteredBerita.length / ITEMS_PER_PAGE));
 
     const paginatedBerita = useMemo(() => {
+        if (pagination) {
+            return filteredBerita;
+        }
         const start = (currentPage - 1) * ITEMS_PER_PAGE;
         return filteredBerita.slice(start, start + ITEMS_PER_PAGE);
-    }, [filteredBerita, currentPage]);
+    }, [filteredBerita, currentPage, pagination]);
 
     const goToPage = (page: number) => {
         const clamped = Math.min(Math.max(page, 1), totalPages);
@@ -135,7 +186,6 @@ export default function Berita({ berita = [] }: BeritaProps) {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    // Nomor halaman yang ditampilkan di pagination, dengan "..." kalau halamannya banyak
     const paginationNumbers = useMemo(() => {
         const pages: (number | "ellipsis")[] = [];
         const maxVisible = 5;
@@ -163,16 +213,21 @@ export default function Berita({ berita = [] }: BeritaProps) {
 
         setNewsletterStatus("loading");
 
-        // TODO: sambungkan ke endpoint backend beneran, misal:
-        // router.post('/newsletter/subscribe', { email: newsletterEmail })
-        // Sementara ini simulasi biar UI-nya sudah siap dipakai.
+        // TODO: sambungkan ke endpoint backend
         setTimeout(() => {
             setNewsletterStatus("success");
             setNewsletterEmail("");
         }, 800);
     };
 
-    const hasAnyBerita = berita.length > 0;
+    const handleReset = () => {
+        setActiveFilter("Semua");
+        setSelectedKecamatan("");
+        setSearchQuery("");
+        setCurrentPage(1);
+    };
+
+    const hasAnyBerita = beritaData.length > 0;
     const hasFilteredResult = filteredBerita.length > 0;
 
     return (
@@ -194,8 +249,7 @@ export default function Berita({ berita = [] }: BeritaProps) {
                         className="w-full h-full object-cover object-center"
                         loading="eager"
                         onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
+                            e.currentTarget.src = FALLBACK_IMAGE;
                         }}
                     />
                     <div className="absolute inset-0 bg-black/55" />
@@ -216,14 +270,10 @@ export default function Berita({ berita = [] }: BeritaProps) {
             </section>
 
             {/* ==================== FILTER & SEARCH ==================== */}
-            <section className="py-8 bg-white border-b border-slate-100 sticky top-14 z-30">
+            <section className="py-6 bg-white border-b border-slate-100 sticky top-14 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row items-center gap-4">
-                        <div
-                            className="flex flex-wrap gap-2 flex-1 justify-center md:justify-start"
-                            role="group"
-                            aria-label="Filter kategori berita"
-                        >
+                        <div className="flex flex-wrap gap-2 flex-1 justify-center md:justify-start">
                             {filterKategori.map((kat) => (
                                 <button
                                     key={kat}
@@ -240,34 +290,53 @@ export default function Berita({ berita = [] }: BeritaProps) {
                                 </button>
                             ))}
                         </div>
-                        <div className="relative w-full md:w-64">
-                            <label htmlFor="berita-search" className="sr-only">
-                                Cari berita
-                            </label>
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                aria-hidden="true"
-                            />
-                            <input
-                                id="berita-search"
-                                type="text"
-                                placeholder="Cari berita..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white text-slate-800 placeholder:text-slate-400"
-                            />
+
+                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            {/* Filter Kecamatan */}
+                            {kecamatanList.length > 0 && (
+                                <select
+                                    value={selectedKecamatan}
+                                    onChange={(e) => setSelectedKecamatan(e.target.value)}
+                                    className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-teal-500"
+                                >
+                                    <option value="">Semua Kecamatan</option>
+                                    {kecamatanList.map((k) => (
+                                        <option key={k} value={k}>{k}</option>
+                                    ))}
+                                </select>
+                            )}
+
+                            <div className="relative w-full md:w-48">
+                                <Search
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Cari berita..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white text-slate-800 placeholder:text-slate-400"
+                                />
+                            </div>
+
+                            {(searchQuery || selectedKecamatan || activeFilter !== "Semua") && (
+                                <button
+                                    type="button"
+                                    onClick={handleReset}
+                                    className="text-sm text-teal-600 hover:text-teal-700 font-medium whitespace-nowrap"
+                                >
+                                    Reset
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Info jumlah hasil, biar user tahu lagi lihat berapa dari berapa */}
                     {hasAnyBerita && (
                         <p className="text-xs text-slate-400 mt-3 text-center md:text-left">
-                            Menampilkan {filteredBerita.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
-                            {"–"}
-                            {Math.min(currentPage * ITEMS_PER_PAGE, filteredBerita.length)} dari{" "}
-                            {filteredBerita.length} berita
+                            Menampilkan {filteredBerita.length} berita
                             {activeFilter !== "Semua" && ` di kategori "${activeFilter}"`}
+                            {selectedKecamatan && ` di kecamatan "${selectedKecamatan}"`}
                             {searchQuery && ` untuk pencarian "${searchQuery}"`}
                         </p>
                     )}
@@ -275,9 +344,14 @@ export default function Berita({ berita = [] }: BeritaProps) {
             </section>
 
             {/* ==================== GRID BERITA ==================== */}
-            <section className="py-16 lg:py-20 bg-slate-50">
+            <section className="py-16 lg:py-20 bg-slate-50 flex-1">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {hasFilteredResult ? (
+                    {isLoading ? (
+                        <div className="text-center py-20">
+                            <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
+                            <p className="text-slate-500 mt-3">Memuat berita...</p>
+                        </div>
+                    ) : hasFilteredResult ? (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                                 {paginatedBerita.map((item) => {
@@ -301,10 +375,16 @@ export default function Berita({ berita = [] }: BeritaProps) {
                                                 />
                                             </Link>
                                             <div className="p-5 flex flex-col flex-grow">
-                                                <div className="flex items-center gap-3 mb-3 text-xs text-slate-400">
+                                                <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-slate-400">
                                                     <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 bg-teal-50 px-2.5 py-1 rounded">
                                                         {item.kategori || DEFAULT_KATEGORI}
                                                     </span>
+                                                    {item.kecamatan && (
+                                                        <span className="text-[10px] font-semibold tracking-wide uppercase text-blue-600 bg-blue-50 px-2.5 py-1 rounded flex items-center gap-1">
+                                                            <MapPin size={10} />
+                                                            {item.kecamatan}
+                                                        </span>
+                                                    )}
                                                     <span className="flex items-center gap-1">
                                                         <Calendar size={12} />
                                                         {formatDate(item.created_at || item.tanggal)}
@@ -343,7 +423,7 @@ export default function Berita({ berita = [] }: BeritaProps) {
                                 })}
                             </div>
 
-                            {/* ==================== PAGINATION (fungsional) ==================== */}
+                            {/* ==================== PAGINATION ==================== */}
                             {totalPages > 1 && (
                                 <nav
                                     className="flex items-center justify-center gap-2"
@@ -353,8 +433,7 @@ export default function Berita({ berita = [] }: BeritaProps) {
                                         type="button"
                                         onClick={() => goToPage(currentPage - 1)}
                                         disabled={currentPage === 1}
-                                        aria-label="Halaman sebelumnya"
-                                        className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+                                        className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                         <ChevronLeft size={16} />
                                     </button>
@@ -388,8 +467,7 @@ export default function Berita({ berita = [] }: BeritaProps) {
                                         type="button"
                                         onClick={() => goToPage(currentPage + 1)}
                                         disabled={currentPage === totalPages}
-                                        aria-label="Halaman berikutnya"
-                                        className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+                                        className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                         <ChevronRight size={16} />
                                     </button>
@@ -397,7 +475,6 @@ export default function Berita({ berita = [] }: BeritaProps) {
                             )}
                         </>
                     ) : hasAnyBerita ? (
-                        // Ada data berita, tapi hasil filter/pencarian kosong
                         <div className="text-center py-20">
                             <Search size={40} className="text-slate-300 mx-auto mb-4" />
                             <p className="text-slate-600 font-medium text-lg mb-1">
@@ -408,17 +485,13 @@ export default function Berita({ berita = [] }: BeritaProps) {
                             </p>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setActiveFilter("Semua");
-                                    setSearchQuery("");
-                                }}
+                                onClick={handleReset}
                                 className="inline-flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:bg-teal-50 px-4 py-2 rounded-lg transition-colors"
                             >
                                 Reset Filter
                             </button>
                         </div>
                     ) : (
-                        // Belum ada berita sama sekali di database
                         <div className="text-center py-20">
                             <Newspaper size={40} className="text-slate-300 mx-auto mb-4" />
                             <p className="text-slate-600 font-medium text-lg mb-1">
@@ -465,7 +538,6 @@ export default function Berita({ berita = [] }: BeritaProps) {
                                 <Mail
                                     size={16}
                                     className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                                    aria-hidden="true"
                                 />
                                 <input
                                     id="newsletter-email"

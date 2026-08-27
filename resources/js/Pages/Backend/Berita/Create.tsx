@@ -13,10 +13,59 @@ const KATEGORI_OPTIONS = [
     "Pemberitaan Desa",
 ];
 
-export default function CreateBerita() {
+// 39 KECAMATAN KABUPATEN TASIKMALAYA (RESMI, sesuai Permendagri No. 137 Tahun 2017)
+// Diurutkan alfabet A-Z
+const KECAMATAN_OPTIONS = [
+    "Bantarkalong",
+    "Bojongasih",
+    "Bojonggambir",
+    "Ciawi",
+    "Cibalong",
+    "Cigalontang",
+    "Cikalong",
+    "Cikatomas",
+    "Cineam",
+    "Cipatujah",
+    "Cisayong",
+    "Culamega",
+    "Gunungtanjung",
+    "Jamanis",
+    "Jatiwaras",
+    "Kadipaten",
+    "Karangjaya",
+    "Karangnunggal",
+    "Leuwisari",
+    "Mangunreja",
+    "Manonjaya",
+    "Padakembang",
+    "Pagerageung",
+    "Pancatengah",
+    "Parungponteng",
+    "Puspahiang",
+    "Rajapolah",
+    "Salawu",
+    "Salopa",
+    "Sariwangi",
+    "Singaparna",
+    "Sodonghilir",
+    "Sukahening",
+    "Sukaraja",
+    "Sukarame",
+    "Sukaratu",
+    "Sukaresik",
+    "Tanjungjaya",
+    "Taraju",
+];
+
+interface CreateBeritaProps {
+    kecamatanList?: string[];
+}
+
+export default function CreateBerita({ kecamatanList = [] }: CreateBeritaProps) {
     const { data, setData, post, processing, errors } = useForm({
         judul: "",
         kategori: "Kegiatan",
+        kecamatan: "",
         konten: "",
         foto: null as File | null,
         status_publikasi: true as boolean,
@@ -28,7 +77,9 @@ export default function CreateBerita() {
     };
 
     const selectClass =
-        "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
+        "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
+
+    const kecamatanOptions = kecamatanList.length > 0 ? kecamatanList : KECAMATAN_OPTIONS;
 
     return (
         <MainLayout>
@@ -64,7 +115,7 @@ export default function CreateBerita() {
                                 onChange={(e) => setData("judul", e.target.value)}
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.judul && <div className="text-red-500 text-xs mt-1">{errors.judul}</div>}
+                            {errors.judul && <div className="text-rose-500 text-xs mt-1">{errors.judul}</div>}
                         </div>
 
                         <div>
@@ -80,10 +131,27 @@ export default function CreateBerita() {
                                     <option key={k} value={k}>{k}</option>
                                 ))}
                             </select>
-                            {errors.kategori && <div className="text-red-500 text-xs mt-1">{errors.kategori}</div>}
+                            {errors.kategori && <div className="text-rose-500 text-xs mt-1">{errors.kategori}</div>}
                         </div>
 
                         <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Kecamatan
+                            </label>
+                            <select
+                                value={data.kecamatan}
+                                onChange={(e) => setData("kecamatan", e.target.value)}
+                                className={selectClass}
+                            >
+                                <option value="">Pilih Kecamatan</option>
+                                {kecamatanOptions.map((k) => (
+                                    <option key={k} value={k}>{k}</option>
+                                ))}
+                            </select>
+                            {errors.kecamatan && <div className="text-rose-500 text-xs mt-1">{errors.kecamatan}</div>}
+                        </div>
+
+                        <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
                                 Gambar Utama / Cover
                             </label>
@@ -93,7 +161,7 @@ export default function CreateBerita() {
                                 onChange={(e) => setData("foto", e.target.files ? e.target.files[0] : null)}
                                 className={selectClass}
                             />
-                            {errors.foto && <div className="text-red-500 text-xs mt-1">{errors.foto}</div>}
+                            {errors.foto && <div className="text-rose-500 text-xs mt-1">{errors.foto}</div>}
                         </div>
 
                         <div className="md:col-span-2">
@@ -103,11 +171,11 @@ export default function CreateBerita() {
                             <textarea
                                 value={data.konten}
                                 onChange={(e) => setData("konten", e.target.value)}
-                                rows={6}
+                                rows={8}
                                 placeholder="Tulis isi berita di sini..."
                                 className={selectClass}
                             />
-                            {errors.konten && <div className="text-red-500 text-xs mt-1">{errors.konten}</div>}
+                            {errors.konten && <div className="text-rose-500 text-xs mt-1">{errors.konten}</div>}
                         </div>
 
                         <div className="flex items-center gap-2 md:col-span-2">
@@ -116,7 +184,7 @@ export default function CreateBerita() {
                                 type="checkbox"
                                 checked={data.status_publikasi}
                                 onChange={(e) => setData("status_publikasi", e.target.checked)}
-                                className="w-4 h-4 text-rose-600 border-slate-300 rounded focus:ring-rose-500"
+                                className="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
                             />
                             <label htmlFor="status_publikasi" className="text-sm text-slate-600 dark:text-slate-300">
                                 Publikasikan langsung (Draft jika tidak dicentang)
@@ -135,7 +203,7 @@ export default function CreateBerita() {
                             type="submit"
                             variant="primary"
                             disabled={processing}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
                         >
                             <Save size={16} />
                             <span>Simpan Berita</span>
