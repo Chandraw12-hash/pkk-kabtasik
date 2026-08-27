@@ -17,8 +17,10 @@ class Berita extends Model
         'slug',
         'konten',
         'kategori',
-        'status_publikasi',
+        'kecamatan',
         'foto',
+        'status_publikasi',
+        // 'user_id',
     ];
 
     protected $casts = [
@@ -30,22 +32,34 @@ class Berita extends Model
     // ============= APPENDS =============
     protected $appends = ['foto_url', 'deskripsi_singkat', 'tanggal_formatted'];
 
+    // ============================================================
+    // RELATIONS
+    // ============================================================
+
+    /**
+     * Relasi ke User (penulis berita)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // ============================================================
+    // ACCESSORS
+    // ============================================================
+
     /**
      * Accessor untuk URL foto
-     * PERBAIKI: Cek apakah path sudah memiliki 'storage/'
      */
     public function getFotoUrlAttribute()
     {
         if ($this->foto) {
-            // HAPUS 'storage/' ATAU 'public/' JIKA SUDAH ADA
             $path = $this->foto;
 
-            // Hapus 'storage/' jika ada di awal
             if (str_starts_with($path, 'storage/')) {
                 $path = substr($path, 8);
             }
 
-            // Hapus 'public/' jika ada di awal
             if (str_starts_with($path, 'public/')) {
                 $path = substr($path, 7);
             }
@@ -83,6 +97,10 @@ class Berita extends Model
         return null;
     }
 
+    // ============================================================
+    // MUTATORS
+    // ============================================================
+
     /**
      * Setter untuk judul dan slug
      */
@@ -94,7 +112,6 @@ class Berita extends Model
         $originalSlug = $slug;
         $count = 1;
 
-        // Memastikan slug unik
         while (static::where('slug', $slug)->where('id', '!=', $this->id ?? 0)->exists()) {
             $slug = "{$originalSlug}-{$count}";
             $count++;
@@ -102,6 +119,10 @@ class Berita extends Model
 
         $this->attributes['slug'] = $slug;
     }
+
+    // ============================================================
+    // SCOPES
+    // ============================================================
 
     /**
      * Scope untuk berita yang dipublikasikan
@@ -120,10 +141,41 @@ class Berita extends Model
     }
 
     /**
+     * Scope untuk filter by kecamatan
+     */
+    public function scopeByKecamatan($query, $kecamatan)
+    {
+        return $query->where('kecamatan', $kecamatan);
+    }
+
+    /**
+     * Scope untuk filter by kategori
+     */
+    public function scopeByKategori($query, $kategori)
+    {
+        return $query->where('kategori', $kategori);
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
+    /**
      * Cek apakah berita sudah dipublikasikan
      */
     public function isPublished()
     {
         return $this->status_publikasi === true;
+    }
+
+    /**
+     * Get daftar kecamatan yang memiliki berita
+     */
+    public static function getKecamatanList()
+    {
+        return self::select('kecamatan')
+            ->distinct()
+            ->whereNotNull('kecamatan')
+            ->pluck('kecamatan');
     }
 }

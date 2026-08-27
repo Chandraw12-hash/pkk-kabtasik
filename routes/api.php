@@ -24,10 +24,14 @@ use App\Http\Controllers\Api\AgendaApiController;
 Route::post('/login', [AuthController::class, 'login']);
 
 // ============================================
-// BERITA (Read-only, publik)
+// BERITA (Read-only, publik) - SUPPORT KECAMATAN
 // ============================================
 Route::get('/berita', [BeritaController::class, 'index']);
+Route::get('/berita/latest', [BeritaController::class, 'latest']);
 Route::get('/berita/{slug}', [BeritaController::class, 'show']);
+Route::get('/berita/kecamatan/list', [BeritaController::class, 'getKecamatan']);
+Route::get('/berita/kategori/{kategori}', [BeritaController::class, 'byKategori']);
+Route::get('/berita/kecamatan/{kecamatan}', [BeritaController::class, 'byKecamatan']);
 
 // ============================================
 // GALERI (Read-only, publik)
