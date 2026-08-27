@@ -276,7 +276,7 @@ const YOUTUBE_CHANNEL = "https://youtube.com/@pkkkabtasikmalaya2649";
 
 // Logo yang ditampilkan berjalan (marquee) di bawah hero
 const HERO_LOGOS = [
-    { id: "diskominfo", src: "/assets/logo/diskominfo.jpeg", alt: "Diskominfo" },
+    { id: "diskominfo", src: "/assets/logo/diskominfo.jpeg", alt: "Dishubkominfo" },
     { id: "pkk", src: "/assets/logo/logotasik.png", alt: "PKK Kab. Tasikmalaya" },
     { id: "pemkab", src: "/assets/logo/pemkab.png", alt: "Pemerintah Kab. Tasikmalaya" },
 ];

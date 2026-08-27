@@ -11,6 +11,7 @@ import {
     Share2,
     Search,
     FolderOpen,
+    MapPin,
 } from "lucide-react";
 
 interface BeritaItem {
@@ -19,9 +20,13 @@ interface BeritaItem {
     slug?: string;
     konten?: string;
     deskripsi?: string;
+    kategori?: string;
+    kecamatan?: string | null;
     foto?: string | null;
     foto_url?: string | null;
     created_at?: string;
+    created_at_formatted?: string;
+    user?: { name: string };
 }
 
 interface Props {
@@ -84,12 +89,13 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                 <Navbar />
                 <div className="flex-grow flex items-center justify-center px-4">
                     <div className="text-center">
-                        <p className="text-slate-800 font-semibold mb-2">
+                        <Newspaper size={48} className="text-slate-300 mx-auto mb-4" />
+                        <p className="text-slate-800 font-semibold text-lg mb-2">
                             Berita tidak ditemukan
                         </p>
                         <Link
                             href="/berita"
-                            className="text-sm text-teal-700 font-medium"
+                            className="text-sm text-teal-700 font-medium hover:text-teal-800 transition-colors"
                         >
                             ← Kembali ke daftar berita
                         </Link>
@@ -101,6 +107,8 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
     }
 
     const imageSrc = getImageSrc(berita);
+    const isVisiMisi = berita.judul?.toLowerCase().includes("visi") ||
+                        berita.judul?.toLowerCase().includes("misi");
 
     return (
         <div className="min-h-screen flex flex-col bg-[#f7f8fa] text-slate-800 pt-14 overflow-x-hidden">
@@ -113,27 +121,21 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                         {/* ========== ARTIKEL ========== */}
                         <article className="lg:col-span-8 min-w-0">
                             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                                {/* Foto utama — di atas, seperti PKK Jatim */}
+                                {/* Foto utama — landscape / full width */}
                                 {imageSrc ? (
-                                    <div className="relative w-full aspect-[16/10] bg-slate-100">
+                                    <div className="relative w-full aspect-[16/9] bg-slate-100">
                                         <img
                                             src={imageSrc}
                                             alt={berita.judul}
                                             className="absolute inset-0 w-full h-full object-cover"
                                             onError={(e) => {
-                                                (
-                                                    e.currentTarget
-                                                        .parentElement as HTMLElement
-                                                ).style.display = "none";
+                                                (e.currentTarget.parentElement as HTMLElement).style.display = "none";
                                             }}
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-full aspect-[16/10] bg-slate-100 flex items-center justify-center">
-                                        <Newspaper
-                                            size={48}
-                                            className="text-slate-300"
-                                        />
+                                    <div className="w-full aspect-[16/9] bg-slate-100 flex items-center justify-center">
+                                        <Newspaper size={48} className="text-slate-300" />
                                     </div>
                                 )}
 
@@ -144,29 +146,25 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
 
                                     {/* Meta */}
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-slate-500 mb-6 pb-5 border-b border-slate-100">
+                                        {berita.kategori && (
+                                            <span className="inline-flex items-center gap-1.5 bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-medium">
+                                                <FolderOpen size={14} />
+                                                {berita.kategori}
+                                            </span>
+                                        )}
+                                        {berita.kecamatan && (
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <MapPin size={14} className="text-slate-400" />
+                                                {berita.kecamatan}
+                                            </span>
+                                        )}
                                         <span className="inline-flex items-center gap-1.5">
-                                            <User
-                                                size={14}
-                                                className="text-slate-400"
-                                            />
-                                            Admin PKK
+                                            <User size={14} className="text-slate-400" />
+                                            {berita.user?.name || "Admin PKK"}
                                         </span>
                                         <span className="inline-flex items-center gap-1.5">
-                                            <FolderOpen
-                                                size={14}
-                                                className="text-slate-400"
-                                            />
-                                            Berita
-                                        </span>
-                                        <span className="inline-flex items-center gap-1.5">
-                                            <Calendar
-                                                size={14}
-                                                className="text-slate-400"
-                                            />
-                                            {formatTanggal(
-                                                berita.created_at,
-                                                true
-                                            )}
+                                            <Calendar size={14} className="text-slate-400" />
+                                            {formatTanggal(berita.created_at, true)}
                                         </span>
                                     </div>
 
@@ -177,6 +175,8 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                                                 prose-p:text-slate-600 prose-p:text-[15px] prose-p:leading-[1.75]
                                                 prose-headings:text-slate-900 prose-headings:font-semibold
                                                 prose-a:text-teal-700 prose-img:rounded-xl prose-img:max-w-full
+                                                prose-strong:text-slate-900 prose-ul:text-slate-600
+                                                prose-ol:text-slate-600 prose-li:marker:text-teal-600
                                                 [&_*]:max-w-full [&_*]:break-words"
                                             style={{
                                                 overflowWrap: "anywhere",
@@ -194,8 +194,7 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                                                 wordBreak: "break-word",
                                             }}
                                         >
-                                            {berita.deskripsi ||
-                                                "Konten berita belum tersedia."}
+                                            {berita.deskripsi || "Konten berita belum tersedia."}
                                         </p>
                                     )}
 
@@ -214,13 +213,10 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                                                 if (navigator.share) {
                                                     navigator.share({
                                                         title: berita.judul,
-                                                        url: window.location
-                                                            .href,
+                                                        url: window.location.href,
                                                     });
                                                 } else {
-                                                    navigator.clipboard.writeText(
-                                                        window.location.href
-                                                    );
+                                                    navigator.clipboard.writeText(window.location.href);
                                                 }
                                             }}
                                             className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-teal-700 transition-colors"
@@ -239,19 +235,14 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                                 {/* Search */}
                                 <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
                                     <h2 className="text-base font-semibold text-slate-900 mb-3">
-                                        Search
+                                        Cari Berita
                                     </h2>
-                                    <form
-                                        onSubmit={handleSearchSubmit}
-                                        className="flex"
-                                    >
+                                    <form onSubmit={handleSearchSubmit} className="flex">
                                         <input
                                             type="search"
                                             value={search}
-                                            onChange={(e) =>
-                                                setSearch(e.target.value)
-                                            }
-                                            placeholder="kata kunci ..."
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            placeholder="Kata kunci..."
                                             className="flex-1 min-w-0 px-3.5 py-2.5 text-sm border border-slate-200 border-r-0 rounded-l-lg
                                                 focus:outline-none focus:ring-2 focus:ring-teal-500/25 focus:border-teal-500
                                                 placeholder:text-slate-400"
@@ -277,9 +268,7 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                                     <ul className="divide-y divide-slate-100">
                                         {filteredLainnya.length === 0 ? (
                                             <li className="px-5 py-5 text-sm text-slate-400">
-                                                {search.trim()
-                                                    ? "Tidak ada hasil."
-                                                    : "Belum ada berita lain."}
+                                                {search.trim() ? "Tidak ada hasil." : "Belum ada berita lain."}
                                             </li>
                                         ) : (
                                             filteredLainnya.map((item) => {
@@ -293,35 +282,23 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                                                             <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 shrink-0">
                                                                 {thumb ? (
                                                                     <img
-                                                                        src={
-                                                                            thumb
-                                                                        }
+                                                                        src={thumb}
                                                                         alt=""
                                                                         className="w-full h-full object-cover"
                                                                         loading="lazy"
                                                                     />
                                                                 ) : (
                                                                     <div className="w-full h-full flex items-center justify-center">
-                                                                        <Newspaper
-                                                                            size={
-                                                                                16
-                                                                            }
-                                                                            className="text-slate-300"
-                                                                        />
+                                                                        <Newspaper size={16} className="text-slate-300" />
                                                                     </div>
                                                                 )}
                                                             </div>
                                                             <div className="min-w-0 flex-1 pt-0.5">
                                                                 <p className="text-sm font-medium text-slate-800 group-hover:text-teal-700 line-clamp-2 leading-snug break-words">
-                                                                    {
-                                                                        item.judul
-                                                                    }
+                                                                    {item.judul}
                                                                 </p>
                                                                 <p className="text-[11px] text-slate-400 mt-1">
-                                                                    {formatTanggal(
-                                                                        item.created_at,
-                                                                        true
-                                                                    )}
+                                                                    {formatTanggal(item.created_at, true)}
                                                                 </p>
                                                             </div>
                                                         </Link>
