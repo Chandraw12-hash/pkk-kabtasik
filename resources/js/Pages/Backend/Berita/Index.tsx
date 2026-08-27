@@ -2,12 +2,25 @@ import React, { useState, useEffect, useRef } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
+import Badge from "@/Components/UI/Badge";
 import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus, Newspaper } from "lucide-react";
+import {
+    Search,
+    Edit2,
+    Trash2,
+    RotateCcw,
+    Plus,
+    Newspaper,
+    Eye,
+    MapPin,
+    CheckCircle,
+    XCircle,
+    Filter
+} from "lucide-react";
 import { PaginatedData } from "@/types/model";
 import axios from "axios";
 
@@ -16,13 +29,22 @@ interface Berita {
     judul: string;
     slug: string;
     konten: string;
+    kategori: string;
+    kecamatan: string | null;
     foto: string | null;
+    status_publikasi: boolean;
+    created_at: string;
+    user?: { id: number; name: string };
 }
 
 interface IndexProps {
     beritas: PaginatedData<Berita>;
+    kecamatanList?: string[];
     filters?: {
         search?: string;
+        kategori?: string;
+        kecamatan?: string;
+        status?: string;
         per_page?: number | string;
     };
 }
@@ -43,7 +65,14 @@ const emptyPagination: PaginatedData<Berita> = {
     last_page: 1,
 };
 
-export default function Index({ beritas, filters = {} }: IndexProps) {
+const KATEGORI_OPTIONS = [
+    "Kegiatan",
+    "Pengumuman",
+    "Artikel",
+    "Pemberitaan Desa",
+];
+
+export default function Index({ beritas, kecamatanList = [], filters = {} }: IndexProps) {
     const { auth } = usePage<any>().props;
     const permissions: string[] = auth?.permissions || [];
 
@@ -52,6 +81,9 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
     const canDelete = permissions.includes("berita.delete") || true;
 
     const [search, setSearch] = useState(filters.search || "");
+    const [kategoriFilter, setKategoriFilter] = useState(filters.kategori || "");
+    const [kecamatanFilter, setKecamatanFilter] = useState(filters.kecamatan || "");
+    const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [perPage, setPerPage] = useState<number>(
         Number(filters.per_page) || 10
     );
@@ -78,6 +110,9 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
         const url = route("be.berita.index");
         const params = {
             search: search || undefined,
+            kategori: kategoriFilter || undefined,
+            kecamatan: kecamatanFilter || undefined,
+            status: statusFilter || undefined,
             per_page: perPage,
         };
 
@@ -89,12 +124,6 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
             .then((res) => {
                 if (res.data && typeof res.data === "object" && "data" in res.data) {
                     setLocalBeritas(res.data);
-                } else if (Array.isArray(res.data)) {
-                    setLocalBeritas((prev) => ({
-                        ...prev,
-                        data: res.data,
-                        total: res.data.length,
-                    }));
                 }
             })
             .catch((err) => {
@@ -114,7 +143,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
         }, 350);
 
         return () => clearTimeout(timeout);
-    }, [search, perPage]);
+    }, [search, kategoriFilter, kecamatanFilter, statusFilter, perPage]);
 
     const openDeleteModal = (berita: Berita) => {
         setSelectedBerita(berita);
@@ -131,14 +160,14 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                 setSelectedBerita(null);
                 fetchData();
             },
-            onError: () => {
-                // optional: toast error
-            },
         });
     };
 
     const handleReset = () => {
         setSearch("");
+        setKategoriFilter("");
+        setKecamatanFilter("");
+        setStatusFilter("");
         setPerPage(10);
     };
 
@@ -161,6 +190,13 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
             .finally(() => setIsLoading(false));
     };
 
+    const getStatusBadge = (status: boolean) => {
+        if (status) {
+            return <Badge type="success">Published</Badge>;
+        }
+        return <Badge type="default">Draft</Badge>;
+    };
+
     return (
         <MainLayout>
             <Head title="Manajemen Berita & Informasi" />
@@ -179,7 +215,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                     <Button
                         variant="primary"
                         href={route("be.berita.create")}
-                        className="shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2"
+                        className="shadow-lg shadow-teal-100 dark:shadow-none flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
                     >
                         <Plus size={16} />
                         <span>Tambah Berita</span>
@@ -188,30 +224,66 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
             </div>
 
             <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50 overflow-hidden">
-                <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex items-center gap-4">
-                    <div className="relative w-full max-w-md">
-                        <TextInput
-                            iconLeft={<Search size={18} />}
-                            placeholder="Cari judul berita..."
-                            className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                            containerClassName="relative w-full"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+                {/* Filter Section */}
+                <div className="p-6 border-b border-slate-50 dark:border-slate-700">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="relative flex-1 min-w-[180px] max-w-md">
+                            <TextInput
+                                iconLeft={<Search size={18} />}
+                                placeholder="Cari judul berita..."
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                containerClassName="relative w-full"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
 
-                    {(search || perPage !== 10) && (
-                        <Button
-                            variant="danger"
-                            onClick={handleReset}
-                            className="flex items-center gap-2"
+                        <select
+                            value={kategoriFilter}
+                            onChange={(e) => setKategoriFilter(e.target.value)}
+                            className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
                         >
-                            <RotateCcw size={16} />
-                            <span>Reset</span>
-                        </Button>
-                    )}
+                            <option value="">Semua Kategori</option>
+                            {KATEGORI_OPTIONS.map((k) => (
+                                <option key={k} value={k}>{k}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={kecamatanFilter}
+                            onChange={(e) => setKecamatanFilter(e.target.value)}
+                            className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
+                        >
+                            <option value="">Semua Kecamatan</option>
+                            {kecamatanList.map((k) => (
+                                <option key={k} value={k}>{k}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="true">Published</option>
+                            <option value="false">Draft</option>
+                        </select>
+
+                        {(search || kategoriFilter || kecamatanFilter || statusFilter || perPage !== 10) && (
+                            <Button
+                                variant="secondary"
+                                onClick={handleReset}
+                                className="flex items-center gap-2"
+                            >
+                                <RotateCcw size={16} />
+                                <span>Reset</span>
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
+                {/* Table */}
                 <div className="overflow-x-hidden">
                     <Table
                         isLoading={isLoading}
@@ -219,8 +291,8 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                             {
                                 header: "#",
                                 className:
-                                    "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                                headerClassName: "text-center w-16",
+                                    "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-14",
+                                headerClassName: "text-center w-14",
                                 render: (_: Berita, index: number) => {
                                     const currentPage =
                                         localBeritas.current_page ?? 1;
@@ -232,8 +304,8 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                             },
                             {
                                 header: "Foto",
-                                className: "w-24 text-center",
-                                headerClassName: "text-center w-24",
+                                className: "w-20 text-center",
+                                headerClassName: "text-center w-20",
                                 render: (berita: Berita) => (
                                     <div className="flex justify-center">
                                         {berita.foto ? (
@@ -255,7 +327,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                                 ),
                             },
                             {
-                                header: "Judul",
+                                header: "Judul & Kategori",
                                 className: "w-auto",
                                 headerClassName: "w-auto",
                                 render: (berita: Berita) => (
@@ -263,24 +335,54 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                                         <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
                                             {berita.judul}
                                         </p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Badge type="info" className="text-[10px]">
+                                                {berita.kategori || "Umum"}
+                                            </Badge>
+                                            {berita.kecamatan && (
+                                                <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                                                    <MapPin size={10} />
+                                                    {berita.kecamatan}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: "Status",
+                                className: "text-center w-28",
+                                headerClassName: "text-center w-28",
+                                render: (berita: Berita) => (
+                                    <div className="flex justify-center">
+                                        {getStatusBadge(berita.status_publikasi)}
                                     </div>
                                 ),
                             },
                             {
                                 header: "Aksi",
-                                headerClassName: "text-center w-32",
-                                className: "text-center w-32",
+                                headerClassName: "text-center w-28",
+                                className: "text-center w-28",
                                 render: (berita: Berita) => (
-                                    <div className="flex items-center justify-center gap-2">
+                                    <div className="flex items-center justify-center gap-1">
+                                        <Link
+                                            href={`/berita/${berita.slug}`}
+                                            target="_blank"
+                                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                            title="Lihat"
+                                        >
+                                            <Eye size={15} />
+                                        </Link>
                                         {canEdit && (
                                             <Link
                                                 href={route(
                                                     "be.berita.edit",
                                                     berita.id
                                                 )}
-                                                className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center dark:hover:bg-indigo-900/30"
+                                                className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all"
+                                                title="Edit"
                                             >
-                                                <Edit2 size={16} />
+                                                <Edit2 size={15} />
                                             </Link>
                                         )}
                                         {canDelete && (
@@ -289,9 +391,10 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                                                 onClick={() =>
                                                     openDeleteModal(berita)
                                                 }
-                                                className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer dark:hover:bg-rose-900/30"
+                                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                                title="Hapus"
                                             >
-                                                <Trash2 size={16} />
+                                                <Trash2 size={15} />
                                             </button>
                                         )}
                                     </div>
@@ -302,6 +405,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                     />
                 </div>
 
+                {/* Pagination */}
                 <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
                     <p className="text-sm text-slate-500 dark:text-slate-200">
                         Menampilkan{" "}
@@ -326,7 +430,7 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                             onChange={(e) =>
                                 setPerPage(parseInt(e.target.value, 10))
                             }
-                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-3 focus:ring-indigo-500/10 focus:border-indigo-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                         >
                             <option value={5}>5</option>
                             <option value={10}>10</option>
@@ -346,7 +450,11 @@ export default function Index({ beritas, filters = {} }: IndexProps) {
                 show={showDeleteModal}
                 processing={processing}
                 title="Hapus Berita"
-                message="Apakah Anda yakin ingin menghapus berita ini? Data yang dihapus tidak dapat dikembalikan."
+                message={
+                    selectedBerita
+                        ? `Apakah Anda yakin ingin menghapus berita "${selectedBerita.judul}"? Data yang dihapus tidak dapat dikembalikan.`
+                        : "Apakah Anda yakin ingin menghapus berita ini?"
+                }
                 onConfirm={handleDelete}
                 onCancel={() => {
                     setShowDeleteModal(false);
