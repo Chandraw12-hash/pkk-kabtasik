@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\Galeri;
 use App\Models\Agenda;
+use App\Models\Infografis;
 use App\Models\DataUmumSekretariat;
 use App\Models\Pokja1;
 use App\Models\Pokja2;
@@ -75,6 +76,20 @@ class IndexController extends Controller
         // ✅ AMBIL DATA VIDEO (jika ada tabelnya)
         $videos = collect([]);
 
+        $infografis = Infografis::where('status', 'active')
+            ->orderBy('created_at', 'desc')  // ⬅️ URUTKAN TERBARU
+            ->limit(3)                        // ⬅️ HANYA 3 DATA
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'judul' => $item->judul,
+                    'deskripsi' => $item->deskripsi,
+                    'gambar_url' => $item->gambar_url,
+                    'kategori' => $item->kategori,
+                ];
+            });
+
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
@@ -103,7 +118,7 @@ class IndexController extends Controller
                 'file_path' => '#',
                 'urutan' => 3,
             ],
-        ])->map(fn ($item) => (object) $item);
+        ])->map(fn($item) => (object) $item);
 
         $chartData = collect([
             ['year' => '2019', 'value' => 1.8],
@@ -129,6 +144,7 @@ class IndexController extends Controller
             'galeri' => $galeriTerbaru,
             'agenda' => $agendaTerbaru,
             'videos' => $videos,
+            'infografis' => $infografis,
             'sekretariat' => $sekretariat,
             'pokja1' => $pokja1,
             'pokja2' => $pokja2,
@@ -176,8 +192,8 @@ class IndexController extends Controller
     public function galeriKegiatan(Request $request)
     {
         $galeri = Galeri::when($request->search, function ($query) use ($request) {
-                return $query->where('judul', 'like', '%' . $request->search . '%');
-            })
+            return $query->where('judul', 'like', '%' . $request->search . '%');
+        })
             ->orderBy('created_at', 'desc')
             ->paginate(12)
             ->withQueryString();
@@ -202,11 +218,24 @@ class IndexController extends Controller
     public function berita(Request $request)
     {
         $search = $request->get('search');
+        $kategori = $request->get('kategori');
+        $kecamatan = $request->get('kecamatan');
 
         $query = Berita::where('status_publikasi', true)->latest();
 
         if ($search) {
-            $query->where('judul', 'like', '%' . $search . '%');
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                    ->orWhere('konten', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($kategori) {
+            $query->where('kategori', $kategori);
+        }
+
+        if ($kecamatan) {
+            $query->where('kecamatan', $kecamatan);
         }
 
         $beritas = $query->get()->map(function ($item) {
@@ -217,6 +246,7 @@ class IndexController extends Controller
                 'deskripsi' => $item->konten,
                 'konten' => $item->konten,
                 'kategori' => $item->kategori,
+                'kecamatan' => $item->kecamatan,
                 'foto' => $item->foto,
                 'foto_url' => $item->foto_url ?? null,
                 'created_at' => $item->created_at,
@@ -227,6 +257,8 @@ class IndexController extends Controller
             'berita' => $beritas,
             'filters' => [
                 'search' => $search,
+                'kategori' => $kategori,
+                'kecamatan' => $kecamatan,
             ],
         ]);
     }

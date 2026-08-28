@@ -27,6 +27,7 @@ import {
     Activity,
     CalendarDays,
     ClipboardList,
+    Image,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -90,6 +91,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
     const hasAgenda = routeExists("be.agenda.index");
     const hasLaporan = routeExists("be.laporan-kegiatan.index");
+    const hasInfografis = routeExists("be.infografis.index");
 
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
         pokjaManagement:
@@ -202,7 +204,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
                             isCurrentRoute("be.dashboard")
-                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                 >
@@ -211,8 +213,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         strokeWidth={2}
                         className={`shrink-0 ${
                             isCurrentRoute("be.dashboard")
-                                ? "text-brand-green-600 dark:text-brand-green-400"
-                                : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                ? "text-teal-600 dark:text-teal-400"
+                                : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                         }`}
                     />
                     <span>Dashboard</span>
@@ -228,7 +230,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
                             isCurrentRoute("be.kader.*")
-                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                     >
@@ -237,8 +239,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             strokeWidth={2}
                             className={`shrink-0 ${
                                 isCurrentRoute("be.kader.*")
-                                    ? "text-brand-green-600 dark:text-brand-green-400"
-                                    : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                             }`}
                         />
                         <span>Data Kader</span>
@@ -256,7 +258,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             isCurrentRoute("be.pokja2.*") ||
                             isCurrentRoute("be.pokja3.*") ||
                             isCurrentRoute("be.pokja4.*")
-                                ? "text-brand-green-600 dark:text-brand-green-400"
+                                ? "text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                     >
@@ -270,8 +272,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     isCurrentRoute("be.pokja2.*") ||
                                     isCurrentRoute("be.pokja3.*") ||
                                     isCurrentRoute("be.pokja4.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400"
-                                        : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                        ? "text-teal-600 dark:text-teal-400"
+                                        : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                                 }`}
                             />
                             <span>Data Pokja & Sekretariat</span>
@@ -294,8 +296,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 href={route("be.sekretariat.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
                                     isCurrentRoute("be.sekretariat.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                        ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                 }`}
                             >
                                 <FileText size={16} />
@@ -305,8 +307,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 href={route("be.pokja1.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
                                     isCurrentRoute("be.pokja1.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                        ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                 }`}
                             >
                                 <HeartHandshake size={16} />
@@ -316,8 +318,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 href={route("be.pokja2.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
                                     isCurrentRoute("be.pokja2.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                        ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                 }`}
                             >
                                 <BookOpen size={16} />
@@ -327,8 +329,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 href={route("be.pokja3.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
                                     isCurrentRoute("be.pokja3.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                        ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                 }`}
                             >
                                 <HomeIcon size={16} />
@@ -338,8 +340,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 href={route("be.pokja4.index")}
                                 className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
                                     isCurrentRoute("be.pokja4.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                        : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                        ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                 }`}
                             >
                                 <Activity size={16} />
@@ -358,7 +360,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                     ${
                         isCurrentRoute("be.galeri.*")
-                            ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                             : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                 >
@@ -367,8 +369,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         strokeWidth={2}
                         className={`shrink-0 ${
                             isCurrentRoute("be.galeri.*")
-                                ? "text-brand-green-600 dark:text-brand-green-400"
-                                : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                ? "text-teal-600 dark:text-teal-400"
+                                : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                         }`}
                     />
                     <span>Galeri Kegiatan</span>
@@ -379,7 +381,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                     ${
                         isCurrentRoute("be.berita.*")
-                            ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                             : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                 >
@@ -388,21 +390,21 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         strokeWidth={2}
                         className={`shrink-0 ${
                             isCurrentRoute("be.berita.*")
-                                ? "text-brand-green-600 dark:text-brand-green-400"
-                                : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                ? "text-teal-600 dark:text-teal-400"
+                                : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                         }`}
                     />
                     <span>Berita & Informasi</span>
                 </Link>
 
-                {/* Agenda — hanya tampil kalau route sudah terdaftar */}
+                {/* Agenda */}
                 {hasAgenda && (
                     <Link
                         href={safeRoute("be.agenda.index")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                         ${
                             isCurrentRoute("be.agenda.*")
-                                ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                     >
@@ -411,15 +413,39 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             strokeWidth={2}
                             className={`shrink-0 ${
                                 isCurrentRoute("be.agenda.*")
-                                    ? "text-brand-green-600 dark:text-brand-green-400"
-                                    : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                             }`}
                         />
                         <span>Agenda</span>
                     </Link>
                 )}
 
-                {/* Laporan Kegiatan — hanya tampil kalau route sudah terdaftar */}
+                {/* Infografis */}
+                {hasInfografis && (
+                    <Link
+                        href={safeRoute("be.infografis.index")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                        ${
+                            isCurrentRoute("be.infografis.*")
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <Image
+                            size={20}
+                            strokeWidth={2}
+                            className={`shrink-0 ${
+                                isCurrentRoute("be.infografis.*")
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                            }`}
+                        />
+                        <span>Infografis</span>
+                    </Link>
+                )}
+
+                {/* Laporan Kegiatan */}
                 {hasLaporan && (
                     <>
                         <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
@@ -430,7 +456,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
                             ${
                                 isCurrentRoute("be.laporan-kegiatan.*")
-                                    ? "bg-brand-green-50 dark:bg-slate-800 text-brand-green-600 dark:text-brand-green-400"
+                                    ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
                         >
@@ -439,8 +465,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 strokeWidth={2}
                                 className={`shrink-0 ${
                                     isCurrentRoute("be.laporan-kegiatan.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400"
-                                        : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                        ? "text-teal-600 dark:text-teal-400"
+                                        : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                                 }`}
                             />
                             <span>Laporan Kegiatan</span>
@@ -456,7 +482,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                             ${
                                 isCurrentRoute("be.users.*")
-                                    ? "text-brand-green-600 dark:text-brand-green-400"
+                                    ? "text-teal-600 dark:text-teal-400"
                                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
                         >
@@ -466,8 +492,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     strokeWidth={2}
                                     className={`shrink-0 ${
                                         isCurrentRoute("be.users.*")
-                                            ? "text-brand-green-600 dark:text-brand-green-400"
-                                            : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                            ? "text-teal-600 dark:text-teal-400"
+                                            : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                                     }`}
                                 />
                                 <span>User Management</span>
@@ -492,8 +518,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     href={route("be.users.index")}
                                     className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
                                         isCurrentRoute("be.users.*")
-                                            ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                            : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                     }`}
                                 >
                                     User
@@ -503,8 +529,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                         href={route("be.roles.index")}
                                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
                                             isCurrentRoute("be.roles.*")
-                                                ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                         }`}
                                     >
                                         Role
@@ -528,7 +554,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
                                 ${
                                     isCurrentRoute("be.settings.*")
-                                        ? "text-brand-green-600 dark:text-brand-green-400"
+                                        ? "text-teal-600 dark:text-teal-400"
                                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                 }`}
                             >
@@ -538,8 +564,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                         strokeWidth={2}
                                         className={`shrink-0 ${
                                             isCurrentRoute("be.settings.*")
-                                                ? "text-brand-green-600 dark:text-brand-green-400"
-                                                : "text-slate-400 dark:text-slate-500 group-hover:text-brand-green-500"
+                                                ? "text-teal-600 dark:text-teal-400"
+                                                : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                                         }`}
                                     />
                                     <span>Pengaturan</span>
@@ -568,8 +594,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                             isCurrentRoute(
                                                 "be.settings.profile"
                                             )
-                                                ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                         }`}
                                     >
                                         Profil Saya
@@ -578,8 +604,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                         href={route("be.settings.app")}
                                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
                                             isCurrentRoute("be.settings.app")
-                                                ? "text-brand-green-600 dark:text-brand-green-400 font-semibold bg-brand-green-50/50 dark:bg-slate-800/50"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-brand-green-600 dark:hover:text-brand-green-400"
+                                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                         }`}
                                     >
                                         Aplikasi
@@ -599,7 +625,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group cursor-pointer"
                     >
                         <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-                            <div className="w-9 h-9 shrink-0 rounded-full bg-brand-green-100 dark:bg-brand-green-900/50 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-brand-green-600 dark:text-brand-green-400 font-bold overflow-hidden shadow-sm">
+                            <div className="w-9 h-9 shrink-0 rounded-full bg-teal-100 dark:bg-teal-900/50 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold overflow-hidden shadow-sm">
                                 {user?.profile_photo_path ? (
                                     <img
                                         src={`/storage/${user.profile_photo_path}`}

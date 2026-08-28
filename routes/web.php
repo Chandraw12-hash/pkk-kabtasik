@@ -23,6 +23,9 @@ use App\Http\Controllers\Backend\Pokja4Controller;
 use App\Http\Controllers\Backend\AgendaController;
 use App\Http\Controllers\Backend\LaporanKegiatanController;
 
+// Infografis
+use App\Http\Controllers\Backend\InfografisController;
+
 // ============================================
 // FRONTEND ROUTES (Public)
 // ============================================
@@ -132,6 +135,13 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
+
+    // ============================================
+    // INFOGRAFIS (Fitur Upload Infografis)
+    // ============================================
+    Route::resource('infografis', InfografisController::class)->except(['show']);
+    Route::patch('infografis/{infografis}/toggle-status', [InfografisController::class, 'toggleStatus'])
+        ->name('infografis.toggle-status');
 
     // ============================================
     // AGENDA - FIX: Tambahkan show route secara manual
