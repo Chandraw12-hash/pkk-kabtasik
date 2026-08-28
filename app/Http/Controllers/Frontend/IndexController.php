@@ -138,6 +138,11 @@ class IndexController extends Controller
         ]);
     }
 
+    public function surveyKepuasan()
+    {
+        return Inertia::render('Frontend/Survey/Index');
+    }
+
     public function sejarah()
     {
         return Inertia::render('Frontend/Profil/Sejarah');

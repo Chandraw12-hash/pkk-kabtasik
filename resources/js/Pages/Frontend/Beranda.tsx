@@ -1276,6 +1276,57 @@ export default function Welcome({
             </section>
 
             {/* ==========================================================
+                INFO GRAFIS
+            ========================================================== */}
+            <section className="py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up show">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-10">
+                        <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                            Publikasi
+                        </p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
+                            Info Grafis
+                        </h2>
+                        <div className="w-10 h-1 bg-teal-600 rounded-full mx-auto mt-3" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+                        {[
+                            { id: 1, title: "Cegah Stunting Itu Penting", img: "/assets/images/infografis-1.jpg" },
+                            { id: 2, title: "10 Program Pokok PKK", img: "/assets/images/infografis-2.jpg" },
+                            { id: 3, title: "Pola Hidup Bersih dan Sehat", img: "/assets/images/infografis-3.jpg" },
+                            { id: 4, title: "Pemberdayaan Ekonomi Keluarga", img: "/assets/images/infografis-4.jpg" },
+                            { id: 5, title: "Pendidikan Anak Usia Dini", img: "/assets/images/infografis-5.jpg" },
+                        ].map((item) => (
+                            <div key={item.id} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col">
+                                <div className="aspect-[3/4] bg-slate-200 relative overflow-hidden flex items-center justify-center">
+                                    <Images size={32} className="text-slate-400 absolute" />
+                                    <img 
+                                        src={item.img} 
+                                        alt={item.title} 
+                                        className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                        }}
+                                    />
+                                    <div className="absolute z-20 inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                        <button className="w-full bg-white text-teal-700 font-semibold text-xs py-2 rounded-lg hover:bg-teal-50 transition-colors">
+                                            Lihat Detail
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-3 border-t border-slate-100 bg-white flex-1 flex items-center justify-center">
+                                    <h3 className="text-slate-800 font-semibold text-xs sm:text-[13px] leading-snug line-clamp-2 text-center group-hover:text-teal-700 transition-colors">
+                                        {item.title}
+                                    </h3>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==========================================================
                 AGENDA KEGIATAN
             ========================================================== */}
             <section
@@ -1514,6 +1565,31 @@ export default function Welcome({
                             </p>
                         </div>
                     )}
+
+                    {/* ==========================================================
+                        SURVEY KEPUASAN MASYARAKAT
+                    ========================================================== */}
+                    <div className="mt-12 bg-gradient-to-r from-teal-700 to-teal-900 rounded-2xl p-6 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 anim-fade-up show">
+                        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
+                            <ClipboardList size={250} />
+                        </div>
+                        <div className="relative z-10 max-w-2xl">
+                            <h3 className="text-xl md:text-2xl font-bold mb-3">Survey Kepuasan Masyarakat</h3>
+                            <p className="text-teal-50 text-sm md:text-base leading-relaxed">
+                                Partisipasi Anda sangat berarti! Bantu kami meningkatkan kualitas layanan dan 
+                                efektivitas program TP PKK Kabupaten Tasikmalaya dengan mengisi survey singkat.
+                            </p>
+                        </div>
+                        <div className="relative z-10 flex-shrink-0 w-full md:w-auto">
+                            <Link 
+                                href="/survey-kepuasan" 
+                                className="inline-flex items-center justify-center w-full md:w-auto gap-2 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-8 py-3.5 rounded-xl transition-all hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-yellow-400/30"
+                            >
+                                <ClipboardList size={20} />
+                                Isi Survey Sekarang
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </section>
 

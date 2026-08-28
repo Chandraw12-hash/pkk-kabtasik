@@ -46,6 +46,9 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
+    // Survey Kepuasan Masyarakat
+    Route::get('/survey-kepuasan', [IndexController::class, 'surveyKepuasan'])->name('survey.kepuasan');
+
     // Data Publik Sekretariat & Pokja (Inertia)
     Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
     Route::get('/pokja-1', [IndexController::class, 'pokja1Public'])->name('pokja1');
