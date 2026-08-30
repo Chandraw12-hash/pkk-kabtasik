@@ -26,6 +26,10 @@ use App\Http\Controllers\Backend\LaporanKegiatanController;
 // Infografis
 use App\Http\Controllers\Backend\InfografisController;
 
+// Survey
+use App\Http\Controllers\Backend\SurveyController;
+use App\Http\Controllers\Frontend\SurveyController as FrontendSurveyController;
+
 // ============================================
 // FRONTEND ROUTES (Public)
 // ============================================
@@ -49,8 +53,11 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
-    // Survey Kepuasan Masyarakat
-    Route::get('/survey-kepuasan', [IndexController::class, 'surveyKepuasan'])->name('survey.kepuasan');
+    // ============================================
+    // SURVEY KEPUASAN (Public)
+    // ============================================
+    Route::get('/survey-kepuasan', [FrontendSurveyController::class, 'index'])->name('survey.kepuasan');
+    Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])->name('survey.kepuasan.store');
 
     // Data Publik Sekretariat & Pokja (Inertia)
     Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
@@ -177,11 +184,20 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])
         ->name('laporan-kegiatan.review');
 
-    // ✅ TAMBAHKAN ROUTE APPROVE & REJECT
+    // Route APPROVE & REJECT
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/approve', [LaporanKegiatanController::class, 'approve'])
         ->name('laporan-kegiatan.approve');
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])
         ->name('laporan-kegiatan.reject');
+
+    // ============================================
+    // SURVEY KEPUASAN (Backend Admin)
+    // ============================================
+    Route::get('/survey', [SurveyController::class, 'index'])->name('survey.index');
+    Route::get('/survey/{survey}', [SurveyController::class, 'show'])->name('survey.show');
+    Route::patch('/survey/{survey}/toggle-status', [SurveyController::class, 'toggleStatus'])->name('survey.toggle-status');
+    Route::delete('/survey/{survey}', [SurveyController::class, 'destroy'])->name('survey.destroy');
+    Route::get('/survey/export', [SurveyController::class, 'export'])->name('survey.export');
 
     // User Management
     Route::resource('users', UserController::class)

@@ -94,6 +94,14 @@ interface InfografisItem {
     kategori?: string | null;
 }
 
+interface TestimoniSurveyItem {
+    id: number;
+    nama: string;
+    rating: number;
+    saran?: string | null;
+    created_at?: string;
+}
+
 interface WelcomeProps {
     year?: number;
     berita?: BeritaItem[];
@@ -102,6 +110,8 @@ interface WelcomeProps {
     agenda?: AgendaItem[];
     pengumuman?: PengumumanItem[];
     infografis?: InfografisItem[];
+    isSurveyActive?: boolean;
+    testimoniSurvey?: TestimoniSurveyItem[];
 }
 
 // ============================================================
@@ -283,7 +293,6 @@ const FALLBACK_IMAGES = {
 
 const YOUTUBE_CHANNEL = "https://youtube.com/@pkkkabtasikmalaya2649";
 
-// Logo yang ditampilkan berjalan (marquee) di bawah hero
 const HERO_LOGOS = [
     { id: "diskominfo", src: "/assets/logo/diskominfo.jpeg", alt: "Dishubkominfo" },
     { id: "pkk", src: "/assets/logo/logotasik.png", alt: "PKK Kab. Tasikmalaya" },
@@ -471,14 +480,14 @@ export default function Welcome({
     agenda = [],
     pengumuman = [],
     infografis = [],
+    isSurveyActive = false,
+    testimoniSurvey = [],
 }: WelcomeProps) {
     const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-    // Data
     const beritaTerbaru = useMemo(() => berita.slice(0, 6), [berita]);
     const galeriTerbaru = useMemo(() => galeri.slice(0, 8), [galeri]);
 
-    // Jam realtime, dipakai buat kotak tanggal di card Agenda (update tiap menit)
     const [now, setNow] = useState<Date>(() => new Date());
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 60000);
@@ -489,7 +498,6 @@ export default function Welcome({
         (typeof PROGRAM_POKOK)[number] | null
     >(null);
 
-    // Agenda yang sedang dibuka pada modal detail
     const [selectedAgenda, setSelectedAgenda] = useState<AgendaItem | null>(null);
 
     const agendaDay = now.toLocaleDateString("id-ID", { day: "2-digit" });
@@ -498,7 +506,6 @@ export default function Welcome({
         .toUpperCase()
         .replace(".", "");
 
-    // Kalau backend kirim daftar agenda, ini otomatis filter yang tanggalnya = hari ini
     const agendaHariIni = useMemo(() => {
         const todayStr = now.toDateString();
         return agenda.filter((item) => {
@@ -510,12 +517,10 @@ export default function Welcome({
         });
     }, [agenda, now]);
 
-    // Carousel
     const beritaCarousel = useCarousel(beritaTerbaru, 5000);
     const galeriCarousel = useCarousel(galeriTerbaru, 4000);
     const videoCarousel = useCarousel(videos, 5000);
 
-    // Animation Hooks
     const heroAnim = useScrollAnimation();
     const sambutanAnim = useScrollAnimation();
     const visiMisiAnim = useScrollAnimation();
@@ -525,7 +530,6 @@ export default function Welcome({
     const beritaListAnim = useScrollAnimation();
     const agendaAnim = useScrollAnimation();
 
-    // FAQ Toggle
     const toggleFaq = useCallback((index: number) => {
         setOpenFaq((prev) => (prev === index ? null : index));
     }, []);
@@ -534,7 +538,6 @@ export default function Welcome({
     // RENDER HELPERS
     // ============================================================
 
-    // RENDER BERITA CAROUSEL SLIDE
     const renderBeritaSlide = (item: BeritaItem, index: number, currentIndex: number) => {
         const imageSrc = getBeritaImageSrc(item);
         const href = getBeritaDetailHref(item);
@@ -584,7 +587,6 @@ export default function Welcome({
         );
     };
 
-    // RENDER GALERI SLIDE
     const renderGaleriSlide = (item: GaleriItem, index: number, currentIndex: number) => {
         const imageSrc = getGaleriImageSrc(item);
         const isActive = index === currentIndex;
@@ -623,7 +625,6 @@ export default function Welcome({
         );
     };
 
-    // RENDER VIDEO SLIDE
     const renderVideoItem = (item: VideoItem, index: number, currentIndex: number) => {
         const isActive = index === currentIndex;
         const videoId = extractYoutubeId(item.url);
@@ -669,7 +670,6 @@ export default function Welcome({
         );
     };
 
-    // CAROUSEL NAVIGATION BUTTONS
     const CarouselNav = ({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) => (
         <>
             <button
@@ -689,7 +689,6 @@ export default function Welcome({
         </>
     );
 
-    // CAROUSEL DOTS
     const CarouselDots = ({ total, current, onGoTo }: { total: number; current: number; onGoTo: (idx: number) => void }) => (
         <div className="flex justify-center gap-1.5 mt-3">
             {Array.from({ length: total }).map((_, idx) => (
@@ -758,9 +757,6 @@ export default function Welcome({
                     transform: translateX(4px);
                 }
 
-                /* ============================================================
-                LOGO RUNNING / MARQUEE - PERSEGI, TIDAK KOTAK, FULL WARNA
-                ============================================================ */
                 @keyframes logo-marquee {
                     0% {
                         transform: translateX(0);
@@ -851,9 +847,9 @@ export default function Welcome({
             ========================================================== */}
             <section
                 ref={heroAnim.ref}
-                className={`relative h-[560px] lg:h-[620px] flex items-center justify-center overflow-hidden anim-fade-up ${(
+                className={`relative h-[560px] lg:h-[620px] flex items-center justify-center overflow-hidden anim-fade-up ${
                     heroAnim.isVisible ? "show" : ""
-                )}`}
+                }`}
                 aria-label="Hero section"
             >
                 <div className="absolute inset-0">
@@ -901,7 +897,6 @@ export default function Welcome({
                         </Link>
                     </div>
 
-                    {/* ⭐ LOGO MARQUEE - BERGERAK KE KIRI, PERSEGI, FULL WARNA */}
                     <div className="logo-marquee-container">
                         <div className="logo-marquee-track">
                             {[...HERO_LOGOS, ...HERO_LOGOS, ...HERO_LOGOS].map((logo, idx) => (
@@ -927,9 +922,9 @@ export default function Welcome({
             <section
                 ref={sambutanAnim.ref}
                 id="tentang"
-                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${(
+                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
                     sambutanAnim.isVisible ? "show" : ""
-                )}`}
+                }`}
                 aria-labelledby="sambutan-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1010,9 +1005,9 @@ export default function Welcome({
             <section
                 ref={dataAnim.ref}
                 id="data"
-                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${(
+                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${
                     dataAnim.isVisible ? "show" : ""
-                )}`}
+                }`}
                 aria-labelledby="data-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1055,7 +1050,7 @@ export default function Welcome({
                                     </p>
 
                                     <span className="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium
-                                        bg-teal-600 text-white                                        group-hover:bg-white group-hover:text-teal-700 transition-colors">
+                                        bg-teal-600 text-white group-hover:bg-white group-hover:text-teal-700 transition-colors">
                                         Selengkapnya
                                     </span>
                                 </div>
@@ -1092,9 +1087,9 @@ export default function Welcome({
             ========================================================== */}
             <section
                 ref={beritaListAnim.ref}
-                className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${(
+                className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
                     beritaListAnim.isVisible ? "show" : ""
-                )}`}
+                }`}
                 aria-labelledby="program-pokok-title"
             >
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1186,9 +1181,9 @@ export default function Welcome({
             ========================================================== */}
             <section
                 ref={kabarAnim.ref}
-                className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${(
+                className={`py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
                     kabarAnim.isVisible ? "show" : ""
-                )}`}
+                }`}
                 aria-labelledby="kabar-berita-title"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1285,86 +1280,85 @@ export default function Welcome({
                 </div>
             </section>
 
-           {/* ==========================================================
-    INFO GRAFIS - 3 DATA TERBARU
-========================================================== */}
-{infografis && infografis.length > 0 && (
-    <section className="py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up show">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-                <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
-                    Publikasi
-                </p>
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
-                    Info Grafis
-                </h2>
-                <div className="w-10 h-1 bg-teal-600 rounded-full mx-auto mt-3" />
-            </div>
-
-            {/* Ganti grid menjadi 3 kolom di tengah */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
-                {infografis.map((item) => (
-                    <div
-                        key={item.id}
-                        className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col"
-                    >
-                        <div className="aspect-[3/4] bg-slate-200 relative overflow-hidden flex items-center justify-center">
-                            {item.gambar_url ? (
-                                <>
-                                    <img
-                                        src={item.gambar_url}
-                                        alt={item.judul}
-                                        className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105"
-                                        onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                            const parent = e.currentTarget.parentElement;
-                                            if (parent) {
-                                                const icon = parent.querySelector('.fallback-icon');
-                                                if (icon) icon.classList.remove('hidden');
-                                            }
-                                        }}
-                                    />
-                                    <Images size={32} className="fallback-icon hidden text-slate-400 absolute" />
-                                </>
-                            ) : (
-                                <Images size={32} className="text-slate-400 absolute" />
-                            )}
-
-                            {item.kategori && (
-                                <span className="absolute top-2 left-2 z-20 bg-teal-600/90 text-white text-[8px] font-semibold px-2 py-0.5 rounded-full">
-                                    {item.kategori}
-                                </span>
-                            )}
-
-                            <div className="absolute z-20 inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                <Link
-                                    href={`/infografis/${item.id}`}
-                                    className="w-full bg-white text-teal-700 font-semibold text-xs py-2 rounded-lg hover:bg-teal-50 transition-colors text-center"
-                                >
-                                    Lihat Detail
-                                </Link>
-                            </div>
+            {/* ==========================================================
+                INFO GRAFIS - 3 DATA TERBARU
+            ========================================================== */}
+            {infografis && infografis.length > 0 && (
+                <section className="py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up show">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-10">
+                            <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                                Publikasi
+                            </p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
+                                Info Grafis
+                            </h2>
+                            <div className="w-10 h-1 bg-teal-600 rounded-full mx-auto mt-3" />
                         </div>
-                        <div className="p-3 border-t border-slate-100 bg-white flex-1 flex items-center justify-center">
-                            <h3 className="text-slate-800 font-semibold text-xs sm:text-[13px] leading-snug line-clamp-2 text-center group-hover:text-teal-700 transition-colors">
-                                {item.judul}
-                            </h3>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-3xl mx-auto">
+                            {infografis.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col"
+                                >
+                                    <div className="aspect-[3/4] bg-slate-200 relative overflow-hidden flex items-center justify-center">
+                                        {item.gambar_url ? (
+                                            <>
+                                                <img
+                                                    src={item.gambar_url}
+                                                    alt={item.judul}
+                                                    className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                        const parent = e.currentTarget.parentElement;
+                                                        if (parent) {
+                                                            const icon = parent.querySelector('.fallback-icon');
+                                                            if (icon) icon.classList.remove('hidden');
+                                                        }
+                                                    }}
+                                                />
+                                                <Images size={32} className="fallback-icon hidden text-slate-400 absolute" />
+                                            </>
+                                        ) : (
+                                            <Images size={32} className="text-slate-400 absolute" />
+                                        )}
+
+                                        {item.kategori && (
+                                            <span className="absolute top-2 left-2 z-20 bg-teal-600/90 text-white text-[8px] font-semibold px-2 py-0.5 rounded-full">
+                                                {item.kategori}
+                                            </span>
+                                        )}
+
+                                        <div className="absolute z-20 inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                            <Link
+                                                href={`/infografis/${item.id}`}
+                                                className="w-full bg-white text-teal-700 font-semibold text-xs py-2 rounded-lg hover:bg-teal-50 transition-colors text-center"
+                                            >
+                                                Lihat Detail
+                                            </Link>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 border-t border-slate-100 bg-white flex-1 flex items-center justify-center">
+                                        <h3 className="text-slate-800 font-semibold text-xs sm:text-[13px] leading-snug line-clamp-2 text-center group-hover:text-teal-700 transition-colors">
+                                            {item.judul}
+                                        </h3>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                ))}
-            </div>
-        </div>
-    </section>
-)}
+                </section>
+            )}
 
             {/* ==========================================================
                 AGENDA KEGIATAN
             ========================================================== */}
             <section
                 ref={agendaAnim.ref}
-                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${(
+                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${
                     agendaAnim.isVisible ? "show" : ""
-                )}`}
+                }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -1598,29 +1592,67 @@ export default function Welcome({
                     )}
 
                     {/* ==========================================================
-                        SURVEY KEPUASAN MASYARAKAT
+                        TESTIMONI SURVEY (admin approve) + CTA SURVEY
                     ========================================================== */}
-                    <div className="mt-12 bg-gradient-to-r from-teal-700 to-teal-900 rounded-2xl p-6 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 anim-fade-up show">
-                        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
-                            <ClipboardList size={250} />
+                    {testimoniSurvey.length > 0 && (
+                        <div className="mt-12">
+                            <div className="text-center mb-8">
+                                <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                                    Suara Masyarakat
+                                </p>
+                                <h3 className="text-xl md:text-2xl font-semibold text-slate-900">
+                                    Apa Kata Mereka
+                                </h3>
+                                <div className="w-10 h-0.5 bg-teal-600 mx-auto mt-3" />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {testimoniSurvey.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm"
+                                    >
+                                        <p className="text-amber-400 text-sm tracking-wide mb-3">
+                                            {"★".repeat(Math.min(5, Math.max(0, item.rating)))}
+                                            {"☆".repeat(5 - Math.min(5, Math.max(0, item.rating)))}
+                                        </p>
+                                        <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                                            “
+                                            {item.saran?.trim() ||
+                                                "Terima kasih atas layanan TP PKK Kabupaten Tasikmalaya."}
+                                            ”
+                                        </p>
+                                        <p className="text-sm font-semibold text-slate-800">
+                                            {item.nama || "Anonim"}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="relative z-10 max-w-2xl">
-                            <h3 className="text-xl md:text-2xl font-bold mb-3">Survey Kepuasan Masyarakat</h3>
-                            <p className="text-teal-50 text-sm md:text-base leading-relaxed">
-                                Partisipasi Anda sangat berarti! Bantu kami meningkatkan kualitas layanan dan
-                                efektivitas program TP PKK Kabupaten Tasikmalaya dengan mengisi survey singkat.
-                            </p>
+                    )}
+
+                    {isSurveyActive && (
+                        <div className="mt-12 bg-gradient-to-r from-teal-700 to-teal-900 rounded-2xl p-6 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                            <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
+                                <ClipboardList size={250} />
+                            </div>
+                            <div className="relative z-10 max-w-2xl">
+                                <h3 className="text-xl md:text-2xl font-bold mb-3">Survey Kepuasan Masyarakat</h3>
+                                <p className="text-teal-50 text-sm md:text-base leading-relaxed">
+                                    Partisipasi Anda sangat berarti! Bantu kami meningkatkan kualitas layanan dan
+                                    efektivitas program TP PKK Kabupaten Tasikmalaya dengan mengisi survey singkat.
+                                </p>
+                            </div>
+                            <div className="relative z-10 flex-shrink-0 w-full md:w-auto">
+                                <Link
+                                    href="/survey-kepuasan"
+                                    className="inline-flex items-center justify-center w-full md:w-auto gap-2 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-8 py-3.5 rounded-xl transition-all hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-yellow-400/30"
+                                >
+                                    <ClipboardList size={20} />
+                                    Isi Survey Sekarang
+                                </Link>
+                            </div>
                         </div>
-                        <div className="relative z-10 flex-shrink-0 w-full md:w-auto">
-                            <Link
-                                href="/survey-kepuasan"
-                                className="inline-flex items-center justify-center w-full md:w-auto gap-2 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-8 py-3.5 rounded-xl transition-all hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-yellow-400/30"
-                            >
-                                <ClipboardList size={20} />
-                                Isi Survey Sekarang
-                            </Link>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </section>
 

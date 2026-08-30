@@ -28,6 +28,7 @@ import {
     CalendarDays,
     ClipboardList,
     Image,
+    Star, // ⬅️ TAMBAHKAN UNTUK ICON SURVEY
 } from "lucide-react";
 
 interface SidebarProps {
@@ -92,6 +93,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const hasAgenda = routeExists("be.agenda.index");
     const hasLaporan = routeExists("be.laporan-kegiatan.index");
     const hasInfografis = routeExists("be.infografis.index");
+    const hasSurvey = routeExists("be.survey.index"); // ⬅️ TAMBAHKAN!
 
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
         pokjaManagement:
@@ -472,6 +474,30 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             <span>Laporan Kegiatan</span>
                         </Link>
                     </>
+                )}
+
+                {/* ⭐ SURVEY KEPUASAN - TAMBAHKAN DI SINI! */}
+                {hasSurvey && (
+                    <Link
+                        href={safeRoute("be.survey.index")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
+                        ${
+                            isCurrentRoute("be.survey.*")
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <Star
+                            size={20}
+                            strokeWidth={2}
+                            className={`shrink-0 ${
+                                isCurrentRoute("be.survey.*")
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                            }`}
+                        />
+                        <span>Survey Kepuasan</span>
+                    </Link>
                 )}
 
                 {permissions.includes("view-users") && (

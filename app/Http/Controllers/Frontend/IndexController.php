@@ -12,6 +12,7 @@ use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
 use App\Models\Pokja4;
+use App\Models\Survey;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -19,6 +20,24 @@ class IndexController extends Controller
 {
     public function index()
     {
+        $isSurveyActive = true;
+
+        // Hanya pakai kolom yang ada: status = published
+        $testimoniSurvey = Survey::query()
+            ->where('status', 'published')
+            ->latest()
+            ->take(6)
+            ->get(['id', 'nama', 'rating', 'saran', 'created_at'])
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'nama' => $item->nama ?: 'Anonim',
+                    'rating' => (int) $item->rating,
+                    'saran' => $item->saran,
+                    'created_at' => $item->created_at,
+                ];
+            });
+
         $beritaTerbaru = Berita::where('status_publikasi', true)
             ->latest()
             ->take(6)
@@ -54,7 +73,6 @@ class IndexController extends Controller
                 ];
             });
 
-        // ✅ AMBIL DATA AGENDA UNTUK LANDING PAGE
         $agendaTerbaru = Agenda::where('status', '!=', 'cancelled')
             ->whereDate('tanggal', '>=', now()->subDays(1))
             ->orderBy('tanggal', 'asc')
@@ -66,19 +84,24 @@ class IndexController extends Controller
                     'id' => $item->id,
                     'judul' => $item->judul,
                     'deskripsi' => $item->deskripsi,
-                    'tanggal' => $item->tanggal instanceof \DateTime ? $item->tanggal->format('Y-m-d') : $item->tanggal,
-                    'waktu' => $item->waktu ? (method_exists($item->waktu, 'format') ? $item->waktu->format('H:i') : substr($item->waktu, 0, 5)) : null,
+                    'tanggal' => $item->tanggal instanceof \DateTime
+                        ? $item->tanggal->format('Y-m-d')
+                        : $item->tanggal,
+                    'waktu' => $item->waktu
+                        ? (method_exists($item->waktu, 'format')
+                            ? $item->waktu->format('H:i')
+                            : substr($item->waktu, 0, 5))
+                        : null,
                     'lokasi' => $item->lokasi,
                     'status' => $item->status,
                 ];
             });
 
-        // ✅ AMBIL DATA VIDEO (jika ada tabelnya)
         $videos = collect([]);
 
         $infografis = Infografis::where('status', 'active')
-            ->orderBy('created_at', 'desc')  // ⬅️ URUTKAN TERBARU
-            ->limit(3)                        // ⬅️ HANYA 3 DATA
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
             ->get()
             ->map(function ($item) {
                 return [
@@ -118,7 +141,7 @@ class IndexController extends Controller
                 'file_path' => '#',
                 'urutan' => 3,
             ],
-        ])->map(fn($item) => (object) $item);
+        ])->map(fn ($item) => (object) $item);
 
         $chartData = collect([
             ['year' => '2019', 'value' => 1.8],
@@ -151,12 +174,39 @@ class IndexController extends Controller
             'pokja3' => $pokja3,
             'pokja4' => $pokja4,
             'year' => (int) date('Y'),
+            'isSurveyActive' => $isSurveyActive,
+            'testimoniSurvey' => $testimoniSurvey,
         ]);
     }
 
     public function surveyKepuasan()
     {
-        return Inertia::render('Frontend/Survey/Index');
+        return Inertia::render('Frontend/Survey/Index', [
+            'isActive' => true,
+        ]);
+    }
+
+    public function surveyStore(Request $request)
+    {
+        $request->validate([
+            'nama' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'rating' => 'required|integer|min:1|max:5',
+            'saran' => 'nullable|string|max:1000',
+        ]);
+
+        Survey::create([
+            'nama' => $request->nama ?? 'Anonim',
+            'email' => $request->email,
+            'rating' => $request->rating,
+            'saran' => $request->saran,
+            'ip_address' => $request->ip(),
+            'status' => 'pending',
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Terima kasih atas partisipasi Anda! 🙏');
     }
 
     public function sejarah()
@@ -214,7 +264,6 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Program/Dokumen');
     }
 
-    // ===== LIST BERITA =====
     public function berita(Request $request)
     {
         $search = $request->get('search');
@@ -263,7 +312,6 @@ class IndexController extends Controller
         ]);
     }
 
-    // ===== DETAIL BERITA (slug ATAU id) =====
     public function showBerita($slug)
     {
         $berita = Berita::query()
@@ -284,10 +332,6 @@ class IndexController extends Controller
             'beritaLainnya' => $beritaLainnya,
         ]);
     }
-
-    // ============================================================
-    // DATA PUBLIK - (HANYA UNTUK INERTIA, BUKAN JSON)
-    // ============================================================
 
     public function sekretariatPublic(Request $request)
     {
@@ -398,10 +442,6 @@ class IndexController extends Controller
             'filters' => $request->only(['search', 'per_page']),
         ]);
     }
-
-    // ============================================================
-    // API JSON UNTUK AJAX / AXIOS (SEARCH & PAGINATION)
-    // ============================================================
 
     public function sekretariatJson(Request $request)
     {
