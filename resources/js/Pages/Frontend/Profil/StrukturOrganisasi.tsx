@@ -148,35 +148,6 @@ export default function StrukturOrganisasi() {
             <Head title="Struktur Organisasi - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Struktur Organisasi"
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/55" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
-                        Tentang Kami
-                    </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
-                        Struktur Organisasi
-                    </h1>
-                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-                        Mengenal formasi Tim Penggerak PKK Masa Bakti Tahun
-                        2025–2030 Kabupaten Tasikmalaya.
-                    </p>
-                </div>
-            </section>
-
             {/* ==================== PIMPINAN UTAMA ==================== */}
             <section className="py-20 lg:py-24 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -231,7 +202,7 @@ export default function StrukturOrganisasi() {
             {/* ==================== HIERARKI ==================== */}
             <section
                 id="hierarki"
-                className="py-20 lg:py-24 bg-slate-50 border-t border-slate-100"
+                className="py-20 lg:py-24 bg-white border-t border-slate-100"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-12">
@@ -315,7 +286,7 @@ export default function StrukturOrganisasi() {
                                     >
                                         <pokja.icon size={18} />
                                     </div>
-                                    <span className="text-[10px] font-semibold tracking-wide uppercase text-slate-400 bg-slate-50 px-2.5 py-1 rounded">
+                                    <span className="text-[10px] font-semibold tracking-wide uppercase text-slate-400 bg-white px-2.5 py-1 rounded">
                                         {pokja.label}
                                     </span>
                                 </div>
@@ -379,7 +350,7 @@ export default function StrukturOrganisasi() {
                         </div>
 
                         <div className="space-y-4 text-sm text-slate-700 border-t border-slate-100 pt-4">
-                            <div className="bg-slate-50 p-3 rounded-lg space-y-1">
+                            <div className="bg-white p-3 rounded-lg space-y-1">
                                 <p>
                                     <strong className="text-slate-900">
                                         Ketua:

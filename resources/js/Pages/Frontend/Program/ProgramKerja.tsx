@@ -227,35 +227,6 @@ export default function ProgramKerja() {
             <Head title="Program Kerja PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Program Kerja PKK"
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/55" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
-                        Program Kerja & Agenda Tahunan
-                    </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
-                        Program Kerja PKK
-                    </h1>
-                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-                        Inisiatif strategis, rencana kegiatan, serta 10 Program Pokok
-                        PKK Kabupaten Tasikmalaya Tahun 2026.
-                    </p>
-                </div>
-            </section>
-
             {/* ==================== 10 PROGRAM POKOK ==================== */}
             <section className="py-20 lg:py-24 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -307,7 +278,7 @@ export default function ProgramKerja() {
             </section>
 
             {/* ==================== RENCANA KERJA TAHUN 2026 (TABEL & DOWNLOAD) ==================== */}
-            <section className="py-20 lg:py-24 bg-slate-50 border-t border-slate-200">
+            <section className="py-20 lg:py-24 bg-white border-t border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
                         <div>
@@ -372,7 +343,7 @@ export default function ProgramKerja() {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
                                     {filteredData.map((item) => (
-                                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <tr key={item.id} className="hover:bg-white/80 transition-colors">
                                             <td className="py-4 px-6 font-medium text-slate-900 whitespace-nowrap">
                                                 <span className="inline-block bg-teal-50 text-teal-700 text-[10px] font-bold px-2.5 py-1 rounded">
                                                     {item.kategori}

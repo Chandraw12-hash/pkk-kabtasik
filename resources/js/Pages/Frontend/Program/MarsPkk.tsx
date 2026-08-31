@@ -23,52 +23,6 @@ export default function MarsPkk() {
             <Head title="Mars PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Mars PKK"
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/55" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
-                        Lagu Kebanggaan
-                    </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
-                        Mars PKK
-                    </h1>
-                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-8">
-                        Nyanyian pemersatu jiwa dan semangat juang kader PKK
-                        dalam mewujudkan keluarga yang sejahtera, bertaqwa, dan
-                        mandiri.
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                        <a
-                            href="#lirik"
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
-                        >
-                            <BookOpen size={15} />
-                            Baca Lirik
-                        </a>
-                        <a
-                            href="#"
-                            className="inline-flex items-center gap-2 border border-white/50 hover:bg-white/10 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
-                        >
-                            <Download size={15} />
-                            Unduh Partitur
-                        </a>
-                    </div>
-                </div>
-            </section>
-
             {/* ==================== AUDIO PLAYER ==================== */}
             <section className="py-8 bg-slate-50 border-b border-slate-100">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6">

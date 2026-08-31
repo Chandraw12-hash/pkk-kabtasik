@@ -111,35 +111,6 @@ export default function GaleriKegiatan({
             <Head title="Galeri Kegiatan - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Galeri Kegiatan PKK"
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/55" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
-                        Dokumentasi Visual
-                    </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
-                        Galeri Kegiatan
-                    </h1>
-                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-                        Mendokumentasikan setiap langkah pemberdayaan dan
-                        kesejahteraan keluarga di Kabupaten Tasikmalaya.
-                    </p>
-                </div>
-            </section>
-
             {/* ==================== FILTER & SEARCH ==================== */}
             <section className="py-8 bg-white border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -171,7 +142,7 @@ export default function GaleriKegiatan({
             </section>
 
             {/* ==================== GRID GALERI ==================== */}
-            <section className="py-16 lg:py-20 bg-slate-50">
+            <section className="py-16 lg:py-20 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {hasData ? (
                         <>
@@ -237,7 +208,7 @@ export default function GaleriKegiatan({
                                             className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
                                                 link.active
                                                     ? "bg-teal-600 text-white border-teal-600"
-                                                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-teal-400 disabled:opacity-40"
+                                                    : "bg-white text-slate-600 border-slate-200 hover:bg-white hover:border-teal-400 disabled:opacity-40"
                                             }`}
                                             dangerouslySetInnerHTML={{
                                                 __html: link.label,

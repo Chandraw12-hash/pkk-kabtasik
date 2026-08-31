@@ -240,35 +240,6 @@ export default function Berita({
             </Head>
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Pusat Informasi PKK Kabupaten Tasikmalaya"
-                        className="w-full h-full object-cover object-center"
-                        loading="eager"
-                        onError={(e) => {
-                            e.currentTarget.src = FALLBACK_IMAGE;
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/55" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
-                        Pusat Informasi
-                    </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
-                        Berita Terkini
-                    </h1>
-                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-                        Informasi terbaru mengenai kegiatan, program, dan
-                        prestasi Tim Penggerak PKK Kabupaten Tasikmalaya.
-                    </p>
-                </div>
-            </section>
-
             {/* ==================== FILTER & SEARCH ==================== */}
             <section className="py-6 bg-white border-b border-slate-100 sticky top-14 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -344,7 +315,7 @@ export default function Berita({
             </section>
 
             {/* ==================== GRID BERITA ==================== */}
-            <section className="py-16 lg:py-20 bg-slate-50 flex-1">
+            <section className="py-16 lg:py-20 bg-white flex-1">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {isLoading ? (
                         <div className="text-center py-20">

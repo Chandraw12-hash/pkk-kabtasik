@@ -96,46 +96,6 @@ export default function VisiMisi() {
             <Head title="Visi & Misi Gerakan PKK - TP PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section
-                ref={heroAnim.ref}
-                className={`relative min-h-[380px] lg:min-h-[420px] flex items-center justify-center overflow-hidden pt-20 pb-12 anim-fade-up ${
-                    heroAnim.isVisible ? "show" : ""
-                }`}
-            >
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Visi Misi Gerakan PKK"
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/60" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <div className="flex justify-center mb-3">
-                        <img
-                            src="/assets/logo/logotasik.png"
-                            alt="Logo PKK"
-                            className="h-14 w-auto drop-shadow-md"
-                            onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                            }}
-                        />
-                    </div>
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-2">
-                        TP PKK Kabupaten Tasikmalaya
-                    </span>
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight">
-                        VISI DAN MISI GERAKAN PKK
-                    </h1>
-                </div>
-            </section>
-
             {/* ==================== VISI ==================== */}
             <section
                 ref={visiAnim.ref}
@@ -158,7 +118,7 @@ export default function VisiMisi() {
             {/* ==================== MISI (KARTU) ==================== */}
             <section
                 ref={misiAnim.ref}
-                className={`py-12 lg:py-16 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                className={`py-12 lg:py-16 bg-white border-t border-slate-100 anim-fade-up ${
                     misiAnim.isVisible ? "show" : ""
                 }`}
             >
@@ -258,7 +218,7 @@ export default function VisiMisi() {
             {/* ==================== CTA ==================== */}
             <section
                 ref={ctaAnim.ref}
-                className={`py-12 lg:py-16 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                className={`py-12 lg:py-16 bg-white border-t border-slate-100 anim-fade-up ${
                     ctaAnim.isVisible ? "show" : ""
                 }`}
             >

@@ -71,46 +71,6 @@ export default function Dokumen() {
             <Head title="Dokumen Publik - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== HERO ==================== */}
-            <section className="relative h-[420px] lg:h-[480px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Dokumen Publik PKK"
-                        className="w-full h-full object-cover object-center"
-                        onError={(e) => {
-                            e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80";
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-black/55" />
-                </div>
-
-                <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <span className="inline-block text-teal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-5">
-                        Repositori Dokumen
-                    </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5">
-                        Dokumen Publik
-                    </h1>
-                    <p className="text-slate-200 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-8">
-                        Akses dan unduh berbagai dokumen resmi, panduan
-                        operasional, serta laporan kegiatan TP PKK Kabupaten
-                        Tasikmalaya.
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-300">
-                        <div className="flex items-center gap-2">
-                            <Clock size={14} className="text-teal-300" />
-                            <span>Update: 12 Oktober 2024</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <FileText size={14} className="text-teal-300" />
-                            <span>129 Berkas</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* ==================== SEARCH & FILTER ==================== */}
             <section className="py-8 bg-white border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -207,7 +167,7 @@ export default function Dokumen() {
             </section>
 
             {/* ==================== LAPORAN & EVALUASI ==================== */}
-            <section className="py-16 lg:py-20 bg-slate-50 border-t border-slate-100">
+            <section className="py-16 lg:py-20 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-8">
                         <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-1">
@@ -279,7 +239,7 @@ export default function Dokumen() {
             </section>
 
             {/* ==================== CTA HELP ==================== */}
-            <section className="py-16 lg:py-20 bg-slate-50 border-t border-slate-100">
+            <section className="py-16 lg:py-20 bg-white border-t border-slate-100">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
                     <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-3">
                         Bantuan
