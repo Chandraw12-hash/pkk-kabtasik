@@ -11,8 +11,6 @@ class SurveyController extends Controller
 {
     /**
      * Form survey publik.
-     * Form dibuka (bisa diganti setting nanti).
-     * Jangan pakai Survey::where('status','active') — itu bentrok dengan status jawaban.
      */
     public function index()
     {
@@ -22,25 +20,44 @@ class SurveyController extends Controller
     }
 
     /**
-     * Simpan jawaban masyarakat → masuk admin (pending).
-     * Baru tampil di landing kalau admin set status = published.
+     * Simpan jawaban masyarakat → pending (admin publish dulu).
+     * Anti-bot: honeypot + max 3x per IP per hari (+ throttle di route).
      */
     public function store(Request $request)
     {
+        // Honeypot: bot biasanya isi field tersembunyi "website"
+        if ($request->filled('website')) {
+            return redirect()
+                ->back()
+                ->with('success', 'Terima kasih atas partisipasi Anda!');
+        }
+
         $request->validate([
-            'nama' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-            'saran' => 'nullable|string|max:1000',
+            'nama'    => 'nullable|string|max:100',
+            'email'   => 'nullable|email|max:255',
+            'rating'  => 'required|integer|min:1|max:5',
+            'saran'   => 'nullable|string|max:500',
+            'website' => 'nullable|max:0', // harus kosong
         ]);
 
+        // Max 3 submit / IP / hari
+        $countToday = Survey::where('ip_address', $request->ip())
+            ->whereDate('created_at', today())
+            ->count();
+
+        if ($countToday >= 3) {
+            return redirect()
+                ->back()
+                ->with('error', 'Batas pengiriman survey hari ini sudah tercapai. Coba lagi besok.');
+        }
+
         Survey::create([
-            'nama' => $request->nama ?: 'Anonim',
-            'email' => $request->email,
-            'rating' => $request->rating,
-            'saran' => $request->saran,
+            'nama'       => $request->nama ?: 'Anonim',
+            'email'      => $request->email,
+            'rating'     => $request->rating,
+            'saran'      => $request->saran,
             'ip_address' => $request->ip(),
-            'status' => 'pending',
+            'status'     => 'pending',
         ]);
 
         return redirect()

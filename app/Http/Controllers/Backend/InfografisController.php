@@ -29,6 +29,12 @@ class InfografisController extends Controller
 
         $infografis = $query->paginate($perPage)->withQueryString();
 
+        // ⬅️ TAMBAHKAN INI - UBAH DATA JADI ARRAY DENGAN gambar_url
+        $infografis->getCollection()->transform(function ($item) {
+            $item->gambar_url = $item->gambar ? asset('storage/' . $item->gambar) : null;
+            return $item;
+        });
+
         $kategoriList = Infografis::select('kategori')->distinct()->whereNotNull('kategori')->pluck('kategori');
 
         return Inertia::render('Backend/Infografis/Index', [
@@ -76,6 +82,9 @@ class InfografisController extends Controller
 
     public function edit(Infografis $infografis)
     {
+        // ⬅️ TAMBAHKAN gambar_url DI EDIT
+        $infografis->gambar_url = $infografis->gambar ? asset('storage/' . $infografis->gambar) : null;
+
         return Inertia::render('Backend/Infografis/Edit', [
             'infografis' => $infografis,
         ]);

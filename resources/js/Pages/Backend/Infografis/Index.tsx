@@ -271,16 +271,23 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                                         {item.gambar_url ? (
                                             <button
                                                 onClick={() => openImageModal(item.gambar_url!)}
-                                                className="w-14 h-14 rounded-lg overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
+                                                className="w-14 h-14 rounded-lg overflow-hidden border border-slate-200 hover:shadow-md transition-shadow relative"
                                             >
                                                 <img
                                                     src={item.gambar_url}
                                                     alt={item.judul}
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => {
+                                                        console.log("Gambar error:", item.gambar_url);
                                                         e.currentTarget.style.display = "none";
+                                                        const parent = e.currentTarget.parentElement;
+                                                        if (parent) {
+                                                            const fallback = parent.querySelector('.fallback-icon');
+                                                            if (fallback) fallback.classList.remove('hidden');
+                                                        }
                                                     }}
                                                 />
+                                                <Image size={20} className="fallback-icon hidden text-slate-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                                             </button>
                                         ) : (
                                             <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
@@ -411,6 +418,10 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                             src={selectedImage}
                             alt="Preview"
                             className="max-w-full max-h-[80vh] object-contain"
+                            onError={(e) => {
+                                console.log("Preview error:", selectedImage);
+                                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%2394a3b8' font-size='16' font-family='sans-serif'%3EGambar tidak ditemukan%3C/text%3E%3C/svg%3E";
+                            }}
                         />
                         <button
                             onClick={() => setShowImageModal(false)}

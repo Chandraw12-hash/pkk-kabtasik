@@ -299,6 +299,13 @@ const HERO_LOGOS = [
     { id: "pemkab", src: "/assets/logo/pemkab.png", alt: "Pemerintah Kab. Tasikmalaya" },
 ];
 
+// ⭐ HERO SLIDE IMAGES
+const HERO_SLIDES = [
+    { id: 1, src: "/assets/images/hero.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya" },
+    { id: 2, src: "/assets/images/hero2.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya" },
+    { id: 3, src: "/assets/images/hero3.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya" },
+];
+
 // ============================================================
 // UTILITY FUNCTIONS
 // ============================================================
@@ -387,8 +394,52 @@ const useScrollAnimation = () => {
     return { ref, isVisible };
 };
 
+// ⭐ HERO CAROUSEL HOOK (AUTO SLIDE)
+const useHeroCarousel = (items: any[], interval: number = 5000) => {
+    const [index, setIndex] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const next = useCallback(() => {
+        if (items.length > 0) {
+            setIndex((prev) => (prev + 1) % items.length);
+        }
+    }, [items.length]);
+
+    const goTo = useCallback((idx: number) => {
+        if (idx >= 0 && idx < items.length) {
+            setIndex(idx);
+        }
+    }, [items.length]);
+
+    useEffect(() => {
+        if (items.length === 0 || isPaused) return;
+
+        timerRef.current = setInterval(next, interval);
+
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+        };
+    }, [items.length, interval, next, isPaused]);
+
+    const handleMouseEnter = useCallback(() => setIsPaused(true), []);
+    const handleMouseLeave = useCallback(() => setIsPaused(false), []);
+
+    return {
+        index,
+        goTo,
+        next,
+        isPaused,
+        handleMouseEnter,
+        handleMouseLeave,
+    };
+};
+
 // ============================================================
-// CAROUSEL HOOK
+// CAROUSEL HOOK (untuk yang lain)
 // ============================================================
 const useCarousel = (items: any[], interval: number = 4000) => {
     const [index, setIndex] = useState(0);
@@ -484,6 +535,7 @@ export default function Welcome({
     testimoniSurvey = [],
 }: WelcomeProps) {
     const [openFaq, setOpenFaq] = useState<number | null>(0);
+    const [selectedInfografis, setSelectedInfografis] = useState<InfografisItem | null>(null);
 
     const beritaTerbaru = useMemo(() => berita.slice(0, 6), [berita]);
     const galeriTerbaru = useMemo(() => galeri.slice(0, 8), [galeri]);
@@ -499,6 +551,9 @@ export default function Welcome({
     >(null);
 
     const [selectedAgenda, setSelectedAgenda] = useState<AgendaItem | null>(null);
+
+    // ⭐ HERO CAROUSEL
+    const heroCarousel = useHeroCarousel(HERO_SLIDES, 5000);
 
     const agendaDay = now.toLocaleDateString("id-ID", { day: "2-digit" });
     const agendaMonth = now
@@ -838,12 +893,29 @@ export default function Welcome({
                         max-width: 120px;
                     }
                 }
+
+                /* ⭐ HERO SLIDE ANIMATION */
+                .hero-slide {
+                    transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+                }
+                .hero-slide-enter {
+                    opacity: 0;
+                    transform: scale(1.05);
+                }
+                .hero-slide-active {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                .hero-slide-exit {
+                    opacity: 0;
+                    transform: scale(1.05);
+                }
             `}</style>
 
             <Navbar />
 
             {/* ==========================================================
-                HERO SECTION
+                HERO SECTION - AUTO SLIDE DENGAN 3 GAMBAR
             ========================================================== */}
             <section
                 ref={heroAnim.ref}
@@ -851,20 +923,34 @@ export default function Welcome({
                     heroAnim.isVisible ? "show" : ""
                 }`}
                 aria-label="Hero section"
+                onMouseEnter={heroCarousel.handleMouseEnter}
+                onMouseLeave={heroCarousel.handleMouseLeave}
             >
+                {/* Background Slides */}
                 <div className="absolute inset-0">
-                    <img
-                        src="/assets/images/hero.jpg"
-                        alt="Kegiatan Tim Penggerak PKK Kabupaten Tasikmalaya"
-                        className="w-full h-full object-cover object-center"
-                        loading="eager"
-                        onError={(e) => {
-                            e.currentTarget.src = getImageFallback("hero");
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-slate-900/65" aria-hidden="true" />
+                    {HERO_SLIDES.map((slide, idx) => (
+                        <div
+                            key={slide.id}
+                            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                                idx === heroCarousel.index ? "opacity-100" : "opacity-0"
+                            }`}
+                        >
+                            <img
+                                src={slide.src}
+                                alt={slide.alt}
+                                className="w-full h-full object-cover object-center"
+                                loading={idx === 0 ? "eager" : "lazy"}
+                                onError={(e) => {
+                                    e.currentTarget.src = getImageFallback("hero");
+                                }}
+                            />
+                            {/* Overlay gradien tipis biar teks tetap terbaca */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 via-slate-900/30 to-slate-900/50" aria-hidden="true" />
+                        </div>
+                    ))}
                 </div>
 
+                {/* Hero Content */}
                 <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
                     <span className="inline-block text-teal-200 text-xs font-medium tracking-[0.2em] uppercase mb-5">
                         Tim Penggerak PKK Kabupaten Tasikmalaya
@@ -897,6 +983,7 @@ export default function Welcome({
                         </Link>
                     </div>
 
+                    {/* ⭐ LOGO MARQUEE */}
                     <div className="logo-marquee-container">
                         <div className="logo-marquee-track">
                             {[...HERO_LOGOS, ...HERO_LOGOS, ...HERO_LOGOS].map((logo, idx) => (
@@ -914,6 +1001,22 @@ export default function Welcome({
                         </div>
                     </div>
                 </div>
+
+                {/* ⭐ Hero Slide Dots */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                    {HERO_SLIDES.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => heroCarousel.goTo(idx)}
+                            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                                idx === heroCarousel.index
+                                    ? "w-8 bg-white"
+                                    : "bg-white/50 hover:bg-white/80"
+                            }`}
+                            aria-label={`Slide ${idx + 1}`}
+                        />
+                    ))}
+                </div>
             </section>
 
             {/* ==========================================================
@@ -930,7 +1033,7 @@ export default function Welcome({
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
                         <div className="w-full lg:w-5/12">
-                            <div className="rounded-lg overflow-hidden border border-slate-200">
+                            <div className="rounded-3xl overflow-hidden shadow-xl">
                                 <img
                                     src="/assets/images/ketuapkk.png"
                                     alt="Hj. Retno Widyastuti, S.E, Ketua TP PKK Kabupaten Tasikmalaya"
@@ -941,7 +1044,7 @@ export default function Welcome({
                                     }}
                                 />
                             </div>
-                            <div className="mt-4">
+                            <div className="mt-4 text-center lg:text-left">
                                 <h3 className="text-lg font-semibold text-slate-900">
                                     Hj. Retno Widyastuti, S.E
                                 </h3>
@@ -1300,7 +1403,8 @@ export default function Welcome({
                             {infografis.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col"
+                                    className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col cursor-pointer"
+                                    onClick={() => setSelectedInfografis(item)}
                                 >
                                     <div className="aspect-[3/4] bg-slate-200 relative overflow-hidden flex items-center justify-center">
                                         {item.gambar_url ? (
@@ -1330,13 +1434,12 @@ export default function Welcome({
                                             </span>
                                         )}
 
-                                        <div className="absolute z-20 inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                            <Link
-                                                href={`/infografis/${item.id}`}
-                                                className="w-full bg-white text-teal-700 font-semibold text-xs py-2 rounded-lg hover:bg-teal-50 transition-colors text-center"
-                                            >
-                                                Lihat Detail
-                                            </Link>
+                                        {/* OVERLAY ZOOM */}
+                                        <div className="absolute z-20 inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <div className="bg-white/90 text-teal-700 font-semibold text-xs py-2 px-4 rounded-lg flex items-center gap-2 shadow-lg">
+                                                <Eye size={16} />
+                                                Klik untuk lihat
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="p-3 border-t border-slate-100 bg-white flex-1 flex items-center justify-center">
@@ -1351,8 +1454,36 @@ export default function Welcome({
                 </section>
             )}
 
+            {/* ⭐ MODAL FULLSCREEN GAMBAR INFOGRAFIS */}
+            {selectedInfografis && (
+                <div
+                    className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                    onClick={() => setSelectedInfografis(null)}
+                >
+                    <div className="relative max-w-5xl max-h-[90vh]">
+                        <img
+                            src={selectedInfografis.gambar_url || undefined}
+                            alt={selectedInfografis.judul}
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                            onError={(e) => {
+                                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%2394a3b8' font-size='20' font-family='sans-serif'%3EGambar tidak ditemukan%3C/text%3E%3C/svg%3E";
+                            }}
+                        />
+                        <button
+                            onClick={() => setSelectedInfografis(null)}
+                            className="absolute -top-12 right-0 text-white hover:text-teal-300 transition-colors text-2xl font-medium"
+                        >
+                            ✕ Tutup
+                        </button>
+                        <p className="absolute -bottom-10 left-0 right-0 text-center text-white/70 text-sm font-medium">
+                            {selectedInfografis.judul}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* ==========================================================
-                AGENDA KEGIATAN
+                AGENDA KEGIATAN + SURVEY
             ========================================================== */}
             <section
                 ref={agendaAnim.ref}
@@ -1592,10 +1723,10 @@ export default function Welcome({
                     )}
 
                     {/* ==========================================================
-                        TESTIMONI SURVEY (admin approve) + CTA SURVEY
+                        TESTIMONI SURVEY + CTA SURVEY (strip bersih)
                     ========================================================== */}
                     {testimoniSurvey.length > 0 && (
-                        <div className="mt-12">
+                        <div className="mt-14">
                             <div className="text-center mb-8">
                                 <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
                                     Suara Masyarakat
@@ -1605,11 +1736,11 @@ export default function Welcome({
                                 </h3>
                                 <div className="w-10 h-0.5 bg-teal-600 mx-auto mt-3" />
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
                                 {testimoniSurvey.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm"
+                                        className="bg-white border border-slate-200 rounded-xl p-5"
                                     >
                                         <p className="text-amber-400 text-sm tracking-wide mb-3">
                                             {"★".repeat(Math.min(5, Math.max(0, item.rating)))}
@@ -1631,26 +1762,22 @@ export default function Welcome({
                     )}
 
                     {isSurveyActive && (
-                        <div className="mt-12 bg-gradient-to-r from-teal-700 to-teal-900 rounded-2xl p-6 sm:p-8 lg:p-10 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-                            <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
-                                <ClipboardList size={250} />
-                            </div>
-                            <div className="relative z-10 max-w-2xl">
-                                <h3 className="text-xl md:text-2xl font-bold mb-3">Survey Kepuasan Masyarakat</h3>
-                                <p className="text-teal-50 text-sm md:text-base leading-relaxed">
-                                    Partisipasi Anda sangat berarti! Bantu kami meningkatkan kualitas layanan dan
-                                    efektivitas program TP PKK Kabupaten Tasikmalaya dengan mengisi survey singkat.
+                        <div className="mt-10 rounded-xl border border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-slate-900">
+                                    Survey kepuasan masyarakat
+                                </p>
+                                <p className="text-sm text-slate-500 mt-0.5 leading-relaxed">
+                                    Bantu penilaian singkat untuk peningkatan layanan informasi TP PKK.
                                 </p>
                             </div>
-                            <div className="relative z-10 flex-shrink-0 w-full md:w-auto">
-                                <Link
-                                    href="/survey-kepuasan"
-                                    className="inline-flex items-center justify-center w-full md:w-auto gap-2 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-8 py-3.5 rounded-xl transition-all hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-yellow-400/30"
-                                >
-                                    <ClipboardList size={20} />
-                                    Isi Survey Sekarang
-                                </Link>
-                            </div>
+                            <Link
+                                href="/survey-kepuasan"
+                                className="inline-flex items-center justify-center shrink-0 gap-2 bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
+                            >
+                                Isi survey
+                                <ArrowRight size={16} aria-hidden="true" />
+                            </Link>
                         </div>
                     )}
                 </div>

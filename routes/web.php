@@ -59,6 +59,11 @@ Route::as('fe.')->group(function () {
     Route::get('/survey-kepuasan', [FrontendSurveyController::class, 'index'])->name('survey.kepuasan');
     Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])->name('survey.kepuasan.store');
 
+    // Anti-bot: max 5 submit per 10 menit per IP
+    Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])
+        ->middleware('throttle:5,10')
+        ->name('survey.kepuasan.store');
+
     // Data Publik Sekretariat & Pokja (Inertia)
     Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
     Route::get('/pokja-1', [IndexController::class, 'pokja1Public'])->name('pokja1');
