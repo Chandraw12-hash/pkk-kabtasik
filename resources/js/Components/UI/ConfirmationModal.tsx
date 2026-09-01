@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, X } from "lucide-react";
 import Button from "./Button";
+
+type ConfirmVariant = "danger" | "success" | "warning";
 
 interface ConfirmationModalProps {
     show?: boolean;
@@ -9,7 +11,39 @@ interface ConfirmationModalProps {
     onConfirm: () => void;
     onCancel: () => void;
     processing?: boolean;
+    confirmText?: string;
+    cancelText?: string;
+    confirmVariant?: ConfirmVariant;
 }
+
+const variantStyles: Record<
+    ConfirmVariant,
+    {
+        iconWrapper: string;
+        icon: React.ReactNode;
+        buttonVariant: "danger" | "success" | "warning";
+        processingText: string;
+    }
+> = {
+    danger: {
+        iconWrapper: "bg-rose-50 text-rose-500 dark:bg-rose-700 dark:text-rose-200",
+        icon: <AlertCircle size={32} strokeWidth={2.5} />,
+        buttonVariant: "danger",
+        processingText: "Memproses...",
+    },
+    success: {
+        iconWrapper: "bg-emerald-50 text-emerald-500 dark:bg-emerald-700 dark:text-emerald-200",
+        icon: <CheckCircle2 size={32} strokeWidth={2.5} />,
+        buttonVariant: "success",
+        processingText: "Memproses...",
+    },
+    warning: {
+        iconWrapper: "bg-amber-50 text-amber-500 dark:bg-amber-700 dark:text-amber-200",
+        icon: <AlertCircle size={32} strokeWidth={2.5} />,
+        buttonVariant: "warning",
+        processingText: "Memproses...",
+    },
+};
 
 export default function ConfirmationModal({
     show = false,
@@ -18,6 +52,9 @@ export default function ConfirmationModal({
     onConfirm,
     onCancel,
     processing = false,
+    confirmText,
+    cancelText = "Batalkan",
+    confirmVariant = "danger",
 }: ConfirmationModalProps) {
     // animate: untuk trigger CSS transition (opacity/scale)
     const [animate, setAnimate] = useState(false);
@@ -40,6 +77,9 @@ export default function ConfirmationModal({
 
     if (!isVisible) return null;
 
+    const styles = variantStyles[confirmVariant] ?? variantStyles.danger;
+    const resolvedConfirmText = confirmText ?? "Ya, Hapus";
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 dark:bg-slate-900/40">
             {/* Backdrop */}
@@ -53,7 +93,7 @@ export default function ConfirmationModal({
             {/* Modal Content */}
             <div
                 className={`
-                relative bg-white w-full max-w-md rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50 
+                relative bg-white w-full max-w-md rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50
                 transition-all duration-300 ease-in-out transform
                 ${
                     animate
@@ -65,8 +105,10 @@ export default function ConfirmationModal({
                 <div className="p-8">
                     {/* Icon & Close Button */}
                     <div className="flex items-start justify-between mb-6">
-                        <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 dark:bg-rose-700 dark:text-rose-200">
-                            <AlertCircle size={32} strokeWidth={2.5} />
+                        <div
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${styles.iconWrapper}`}
+                        >
+                            {styles.icon}
                         </div>
                         <button
                             onClick={onCancel}
@@ -93,15 +135,15 @@ export default function ConfirmationModal({
                         disabled={processing}
                         className="flex-1 py-3 text-[13px]"
                     >
-                        Batalkan
+                        {cancelText}
                     </Button>
                     <Button
-                        variant="danger"
+                        variant={styles.buttonVariant}
                         onClick={onConfirm}
                         disabled={processing}
                         className="flex-1 py-3 text-[13px]"
                     >
-                        {processing ? "Menghapus..." : "Ya, Hapus"}
+                        {processing ? styles.processingText : resolvedConfirmText}
                     </Button>
                 </div>
             </div>

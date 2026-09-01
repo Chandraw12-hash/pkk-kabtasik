@@ -14,10 +14,12 @@ import {
     RotateCcw,
     ClipboardList,
     Eye,
-    CheckCircle,
     XCircle,
     ThumbsUp,
     ThumbsDown,
+    CheckCircle2,
+    AlertTriangle,
+    X,
 } from "lucide-react";
 import axios from "axios";
 
@@ -58,6 +60,12 @@ interface Props {
     };
 }
 
+interface FlashProps {
+    success?: string;
+    warning?: string;
+    error?: string;
+}
+
 const formatTanggal = (d?: string) => {
     if (!d) return "—";
     try {
@@ -80,6 +88,83 @@ const getStatusBadge = (status: string) => {
     };
     return statusMap[status] || { label: status, type: "default" };
 };
+
+// ============================================================
+// TOAST NOTIFICATION
+// Menampilkan flash message dari Laravel (success/warning/error)
+// yang sebelumnya dikirim server tapi tidak pernah ditampilkan.
+// ============================================================
+function FlashToast() {
+    const { props } = usePage<{ flash?: FlashProps }>();
+    const flash = props.flash || {};
+
+    const [visible, setVisible] = useState(false);
+    const [current, setCurrent] = useState<{
+        type: "success" | "warning" | "error";
+        message: string;
+    } | null>(null);
+
+    useEffect(() => {
+        const message = flash.success || flash.warning || flash.error;
+        if (!message) return;
+
+        const type = flash.success
+            ? "success"
+            : flash.warning
+            ? "warning"
+            : "error";
+
+        setCurrent({ type, message });
+        setVisible(true);
+
+        const timer = setTimeout(() => setVisible(false), 5000);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash.success, flash.warning, flash.error]);
+
+    if (!current) return null;
+
+    const styles = {
+        success: {
+            bg: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/40 dark:border-emerald-700",
+            text: "text-emerald-700 dark:text-emerald-200",
+            icon: <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />,
+        },
+        warning: {
+            bg: "bg-amber-50 border-amber-200 dark:bg-amber-900/40 dark:border-amber-700",
+            text: "text-amber-700 dark:text-amber-200",
+            icon: <AlertTriangle size={18} className="text-amber-500 shrink-0" />,
+        },
+        error: {
+            bg: "bg-rose-50 border-rose-200 dark:bg-rose-900/40 dark:border-rose-700",
+            text: "text-rose-700 dark:text-rose-200",
+            icon: <AlertTriangle size={18} className="text-rose-500 shrink-0" />,
+        },
+    }[current.type];
+
+    return (
+        <div
+            className={`fixed top-5 right-5 z-[200] max-w-sm w-full border rounded-2xl shadow-lg px-4 py-3 flex items-start gap-3 transition-all duration-300 ease-in-out ${
+                styles.bg
+            } ${
+                visible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-2 pointer-events-none"
+            }`}
+        >
+            {styles.icon}
+            <p className={`text-sm leading-relaxed flex-1 ${styles.text}`}>
+                {current.message}
+            </p>
+            <button
+                onClick={() => setVisible(false)}
+                className={`shrink-0 hover:opacity-70 ${styles.text}`}
+            >
+                <X size={16} />
+            </button>
+        </div>
+    );
+}
 
 export default function Index({ laporans, filters = {} }: Props) {
     const [search, setSearch] = useState(filters.search || "");
@@ -147,14 +232,6 @@ export default function Index({ laporans, filters = {} }: Props) {
         });
     };
 
-    const markReviewed = (item: Laporan) => {
-        router.patch(
-            route("be.laporan-kegiatan.review", item.id),
-            {},
-            { preserveScroll: true, onSuccess: () => refreshData() }
-        );
-    };
-
     const handleApprove = (item: Laporan) => {
         setActionTarget(item);
         setShowApproveModal(true);
@@ -220,6 +297,8 @@ export default function Index({ laporans, filters = {} }: Props) {
     return (
         <MainLayout>
             <Head title="Laporan Kegiatan" />
+
+            <FlashToast />
 
             <div className="mb-6">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -384,18 +463,6 @@ export default function Index({ laporans, filters = {} }: Props) {
                                         </button>
                                     )}
 
-                                    {/* Tombol Review - untuk pending juga (opsional) */}
-                                    {item.status === "pending" && (
-                                        <button
-                                            type="button"
-                                            onClick={() => markReviewed(item)}
-                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"
-                                            title="Tandai sudah direview"
-                                        >
-                                            <CheckCircle size={15} />
-                                        </button>
-                                    )}
-
                                     {/* Tombol Hapus */}
                                     <button
                                         type="button"
@@ -462,7 +529,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                 title="Hapus Laporan"
                 message={
                     selected
-                        ? `Hapus laporan “${selected.judul}”?`
+                        ? `Hapus laporan "${selected.judul}"?`
                         : "Hapus laporan ini?"
                 }
                 onConfirm={handleDelete}

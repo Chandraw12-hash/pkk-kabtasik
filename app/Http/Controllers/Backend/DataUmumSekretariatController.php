@@ -18,13 +18,13 @@ class DataUmumSekretariatController extends Controller
 
         $sekretariatData = DataUmumSekretariat::query()
             ->when($search, function ($query, $search) {
-                $query->where('kecamatan', 'like', "%{$search}%");
+                $query->where('kecamatan', 'like', "%{$search}%")
+                    ->orWhere('nama_kecamatan', 'like', "%{$search}%");
             })
             ->orderBy('kecamatan')
             ->paginate($perPage)
             ->withQueryString();
 
-        // 💡 PERBAIKAN: Selalu kembalikan Inertia render agar tidak terjadi error "plain JSON response was received"
         return Inertia::render('Backend/Sekretariat/Index', [
             'sekretariats' => $sekretariatData,
             'filters' => $request->only(['search', 'per_page']),
@@ -40,6 +40,10 @@ class DataUmumSekretariatController extends Controller
     {
         $validated = $request->validate([
             'kecamatan'         => 'required|string|max:255',
+            'nama_kecamatan'    => 'nullable|string|max:255', // 🔥 TAMBAHKAN
+            'kategori'          => 'nullable|string|max:255',
+            'judul_kegiatan'    => 'nullable|string|max:255',
+            'deskripsi'         => 'nullable|string',
             'jumlah_pkk_rw'     => 'nullable|integer|min:0',
             'jumlah_pkk_rt'     => 'nullable|integer|min:0',
             'jumlah_dasa_wisma' => 'nullable|integer|min:0',
@@ -54,6 +58,21 @@ class DataUmumSekretariatController extends Controller
             'kader_khusus_l'    => 'nullable|integer|min:0',
             'kader_khusus_p'    => 'nullable|integer|min:0',
         ]);
+
+        // 🔥 FIX: Jika nama_kecamatan kosong, isi dengan kecamatan
+        if (empty($validated['nama_kecamatan'])) {
+            $validated['nama_kecamatan'] = $validated['kecamatan'];
+        }
+
+        // 🔥 FIX: Jika kategori kosong, set default
+        if (empty($validated['kategori'])) {
+            $validated['kategori'] = 'Sekretariat';
+        }
+
+        // 🔥 FIX: Jika judul_kegiatan kosong, buat otomatis
+        if (empty($validated['judul_kegiatan'])) {
+            $validated['judul_kegiatan'] = 'Data Umum Sekretariat - ' . $validated['kecamatan'];
+        }
 
         DataUmumSekretariat::create($validated);
 
@@ -73,6 +92,10 @@ class DataUmumSekretariatController extends Controller
     {
         $validated = $request->validate([
             'kecamatan'         => 'required|string|max:255',
+            'nama_kecamatan'    => 'nullable|string|max:255',
+            'kategori'          => 'nullable|string|max:255',
+            'judul_kegiatan'    => 'nullable|string|max:255',
+            'deskripsi'         => 'nullable|string',
             'jumlah_pkk_rw'     => 'nullable|integer|min:0',
             'jumlah_pkk_rt'     => 'nullable|integer|min:0',
             'jumlah_dasa_wisma' => 'nullable|integer|min:0',
@@ -87,6 +110,16 @@ class DataUmumSekretariatController extends Controller
             'kader_khusus_l'    => 'nullable|integer|min:0',
             'kader_khusus_p'    => 'nullable|integer|min:0',
         ]);
+
+        // 🔥 FIX: Jika nama_kecamatan kosong, isi dengan kecamatan
+        if (empty($validated['nama_kecamatan'])) {
+            $validated['nama_kecamatan'] = $validated['kecamatan'];
+        }
+
+        // 🔥 FIX: Jika kategori kosong, set default
+        if (empty($validated['kategori'])) {
+            $validated['kategori'] = 'Sekretariat';
+        }
 
         $sekretariat->update($validated);
 

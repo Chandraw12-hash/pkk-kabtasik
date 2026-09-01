@@ -116,8 +116,21 @@ class IndexController extends Controller
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
-        $pokja3 = Pokja3::latest()->take(6)->get();
-        $pokja4 = Pokja4::latest()->take(6)->get();
+
+        // 🔥 FIX: TAMBAHKAN select() UNTUK POKJA 3 AGAR KOLOM YANG DIBUTUHKAN TERAMBIL
+        $pokja3 = Pokja3::select(
+            'id', 'kecamatan', 'nama_kecamatan',
+            'rumah_sehat', 'rumah_tidak_sehat',
+            'pemanfaatan_pekarangan', 'industri_rumah_tangga',
+            'kategori', 'judul_kegiatan', 'deskripsi', 'created_at'
+        )->latest()->take(6)->get();
+
+        // 🔥 FIX: TAMBAHKAN select() UNTUK POKJA 4 AGAR KOLOM YANG DIBUTUHKAN TERAMBIL
+        $pokja4 = Pokja4::select(
+            'id', 'kecamatan', 'nama_kecamatan',
+            'posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga',
+            'kategori', 'judul_kegiatan', 'deskripsi', 'created_at'
+        )->latest()->take(6)->get();
 
         $kebijakan = collect([
             [

@@ -61,7 +61,14 @@ class LaporanKegiatanController extends Controller
     }
 
     /**
-     * Approve laporan dan update statistik Pokja
+     * Approve laporan dan update statistik Pokja.
+     *
+     * FIX: Sebelumnya, laporan tanpa data kecamatan DITOLAK total —
+     * status tetap 'pending' dan admin tidak diberi tahu kenapa (flash
+     * 'warning' tidak pernah ditampilkan di frontend). Sekarang laporan
+     * TETAP BISA disetujui walau kecamatan kosong; hanya update statistik
+     * Pokja yang di-skip untuk laporan itu (karena statistik butuh
+     * kecamatan sebagai kunci rekap).
      */
     public function approve(Request $request, LaporanKegiatan $laporan_kegiatan)
     {
@@ -72,26 +79,31 @@ class LaporanKegiatanController extends Controller
                 ->with('warning', 'Laporan sudah disetujui sebelumnya.');
         }
 
-        // Cek apakah ada data angka
-        if (empty($laporan_kegiatan->data_angka)) {
-            return redirect()
-                ->back()
-                ->with('warning', 'Laporan tidak memiliki data angka untuk dimasukkan ke statistik.');
+        $statistikTerupdate = false;
+
+        // Statistik Pokja cuma bisa diupdate kalau ada kecamatan DAN data_angka.
+        // Kalau salah satu kosong, statistik di-skip tapi laporan tetap approved.
+        if (!empty($laporan_kegiatan->kecamatan) && !empty($laporan_kegiatan->data_angka)) {
+            $this->updateStatistikPokja($laporan_kegiatan);
+            $statistikTerupdate = true;
         }
 
-        // Update status laporan
+        // Update status laporan — ini SELALU jalan, terlepas dari statistik.
         $laporan_kegiatan->update([
             'status'      => 'approved',
             'reviewed_at' => now(),
             'reviewed_by' => $request->user()->id,
         ]);
 
-        // Update statistik Pokja
-        $this->updateStatistikPokja($laporan_kegiatan);
+        if ($statistikTerupdate) {
+            return redirect()
+                ->back()
+                ->with('success', 'Laporan berhasil disetujui dan data telah masuk ke statistik Pokja.');
+        }
 
         return redirect()
             ->back()
-            ->with('success', 'Laporan berhasil disetujui dan data telah masuk ke statistik Pokja.');
+            ->with('warning', 'Laporan disetujui, tetapi TIDAK masuk ke statistik Pokja karena data kecamatan atau data angka kosong. Lengkapi data laporan ini kalau ingin statistiknya tercatat.');
     }
 
     /**
@@ -168,7 +180,6 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        // Increment data berdasarkan angka dari laporan
         $pokja->increment('pkbn_l', $dataAngka['pkbn_l'] ?? 0);
         $pokja->increment('pkbn_p', $dataAngka['pkbn_p'] ?? 0);
         $pokja->increment('pkdrt_l', $dataAngka['pkdrt_l'] ?? 0);

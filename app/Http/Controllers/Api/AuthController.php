@@ -17,15 +17,25 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // FIX: username & email sama-sama opsional, tapi salah satu WAJIB ada.
+        // Sebelumnya 'username' => 'required' bikin validasi selalu gagal
+        // kalau Flutter cuma kirim 'email' — dan itu yang bikin redirect 302.
         $request->validate([
-            'username' => 'required|string',
+            'username' => 'required_without:email|string',
             'email' => 'required_without:username|email',
             'password' => 'required|string',
         ]);
 
-        // Cari user berdasarkan username ATAU email
-        $user = User::where('username', $request->username)
-            ->orWhere('email', $request->email)
+        // FIX: bungkus dalam closure supaya orWhere tidak ikut match
+        // saat salah satu field (username/email) tidak dikirim/null.
+        $user = User::where(function ($query) use ($request) {
+                if ($request->filled('username')) {
+                    $query->where('username', $request->username);
+                }
+                if ($request->filled('email')) {
+                    $query->orWhere('email', $request->email);
+                }
+            })
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {

@@ -6,19 +6,67 @@ import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { ArrowLeft, Save } from "lucide-react";
 
+// 🔥 DAFTAR KECAMATAN
+const KECAMATAN_OPTIONS = [
+    "Bantarkalong", "Bojongasih", "Bojonggambir", "Ciawi", "Cibalong",
+    "Cigalontang", "Cikalong", "Cikatomas", "Cineam", "Cipatujah",
+    "Cisayong", "Culamega", "Gunungtanjung", "Jamanis", "Jatiwaras",
+    "Kadipaten", "Karangjaya", "Karangnunggal", "Leuwisari", "Mangunreja",
+    "Manonjaya", "Padakembang", "Pagerageung", "Pancatengah", "Parungponteng",
+    "Puspahiang", "Rajapolah", "Salawu", "Salopa", "Sariwangi",
+    "Singaparna", "Sodonghilir", "Sukahening", "Sukaraja", "Sukarame",
+    "Sukaratu", "Sukaresik", "Tanjungjaya", "Taraju"
+];
+
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
-        kategori: "",
+        // 🔥 SEMUA FIELD YANG ADA DI DATABASE
+        kecamatan: "",
+        nama_kecamatan: "",
+        kategori: "Sekretariat",
         judul_kegiatan: "",
         deskripsi: "",
+        jumlah_pkk_rw: "",
+        jumlah_pkk_rt: "",
+        jumlah_dasa_wisma: "",
+        jumlah_krt: "",
+        jumlah_kk: "",
+        jiwa_l: "",
+        jiwa_p: "",
+        tp_pkk_l: "",
+        tp_pkk_p: "",
+        kader_umum_l: "",
+        kader_umum_p: "",
+        kader_khusus_l: "",
+        kader_khusus_p: "",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("be.sekretariat.store"));
+        // 🔥 Konversi string ke number untuk field angka
+        const formData = {
+            ...data,
+            jumlah_pkk_rw: parseInt(data.jumlah_pkk_rw) || 0,
+            jumlah_pkk_rt: parseInt(data.jumlah_pkk_rt) || 0,
+            jumlah_dasa_wisma: parseInt(data.jumlah_dasa_wisma) || 0,
+            jumlah_krt: parseInt(data.jumlah_krt) || 0,
+            jumlah_kk: parseInt(data.jumlah_kk) || 0,
+            jiwa_l: parseInt(data.jiwa_l) || 0,
+            jiwa_p: parseInt(data.jiwa_p) || 0,
+            tp_pkk_l: parseInt(data.tp_pkk_l) || 0,
+            tp_pkk_p: parseInt(data.tp_pkk_p) || 0,
+            kader_umum_l: parseInt(data.kader_umum_l) || 0,
+            kader_umum_p: parseInt(data.kader_umum_p) || 0,
+            kader_khusus_l: parseInt(data.kader_khusus_l) || 0,
+            kader_khusus_p: parseInt(data.kader_khusus_p) || 0,
+        };
+        post(route("be.sekretariat.store"), { data: formData });
     };
 
     const selectClass =
+        "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
+
+    const inputClass =
         "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
 
     return (
@@ -37,7 +85,7 @@ export default function Create() {
                         Tambah Data Sekretariat
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Tambah data kegiatan atau program kerja Sekretariat TP PKK
+                        Tambah data umum sekretariat per kecamatan
                     </p>
                 </div>
             </div>
@@ -45,44 +93,284 @@ export default function Create() {
             <Card className="dark:bg-slate-800 dark:border-slate-700">
                 <form onSubmit={submit} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="md:col-span-2">
+                        {/* ===== KECAMATAN ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Kecamatan <span className="text-rose-500">*</span>
+                            </label>
+                            <select
+                                value={data.kecamatan}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setData("kecamatan", val);
+                                    setData("nama_kecamatan", val);
+                                }}
+                                className={selectClass}
+                            >
+                                <option value="">Pilih Kecamatan</option>
+                                {KECAMATAN_OPTIONS.map((kec) => (
+                                    <option key={kec} value={kec}>
+                                        {kec}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.kecamatan && <div className="text-red-500 text-xs mt-1">{errors.kecamatan}</div>}
+                        </div>
+
+                        {/* ===== KATEGORI ===== */}
+                        <div>
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
                                 Kategori <span className="text-rose-500">*</span>
                             </label>
-                            <TextInput
-                                placeholder="Contoh: Umum, Keuangan, Program, dll"
+                            <select
                                 value={data.kategori}
                                 onChange={(e) => setData("kategori", e.target.value)}
-                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                            />
+                                className={selectClass}
+                            >
+                                <option value="Sekretariat">Sekretariat</option>
+                                <option value="Umum">Umum</option>
+                            </select>
                             {errors.kategori && <div className="text-red-500 text-xs mt-1">{errors.kategori}</div>}
                         </div>
 
+                        {/* ===== JUDUL KEGIATAN ===== */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
                                 Judul Kegiatan <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                placeholder="Contoh: Rapat Koordinasi Bulanan"
+                                placeholder="Contoh: Data Umum Sekretariat - Kecamatan X"
                                 value={data.judul_kegiatan}
                                 onChange={(e) => setData("judul_kegiatan", e.target.value)}
-                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                className={inputClass}
                             />
                             {errors.judul_kegiatan && <div className="text-red-500 text-xs mt-1">{errors.judul_kegiatan}</div>}
                         </div>
 
+                        {/* ===== DESKRIPSI ===== */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Deskripsi / Keterangan
+                                Deskripsi
                             </label>
                             <textarea
                                 value={data.deskripsi}
                                 onChange={(e) => setData("deskripsi", e.target.value)}
-                                rows={4}
-                                placeholder="Penjelasan singkat mengenai kegiatan..."
+                                rows={3}
+                                placeholder="Penjelasan singkat mengenai data..."
                                 className={selectClass}
                             />
                             {errors.deskripsi && <div className="text-red-500 text-xs mt-1">{errors.deskripsi}</div>}
+                        </div>
+
+                        {/* ===== DIVIDER ===== */}
+                        <div className="md:col-span-2">
+                            <hr className="border-slate-200 dark:border-slate-700" />
+                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-3">
+                                Data Jumlah Kelompok & Penduduk
+                            </p>
+                        </div>
+
+                        {/* ===== JUMLAH PKK RW ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jumlah PKK RW
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jumlah_pkk_rw}
+                                onChange={(e) => setData("jumlah_pkk_rw", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jumlah_pkk_rw && <div className="text-red-500 text-xs mt-1">{errors.jumlah_pkk_rw}</div>}
+                        </div>
+
+                        {/* ===== JUMLAH PKK RT ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jumlah PKK RT
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jumlah_pkk_rt}
+                                onChange={(e) => setData("jumlah_pkk_rt", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jumlah_pkk_rt && <div className="text-red-500 text-xs mt-1">{errors.jumlah_pkk_rt}</div>}
+                        </div>
+
+                        {/* ===== JUMLAH DASAWISMA ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jumlah Dasawisma
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jumlah_dasa_wisma}
+                                onChange={(e) => setData("jumlah_dasa_wisma", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jumlah_dasa_wisma && <div className="text-red-500 text-xs mt-1">{errors.jumlah_dasa_wisma}</div>}
+                        </div>
+
+                        {/* ===== JUMLAH KRT ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jumlah KRT
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jumlah_krt}
+                                onChange={(e) => setData("jumlah_krt", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jumlah_krt && <div className="text-red-500 text-xs mt-1">{errors.jumlah_krt}</div>}
+                        </div>
+
+                        {/* ===== JUMLAH KK ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jumlah KK
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jumlah_kk}
+                                onChange={(e) => setData("jumlah_kk", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jumlah_kk && <div className="text-red-500 text-xs mt-1">{errors.jumlah_kk}</div>}
+                        </div>
+
+                        {/* ===== DIVIDER ===== */}
+                        <div className="md:col-span-2">
+                            <hr className="border-slate-200 dark:border-slate-700" />
+                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-3">
+                                Data Jiwa & Kader
+                            </p>
+                        </div>
+
+                        {/* ===== JIWA L ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jiwa Laki-laki
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jiwa_l}
+                                onChange={(e) => setData("jiwa_l", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jiwa_l && <div className="text-red-500 text-xs mt-1">{errors.jiwa_l}</div>}
+                        </div>
+
+                        {/* ===== JIWA P ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Jiwa Perempuan
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.jiwa_p}
+                                onChange={(e) => setData("jiwa_p", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.jiwa_p && <div className="text-red-500 text-xs mt-1">{errors.jiwa_p}</div>}
+                        </div>
+
+                        {/* ===== TP PKK L ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                TP PKK Laki-laki
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.tp_pkk_l}
+                                onChange={(e) => setData("tp_pkk_l", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.tp_pkk_l && <div className="text-red-500 text-xs mt-1">{errors.tp_pkk_l}</div>}
+                        </div>
+
+                        {/* ===== TP PKK P ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                TP PKK Perempuan
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.tp_pkk_p}
+                                onChange={(e) => setData("tp_pkk_p", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.tp_pkk_p && <div className="text-red-500 text-xs mt-1">{errors.tp_pkk_p}</div>}
+                        </div>
+
+                        {/* ===== KADER UMUM L ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Kader Umum Laki-laki
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.kader_umum_l}
+                                onChange={(e) => setData("kader_umum_l", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.kader_umum_l && <div className="text-red-500 text-xs mt-1">{errors.kader_umum_l}</div>}
+                        </div>
+
+                        {/* ===== KADER UMUM P ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Kader Umum Perempuan
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.kader_umum_p}
+                                onChange={(e) => setData("kader_umum_p", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.kader_umum_p && <div className="text-red-500 text-xs mt-1">{errors.kader_umum_p}</div>}
+                        </div>
+
+                        {/* ===== KADER KHUSUS L ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Kader Khusus Laki-laki
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.kader_khusus_l}
+                                onChange={(e) => setData("kader_khusus_l", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.kader_khusus_l && <div className="text-red-500 text-xs mt-1">{errors.kader_khusus_l}</div>}
+                        </div>
+
+                        {/* ===== KADER KHUSUS P ===== */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Kader Khusus Perempuan
+                            </label>
+                            <TextInput
+                                type="number"
+                                placeholder="0"
+                                value={data.kader_khusus_p}
+                                onChange={(e) => setData("kader_khusus_p", e.target.value)}
+                                className={inputClass}
+                            />
+                            {errors.kader_khusus_p && <div className="text-red-500 text-xs mt-1">{errors.kader_khusus_p}</div>}
                         </div>
                     </div>
 
