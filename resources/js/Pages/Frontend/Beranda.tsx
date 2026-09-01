@@ -12,12 +12,9 @@ import {
     Stethoscope,
     Globe,
     ChevronRight,
-    ChevronLeft,
     ArrowRight,
-    Target,
     Eye,
     Newspaper,
-    Megaphone,
     X,
     Sparkles,
     Handshake,
@@ -29,8 +26,6 @@ import {
     ClipboardList,
     CalendarDays,
     Images,
-    Youtube,
-    Play,
 } from "lucide-react";
 
 // ============================================================
@@ -275,23 +270,12 @@ const PROGRAM_POKOK = [
     },
 ];
 
-const MISI_LIST = [
-    "Meningkatkan kualitas sumber daya manusia melalui pendidikan, keterampilan, dan pembinaan karakter keluarga.",
-    "Mewujudkan keluarga yang sehat, sejahtera, dan mandiri melalui 10 Program Pokok PKK.",
-    "Memperkuat gotong royong dan kepedulian sosial di seluruh jenjang masyarakat.",
-    "Mendorong partisipasi aktif perempuan dalam pembangunan keluarga dan masyarakat.",
-    "Menjaga kelestarian lingkungan hidup serta meningkatkan kualitas kehidupan keluarga yang berkelanjutan.",
-];
-
 const FALLBACK_IMAGES = {
     hero: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
     ketua: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
     berita: "/assets/images/default-berita.jpg",
     galeri: "/assets/images/default-galeri.jpg",
-    youtube: "https://img.youtube.com/vi/",
 };
-
-const YOUTUBE_CHANNEL = "https://youtube.com/@pkkkabtasikmalaya2649";
 
 const HERO_LOGOS = [
     { id: "diskominfo", src: "/assets/logo/diskominfo.jpeg", alt: "Dishubkominfo" },
@@ -309,61 +293,8 @@ const HERO_SLIDES = [
 // ============================================================
 // UTILITY FUNCTIONS
 // ============================================================
-const getBeritaImageSrc = (item: BeritaItem): string | null => {
-    return item.foto_url || (item.foto ? `/storage/${item.foto}` : null) || item.image || null;
-};
-
-const getGaleriImageSrc = (item: GaleriItem): string | null => {
-    return item.foto_url || (item.foto ? `/storage/${item.foto}` : null) || null;
-};
-
-const getBeritaDetailHref = (item: BeritaItem): string => {
-    if (item.slug) return `/berita/${item.slug}`;
-    return `/berita/${item.id}`;
-};
-
-const formatTanggal = (date: string | undefined): string => {
-    if (!date) return "Tanggal tidak tersedia";
-    try {
-        return new Date(date).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-    } catch {
-        return "Tanggal tidak tersedia";
-    }
-};
-
-const formatTanggalPendek = (date: string | undefined): string => {
-    if (!date) return "-";
-    try {
-        return new Date(date).toLocaleDateString("id-ID", {
-            day: "2-digit",
-            month: "short",
-        }).toUpperCase();
-    } catch {
-        return "-";
-    }
-};
-
 const getImageFallback = (type: "hero" | "ketua" | "berita" | "galeri"): string => {
     return FALLBACK_IMAGES[type];
-};
-
-const getYoutubeThumbnail = (videoId: string): string => {
-    return `${FALLBACK_IMAGES.youtube}${videoId}/hqdefault.jpg`;
-};
-
-const extractYoutubeId = (url: string): string | null => {
-    if (!url) return null;
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/);
-    return match ? match[1] : null;
-};
-
-const stripHtml = (html: string | undefined): string => {
-    if (!html) return "";
-    return html.replace(/<[^>]*>?/gm, "").substring(0, 150);
 };
 
 // ============================================================
@@ -439,88 +370,6 @@ const useHeroCarousel = (items: any[], interval: number = 5000) => {
 };
 
 // ============================================================
-// CAROUSEL HOOK (untuk yang lain)
-// ============================================================
-const useCarousel = (items: any[], interval: number = 4000) => {
-    const [index, setIndex] = useState(0);
-    const [isPaused, setIsPaused] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const touchStartX = useRef<number>(0);
-    const touchEndX = useRef<number>(0);
-
-    useEffect(() => {
-        setIndex(0);
-    }, [items.length]);
-
-    const next = useCallback(() => {
-        if (items.length > 0) {
-            setIndex((prev) => (prev + 1) % items.length);
-        }
-    }, [items.length]);
-
-    const prev = useCallback(() => {
-        if (items.length > 0) {
-            setIndex((prev) => (prev - 1 + items.length) % items.length);
-        }
-    }, [items.length]);
-
-    const goTo = useCallback((idx: number) => {
-        if (idx >= 0 && idx < items.length) {
-            setIndex(idx);
-        }
-    }, [items.length]);
-
-    useEffect(() => {
-        if (items.length === 0 || isPaused) return;
-
-        timerRef.current = setInterval(next, interval);
-
-        return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
-        };
-    }, [items.length, interval, next, isPaused]);
-
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
-        touchStartX.current = e.touches[0].clientX;
-        setIsPaused(true);
-    }, []);
-
-    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-        touchEndX.current = e.changedTouches[0].clientX;
-        const diff = touchStartX.current - touchEndX.current;
-
-        if (Math.abs(diff) > 50) {
-            if (diff > 0) {
-                next();
-            } else {
-                prev();
-            }
-        }
-
-        setTimeout(() => setIsPaused(false), 3000);
-    }, [next, prev]);
-
-    const handleMouseEnter = useCallback(() => setIsPaused(true), []);
-    const handleMouseLeave = useCallback(() => setIsPaused(false), []);
-
-    return {
-        index,
-        setIndex: goTo,
-        next,
-        prev,
-        isPaused,
-        setIsPaused,
-        handleTouchStart,
-        handleTouchEnd,
-        handleMouseEnter,
-        handleMouseLeave,
-    };
-};
-
-// ============================================================
 // MAIN COMPONENT
 // ============================================================
 export default function Welcome({
@@ -534,11 +383,9 @@ export default function Welcome({
     isSurveyActive = false,
     testimoniSurvey = [],
 }: WelcomeProps) {
-    const [openFaq, setOpenFaq] = useState<number | null>(0);
     const [selectedInfografis, setSelectedInfografis] = useState<InfografisItem | null>(null);
 
     const beritaTerbaru = useMemo(() => berita.slice(0, 6), [berita]);
-    const galeriTerbaru = useMemo(() => galeri.slice(0, 8), [galeri]);
 
     const [now, setNow] = useState<Date>(() => new Date());
     useEffect(() => {
@@ -555,217 +402,18 @@ export default function Welcome({
     // ⭐ HERO CAROUSEL
     const heroCarousel = useHeroCarousel(HERO_SLIDES, 5000);
 
-    const agendaDay = now.toLocaleDateString("id-ID", { day: "2-digit" });
-    const agendaMonth = now
-        .toLocaleDateString("id-ID", { month: "short" })
-        .toUpperCase()
-        .replace(".", "");
-
-    const agendaHariIni = useMemo(() => {
-        const todayStr = now.toDateString();
-        return agenda.filter((item) => {
-            try {
-                return new Date(item.tanggal).toDateString() === todayStr;
-            } catch {
-                return false;
-            }
-        });
-    }, [agenda, now]);
-
-    const beritaCarousel = useCarousel(beritaTerbaru, 5000);
-    const galeriCarousel = useCarousel(galeriTerbaru, 4000);
-    const videoCarousel = useCarousel(videos, 5000);
-
     const heroAnim = useScrollAnimation();
     const sambutanAnim = useScrollAnimation();
-    const visiMisiAnim = useScrollAnimation();
     const dataAnim = useScrollAnimation();
-    const faqAnim = useScrollAnimation();
     const kabarAnim = useScrollAnimation();
     const beritaListAnim = useScrollAnimation();
     const agendaAnim = useScrollAnimation();
-
-    const toggleFaq = useCallback((index: number) => {
-        setOpenFaq((prev) => (prev === index ? null : index));
-    }, []);
-
-    // ============================================================
-    // RENDER HELPERS
-    // ============================================================
-
-    const renderBeritaSlide = (item: BeritaItem, index: number, currentIndex: number) => {
-        const imageSrc = getBeritaImageSrc(item);
-        const href = getBeritaDetailHref(item);
-        const isActive = index === currentIndex;
-        const tanggal = formatTanggal(item.created_at || item.tanggal);
-
-        return (
-            <Link
-                key={item.id}
-                href={href}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                    isActive ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
-            >
-                <div className="w-full h-full rounded-xl overflow-hidden bg-slate-100 group">
-                    {imageSrc ? (
-                        <img
-                            src={imageSrc}
-                            alt={item.judul}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                            }}
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-100">
-                            <Newspaper size={36} strokeWidth={1.5} className="text-slate-300" />
-                        </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <div className="bg-slate-900/60 backdrop-blur-md rounded-lg p-3">
-                            <p className="text-teal-300 text-xs font-medium mb-1">
-                                {tanggal}
-                            </p>
-                            <h3 className="text-white font-semibold text-sm sm:text-base leading-snug line-clamp-2">
-                                {item.judul}
-                            </h3>
-                            <span className="inline-flex items-center gap-1 text-teal-300 text-xs font-medium mt-2">
-                                Baca Selengkapnya
-                                <ArrowRight size={12} />
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        );
-    };
-
-    const renderGaleriSlide = (item: GaleriItem, index: number, currentIndex: number) => {
-        const imageSrc = getGaleriImageSrc(item);
-        const isActive = index === currentIndex;
-
-        return (
-            <div
-                key={item.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                    isActive ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
-            >
-                <div className="w-full h-full rounded-xl overflow-hidden bg-slate-100">
-                    {imageSrc ? (
-                        <img
-                            src={imageSrc}
-                            alt={item.caption || "Galeri PKK"}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                            }}
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                            <Images size={48} className="text-slate-300" />
-                        </div>
-                    )}
-                    {item.caption && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/60 to-transparent p-3">
-                            <p className="text-white text-sm font-medium line-clamp-1">
-                                {item.caption}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    const renderVideoItem = (item: VideoItem, index: number, currentIndex: number) => {
-        const isActive = index === currentIndex;
-        const videoId = extractYoutubeId(item.url);
-        const thumbnail = item.thumbnail || (videoId ? getYoutubeThumbnail(videoId) : null);
-
-        return (
-            <a
-                key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                    isActive ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
-            >
-                <div className="w-full h-full rounded-xl overflow-hidden bg-slate-800 group">
-                    {thumbnail ? (
-                        <img
-                            src={thumbnail}
-                            alt={item.judul}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                            }}
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-700">
-                            <Youtube size={48} className="text-slate-400" />
-                        </div>
-                    )}
-                    <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full bg-red-600/90 group-hover:bg-red-500 text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
-                            <Play size={24} className="ml-1" />
-                        </div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent p-3">
-                        <p className="text-white text-sm font-medium line-clamp-1">
-                            {item.judul}
-                        </p>
-                    </div>
-                </div>
-            </a>
-        );
-    };
-
-    const CarouselNav = ({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) => (
-        <>
-            <button
-                onClick={onPrev}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center transition-colors shadow-lg z-20"
-                aria-label="Previous"
-            >
-                <ChevronLeft size={18} />
-            </button>
-            <button
-                onClick={onNext}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center transition-colors shadow-lg z-20"
-                aria-label="Next"
-            >
-                <ChevronRight size={18} />
-            </button>
-        </>
-    );
-
-    const CarouselDots = ({ total, current, onGoTo }: { total: number; current: number; onGoTo: (idx: number) => void }) => (
-        <div className="flex justify-center gap-1.5 mt-3">
-            {Array.from({ length: total }).map((_, idx) => (
-                <button
-                    key={idx}
-                    onClick={() => onGoTo(idx)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        idx === current
-                            ? "w-6 bg-teal-600"
-                            : "bg-slate-300 hover:bg-slate-400"
-                    }`}
-                    aria-label={`Slide ${idx + 1}`}
-                />
-            ))}
-        </div>
-    );
 
     // ============================================================
     // RENDER
     // ============================================================
     return (
-        <div className="min-h-screen flex flex-col bg-white text-slate-800 pt-14 font-['Poppins',_sans-serif]">
+        <div className="min-h-screen flex flex-col bg-white text-slate-800 font-['Poppins',_sans-serif]">
             <Head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -915,7 +563,7 @@ export default function Welcome({
             <Navbar />
 
             {/* ==========================================================
-                HERO SECTION - AUTO SLIDE DENGAN 3 GAMBAR
+                HERO SECTION - AUTO SLIDE DENGAN 3 GAMBAR + OVERLAY
             ========================================================== */}
             <section
                 ref={heroAnim.ref}
@@ -944,8 +592,8 @@ export default function Welcome({
                                     e.currentTarget.src = getImageFallback("hero");
                                 }}
                             />
-                            {/* Overlay gradien tipis biar teks tetap terbaca */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 via-slate-900/30 to-slate-900/50" aria-hidden="true" />
+                            {/* 🔥 OVERLAY GRADASI GELAP BIAR TEKS TERBACA */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60" aria-hidden="true" />
                         </div>
                     ))}
                 </div>
@@ -1025,7 +673,7 @@ export default function Welcome({
             <section
                 ref={sambutanAnim.ref}
                 id="tentang"
-                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up ${
+                className={`py-20 lg:py-24 bg-white border-t border-slate-100 anim-fade-up scroll-mt-20 ${
                     sambutanAnim.isVisible ? "show" : ""
                 }`}
                 aria-labelledby="sambutan-title"
@@ -1108,7 +756,7 @@ export default function Welcome({
             <section
                 ref={dataAnim.ref}
                 id="data"
-                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up ${
+                className={`py-16 lg:py-20 bg-slate-50 border-t border-slate-100 anim-fade-up scroll-mt-20 ${
                     dataAnim.isVisible ? "show" : ""
                 }`}
                 aria-labelledby="data-title"
@@ -1747,10 +1395,10 @@ export default function Welcome({
                                             {"☆".repeat(5 - Math.min(5, Math.max(0, item.rating)))}
                                         </p>
                                         <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                                            “
+                                            "
                                             {item.saran?.trim() ||
                                                 "Terima kasih atas layanan TP PKK Kabupaten Tasikmalaya."}
-                                            ”
+                                            "
                                         </p>
                                         <p className="text-sm font-semibold text-slate-800">
                                             {item.nama || "Anonim"}
