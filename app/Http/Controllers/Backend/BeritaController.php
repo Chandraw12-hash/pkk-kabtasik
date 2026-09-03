@@ -122,6 +122,9 @@ class BeritaController extends Controller
         ]);
     }
 
+    /**
+     * 🔥 STORE - Admin langsung published, Kader pending
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -138,20 +141,39 @@ class BeritaController extends Controller
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
         }
 
+        // 🔥🔥🔥 CEK ROLE USER
+        $isAdmin = auth()->user()->hasRole('admin');
+        $isPkk = auth()->user()->hasRole('pkk');
+
+        // 🔥 Admin → langsung published, Kader → pending
+        $isPublished = $isAdmin || $isPkk;
+
         Berita::create([
             'judul' => $request->judul,
             'slug' => Str::slug($request->judul) . '-' . time(),
             'konten' => $request->konten,
             'kategori' => $request->kategori,
             'kecamatan' => $request->kecamatan,
-            'status_publikasi' => $request->status_publikasi ?? true,
+            'status_publikasi' => $isPublished,
+            'status' => $isPublished ? 'published' : 'pending',
             'foto' => $fotoPath,
-            // 'user_id' => auth()->id(), // COMMENT KARENA KOLOMNYA TIDAK ADA
+            'created_by' => auth()->id(),
         ]);
+
+        $message = $isPublished
+            ? 'Berita berhasil ditambahkan dan langsung dipublikasikan.'
+            : 'Berita berhasil dikirim dan menunggu persetujuan admin.';
 
         return redirect()
             ->route('be.berita.index')
-            ->with('success', 'Berita berhasil ditambahkan.');
+            ->with('success', $message);
+    }
+
+    public function show(Berita $berita)
+    {
+        return Inertia::render('Backend/Berita/Show', [
+            'berita' => $berita,
+        ]);
     }
 
     public function edit(Berita $berita)
@@ -162,6 +184,9 @@ class BeritaController extends Controller
         ]);
     }
 
+    /**
+     * 🔥 UPDATE - Admin langsung published, Kader pending
+     */
     public function update(Request $request, Berita $berita)
     {
         $request->validate([
@@ -182,20 +207,31 @@ class BeritaController extends Controller
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
         }
 
+        // 🔥🔥🔥 CEK ROLE USER
+        $isAdmin = auth()->user()->hasRole('admin');
+        $isPkk = auth()->user()->hasRole('pkk');
+
+        // 🔥 Admin → published, Kader → pending (kecuali sudah di-approve sebelumnya)
+        $isPublished = $isAdmin || $isPkk || $berita->status === 'published';
+
         $berita->update([
             'judul' => $request->judul,
             'slug' => Str::slug($request->judul) . '-' . $berita->id,
             'konten' => $request->konten,
             'kategori' => $request->kategori,
             'kecamatan' => $request->kecamatan,
-            'status_publikasi' => $request->status_publikasi ?? true,
+            'status_publikasi' => $isPublished,
+            'status' => $isPublished ? 'published' : 'pending',
             'foto' => $fotoPath,
-            // 'user_id' => auth()->id(), // COMMENT KARENA KOLOMNYA TIDAK ADA
         ]);
+
+        $message = $isPublished
+            ? 'Berita berhasil diperbarui dan tetap dipublikasikan.'
+            : 'Berita berhasil diperbarui dan menunggu persetujuan admin.';
 
         return redirect()
             ->route('be.berita.index')
-            ->with('success', 'Berita berhasil diperbarui.');
+            ->with('success', $message);
     }
 
     public function destroy($id)
@@ -222,6 +258,100 @@ class BeritaController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Status berita berhasil diubah.');
+    }
+
+    // ================================================================
+    // 🔥🔥🔥 BERITA PENDING - DENGAN FILTER KECAMATAN & SEARCH
+    // ================================================================
+
+    /**
+     * Display pending berita that need approval
+     * 🔥 Hanya menampilkan berita dari KADER (bukan admin)
+     * 🔥 Support filter search & kecamatan
+     */
+    public function pending(Request $request)
+    {
+        $search = $request->input('search');
+        $kecamatan = $request->input('kecamatan');
+
+        $query = Berita::where('status', 'pending')
+            ->whereNotNull('created_by');
+
+        // 🔥 Filter search
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                    ->orWhere('konten', 'like', "%{$search}%");
+            });
+        }
+
+        // 🔥 Filter kecamatan
+        if ($kecamatan) {
+            $query->where('kecamatan', $kecamatan);
+        }
+
+        $beritaPending = $query->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        // 🔥 Daftar kecamatan unik dari berita pending untuk filter
+        $kecamatanList = Berita::where('status', 'pending')
+            ->whereNotNull('kecamatan')
+            ->whereNotNull('created_by')
+            ->distinct()
+            ->pluck('kecamatan');
+
+        return Inertia::render('Backend/Berita/Pending', [
+            'beritaPending' => $beritaPending,
+            'kecamatanList' => $kecamatanList,
+            'filters' => [
+                'search' => $search,
+                'kecamatan' => $kecamatan,
+            ],
+        ]);
+    }
+
+    /**
+     * Approve a pending berita
+     */
+    public function approve(Request $request, Berita $berita)
+    {
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $berita->update([
+            'judul' => $validated['judul'],
+            'konten' => $validated['deskripsi'] ?? $berita->konten,
+            'status' => 'published',
+            'status_publikasi' => true,
+            'approved_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('be.berita.pending')
+            ->with('success', 'Berita berhasil disetujui dan dipublikasikan.');
+    }
+
+    /**
+     * Reject a pending berita
+     */
+    public function reject(Request $request, Berita $berita)
+    {
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $berita->update([
+            'status' => 'rejected',
+            'status_publikasi' => false,
+            'reject_reason' => $validated['reason'] ?? 'Tidak memenuhi kriteria publikasi.',
+        ]);
+
+        return redirect()
+            ->route('be.berita.pending')
+            ->with('success', 'Berita berhasil ditolak.');
     }
 
     // ============================================
@@ -322,10 +452,10 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * API endpoint untuk mengambil berita terbaru (JSON)
-     * Route: /api/berita/latest
-     */
+    // ============================================
+    // API METHODS (JSON)
+    // ============================================
+
     public function apiLatestBerita()
     {
         $berita = Berita::where('status_publikasi', true)
@@ -351,10 +481,6 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * API endpoint untuk mengambil semua berita dengan filter (JSON)
-     * Route: /api/berita
-     */
     public function apiIndex(Request $request)
     {
         $search = $request->input('search');
@@ -406,10 +532,6 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * API endpoint untuk detail berita (JSON)
-     * Route: /api/berita/{slug}
-     */
     public function apiShow($slug)
     {
         $berita = Berita::where('slug', $slug)
