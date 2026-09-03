@@ -8,6 +8,7 @@ import {
     Home,
     UserCheck,
     Award,
+    BarChart3,
 } from "lucide-react";
 
 // ============================================================
@@ -59,6 +60,138 @@ interface Props {
 }
 
 // ============================================================
+// GRAFIK BATANG (SVG)
+// ------------------------------------------------------------
+// Diperbaiki dari versi lama yang pakai `height: %` pada div (bisa
+// collapse ke 0px kalau parent tanpa tinggi pasti) dan yang memaksa
+// kategori "KK" masuk ke grafik gender padahal KK (Kepala Keluarga)
+// tidak punya pecahan L/P. Sekarang grafik hanya berisi kategori yang
+// benar-benar punya data L/P: Jiwa, Kader Umum, Kader Khusus.
+// ============================================================
+const GenderBarChart = ({
+    data,
+    maxValue,
+}: {
+    data: { label: string; l: number; p: number }[];
+    maxValue: number;
+}) => {
+    const width = 520;
+    const height = 240;
+    const paddingLeft = 34;
+    const paddingBottom = 26;
+    const paddingTop = 16;
+    const chartHeight = height - paddingBottom - paddingTop;
+    const groupWidth = (width - paddingLeft) / data.length;
+    const barWidth = Math.min(34, groupWidth / 3);
+    const gap = 8;
+
+    const yTicks = [0, 0.25, 0.5, 0.75, 1];
+    const safeMax = maxValue > 0 ? maxValue : 1;
+
+    return (
+        <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="w-full h-64"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label="Grafik distribusi jenis kelamin per kategori"
+        >
+            {/* Grid + label sumbu Y (0 di bawah, naik ke atas — arah yang benar) */}
+            {yTicks.map((t) => {
+                const y = paddingTop + chartHeight - t * chartHeight;
+                return (
+                    <g key={t}>
+                        <line x1={paddingLeft} x2={width} y1={y} y2={y} stroke="#f1f5f9" strokeWidth={1} />
+                        <text x={paddingLeft - 8} y={y + 3} textAnchor="end" fontSize="9" fill="#94a3b8">
+                            {Math.round(t * safeMax)}
+                        </text>
+                    </g>
+                );
+            })}
+
+            {/* Sumbu X */}
+            <line
+                x1={paddingLeft}
+                x2={width}
+                y1={paddingTop + chartHeight}
+                y2={paddingTop + chartHeight}
+                stroke="#e2e8f0"
+                strokeWidth={1}
+            />
+
+            {/* Batang */}
+            {data.map((item, idx) => {
+                const groupX =
+                    paddingLeft + idx * groupWidth + (groupWidth - (barWidth * 2 + gap)) / 2;
+                const hL = (item.l / safeMax) * chartHeight;
+                const hP = (item.p / safeMax) * chartHeight;
+                const yBase = paddingTop + chartHeight;
+
+                return (
+                    <g key={item.label}>
+                        {/* Batang L */}
+                        <rect
+                            x={groupX}
+                            y={yBase - Math.max(hL, item.l > 0 ? 2 : 0)}
+                            width={barWidth}
+                            height={Math.max(hL, item.l > 0 ? 2 : 0)}
+                            fill="#38bdf8"
+                            rx={3}
+                        />
+                        {item.l > 0 && (
+                            <text
+                                x={groupX + barWidth / 2}
+                                y={yBase - Math.max(hL, 2) - 4}
+                                textAnchor="middle"
+                                fontSize="9"
+                                fontWeight={600}
+                                fill="#0369a1"
+                            >
+                                {item.l}
+                            </text>
+                        )}
+
+                        {/* Batang P */}
+                        <rect
+                            x={groupX + barWidth + gap}
+                            y={yBase - Math.max(hP, item.p > 0 ? 2 : 0)}
+                            width={barWidth}
+                            height={Math.max(hP, item.p > 0 ? 2 : 0)}
+                            fill="#fb7185"
+                            rx={3}
+                        />
+                        {item.p > 0 && (
+                            <text
+                                x={groupX + barWidth + gap + barWidth / 2}
+                                y={yBase - Math.max(hP, 2) - 4}
+                                textAnchor="middle"
+                                fontSize="9"
+                                fontWeight={600}
+                                fill="#be123c"
+                            >
+                                {item.p}
+                            </text>
+                        )}
+
+                        {/* Label kategori */}
+                        <text
+                            x={groupX + barWidth + gap / 2}
+                            y={height - 6}
+                            textAnchor="middle"
+                            fontSize="10"
+                            fontWeight={500}
+                            fill="#64748b"
+                        >
+                            {item.label}
+                        </text>
+                    </g>
+                );
+            })}
+        </svg>
+    );
+};
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 export default function Sekretariat({ data, filters }: Props) {
@@ -94,12 +227,29 @@ export default function Sekretariat({ data, filters }: Props) {
     );
 
     // ==================== GRAFIK ====================
+    // Sebelumnya nilai P selalu di-hardcode 0. Sekarang dihitung dari data asli,
+    // dan "KK" dikeluarkan dari grafik gender karena memang tidak punya pecahan L/P.
     const sumJiwaL = items.reduce((acc, curr) => acc + (Number(curr.jiwa_l) || 0), 0);
     const sumJiwaP = items.reduce((acc, curr) => acc + (Number(curr.jiwa_p) || 0), 0);
+    const sumKaderUmumL = items.reduce((acc, curr) => acc + (Number(curr.kader_umum_l) || 0), 0);
+    const sumKaderUmumP = items.reduce((acc, curr) => acc + (Number(curr.kader_umum_p) || 0), 0);
+    const sumKaderKhususL = items.reduce((acc, curr) => acc + (Number(curr.kader_khusus_l) || 0), 0);
+    const sumKaderKhususP = items.reduce((acc, curr) => acc + (Number(curr.kader_khusus_p) || 0), 0);
+
     const totalGender = sumJiwaL + sumJiwaP || 1;
     const percentP = (sumJiwaP / totalGender) * 100;
 
-    const maxBarVal = Math.max(totalKK, totalJiwa, totalKaderUmum, totalKaderKhusus, 10);
+    const chartData = [
+        { label: "Jiwa", l: sumJiwaL, p: sumJiwaP },
+        { label: "Kader Umum", l: sumKaderUmumL, p: sumKaderUmumP },
+        { label: "Kader Khusus", l: sumKaderKhususL, p: sumKaderKhususP },
+    ];
+    const maxBarVal = Math.max(
+        sumJiwaL, sumJiwaP,
+        sumKaderUmumL, sumKaderUmumP,
+        sumKaderKhususL, sumKaderKhususP
+    );
+    const hasGenderData = maxBarVal > 0;
 
     const handleApplyFilter = () => {
         router.get(route("sekretariat.index"), {
@@ -281,42 +431,14 @@ export default function Sekretariat({ data, filters }: Props) {
                             </div>
                         </div>
 
-                        <div className="h-64 flex items-end justify-around gap-2 pt-6 border-b border-slate-200 pb-2 px-2">
-                            {[
-                                { label: "KK", l: totalKK, p: 0 },
-                                { label: "Jiwa", l: totalJiwa, p: 0 },
-                                { label: "Kader Umum", l: totalKaderUmum, p: 0 },
-                                { label: "Kader Khusus", l: totalKaderKhusus, p: 0 },
-                            ].map((item, idx) => {
-                                const heightL = `${Math.max((item.l / maxBarVal) * 100, 4)}%`;
-                                const heightP = `${Math.max((item.p / maxBarVal) * 100, 4)}%`;
-                                return (
-                                    <div key={idx} className="flex flex-col items-center flex-1 h-full justify-end">
-                                        <div className="flex items-end justify-center gap-1 w-full h-full">
-                                            <div
-                                                style={{ height: heightL }}
-                                                className="w-1/2 bg-sky-400 rounded-t hover:bg-sky-50 transition-all relative group"
-                                            >
-                                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-slate-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {item.l}
-                                                </span>
-                                            </div>
-                                            <div
-                                                style={{ height: heightP }}
-                                                className="w-1/2 bg-rose-400 rounded-t hover:bg-rose-50 transition-all relative group"
-                                            >
-                                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-slate-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {item.p}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <span className="text-[11px] text-slate-600 mt-2 font-medium truncate max-w-full">
-                                            {item.label}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        {!hasGenderData ? (
+                            <div className="h-64 flex flex-col items-center justify-center text-slate-400">
+                                <BarChart3 size={32} className="mb-2 text-slate-300" />
+                                <p className="text-sm">Belum ada data untuk ditampilkan</p>
+                            </div>
+                        ) : (
+                            <GenderBarChart data={chartData} maxValue={maxBarVal} />
+                        )}
                     </div>
 
                     {/* Pie Chart Gender */}
@@ -324,37 +446,50 @@ export default function Sekretariat({ data, filters }: Props) {
                         <h3 className="text-base font-bold text-slate-900 mb-2">
                             Komposisi Penduduk Berdasarkan Gender
                         </h3>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-auto py-4">
-                            <div
-                                className="w-40 h-40 rounded-full relative shadow-inner"
-                                style={{
-                                    background: `conic-gradient(#38bdf8 0% ${100 - percentP}%, #fb7185 ${100 - percentP}% 100%)`,
-                                }}
-                            >
-                                <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-sm">
-                                    <span className="text-xs text-slate-400 font-medium">Total</span>
-                                    <span className="text-sm font-bold text-slate-800">
-                                        {totalJiwa.toLocaleString("id-ID")}
-                                    </span>
+                        {sumJiwaL + sumJiwaP === 0 ? (
+                            <div className="h-40 flex flex-col items-center justify-center text-slate-400">
+                                <Users size={32} className="mb-2 text-slate-300" />
+                                <p className="text-sm">Belum ada data untuk ditampilkan</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-auto py-4">
+                                <div
+                                    className="w-40 h-40 rounded-full relative shadow-inner"
+                                    style={{
+                                        background: `conic-gradient(#38bdf8 0% ${100 - percentP}%, #fb7185 ${100 - percentP}% 100%)`,
+                                    }}
+                                >
+                                    <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-sm">
+                                        <span className="text-xs text-slate-400 font-medium">Total</span>
+                                        <span className="text-sm font-bold text-slate-800">
+                                            {totalJiwa.toLocaleString("id-ID")}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-4 h-4 bg-sky-400 rounded-md"></span>
+                                        <span className="text-slate-600 font-medium">Laki-laki (L):</span>
+                                        <span className="font-bold text-slate-900">
+                                            {sumJiwaL.toLocaleString("id-ID")}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-4 h-4 bg-rose-400 rounded-md"></span>
+                                        <span className="text-slate-600 font-medium">Perempuan (P):</span>
+                                        <span className="font-bold text-slate-900">
+                                            {sumJiwaP.toLocaleString("id-ID")}
+                                        </span>
+                                    </div>
+                                    <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                                        <span className="text-xs text-slate-400">Persentase P</span>
+                                        <span className="font-bold text-teal-600">
+                                            {percentP.toFixed(1)}%
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-4 h-4 bg-sky-400 rounded-md"></span>
-                                    <span className="text-slate-600 font-medium">Laki-laki (L):</span>
-                                    <span className="font-bold text-slate-900">
-                                        {sumJiwaL.toLocaleString("id-ID")}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-4 h-4 bg-rose-400 rounded-md"></span>
-                                    <span className="text-slate-600 font-medium">Perempuan (P):</span>
-                                    <span className="font-bold text-slate-900">
-                                        {sumJiwaP.toLocaleString("id-ID")}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 

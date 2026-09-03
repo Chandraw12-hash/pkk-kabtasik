@@ -12,10 +12,11 @@ import {
     VolumeX,
     Share2,
     Users,
+    Download,
 } from "lucide-react";
 
 const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return "0:00";
+    if (!seconds || isNaN(seconds)) return "0:00";
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return `${m}:${s.toString().padStart(2, "0")}`;
@@ -29,7 +30,6 @@ export default function MarsPkk() {
     const [volume, setVolume] = useState(0.8);
     const [isMuted, setIsMuted] = useState(false);
 
-    // Sync play/pause with audio element
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -40,7 +40,6 @@ export default function MarsPkk() {
         }
     }, [isPlaying]);
 
-    // Sync volume
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = isMuted ? 0 : volume;
@@ -86,12 +85,24 @@ export default function MarsPkk() {
 
     const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator
+                .share({
+                    title: "Mars PKK — TP PKK Kabupaten Tasikmalaya",
+                    url: window.location.href,
+                })
+                .catch(() => {});
+        } else {
+            navigator.clipboard?.writeText(window.location.href);
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
             <Head title="Mars PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* Hidden Audio Element */}
             <audio
                 ref={audioRef}
                 src="/sound/mars-pkk.mp3"
@@ -101,153 +112,197 @@ export default function MarsPkk() {
                 preload="metadata"
             />
 
-            {/* ==================== AUDIO PLAYER ==================== */}
-            <section className="py-8 bg-slate-50 border-b border-slate-100">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                        {/* Info */}
-                        <div className="flex items-center gap-4">
-                            <div
-                                className={`w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0 transition-transform ${isPlaying ? "animate-spin-slow" : ""}`}
-                                style={{ animation: isPlaying ? "spin 4s linear infinite" : "none" }}
-                            >
-                                <Music size={20} className="text-white" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-slate-900 text-sm">
-                                    Mars PKK
-                                </h3>
-                                <p className="text-slate-500 text-xs">
-                                    Paduan Suara TP PKK Kab. Tasikmalaya
-                                </p>
-                            </div>
-                        </div>
+            {/* Header halaman */}
+            <section className="bg-slate-50 border-b border-slate-100">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+                    <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                        Program
+                    </p>
+                    <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">
+                        Mars PKK
+                    </h1>
+                    <p className="text-slate-500 text-sm sm:text-base max-w-xl leading-relaxed">
+                        Lagu kebangsaan gerakan PKK — diputar dan dilantunkan
+                        pada kegiatan resmi Tim Penggerak PKK.
+                    </p>
+                </div>
+            </section>
 
-                        {/* Controls */}
-                        <div className="flex-1 w-full flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={skipBackward}
-                                    title="Mundur 10 detik"
-                                    className="text-slate-400 hover:text-teal-600 transition-colors"
-                                >
-                                    <SkipBack size={18} />
-                                </button>
-                                <button
-                                    id="mars-pkk-play-btn"
-                                    onClick={() => setIsPlaying((p) => !p)}
-                                    className="w-10 h-10 rounded-full bg-teal-600 hover:bg-teal-500 flex items-center justify-center text-white transition-colors shadow-md"
-                                    aria-label={isPlaying ? "Pause Mars PKK" : "Putar Mars PKK"}
-                                >
-                                    {isPlaying ? (
-                                        <Pause size={16} fill="currentColor" />
-                                    ) : (
-                                        <Play size={16} fill="currentColor" className="ml-0.5" />
-                                    )}
-                                </button>
-                                <button
-                                    onClick={skipForward}
-                                    title="Maju 10 detik"
-                                    className="text-slate-400 hover:text-teal-600 transition-colors"
-                                >
-                                    <SkipForward size={18} />
-                                </button>
-                            </div>
-
-                            {/* Progress Bar */}
-                            <div className="flex items-center gap-2 w-full max-w-sm">
-                                <span className="text-[10px] text-slate-400 w-8 text-right">
-                                    {formatTime(currentTime)}
-                                </span>
-                                <div className="relative flex-1 h-1.5 bg-slate-200 rounded-full cursor-pointer">
-                                    <div
-                                        className="absolute top-0 left-0 h-full bg-teal-600 rounded-full pointer-events-none"
-                                        style={{ width: `${progressPercent}%` }}
-                                    />
-                                    <input
-                                        type="range"
-                                        min={0}
-                                        max={duration || 0}
-                                        step={0.1}
-                                        value={currentTime}
-                                        onChange={handleSeek}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                </div>
-                                <span className="text-[10px] text-slate-400 w-8">
-                                    {formatTime(duration)}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Volume */}
-                        <div className="hidden sm:flex items-center gap-2">
-                            <button
-                                onClick={() => setIsMuted((m) => !m)}
-                                className="text-slate-400 hover:text-teal-600 transition-colors"
-                                aria-label={isMuted ? "Unmute" : "Mute"}
-                            >
-                                {isMuted || volume === 0 ? (
-                                    <VolumeX size={16} />
-                                ) : (
-                                    <Volume2 size={16} />
-                                )}
-                            </button>
-                            <div className="relative w-20 h-1.5 bg-slate-200 rounded-full">
+            {/* Player */}
+            <section className="border-b border-slate-100 bg-white">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-7">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                            {/* Cover + info */}
+                            <div className="flex items-center gap-3.5 min-w-0">
                                 <div
-                                    className="absolute top-0 left-0 h-full bg-slate-400 rounded-full pointer-events-none"
-                                    style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
-                                />
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={1}
-                                    step={0.01}
-                                    value={isMuted ? 0 : volume}
-                                    onChange={handleVolumeChange}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
+                                    className={`w-14 h-14 rounded-xl bg-teal-700 flex items-center justify-center shrink-0 shadow-sm ${
+                                        isPlaying ? "ring-2 ring-teal-300 ring-offset-2" : ""
+                                    }`}
+                                >
+                                    <Music size={22} className="text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h2 className="font-semibold text-slate-900 text-sm sm:text-base truncate">
+                                        Mars PKK
+                                    </h2>
+                                    <p className="text-xs text-slate-500 truncate">
+                                        Paduan Suara TP PKK Kab. Tasikmalaya
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Controls + progress */}
+                            <div className="flex-1 flex flex-col gap-2.5 min-w-0">
+                                <div className="flex items-center justify-center sm:justify-start gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={skipBackward}
+                                        title="Mundur 10 detik"
+                                        className="p-1.5 text-slate-400 hover:text-teal-700 transition-colors rounded-md"
+                                    >
+                                        <SkipBack size={18} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="mars-pkk-play-btn"
+                                        onClick={() => setIsPlaying((p) => !p)}
+                                        className="w-11 h-11 rounded-full bg-teal-700 hover:bg-teal-600 flex items-center justify-center text-white transition-colors shadow-md"
+                                        aria-label={
+                                            isPlaying
+                                                ? "Jeda Mars PKK"
+                                                : "Putar Mars PKK"
+                                        }
+                                    >
+                                        {isPlaying ? (
+                                            <Pause size={18} fill="currentColor" />
+                                        ) : (
+                                            <Play
+                                                size={18}
+                                                fill="currentColor"
+                                                className="ml-0.5"
+                                            />
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={skipForward}
+                                        title="Maju 10 detik"
+                                        className="p-1.5 text-slate-400 hover:text-teal-700 transition-colors rounded-md"
+                                    >
+                                        <SkipForward size={18} />
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center gap-2 w-full">
+                                    <span className="text-[11px] tabular-nums text-slate-400 w-9 text-right shrink-0">
+                                        {formatTime(currentTime)}
+                                    </span>
+                                    <div className="relative flex-1 h-1.5 bg-slate-200 rounded-full">
+                                        <div
+                                            className="absolute top-0 left-0 h-full bg-teal-600 rounded-full pointer-events-none transition-[width] duration-100"
+                                            style={{
+                                                width: `${progressPercent}%`,
+                                            }}
+                                        />
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={duration || 0}
+                                            step={0.1}
+                                            value={currentTime}
+                                            onChange={handleSeek}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            aria-label="Posisi lagu"
+                                        />
+                                    </div>
+                                    <span className="text-[11px] tabular-nums text-slate-400 w-9 shrink-0">
+                                        {formatTime(duration)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Volume + download */}
+                            <div className="flex items-center justify-center sm:justify-end gap-3 shrink-0">
+                                <div className="hidden md:flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMuted((m) => !m)}
+                                        className="text-slate-400 hover:text-teal-700 transition-colors"
+                                        aria-label={isMuted ? "Suara nyala" : "Bisukan"}
+                                    >
+                                        {isMuted || volume === 0 ? (
+                                            <VolumeX size={16} />
+                                        ) : (
+                                            <Volume2 size={16} />
+                                        )}
+                                    </button>
+                                    <div className="relative w-20 h-1.5 bg-slate-200 rounded-full">
+                                        <div
+                                            className="absolute top-0 left-0 h-full bg-slate-400 rounded-full pointer-events-none"
+                                            style={{
+                                                width: `${(isMuted ? 0 : volume) * 100}%`,
+                                            }}
+                                        />
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={1}
+                                            step={0.01}
+                                            value={isMuted ? 0 : volume}
+                                            onChange={handleVolumeChange}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            aria-label="Volume"
+                                        />
+                                    </div>
+                                </div>
+                                <a
+                                    href="/sound/mars-pkk.mp3"
+                                    download
+                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-teal-700 border border-slate-200 hover:border-teal-200 px-3 py-1.5 rounded-lg transition-colors"
+                                >
+                                    <Download size={13} />
+                                    Unduh
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ==================== LIRIK ==================== */}
-            <section id="lirik" className="py-20 lg:py-24 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-12">
-                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
-                            Lirik Lagu
+            {/* Lirik */}
+            <section id="lirik" className="py-14 lg:py-16 bg-white">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="mb-8 sm:mb-10">
+                        <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-1.5">
+                            Lirik
                         </p>
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                        <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
                             Mars PKK
                         </h2>
                     </div>
 
-                    <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
-                        {/* Gambar */}
-                        <div className="w-full lg:w-5/12">
-                            <div className="rounded-xl overflow-hidden border border-slate-200">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                        <div className="lg:col-span-5">
+                            <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
                                 <img
                                     src="/assets/images/hero.jpg"
                                     alt="Tim PKK Kabupaten Tasikmalaya"
-                                    className="w-full h-80 object-cover"
+                                    className="w-full aspect-[4/3] object-cover"
                                     onError={(e) => {
                                         e.currentTarget.src =
                                             "https://images.unsplash.com/photo-1592424005742-8820c744f9ea?auto=format&fit=crop&w=800&q=80";
                                     }}
                                 />
                             </div>
-                            <p className="text-sm text-slate-500 mt-3 italic">
+                            <p className="text-sm text-slate-500 mt-3 leading-relaxed">
                                 &ldquo;Membangun keluarga yang sejahtera dengan
-                                PKK...&rdquo;
+                                PKK.&rdquo;
                             </p>
                         </div>
 
-                        {/* Teks Lirik */}
-                        <div className="w-full lg:w-7/12">
-                            <div className="space-y-5 text-slate-600 text-[15px] leading-relaxed">
+                        <div className="lg:col-span-7">
+                            <div className="space-y-5 text-slate-600 text-[15px] leading-[1.8]">
                                 <p>
                                     Marilah hai semua Rakyat Indonesia
                                     <br />
@@ -262,7 +317,8 @@ export default function MarsPkk() {
                                     <br />
                                     Untuk Negara
                                     <br />
-                                    Hidup gotong royong, makmur pangan dan sandang
+                                    Hidup gotong royong, makmur pangan dan
+                                    sandang
                                     <br />
                                     Rumah sehat sentosa
                                 </p>
@@ -276,30 +332,34 @@ export default function MarsPkk() {
                                     Tampil dan sehat
                                 </p>
                                 <p>
-                                    Kembangkan koperas jagalah lingkungan
+                                    Kembangkan koperasi, jagalah lingkungan
                                     <br />
                                     Dan sekitarnya
                                     <br />
                                     Aman dan bahagia keluarga berencana
                                     <br />
-                                    <strong className="text-slate-900 font-semibold">
+                                    <span className="font-semibold text-slate-900">
                                         Hidup Jaya PKK
-                                    </strong>
+                                    </span>
                                 </p>
                             </div>
 
-                            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">
+                                    <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-0.5">
                                         Ciptaan
                                     </p>
-                                    <p className="text-sm font-semibold text-slate-900">
+                                    <p className="text-sm font-medium text-slate-800">
                                         Tim Penggerak PKK Pusat
                                     </p>
                                 </div>
-                                <button className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors">
+                                <button
+                                    type="button"
+                                    onClick={handleShare}
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-800 self-start sm:self-auto"
+                                >
                                     <Share2 size={14} />
-                                    Bagikan Lirik
+                                    Bagikan
                                 </button>
                             </div>
                         </div>
@@ -307,31 +367,31 @@ export default function MarsPkk() {
                 </div>
             </section>
 
-            {/* ==================== CTA ==================== */}
-            <section className="py-20 lg:py-24 bg-slate-50 border-t border-slate-100">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <div className="w-12 h-12 rounded-lg bg-teal-50 flex items-center justify-center mx-auto mb-4">
-                        <Users size={20} className="text-teal-600" />
+            {/* CTA ringkas */}
+            <section className="py-12 lg:py-14 bg-slate-50 border-t border-slate-100">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center mx-auto mb-3">
+                        <Users size={18} className="text-teal-700" />
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
-                        Ingin Bergabung Menjadi Kader?
+                    <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">
+                        Ingin bergabung menjadi kader?
                     </h2>
-                    <p className="text-slate-500 text-base leading-relaxed max-w-lg mx-auto mb-8">
-                        Jadilah bagian dari perubahan untuk Kabupaten Tasikmalaya
-                        yang lebih mandiri dan sejahtera.
+                    <p className="text-sm text-slate-500 leading-relaxed mb-6 max-w-md mx-auto">
+                        Jadilah bagian dari gerakan pemberdayaan keluarga di
+                        Kabupaten Tasikmalaya.
                     </p>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-wrap items-center justify-center gap-2.5">
                         <Link
-                            href="#"
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                            href="/profil/tugas-fungsi"
+                            className="inline-flex items-center gap-2 bg-teal-700 hover:bg-teal-600 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors"
                         >
-                            Daftar Kader Sekarang
+                            Pelajari organisasi
                         </Link>
                         <Link
-                            href="#"
-                            className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                            href="/berita"
+                            className="inline-flex items-center gap-2 border border-slate-200 hover:border-slate-300 text-slate-700 font-medium text-sm px-5 py-2.5 rounded-lg transition-colors bg-white"
                         >
-                            Pelajari Program Pokja
+                            Lihat kegiatan
                         </Link>
                     </div>
                 </div>

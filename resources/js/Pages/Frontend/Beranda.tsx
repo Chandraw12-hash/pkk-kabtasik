@@ -54,23 +54,6 @@ interface BeritaItem {
     tanggal_formatted?: string;
 }
 
-interface GaleriItem {
-    id: number;
-    foto?: string;
-    foto_url?: string;
-    created_at?: string;
-    caption?: string;
-    judul?: string;
-}
-
-interface VideoItem {
-    id: number;
-    judul: string;
-    url: string;
-    thumbnail?: string;
-    deskripsi?: string;
-}
-
 interface AgendaItem {
     id: number;
     judul: string;
@@ -79,13 +62,6 @@ interface AgendaItem {
     lokasi?: string;
     kategori?: string;
     deskripsi?: string;
-}
-
-interface PengumumanItem {
-    id: number;
-    judul: string;
-    isi?: string;
-    tanggal?: string;
 }
 
 interface InfografisItem {
@@ -107,10 +83,7 @@ interface TestimoniSurveyItem {
 interface WelcomeProps {
     year?: number;
     berita?: BeritaItem[];
-    galeri?: GaleriItem[];
-    videos?: VideoItem[];
     agenda?: AgendaItem[];
-    pengumuman?: PengumumanItem[];
     infografis?: InfografisItem[];
     isSurveyActive?: boolean;
     testimoniSurvey?: TestimoniSurveyItem[];
@@ -461,15 +434,123 @@ const useHeroCarousel = <T,>(
 };
 
 // ============================================================
+// CUSTOM HOOK - FOCUS TRAP (untuk aksesibilitas modal)
+// ------------------------------------------------------------
+// Menjaga fokus keyboard tetap berada di dalam modal selagi
+// modal terbuka (Tab / Shift+Tab tidak "bocor" ke elemen di
+// belakang overlay), dan mengembalikan fokus ke elemen pemicu
+// begitu modal ditutup.
+// ============================================================
+
+const FOCUSABLE_SELECTOR =
+    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+
+const useFocusTrap = (isOpen: boolean) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const previouslyFocused = useRef<HTMLElement | null>(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        previouslyFocused.current =
+            document.activeElement as HTMLElement | null;
+
+        const container = containerRef.current;
+
+        if (container) {
+            const focusables = container.querySelectorAll<HTMLElement>(
+                FOCUSABLE_SELECTOR
+            );
+
+            (focusables[0] ?? container).focus();
+        }
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Tab" || !containerRef.current) return;
+
+            const focusables = Array.from(
+                containerRef.current.querySelectorAll<HTMLElement>(
+                    FOCUSABLE_SELECTOR
+                )
+            ).filter((el) => el.offsetParent !== null);
+
+            if (focusables.length === 0) return;
+
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (
+                !event.shiftKey &&
+                document.activeElement === last
+            ) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            previouslyFocused.current?.focus?.();
+        };
+    }, [isOpen]);
+
+    return containerRef;
+};
+
+// ============================================================
+// KOMPONEN GAMBAR DENGAN FALLBACK (state React, bukan DOM manual)
+// ------------------------------------------------------------
+// Menggantikan pola lama yang memanipulasi DOM langsung lewat
+// event.currentTarget.style / querySelector di dalam onError.
+// Manipulasi DOM manual seperti itu bisa "ditimpa ulang" saat
+// React me-render ulang komponen, sehingga fallback ikon bisa
+// hilang lagi walau gambar tetap gagal dimuat. Dengan state,
+// tampilan fallback selalu konsisten dengan status gambar.
+// ============================================================
+
+const InfografisThumbnail = ({
+    src,
+    alt,
+}: {
+    src?: string | null;
+    alt: string;
+}) => {
+    const [failed, setFailed] = useState(false);
+    const showImage = Boolean(src) && !failed;
+
+    if (!showImage) {
+        return (
+            <Images
+                size={32}
+                className="text-slate-400 absolute"
+                aria-hidden="true"
+            />
+        );
+    }
+
+    return (
+        <img
+            src={src as string}
+            alt={alt}
+            loading="lazy"
+            className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105"
+            onError={() => setFailed(true)}
+        />
+    );
+};
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 
 export default function Welcome({
     berita = [],
-    galeri: _galeri = [],
-    videos: _videos = [],
     agenda = [],
-    pengumuman: _pengumuman = [],
     infografis = [],
     isSurveyActive = false,
     testimoniSurvey = [],
@@ -581,6 +662,111 @@ export default function Welcome({
     }, [modalOpen]);
 
     // ========================================================
+    // FOCUS TRAP PER MODAL
+    // ========================================================
+
+    const programModalRef = useFocusTrap(selectedProgram !== null);
+    const infografisModalRef = useFocusTrap(selectedInfografis !== null);
+    const agendaModalRef = useFocusTrap(selectedAgenda !== null);
+
+    // ========================================================
+    // KALENDER — DIHITUNG SEKALI PER BULAN/AGENDA, BUKAN TIAP RENDER
+    // ========================================================
+
+    const calendarCells = useMemo(() => {
+        const today = new Date(now);
+        const calendarYear = today.getFullYear();
+        const calendarMonth = today.getMonth();
+
+        const firstDay = new Date(calendarYear, calendarMonth, 1);
+        const lastDay = new Date(calendarYear, calendarMonth + 1, 0);
+
+        const startDayOfWeek = firstDay.getDay();
+        const daysInMonth = lastDay.getDate();
+
+        const agendaMap = new Map<number, AgendaItem[]>();
+
+        agendaBulanIni.forEach((item) => {
+            const date = new Date(item.tanggal);
+
+            if (Number.isNaN(date.getTime())) {
+                return;
+            }
+
+            const dayNum = date.getDate();
+
+            if (!agendaMap.has(dayNum)) {
+                agendaMap.set(dayNum, []);
+            }
+
+            agendaMap.get(dayNum)!.push(item);
+        });
+
+        const cells: {
+            key: string;
+            day: number | null;
+            isToday: boolean;
+            agenda: AgendaItem[] | undefined;
+        }[] = [];
+
+        for (let i = 0; i < startDayOfWeek; i++) {
+            cells.push({
+                key: `empty-${i}`,
+                day: null,
+                isToday: false,
+                agenda: undefined,
+            });
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(calendarYear, calendarMonth, day);
+            const isToday = dateObj.toDateString() === today.toDateString();
+            const agendaHari = agendaMap.get(day);
+
+            cells.push({
+                key: `day-${day}`,
+                day,
+                isToday,
+                agenda: agendaHari,
+            });
+        }
+
+        const totalCells = startDayOfWeek + daysInMonth;
+        const remainingCells = (7 - (totalCells % 7)) % 7;
+
+        for (let i = 0; i < remainingCells; i++) {
+            cells.push({
+                key: `empty-end-${i}`,
+                day: null,
+                isToday: false,
+                agenda: undefined,
+            });
+        }
+
+        return cells;
+    }, [now, agendaBulanIni]);
+
+    // ========================================================
+    // JSON-LD STRUCTURED DATA (SEO)
+    // ========================================================
+
+    const jsonLd = useMemo(
+        () =>
+            JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "GovernmentOrganization",
+                name: "Tim Penggerak PKK Kabupaten Tasikmalaya",
+                url: "https://pkk.tasikmalayakab.go.id",
+                logo: "https://pkk.tasikmalayakab.go.id/assets/logo/logotasik.png",
+                areaServed: {
+                    "@type": "AdministrativeArea",
+                    name: "Kabupaten Tasikmalaya",
+                },
+            }),
+        []
+    );
+
+    // ========================================================
     // RENDER
     // ========================================================
 
@@ -594,8 +780,11 @@ export default function Welcome({
                     crossOrigin="anonymous"
                 />
 
+                {/* Font weight dipangkas dari 6 varian ke 4 yang benar-benar
+                    dipakai di desain (400/500/600/700), mengurangi beban
+                    render-blocking di awal muat halaman. */}
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
                     rel="stylesheet"
                 />
 
@@ -616,6 +805,11 @@ export default function Welcome({
                 <meta name="robots" content="index, follow" />
                 <meta name="language" content="id" />
 
+                <link
+                    rel="canonical"
+                    href="https://pkk.tasikmalayakab.go.id"
+                />
+
                 <meta
                     property="og:title"
                     content="PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri"
@@ -633,6 +827,8 @@ export default function Welcome({
                     property="og:url"
                     content="https://pkk.tasikmalayakab.go.id"
                 />
+
+                <script type="application/ld+json">{jsonLd}</script>
             </Head>
 
             {/* ========================================================
@@ -776,7 +972,7 @@ export default function Welcome({
             <Navbar />
 
             {/* ========================================================
-                HERO SECTION
+                HERO SECTION — TIDAK DIUBAH (sesuai permintaan)
             ======================================================== */}
 
             <section
@@ -1237,7 +1433,11 @@ export default function Welcome({
                         }
                     />
 
-                    <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+                    <div
+                        ref={programModalRef}
+                        tabIndex={-1}
+                        className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto focus:outline-none"
+                    >
                         <button
                             type="button"
                             onClick={() =>
@@ -1458,43 +1658,9 @@ export default function Welcome({
                                     aria-label={`Lihat infografis ${item.judul}`}
                                 >
                                     <div className="aspect-[3/4] bg-slate-200 relative overflow-hidden flex items-center justify-center">
-                                        {item.gambar_url ? (
-                                            <img
-                                                src={item.gambar_url}
-                                                alt={item.judul}
-                                                loading="lazy"
-                                                className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105"
-                                                onError={(event) => {
-                                                    event.currentTarget.style.display =
-                                                        "none";
-
-                                                    const parent =
-                                                        event.currentTarget
-                                                            .parentElement;
-
-                                                    if (parent) {
-                                                        const icon =
-                                                            parent.querySelector(
-                                                                ".fallback-icon"
-                                                            );
-
-                                                        if (icon) {
-                                                            icon.classList.remove(
-                                                                "hidden"
-                                                            );
-                                                        }
-                                                    }
-                                                }}
-                                            />
-                                        ) : null}
-
-                                        <Images
-                                            size={32}
-                                            className={`fallback-icon text-slate-400 absolute ${
-                                                item.gambar_url
-                                                    ? "hidden"
-                                                    : ""
-                                            }`}
+                                        <InfografisThumbnail
+                                            src={item.gambar_url}
+                                            alt={item.judul}
                                         />
 
                                         {item.kategori && (
@@ -1544,7 +1710,9 @@ export default function Welcome({
                     />
 
                     <div
-                        className="relative z-10 max-w-5xl max-h-[90vh]"
+                        ref={infografisModalRef}
+                        tabIndex={-1}
+                        className="relative z-10 max-w-5xl max-h-[90vh] focus:outline-none"
                         onClick={(event) =>
                             event.stopPropagation()
                         }
@@ -1684,194 +1852,67 @@ export default function Welcome({
                                     </div>
 
                                     <div className="grid grid-cols-7 gap-y-1">
-                                        {(() => {
-                                            const today = new Date(now);
-                                            const calendarYear =
-                                                today.getFullYear();
-                                            const calendarMonth =
-                                                today.getMonth();
-
-                                            const firstDay = new Date(
-                                                calendarYear,
-                                                calendarMonth,
-                                                1
-                                            );
-
-                                            const lastDay = new Date(
-                                                calendarYear,
-                                                calendarMonth + 1,
-                                                0
-                                            );
-
-                                            const startDayOfWeek =
-                                                firstDay.getDay();
-
-                                            const daysInMonth =
-                                                lastDay.getDate();
-
-                                            const agendaMap =
-                                                new Map<
-                                                    number,
-                                                    AgendaItem[]
-                                                >();
-
-                                            agendaBulanIni.forEach(
-                                                (item) => {
-                                                    const date =
-                                                        new Date(
-                                                            item.tanggal
-                                                        );
-
-                                                    if (
-                                                        Number.isNaN(
-                                                            date.getTime()
-                                                        )
-                                                    ) {
-                                                        return;
-                                                    }
-
-                                                    const dayNum =
-                                                        date.getDate();
-
-                                                    if (
-                                                        !agendaMap.has(
-                                                            dayNum
-                                                        )
-                                                    ) {
-                                                        agendaMap.set(
-                                                            dayNum,
-                                                            []
-                                                        );
-                                                    }
-
-                                                    agendaMap
-                                                        .get(dayNum)!
-                                                        .push(item);
-                                                }
-                                            );
-
-                                            const cells: React.ReactNode[] =
-                                                [];
-
-                                            for (
-                                                let i = 0;
-                                                i <
-                                                startDayOfWeek;
-                                                i++
-                                            ) {
-                                                cells.push(
+                                        {calendarCells.map((cell) => {
+                                            if (cell.day === null) {
+                                                return (
                                                     <div
-                                                        key={`empty-${i}`}
+                                                        key={cell.key}
                                                         className="h-9"
                                                         aria-hidden="true"
                                                     />
                                                 );
                                             }
 
-                                            for (
-                                                let day = 1;
-                                                day <=
-                                                daysInMonth;
-                                                day++
-                                            ) {
-                                                const dateObj =
-                                                    new Date(
-                                                        calendarYear,
-                                                        calendarMonth,
-                                                        day
-                                                    );
+                                            const hasAgenda = Boolean(
+                                                cell.agenda?.length
+                                            );
 
-                                                const isToday =
-                                                    dateObj.toDateString() ===
-                                                    today.toDateString();
-
-                                                const agendaHari =
-                                                    agendaMap.get(
-                                                        day
-                                                    );
-
-                                                const hasAgenda =
-                                                    Boolean(
-                                                        agendaHari
-                                                            ?.length
-                                                    );
-
-                                                cells.push(
-                                                    <button
-                                                        key={day}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            if (
-                                                                agendaHari &&
-                                                                agendaHari.length >
-                                                                    0
-                                                            ) {
-                                                                setSelectedAgenda(
-                                                                    agendaHari[0]
-                                                                );
-                                                            }
-                                                        }}
-                                                        disabled={
-                                                            !hasAgenda
+                                            return (
+                                                <button
+                                                    key={cell.key}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (
+                                                            cell.agenda &&
+                                                            cell.agenda
+                                                                .length > 0
+                                                        ) {
+                                                            setSelectedAgenda(
+                                                                cell.agenda[0]
+                                                            );
                                                         }
-                                                        className={`h-9 w-full flex flex-col items-center justify-center rounded-md transition-colors ${
-                                                            hasAgenda
-                                                                ? "cursor-pointer hover:bg-teal-50"
-                                                                : "cursor-default"
+                                                    }}
+                                                    disabled={!hasAgenda}
+                                                    className={`h-9 w-full flex flex-col items-center justify-center rounded-md transition-colors ${
+                                                        hasAgenda
+                                                            ? "cursor-pointer hover:bg-teal-50"
+                                                            : "cursor-default"
+                                                    }`}
+                                                    aria-label={
+                                                        hasAgenda
+                                                            ? `${cell.day} ${cell.agenda?.length} kegiatan`
+                                                            : `${cell.day}`
+                                                    }
+                                                >
+                                                    <div
+                                                        className={`relative w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-medium transition-colors ${
+                                                            cell.isToday
+                                                                ? "bg-teal-700 text-white font-bold"
+                                                                : hasAgenda
+                                                                ? "text-teal-700 font-bold"
+                                                                : "text-slate-600"
                                                         }`}
-                                                        aria-label={
-                                                            hasAgenda
-                                                                ? `${day} ${agendaHari?.length} kegiatan`
-                                                                : `${day}`
-                                                        }
                                                     >
-                                                        <div
-                                                            className={`relative w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-medium transition-colors ${
-                                                                isToday
-                                                                    ? "bg-teal-700 text-white font-bold"
-                                                                    : hasAgenda
-                                                                    ? "text-teal-700 font-bold"
-                                                                    : "text-slate-600"
-                                                            }`}
-                                                        >
-                                                            {day}
+                                                        {cell.day}
 
-                                                            {hasAgenda &&
-                                                                !isToday && (
-                                                                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-teal-600" />
-                                                                )}
-                                                        </div>
-                                                    </button>
-                                                );
-                                            }
-
-                                            const totalCells =
-                                                startDayOfWeek +
-                                                daysInMonth;
-
-                                            const remainingCells =
-                                                (7 -
-                                                    (totalCells %
-                                                        7)) %
-                                                7;
-
-                                            for (
-                                                let i = 0;
-                                                i <
-                                                remainingCells;
-                                                i++
-                                            ) {
-                                                cells.push(
-                                                    <div
-                                                        key={`empty-end-${i}`}
-                                                        className="h-9"
-                                                        aria-hidden="true"
-                                                    />
-                                                );
-                                            }
-
-                                            return cells;
-                                        })()}
+                                                        {hasAgenda &&
+                                                            !cell.isToday && (
+                                                                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-teal-600" />
+                                                            )}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
 
                                     <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-4">
@@ -2198,7 +2239,11 @@ export default function Welcome({
                         }
                     />
 
-                    <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-100">
+                    <div
+                        ref={agendaModalRef}
+                        tabIndex={-1}
+                        className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-100 focus:outline-none"
+                    >
                         <div className="px-6 sm:px-8 pt-6 sm:pt-7">
                             <div className="flex items-start justify-between gap-4">
                                 <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-100 px-3 py-1 text-[10px] sm:text-xs font-semibold text-teal-700">
