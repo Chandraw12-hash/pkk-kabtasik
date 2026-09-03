@@ -1,27 +1,105 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Head, Link } from "@inertiajs/react";
 import Navbar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
 import {
     Music,
-    Download,
-    BookOpen,
     Play,
     Pause,
     SkipBack,
     SkipForward,
     Volume2,
+    VolumeX,
     Share2,
     Users,
 } from "lucide-react";
 
+const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
 export default function MarsPkk() {
+    const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [volume, setVolume] = useState(0.8);
+    const [isMuted, setIsMuted] = useState(false);
+
+    // Sync play/pause with audio element
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        if (isPlaying) {
+            audio.play().catch(() => setIsPlaying(false));
+        } else {
+            audio.pause();
+        }
+    }, [isPlaying]);
+
+    // Sync volume
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = isMuted ? 0 : volume;
+        }
+    }, [volume, isMuted]);
+
+    const handleTimeUpdate = () => {
+        if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+        if (audioRef.current) setDuration(audioRef.current.duration);
+    };
+
+    const handleEnded = () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const time = Number(e.target.value);
+        if (audioRef.current) audioRef.current.currentTime = time;
+        setCurrentTime(time);
+    };
+
+    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Number(e.target.value);
+        setVolume(val);
+        setIsMuted(val === 0);
+    };
+
+    const skipBackward = () => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = Math.max(0, currentTime - 10);
+        }
+    };
+
+    const skipForward = () => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = Math.min(duration, currentTime + 10);
+        }
+    };
+
+    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
             <Head title="Mars PKK - PKK Kabupaten Tasikmalaya" />
             <Navbar />
+
+            {/* Hidden Audio Element */}
+            <audio
+                ref={audioRef}
+                src="/sound/mars-pkk.mp3"
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onEnded={handleEnded}
+                preload="metadata"
+            />
 
             {/* ==================== AUDIO PLAYER ==================== */}
             <section className="py-8 bg-slate-50 border-b border-slate-100">
@@ -29,7 +107,10 @@ export default function MarsPkk() {
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                         {/* Info */}
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
+                            <div
+                                className={`w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0 transition-transform ${isPlaying ? "animate-spin-slow" : ""}`}
+                                style={{ animation: isPlaying ? "spin 4s linear infinite" : "none" }}
+                            >
                                 <Music size={20} className="text-white" />
                             </div>
                             <div>
@@ -45,45 +126,87 @@ export default function MarsPkk() {
                         {/* Controls */}
                         <div className="flex-1 w-full flex flex-col items-center gap-2">
                             <div className="flex items-center gap-4">
-                                <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <button
+                                    onClick={skipBackward}
+                                    title="Mundur 10 detik"
+                                    className="text-slate-400 hover:text-teal-600 transition-colors"
+                                >
                                     <SkipBack size={18} />
                                 </button>
                                 <button
-                                    onClick={() => setIsPlaying(!isPlaying)}
-                                    className="w-10 h-10 rounded-full bg-teal-600 hover:bg-teal-500 flex items-center justify-center text-white transition-colors"
+                                    id="mars-pkk-play-btn"
+                                    onClick={() => setIsPlaying((p) => !p)}
+                                    className="w-10 h-10 rounded-full bg-teal-600 hover:bg-teal-500 flex items-center justify-center text-white transition-colors shadow-md"
+                                    aria-label={isPlaying ? "Pause Mars PKK" : "Putar Mars PKK"}
                                 >
                                     {isPlaying ? (
                                         <Pause size={16} fill="currentColor" />
                                     ) : (
-                                        <Play
-                                            size={16}
-                                            fill="currentColor"
-                                            className="ml-0.5"
-                                        />
+                                        <Play size={16} fill="currentColor" className="ml-0.5" />
                                     )}
                                 </button>
-                                <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <button
+                                    onClick={skipForward}
+                                    title="Maju 10 detik"
+                                    className="text-slate-400 hover:text-teal-600 transition-colors"
+                                >
                                     <SkipForward size={18} />
                                 </button>
                             </div>
+
+                            {/* Progress Bar */}
                             <div className="flex items-center gap-2 w-full max-w-sm">
-                                <span className="text-[10px] text-slate-400">
-                                    01:24
+                                <span className="text-[10px] text-slate-400 w-8 text-right">
+                                    {formatTime(currentTime)}
                                 </span>
-                                <div className="flex-1 h-1.5 bg-slate-200 rounded-full">
-                                    <div className="h-full bg-teal-600 rounded-full w-[45%]" />
+                                <div className="relative flex-1 h-1.5 bg-slate-200 rounded-full cursor-pointer">
+                                    <div
+                                        className="absolute top-0 left-0 h-full bg-teal-600 rounded-full pointer-events-none"
+                                        style={{ width: `${progressPercent}%` }}
+                                    />
+                                    <input
+                                        type="range"
+                                        min={0}
+                                        max={duration || 0}
+                                        step={0.1}
+                                        value={currentTime}
+                                        onChange={handleSeek}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
                                 </div>
-                                <span className="text-[10px] text-slate-400">
-                                    03:15
+                                <span className="text-[10px] text-slate-400 w-8">
+                                    {formatTime(duration)}
                                 </span>
                             </div>
                         </div>
 
                         {/* Volume */}
                         <div className="hidden sm:flex items-center gap-2">
-                            <Volume2 size={16} className="text-slate-400" />
-                            <div className="w-20 h-1.5 bg-slate-200 rounded-full">
-                                <div className="h-full bg-slate-400 rounded-full w-[70%]" />
+                            <button
+                                onClick={() => setIsMuted((m) => !m)}
+                                className="text-slate-400 hover:text-teal-600 transition-colors"
+                                aria-label={isMuted ? "Unmute" : "Mute"}
+                            >
+                                {isMuted || volume === 0 ? (
+                                    <VolumeX size={16} />
+                                ) : (
+                                    <Volume2 size={16} />
+                                )}
+                            </button>
+                            <div className="relative w-20 h-1.5 bg-slate-200 rounded-full">
+                                <div
+                                    className="absolute top-0 left-0 h-full bg-slate-400 rounded-full pointer-events-none"
+                                    style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
+                                />
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={1}
+                                    step={0.01}
+                                    value={isMuted ? 0 : volume}
+                                    onChange={handleVolumeChange}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
                             </div>
                         </div>
                     </div>
