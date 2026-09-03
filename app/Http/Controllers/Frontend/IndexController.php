@@ -13,6 +13,7 @@ use App\Models\Pokja2;
 use App\Models\Pokja3;
 use App\Models\Pokja4;
 use App\Models\Survey;
+use App\Models\StrukturOrganisasi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -22,7 +23,6 @@ class IndexController extends Controller
     {
         $isSurveyActive = true;
 
-        // Hanya pakai kolom yang ada: status = published
         $testimoniSurvey = Survey::query()
             ->where('status', 'published')
             ->latest()
@@ -117,7 +117,6 @@ class IndexController extends Controller
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
 
-        // 🔥 FIX: TAMBAHKAN select() UNTUK POKJA 3 AGAR KOLOM YANG DIBUTUHKAN TERAMBIL
         $pokja3 = Pokja3::select(
             'id', 'kecamatan', 'nama_kecamatan',
             'rumah_sehat', 'rumah_tidak_sehat',
@@ -125,7 +124,6 @@ class IndexController extends Controller
             'kategori', 'judul_kegiatan', 'deskripsi', 'created_at'
         )->latest()->take(6)->get();
 
-        // 🔥 FIX: TAMBAHKAN select() UNTUK POKJA 4 AGAR KOLOM YANG DIBUTUHKAN TERAMBIL
         $pokja4 = Pokja4::select(
             'id', 'kecamatan', 'nama_kecamatan',
             'posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga',
@@ -237,9 +235,47 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Profil/VisiMisi');
     }
 
+    // ================================================================
+    // 🔥🔥🔥 STRUKTUR ORGANISASI - DARI DATABASE
+    // ================================================================
     public function strukturOrganisasi()
     {
-        return Inertia::render('Frontend/Profil/StrukturOrganisasi');
+        // 🔥 Ambil data ketua (kategori 'ketua')
+        $ketua = StrukturOrganisasi::where('kategori', 'ketua')
+            ->where('is_active', true)
+            ->first();
+
+        // 🔥 Ambil data pimpinan inti (kategori 'pimpinan_inti')
+        $pimpinanInti = StrukturOrganisasi::where('kategori', 'pimpinan_inti')
+            ->where('is_active', true)
+            ->orderBy('urutan', 'asc')
+            ->get();
+
+        // 🔥 Ambil data pokja I, II, III, IV
+        $pokja = [];
+        $pokjaLabels = ['I', 'II', 'III', 'IV'];
+        foreach ($pokjaLabels as $num) {
+            $pokja[$num] = StrukturOrganisasi::where('kategori', 'pokja_' . strtolower($num))
+                ->where('is_active', true)
+                ->orderBy('urutan', 'asc')
+                ->get();
+        }
+
+        // 🔥 DEBUG: Cek data di log
+        \Log::info('Struktur Organisasi Data:', [
+            'ketua' => $ketua ? $ketua->nama : 'null',
+            'pimpinanInti_count' => $pimpinanInti->count(),
+            'pokja_I_count' => $pokja['I']->count(),
+            'pokja_II_count' => $pokja['II']->count(),
+            'pokja_III_count' => $pokja['III']->count(),
+            'pokja_IV_count' => $pokja['IV']->count(),
+        ]);
+
+        return Inertia::render('Frontend/Profil/StrukturOrganisasi', [
+            'ketua' => $ketua,
+            'pimpinanInti' => $pimpinanInti,
+            'pokja' => $pokja,
+        ]);
     }
 
     public function programKerja()

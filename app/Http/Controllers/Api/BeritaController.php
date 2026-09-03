@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BeritaController extends Controller
 {
@@ -243,6 +244,64 @@ class BeritaController extends Controller
             'success' => true,
             'message' => 'Berita kecamatan ' . $kecamatan,
             'data' => $berita,
+        ]);
+    }
+
+    // ================================================================
+    // 🔥🔥🔥 KECAMATAN TERAKTIF - TANPA DUMMY
+    // ================================================================
+
+    /**
+     * Get top 5 kecamatan with most berita
+     * GET /api/berita/kecamatan-teraktif
+     */
+    public function kecamatanTeraktif(Request $request)
+    {
+        $range = $request->input('range', 'all');
+
+        $query = Berita::where('status_publikasi', true)
+            ->whereNotNull('kecamatan')
+            ->where('kecamatan', '!=', '');
+
+        // Filter berdasarkan range
+        if ($range === 'month') {
+            $query->whereMonth('created_at', now()->month)
+                  ->whereYear('created_at', now()->year);
+        } elseif ($range === 'week') {
+            $query->whereBetween('created_at', [now()->subDays(7), now()]);
+        } elseif ($range === 'year') {
+            $query->whereYear('created_at', now()->year);
+        }
+
+        // Group by kecamatan dan hitung
+        $data = $query->select('kecamatan', DB::raw('count(*) as total'))
+            ->groupBy('kecamatan')
+            ->orderBy('total', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'kecamatan' => $item->kecamatan,
+                    'total' => (int) $item->total,
+                ];
+            });
+
+        // 🔥🔥🔥 HAPUS DATA DUMMY! TAPI PASTIKAN DATA TETAP ARRAY
+        // Kalau data kosong, tetap kirim array kosong
+        if ($data->isEmpty()) {
+            $data = collect(); // array kosong
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Top 5 kecamatan teraktif',
+            'data' => $data,
+            'periode' => [
+                'bulan' => (int) now()->month,
+                'tahun' => (int) now()->year,
+                'nama_bulan' => now()->translatedFormat('F'),
+                'range' => $range,
+            ],
         ]);
     }
 }

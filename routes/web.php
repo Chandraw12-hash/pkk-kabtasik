@@ -31,6 +31,11 @@ use App\Http\Controllers\Backend\SurveyController;
 use App\Http\Controllers\Frontend\SurveyController as FrontendSurveyController;
 
 // ============================================
+// STRUKTUR ORGANISASI
+// ============================================
+use App\Http\Controllers\Backend\StrukturOrganisasiController;
+
+// ============================================
 // FRONTEND ROUTES (Public)
 // ============================================
 Route::as('fe.')->group(function () {
@@ -139,11 +144,26 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::post('pokja4/import', [Pokja4Controller::class, 'import'])
         ->name('pokja4.import');
 
-    // Galeri & Berita
+    // Galeri
     Route::resource('galeri', GaleriController::class)
         ->names('galeri')
         ->except(['show']);
 
+    // ============================================
+    // 🔥🔥🔥 BERITA - ROUTE KHUSUS HARUS DI ATAS RESOURCE!
+    // ============================================
+
+    // 🔥 ROUTE KHUSUS PENDING (DI ATAS RESOURCE)
+    Route::get('berita/pending', [BeritaController::class, 'pending'])
+        ->name('berita.pending');
+
+    // 🔥 ROUTE APPROVE & REJECT (DI ATAS RESOURCE)
+    Route::put('berita/{berita}/approve', [BeritaController::class, 'approve'])
+        ->name('berita.approve');
+    Route::put('berita/{berita}/reject', [BeritaController::class, 'reject'])
+        ->name('berita.reject');
+
+    // 🔥 RESOURCE BERITA (DI BAWAH ROUTE KHUSUS)
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
@@ -156,17 +176,15 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->name('infografis.toggle-status');
 
     // ============================================
-    // AGENDA - FIX: Tambahkan show route secara manual
+    // AGENDA
     // ============================================
     Route::resource('agenda', AgendaController::class)
         ->names('agenda')
         ->except(['show']);
 
-    // Route untuk show agenda (manual)
     Route::get('agenda/{agenda}', [AgendaController::class, 'show'])
         ->name('agenda.show');
 
-    // Custom routes untuk agenda
     Route::delete('agenda/bulk-destroy', [AgendaController::class, 'bulkDestroy'])
         ->name('agenda.bulk-destroy');
     Route::put('agenda/bulk-update-status', [AgendaController::class, 'bulkUpdateStatus'])
@@ -185,11 +203,9 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->names('laporan-kegiatan')
         ->only(['index', 'show', 'destroy']);
 
-    // Review laporan (mark as reviewed)
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])
         ->name('laporan-kegiatan.review');
 
-    // Route APPROVE & REJECT
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/approve', [LaporanKegiatanController::class, 'approve'])
         ->name('laporan-kegiatan.approve');
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])
@@ -224,4 +240,19 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
             Route::post('/app', [ConfigController::class, 'updateApp'])->name('app.update');
         });
     });
+
+    // ============================================
+    // 🔥🔥🔥 STRUKTUR ORGANISASI (CRUD + IMPORT)
+    // ============================================
+    Route::resource('struktur-organisasi', StrukturOrganisasiController::class)
+        ->names('struktur-organisasi')
+        ->except(['show']);
+
+    // 🔥 TAMBAHKAN ROUTE IMPORT EXCEL
+    Route::post('struktur-organisasi/import', [StrukturOrganisasiController::class, 'import'])
+        ->name('struktur-organisasi.import');
+
+    // Toggle status
+    Route::patch('struktur-organisasi/{id}/toggle-status', [StrukturOrganisasiController::class, 'toggleStatus'])
+        ->name('struktur-organisasi.toggle-status');
 });

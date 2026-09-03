@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
     Accessibility,
     X,
@@ -36,35 +36,59 @@ const defaultSettings: Settings = {
     easyFont: false,
 };
 
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 export default function AccessibilityWidget() {
     const [open, setOpen] = useState(false);
     const [s, setS] = useState<Settings>(defaultSettings);
     const [isPlayingMars, setIsPlayingMars] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-    // ─── Load preferensi ───────────────────────────────────────────────────────
+    // ─── LOAD PREFERENSI ───────────────────────────────────────────────────────
     useEffect(() => {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) setS({ ...defaultSettings, ...JSON.parse(raw) });
-        } catch { /* ignore */ }
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                setS({ ...defaultSettings, ...parsed });
+            }
+        } catch {
+            // ignore
+        }
     }, []);
 
-    // ─── Terapkan kelas aksesibilitas ──────────────────────────────────────────
+    // ─── TERAPKAN AKSESIBILITAS ──────────────────────────────────────────────
     useEffect(() => {
         const root = document.documentElement;
-        root.classList.toggle("a11y-text-lg", s.fontScale === 1);
-        root.classList.toggle("a11y-text-xl", s.fontScale === 2);
-        root.classList.toggle("a11y-contrast", s.highContrast);
-        root.classList.toggle("a11y-gray", s.grayscale);
-        root.classList.toggle("a11y-underline", s.underlineLinks);
-        root.classList.toggle("a11y-space", s.comfortableSpace);
-        root.classList.toggle("a11y-font", s.easyFont);
+
+        // Hapus semua kelas dulu
+        root.classList.remove(
+            "a11y-text-lg",
+            "a11y-text-xl",
+            "a11y-contrast",
+            "a11y-gray",
+            "a11y-underline",
+            "a11y-space",
+            "a11y-font"
+        );
+
+        // Tambah kelas sesuai state
+        if (s.fontScale === 1) root.classList.add("a11y-text-lg");
+        if (s.fontScale === 2) root.classList.add("a11y-text-xl");
+        if (s.highContrast) root.classList.add("a11y-contrast");
+        if (s.grayscale) root.classList.add("a11y-gray");
+        if (s.underlineLinks) root.classList.add("a11y-underline");
+        if (s.comfortableSpace) root.classList.add("a11y-space");
+        if (s.easyFont) root.classList.add("a11y-font");
+
         localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
     }, [s]);
 
-    // ─── Inisialisasi Audio element ────────────────────────────────────────────
+    // ─── INISIALISASI AUDIO ──────────────────────────────────────────────────
     useEffect(() => {
         const audio = new Audio(MARS_PKK_SRC);
         audio.loop = false;
@@ -79,8 +103,8 @@ export default function AccessibilityWidget() {
         };
     }, []);
 
-    // ─── Play / Pause Mars PKK ─────────────────────────────────────────────────
-    const toggleMars = () => {
+    // ─── HANDLER MARS PKK ────────────────────────────────────────────────────
+    const toggleMars = useCallback(() => {
         const audio = audioRef.current;
         if (!audio) return;
 
@@ -89,214 +113,291 @@ export default function AccessibilityWidget() {
             setIsPlayingMars(false);
         } else {
             // Hentikan text-to-speech jika aktif
-            if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-            audio.play().then(() => {
-                setIsPlayingMars(true);
-            }).catch(() => {
-                // Gagal diputar (file tidak ada / format tidak didukung)
-                setIsPlayingMars(false);
-            });
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+            }
+            audio.play()
+                .then(() => setIsPlayingMars(true))
+                .catch(() => setIsPlayingMars(false));
         }
-    };
+    }, [isPlayingMars, isSpeaking]);
 
-    const stopMars = () => {
-        audioRef.current?.pause();
-        if (audioRef.current) audioRef.current.currentTime = 0;
-        setIsPlayingMars(false);
-    };
-
-    // ─── Text-to-speech ───────────────────────────────────────────────────────
-    const speakPage = () => {
+    // ─── HANDLER TEXT-TO-SPEECH ─────────────────────────────────────────────
+    const speakPage = useCallback(() => {
         if (!("speechSynthesis" in window)) {
             alert("Browser tidak mendukung pembacaan teks.");
             return;
         }
-        stopMars();
+
+        // Stop mars jika sedang diputar
+        if (isPlayingMars) {
+            audioRef.current?.pause();
+            setIsPlayingMars(false);
+        }
+
+        // Cancel speech yang sedang berjalan
         window.speechSynthesis.cancel();
+
         const text = document.body?.innerText?.slice(0, 3000) || "";
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = "id-ID";
-        window.speechSynthesis.speak(u);
-    };
+        if (!text) {
+            alert("Tidak ada teks untuk dibaca.");
+            return;
+        }
 
-    const stopSpeak = () => {
-        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    };
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "id-ID";
+        utterance.rate = 1;
+        utterance.pitch = 1;
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
-    const update = (patch: Partial<Settings>) =>
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        speechRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+    }, [isPlayingMars]);
+
+    const stopSpeak = useCallback(() => {
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+        }
+    }, []);
+
+    // ─── HANDLER UPDATE ──────────────────────────────────────────────────────
+    const update = useCallback((patch: Partial<Settings>) => {
         setS((prev) => ({ ...prev, ...patch }));
+    }, []);
 
-    const reset = () => setS(defaultSettings);
+    const reset = useCallback(() => {
+        setS({ ...defaultSettings });
+        localStorage.removeItem(STORAGE_KEY);
+        // Reload halaman untuk efek instan
+        window.location.reload();
+    }, []);
 
-    const actionBtn = (active?: boolean) =>
-        `flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-[13px] font-medium border transition-colors text-left ${
+    // ─── STYLE BUTTON ────────────────────────────────────────────────────────
+    const actionBtn = useCallback((active?: boolean) => {
+        return `flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-[13px] font-medium border transition-colors text-left ${
             active
-                ? "border-teal-600 bg-teal-50 text-teal-800"
+                ? "border-teal-600 bg-teal-50 text-teal-800 ring-1 ring-teal-200"
                 : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
         }`;
+    }, []);
 
+    // ─── RENDER ──────────────────────────────────────────────────────────────
     return (
         <>
-            {/* Tombol mengambang */}
+            {/* Tombol Floating */}
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="fixed bottom-5 right-5 z-[60] w-12 h-12 rounded-full bg-teal-700 hover:bg-teal-800 text-white shadow-md flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+                className="fixed bottom-5 right-5 z-[60] w-12 h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2"
                 aria-label="Buka pengaturan aksesibilitas"
             >
                 <Accessibility size={22} strokeWidth={1.75} />
             </button>
 
+            {/* Modal Widget */}
             {open && (
-                <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center sm:justify-end p-4 sm:p-6">
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                    {/* Overlay */}
                     <button
                         type="button"
-                        className="absolute inset-0 bg-slate-900/40"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
                         aria-label="Tutup panel"
                         onClick={() => setOpen(false)}
                     />
 
+                    {/* Panel */}
                     <div
-                        className="relative w-full max-w-[340px] bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
+                        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200"
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="a11y-title"
                     >
                         {/* Header */}
-                        <div className="bg-teal-800 px-5 py-4 flex items-start justify-between gap-3">
-                            <div>
-                                <p className="text-[10px] font-semibold tracking-[0.14em] uppercase text-teal-200/90 mb-0.5">
-                                    Fitur disabilitas
-                                </p>
-                                <h2 id="a11y-title" className="text-base font-semibold text-white">
-                                    Aksesibilitas Website
-                                </h2>
+                        <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-5">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-widest uppercase text-teal-100/80">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                                        Fitur Aksesibilitas
+                                    </span>
+                                    <h2 id="a11y-title" className="text-lg font-bold text-white mt-1">
+                                        Pengaturan Aksesibilitas
+                                    </h2>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(false)}
+                                    className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                                    aria-label="Tutup"
+                                >
+                                    <X size={18} />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setOpen(false)}
-                                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-                                aria-label="Tutup"
-                            >
-                                <X size={16} />
-                            </button>
+                            <p className="text-sm text-teal-100/70 mt-1.5">
+                                Sesuaikan tampilan website sesuai kebutuhan Anda
+                            </p>
                         </div>
 
-                        <div className="p-4 grid grid-cols-2 gap-2">
-                            <button type="button" className={actionBtn()} onClick={speakPage}>
-                                <Volume2 size={16} className="text-teal-700 shrink-0" />
-                                Baca halaman
-                            </button>
-                            <button type="button" className={actionBtn()} onClick={stopSpeak}>
-                                <VolumeX size={16} className="text-slate-500 shrink-0" />
-                                Stop suara
-                            </button>
+                        {/* Content */}
+                        <div className="p-5">
+                            <div className="grid grid-cols-2 gap-2.5">
+                                {/* Baca Halaman */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(isSpeaking)}
+                                    onClick={speakPage}
+                                    disabled={isSpeaking}
+                                >
+                                    <Volume2 size={16} className="text-teal-600 shrink-0" />
+                                    {isSpeaking ? "Membaca..." : "Baca halaman"}
+                                </button>
 
-                            <button
-                                type="button"
-                                className={actionBtn(s.fontScale > 0)}
-                                onClick={() => update({ fontScale: Math.min(2, s.fontScale + 1) })}
-                            >
-                                <Plus size={16} className="text-teal-700 shrink-0" />
-                                Perbesar teks
-                            </button>
-                            <button
-                                type="button"
-                                className={actionBtn()}
-                                onClick={() => update({ fontScale: Math.max(0, s.fontScale - 1) })}
-                            >
-                                <Minus size={16} className="text-slate-500 shrink-0" />
-                                Perkecil teks
-                            </button>
+                                {/* Stop Suara */}
+                                <button
+                                    type="button"
+                                    className={actionBtn()}
+                                    onClick={stopSpeak}
+                                    disabled={!isSpeaking && !isPlayingMars}
+                                >
+                                    <VolumeX size={16} className="text-slate-500 shrink-0" />
+                                    Stop suara
+                                </button>
 
-                            <button
-                                type="button"
-                                className={actionBtn(s.highContrast)}
-                                onClick={() => update({ highContrast: !s.highContrast })}
-                            >
-                                <Contrast size={16} className="text-teal-700 shrink-0" />
-                                Kontras tinggi
-                            </button>
-                            <button
-                                type="button"
-                                className={actionBtn(s.grayscale)}
-                                onClick={() => update({ grayscale: !s.grayscale })}
-                            >
-                                <Circle size={16} className="text-slate-400 shrink-0" />
-                                Abu-abu
-                            </button>
+                                {/* Perbesar Teks */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(s.fontScale > 0)}
+                                    onClick={() => update({ fontScale: Math.min(2, s.fontScale + 1) })}
+                                >
+                                    <Plus size={16} className="text-teal-600 shrink-0" />
+                                    Perbesar teks
+                                </button>
 
-                            <button
-                                type="button"
-                                className={actionBtn(s.underlineLinks)}
-                                onClick={() => update({ underlineLinks: !s.underlineLinks })}
-                            >
-                                <Underline size={16} className="text-teal-700 shrink-0" />
-                                Garis link
-                            </button>
-                            <button
-                                type="button"
-                                className={actionBtn(s.comfortableSpace)}
-                                onClick={() => update({ comfortableSpace: !s.comfortableSpace })}
-                            >
-                                <Type size={16} className="text-teal-700 shrink-0" />
-                                Spasi nyaman
-                            </button>
+                                {/* Perkecil Teks */}
+                                <button
+                                    type="button"
+                                    className={actionBtn()}
+                                    onClick={() => update({ fontScale: Math.max(0, s.fontScale - 1) })}
+                                    disabled={s.fontScale === 0}
+                                >
+                                    <Minus size={16} className="text-slate-500 shrink-0" />
+                                    Perkecil teks
+                                </button>
 
-                            <button
-                                type="button"
-                                className={actionBtn(s.easyFont)}
-                                onClick={() => update({ easyFont: !s.easyFont })}
-                            >
-                                <Type size={16} className="text-teal-700 shrink-0" />
-                                Font mudah baca
-                            </button>
-                            <button type="button" className={actionBtn()} onClick={reset}>
-                                <RotateCcw size={16} className="text-slate-500 shrink-0" />
-                                Reset
-                            </button>
+                                {/* Kontras Tinggi */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(s.highContrast)}
+                                    onClick={() => update({ highContrast: !s.highContrast })}
+                                >
+                                    <Contrast size={16} className="text-teal-600 shrink-0" />
+                                    Kontras tinggi
+                                </button>
 
-                            {/* Tombol Mars PKK — full width */}
-                            <button
-                                type="button"
-                                className={`${actionBtn(isPlayingMars)} col-span-2`}
-                                onClick={toggleMars}
-                            >
-                                {isPlayingMars ? (
-                                    <Pause size={16} className="text-teal-700 shrink-0" />
-                                ) : (
-                                    <Music size={16} className="text-teal-700 shrink-0" />
-                                )}
-                                {isPlayingMars ? "Jeda Mars PKK" : "Putar Mars PKK"}
-                            </button>
-                        </div>
+                                {/* Abu-abu */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(s.grayscale)}
+                                    onClick={() => update({ grayscale: !s.grayscale })}
+                                >
+                                    <Circle size={16} className="text-slate-400 shrink-0" />
+                                    Abu-abu
+                                </button>
 
-                        {/* Indikator sedang memutar */}
-                        {isPlayingMars && (
-                            <div className="mx-4 mb-3 px-3 py-2 rounded-lg bg-teal-50 border border-teal-100 flex items-center gap-2.5">
-                                <span className="flex items-end gap-[3px] h-4 shrink-0">
-                                    {[0.6, 1.0, 0.4, 0.8].map((h, i) => (
-                                        <span
-                                            key={i}
-                                            className="w-[3px] rounded-full bg-teal-500"
-                                            style={{
-                                                height: `${h * 100}%`,
-                                                animation: `marsEq ${0.55 + i * 0.18}s ease-in-out infinite alternate`,
-                                            }}
-                                        />
-                                    ))}
-                                </span>
-                                <p className="text-[11px] text-teal-700 font-medium">
-                                    Sedang memutar Mars PKK…
-                                </p>
+                                {/* Garis Link */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(s.underlineLinks)}
+                                    onClick={() => update({ underlineLinks: !s.underlineLinks })}
+                                >
+                                    <Underline size={16} className="text-teal-600 shrink-0" />
+                                    Garis link
+                                </button>
+
+                                {/* Spasi Nyaman */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(s.comfortableSpace)}
+                                    onClick={() => update({ comfortableSpace: !s.comfortableSpace })}
+                                >
+                                    <Type size={16} className="text-teal-600 shrink-0" />
+                                    Spasi nyaman
+                                </button>
+
+                                {/* Font Mudah Baca */}
+                                <button
+                                    type="button"
+                                    className={actionBtn(s.easyFont)}
+                                    onClick={() => update({ easyFont: !s.easyFont })}
+                                >
+                                    <Type size={16} className="text-teal-600 shrink-0" />
+                                    Font mudah baca
+                                </button>
+
+                                {/* Reset */}
+                                <button
+                                    type="button"
+                                    className={actionBtn()}
+                                    onClick={reset}
+                                >
+                                    <RotateCcw size={16} className="text-slate-500 shrink-0" />
+                                    Reset semua
+                                </button>
+
+                                {/* Mars PKK - Full Width */}
+                                <button
+                                    type="button"
+                                    className={`${actionBtn(isPlayingMars)} col-span-2`}
+                                    onClick={toggleMars}
+                                >
+                                    {isPlayingMars ? (
+                                        <Pause size={16} className="text-teal-600 shrink-0" />
+                                    ) : (
+                                        <Music size={16} className="text-teal-600 shrink-0" />
+                                    )}
+                                    {isPlayingMars ? "Jeda Mars PKK" : "Putar Mars PKK"}
+                                </button>
                             </div>
-                        )}
 
-                        <p className="px-4 pb-4 text-[11px] text-slate-400 leading-relaxed">
-                            Text reader membaca teks halaman. Preferensi disimpan di
-                            perangkat ini.
-                        </p>
+                            {/* Indikator Mars PKK */}
+                            {isPlayingMars && (
+                                <div className="mt-3 px-4 py-2.5 rounded-xl bg-teal-50 border border-teal-100 flex items-center gap-3">
+                                    <span className="flex items-end gap-[3px] h-5 shrink-0">
+                                        {[0.6, 1.0, 0.4, 0.8].map((h, i) => (
+                                            <span
+                                                key={i}
+                                                className="w-[3px] rounded-full bg-teal-500"
+                                                style={{
+                                                    height: `${h * 100}%`,
+                                                    animation: `marsEq ${0.55 + i * 0.18}s ease-in-out infinite alternate`,
+                                                }}
+                                            />
+                                        ))}
+                                    </span>
+                                    <p className="text-sm text-teal-700 font-medium">
+                                        Sedang memutar Mars PKK…
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={stopMars}
+                                        className="ml-auto text-teal-600 hover:text-teal-800 transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Footer */}
+                            <p className="mt-4 text-[11px] text-slate-400 leading-relaxed text-center">
+                                Preferensi disimpan di perangkat Anda. <br />
+                                Tekan Reset untuk mengembalikan ke default.
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -305,6 +406,28 @@ export default function AccessibilityWidget() {
                 @keyframes marsEq {
                     from { transform: scaleY(0.3); }
                     to   { transform: scaleY(1); }
+                }
+
+                .animate-in {
+                    animation-duration: 200ms;
+                }
+
+                .fade-in {
+                    animation-name: fadeIn;
+                }
+
+                .zoom-in {
+                    animation-name: zoomIn;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                @keyframes zoomIn {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
                 }
             `}</style>
         </>

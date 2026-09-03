@@ -28,7 +28,8 @@ import {
     CalendarDays,
     ClipboardList,
     Image,
-    Star, // ⬅️ TAMBAHKAN UNTUK ICON SURVEY
+    Star,
+    Clock,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -58,6 +59,7 @@ interface AuthType {
 interface SharedProps {
     app_settings?: AppSettings;
     auth?: AuthType;
+    beritaPendingCount?: number;
     [key: string]: unknown;
 }
 
@@ -90,10 +92,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         }
     };
 
+    const { app_settings, auth, beritaPendingCount = 0 } = usePage<SharedProps>().props;
+
     const hasAgenda = routeExists("be.agenda.index");
     const hasLaporan = routeExists("be.laporan-kegiatan.index");
     const hasInfografis = routeExists("be.infografis.index");
-    const hasSurvey = routeExists("be.survey.index"); // ⬅️ TAMBAHKAN!
+    const hasSurvey = routeExists("be.survey.index");
+    const hasBeritaPending = routeExists("be.berita.pending");
+    const hasStrukturOrganisasi = routeExists("be.struktur-organisasi.index");
 
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
         pokjaManagement:
@@ -104,14 +110,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             isCurrentRoute("be.pokja4.*"),
         userManagement:
             isCurrentRoute("be.users.*") || isCurrentRoute("be.roles.*"),
-        settingManagement: isCurrentRoute("be.settings.*"),
+        settingManagement:
+            isCurrentRoute("be.settings.*") || isCurrentRoute("be.struktur-organisasi.*"),
+        beritaManagement:
+            isCurrentRoute("be.berita.*"),
     });
 
     const toggleMenu = (menuName: string) => {
         setOpenMenus((prev) => ({ ...prev, [menuName]: !prev[menuName] }));
     };
 
-    const { app_settings, auth } = usePage<SharedProps>().props;
     const user = auth?.user;
     const roles = auth?.roles || [];
     const permissions = auth?.permissions || [];
@@ -203,12 +211,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                 <Link
                     href={route("be.dashboard")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                        ${
-                            isCurrentRoute("be.dashboard")
-                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
+                        isCurrentRoute("be.dashboard")
+                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
                 >
                     <LayoutDashboard
                         size={20}
@@ -229,8 +236,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 {permissions.includes("view-kader") && (
                     <Link
                         href={route("be.kader.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                        ${
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
                             isCurrentRoute("be.kader.*")
                                 ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -253,8 +259,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <button
                         type="button"
                         onClick={() => toggleMenu("pokjaManagement")}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
-                        ${
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
                             isCurrentRoute("be.sekretariat.*") ||
                             isCurrentRoute("be.pokja1.*") ||
                             isCurrentRoute("be.pokja2.*") ||
@@ -353,14 +358,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </div>
                 </div>
 
+                {/* ============================================
+                    MANAJEMEN KONTEN - BERITA BISA DILIPAT
+                ============================================ */}
                 <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                     Manajemen Konten
                 </p>
 
                 <Link
                     href={route("be.galeri.index")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                    ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
                         isCurrentRoute("be.galeri.*")
                             ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                             : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -378,33 +385,92 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <span>Galeri Kegiatan</span>
                 </Link>
 
-                <Link
-                    href={route("be.berita.index")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                    ${
-                        isCurrentRoute("be.berita.*")
-                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
-                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    }`}
-                >
-                    <Newspaper
-                        size={20}
-                        strokeWidth={2}
-                        className={`shrink-0 ${
+                {/* ============================================
+                    🔥🔥🔥 BERITA & INFORMASI DENGAN SUB MENU PENDING
+                ============================================ */}
+                <div className="mt-1">
+                    <button
+                        type="button"
+                        onClick={() => toggleMenu("beritaManagement")}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
                             isCurrentRoute("be.berita.*")
                                 ? "text-teal-600 dark:text-teal-400"
-                                : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
-                    />
-                    <span>Berita & Informasi</span>
-                </Link>
+                    >
+                        <div className="flex items-center gap-3">
+                            <Newspaper
+                                size={20}
+                                strokeWidth={2}
+                                className={`shrink-0 ${
+                                    isCurrentRoute("be.berita.*")
+                                        ? "text-teal-600 dark:text-teal-400"
+                                        : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                }`}
+                            />
+                            <span>Berita & Informasi</span>
+                            {/* Badge jumlah pending */}
+                            {beritaPendingCount > 0 && (
+                                <span className="ml-auto text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                                    {beritaPendingCount}
+                                </span>
+                            )}
+                        </div>
+                        <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-300 ${
+                                openMenus.beritaManagement ? "rotate-180" : ""
+                            }`}
+                        />
+                    </button>
+
+                    <div
+                        className={`overflow-hidden transition-all duration-300 ${
+                            openMenus.beritaManagement ? "max-h-96" : "max-h-0"
+                        }`}
+                    >
+                        <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
+                            {/* Semua Berita */}
+                            <Link
+                                href={route("be.berita.index")}
+                                className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                    isCurrentRoute("be.berita.index") && !isCurrentRoute("be.berita.pending")
+                                        ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                }`}
+                            >
+                                <FileText size={16} />
+                                <span>Semua Berita</span>
+                            </Link>
+
+                            {/* 🔥 BERITA PENDING - SUB MENU */}
+                            {hasBeritaPending && (
+                                <Link
+                                    href={safeRoute("be.berita.pending")}
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isCurrentRoute("be.berita.pending")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <Clock size={16} />
+                                    <span>Berita Pending</span>
+                                    {beritaPendingCount > 0 && (
+                                        <span className="ml-auto text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                                            {beritaPendingCount}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
 
                 {/* Agenda */}
                 {hasAgenda && (
                     <Link
                         href={safeRoute("be.agenda.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                        ${
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
                             isCurrentRoute("be.agenda.*")
                                 ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -427,8 +493,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 {hasInfografis && (
                     <Link
                         href={safeRoute("be.infografis.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                        ${
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
                             isCurrentRoute("be.infografis.*")
                                 ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -455,8 +520,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         </p>
                         <Link
                             href={safeRoute("be.laporan-kegiatan.index")}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                            ${
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
                                 isCurrentRoute("be.laporan-kegiatan.*")
                                     ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -476,12 +540,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </>
                 )}
 
-                {/* ⭐ SURVEY KEPUASAN - TAMBAHKAN DI SINI! */}
+                {/* Survey Kepuasan */}
                 {hasSurvey && (
                     <Link
                         href={safeRoute("be.survey.index")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group
-                        ${
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
                             isCurrentRoute("be.survey.*")
                                 ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -505,8 +568,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <button
                             type="button"
                             onClick={() => toggleMenu("userManagement")}
-                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
-                            ${
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
                                 isCurrentRoute("be.users.*")
                                     ? "text-teal-600 dark:text-teal-400"
                                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -534,9 +596,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                         <div
                             className={`overflow-hidden transition-all duration-300 ${
-                                openMenus.userManagement
-                                    ? "max-h-40"
-                                    : "max-h-0"
+                                openMenus.userManagement ? "max-h-40" : "max-h-0"
                             }`}
                         >
                             <div className="ml-9 border-slate-100 dark:border-slate-800 mt-1 space-y-1">
@@ -577,9 +637,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             <button
                                 type="button"
                                 onClick={() => toggleMenu("settingManagement")}
-                                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group
-                                ${
-                                    isCurrentRoute("be.settings.*")
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
+                                    isCurrentRoute("be.settings.*") || isCurrentRoute("be.struktur-organisasi.*")
                                         ? "text-teal-600 dark:text-teal-400"
                                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                 }`}
@@ -589,7 +648,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                         size={20}
                                         strokeWidth={2}
                                         className={`shrink-0 ${
-                                            isCurrentRoute("be.settings.*")
+                                            isCurrentRoute("be.settings.*") || isCurrentRoute("be.struktur-organisasi.*")
                                                 ? "text-teal-600 dark:text-teal-400"
                                                 : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                                         }`}
@@ -599,27 +658,21 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <ChevronDown
                                     size={16}
                                     className={`transition-transform duration-300 ${
-                                        openMenus.settingManagement
-                                            ? "rotate-180"
-                                            : ""
+                                        openMenus.settingManagement ? "rotate-180" : ""
                                     }`}
                                 />
                             </button>
 
                             <div
                                 className={`overflow-hidden transition-all duration-300 ${
-                                    openMenus.settingManagement
-                                        ? "max-h-40"
-                                        : "max-h-0"
+                                    openMenus.settingManagement ? "max-h-96" : "max-h-0"
                                 }`}
                             >
-                                <div className="ml-9 border-slate-100 dark:border-slate-800 mt-1 space-y-1">
+                                <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
                                     <Link
                                         href={route("be.settings.profile")}
                                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            isCurrentRoute(
-                                                "be.settings.profile"
-                                            )
+                                            isCurrentRoute("be.settings.profile")
                                                 ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
                                                 : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                         }`}
@@ -636,6 +689,23 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     >
                                         Aplikasi
                                     </Link>
+
+                                    {/* 🔥🔥🔥 STRUKTUR ORGANISASI DI DALAM PENGATURAN */}
+                                    {hasStrukturOrganisasi && (
+                                        <Link
+                                            href={safeRoute("be.struktur-organisasi.index")}
+                                            className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
+                                                isCurrentRoute("be.struktur-organisasi.*")
+                                                    ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                                    : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                            }`}
+                                        >
+                                            <span className="flex items-center gap-2.5">
+                                                <FileText size={16} />
+                                                Struktur Organisasi
+                                            </span>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -700,11 +770,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                             >
                                 <span className="flex items-center gap-2.5">
-                                    {isDarkMode ? (
-                                        <Sun size={16} />
-                                    ) : (
-                                        <Moon size={16} />
-                                    )}
+                                    {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
                                     {isDarkMode ? "Light Mode" : "Dark Mode"}
                                 </span>
                             </button>
