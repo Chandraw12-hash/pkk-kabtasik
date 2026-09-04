@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import Navbar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
-import { Calendar, Search, Images, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+    Calendar,
+    Search,
+    Images,
+    X,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-react";
 
 interface GaleriItem {
     id: number;
@@ -28,10 +35,13 @@ interface GaleriKegiatanProps {
     };
 }
 
+const FALLBACK =
+    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80";
+
 const getImageSrc = (item: GaleriItem): string => {
     if (item.foto_url) return item.foto_url;
     if (item.foto) return `/storage/${item.foto}`;
-    return "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80";
+    return FALLBACK;
 };
 
 export default function GaleriKegiatan({
@@ -51,9 +61,9 @@ export default function GaleriKegiatan({
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (searchQuery) {
+        if (searchQuery.trim()) {
             window.location.href = `/program/galeri-kegiatan?search=${encodeURIComponent(
-                searchQuery
+                searchQuery.trim()
             )}`;
         } else {
             window.location.href = `/program/galeri-kegiatan`;
@@ -65,7 +75,7 @@ export default function GaleriKegiatan({
         try {
             return new Date(dateString).toLocaleDateString("id-ID", {
                 day: "numeric",
-                month: "long",
+                month: "short",
                 year: "numeric",
             });
         } catch {
@@ -88,7 +98,6 @@ export default function GaleriKegiatan({
         setLightboxIndex((lightboxIndex + 1) % dataItems.length);
     };
 
-    // ESC + panah + kunci scroll body
     useEffect(() => {
         if (!isLightboxOpen) return;
 
@@ -104,79 +113,105 @@ export default function GaleriKegiatan({
             document.body.style.overflow = "";
             window.removeEventListener("keydown", onKey);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLightboxOpen, lightboxIndex, dataItems.length]);
 
     return (
-        <div className="min-h-screen flex flex-col bg-white font-sans text-slate-800 pt-14">
+        <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800 pt-14">
             <Head title="Galeri Kegiatan - PKK Kabupaten Tasikmalaya" />
             <Navbar />
 
-            {/* ==================== FILTER & SEARCH ==================== */}
-            <section className="py-8 bg-white border-b border-slate-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <form
-                        onSubmit={handleSearch}
-                        className="flex flex-col md:flex-row items-center gap-3 md:justify-end"
-                    >
-                        <div className="relative w-full md:w-72">
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Cari judul kegiatan..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white text-slate-800 placeholder:text-slate-400"
-                            />
+            {/* Header */}
+            <div className="bg-white border-b border-slate-100">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                        <div>
+                            <p className="text-teal-700 text-[11px] font-semibold tracking-wider uppercase mb-1">
+                                Program
+                            </p>
+                            <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
+                                Galeri Kegiatan
+                            </h1>
+                            <p className="text-sm text-slate-500 mt-0.5">
+                                Dokumentasi kegiatan TP PKK Kabupaten
+                                Tasikmalaya
+                            </p>
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full md:w-auto bg-teal-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-teal-700 transition-colors"
+                        <form
+                            onSubmit={handleSearch}
+                            className="flex gap-2 w-full sm:w-auto"
                         >
-                            Cari
-                        </button>
-                    </form>
+                            <div className="relative flex-1 sm:w-56">
+                                <Search
+                                    size={14}
+                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                />
+                                <input
+                                    type="search"
+                                    placeholder="Cari kegiatan..."
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="shrink-0 px-3.5 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors"
+                            >
+                                Cari
+                            </button>
+                        </form>
+                    </div>
+                    {hasData && galeri?.total != null && (
+                        <p className="text-[11px] text-slate-400 mt-2">
+                            {galeri.total} foto
+                            {filters.search
+                                ? ` · pencarian “${filters.search}”`
+                                : ""}
+                        </p>
+                    )}
                 </div>
-            </section>
+            </div>
 
-            {/* ==================== GRID GALERI ==================== */}
-            <section className="py-16 lg:py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Grid */}
+            <section className="py-8 sm:py-10 flex-1">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     {hasData ? (
                         <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                                 {dataItems.map((item, index) => {
                                     const imageSrc = getImageSrc(item);
-
                                     return (
                                         <button
                                             key={item.id}
                                             type="button"
                                             onClick={() => openLightbox(index)}
-                                            className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-300 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                                            className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100 border border-slate-200 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
                                         >
-                                            <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-                                                <img
-                                                    src={imageSrc}
-                                                    alt={item.judul}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                    loading="lazy"
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
-                                                <div className="absolute bottom-0 left-0 right-0 p-4">
-                                                    <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2">
-                                                        {item.judul}
-                                                    </h3>
-                                                    <p className="text-xs text-white/85 flex items-center gap-1.5 mt-1">
-                                                        <Calendar size={13} />
-                                                        {formatDate(
-                                                            item.tanggal ||
-                                                                item.created_at
-                                                        )}
-                                                    </p>
-                                                </div>
+                                            <img
+                                                src={imageSrc}
+                                                alt={item.judul}
+                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    e.currentTarget.src =
+                                                        FALLBACK;
+                                                }}
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <div className="absolute bottom-0 left-0 right-0 p-2.5 translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                                                <p className="text-[11px] sm:text-xs font-medium text-white line-clamp-2 leading-snug">
+                                                    {item.judul}
+                                                </p>
+                                                <p className="text-[10px] text-white/80 flex items-center gap-1 mt-0.5">
+                                                    <Calendar size={10} />
+                                                    {formatDate(
+                                                        item.tanggal ||
+                                                            item.created_at
+                                                    )}
+                                                </p>
                                             </div>
                                         </button>
                                     );
@@ -184,82 +219,84 @@ export default function GaleriKegiatan({
                             </div>
 
                             {/* Pagination */}
-                            <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
-                                {galeri?.links?.map((link, index) => {
-                                    if (
-                                        link.label === "pagination.previous" ||
-                                        link.label === "pagination.next" ||
-                                        link.label === "&laquo; Previous" ||
-                                        link.label === "Next &raquo;"
-                                    ) {
-                                        return null;
-                                    }
-
-                                    return (
-                                        <button
-                                            key={index}
-                                            type="button"
-                                            disabled={!link.url}
-                                            onClick={() => {
-                                                if (link.url)
-                                                    window.location.href =
-                                                        link.url;
-                                            }}
-                                            className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
-                                                link.active
-                                                    ? "bg-teal-600 text-white border-teal-600"
-                                                    : "bg-white text-slate-600 border-slate-200 hover:bg-white hover:border-teal-400 disabled:opacity-40"
-                                            }`}
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </div>
+                            {galeri?.links && galeri.links.length > 3 && (
+                                <nav
+                                    className="flex items-center justify-center gap-1 mt-8 flex-wrap"
+                                    aria-label="Navigasi halaman"
+                                >
+                                    {galeri.links.map((link, index) => {
+                                        const label = String(link.label || "");
+                                        if (
+                                            label.includes("Previous") ||
+                                            label.includes("Next") ||
+                                            label.includes("pagination.")
+                                        ) {
+                                            return null;
+                                        }
+                                        return (
+                                            <button
+                                                key={index}
+                                                type="button"
+                                                disabled={!link.url}
+                                                onClick={() => {
+                                                    if (link.url)
+                                                        window.location.href =
+                                                            link.url;
+                                                }}
+                                                className={`min-w-[32px] h-8 px-1.5 flex items-center justify-center rounded-md border text-xs font-medium transition-colors ${
+                                                    link.active
+                                                        ? "bg-teal-700 text-white border-teal-700"
+                                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+                                                }`}
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        );
+                                    })}
+                                </nav>
+                            )}
                         </>
                     ) : (
-                        <div className="text-center py-16 text-slate-500">
+                        <div className="text-center py-16">
                             <Images
-                                size={48}
-                                className="text-slate-300 mx-auto mb-4"
+                                size={36}
+                                className="text-slate-300 mx-auto mb-3"
                             />
-                            <p className="text-lg">
-                                Tidak ada foto kegiatan yang ditemukan.
+                            <p className="text-sm font-medium text-slate-600">
+                                Tidak ada foto kegiatan
                             </p>
-                            <p className="text-sm mt-1">
-                                Silakan tambahkan galeri melalui dashboard admin.
+                            <p className="text-xs text-slate-400 mt-1">
+                                Galeri akan tampil setelah admin mengunggah foto.
                             </p>
                         </div>
                     )}
                 </div>
             </section>
 
-            {/* ==================== LIGHTBOX / POPUP ==================== */}
+            {/* Lightbox */}
             {isLightboxOpen && activeItem && (
                 <div
-                    className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-8"
+                    className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6"
                     role="dialog"
                     aria-modal="true"
                     aria-label={activeItem.judul}
                 >
-                    {/* Backdrop */}
                     <button
                         type="button"
-                        className="absolute inset-0 bg-slate-900/85 backdrop-blur-[2px]"
+                        className="absolute inset-0 bg-slate-900/90"
                         aria-label="Tutup"
                         onClick={closeLightbox}
                     />
 
-                    {/* Konten */}
-                    <div className="relative z-10 w-full max-w-4xl">
+                    <div className="relative z-10 w-full max-w-3xl">
                         <button
                             type="button"
                             onClick={closeLightbox}
-                            className="absolute -top-12 right-0 sm:top-0 sm:-right-12 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                            className="absolute -top-10 right-0 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
                             aria-label="Tutup"
                         >
-                            <X size={20} />
+                            <X size={18} />
                         </button>
 
                         {dataItems.length > 1 && (
@@ -267,47 +304,46 @@ export default function GaleriKegiatan({
                                 <button
                                     type="button"
                                     onClick={showPrev}
-                                    className="absolute left-0 sm:-left-14 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-20"
+                                    className="absolute left-1 sm:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center z-20"
                                     aria-label="Sebelumnya"
                                 >
-                                    <ChevronLeft size={22} />
+                                    <ChevronLeft size={20} />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={showNext}
-                                    className="absolute right-0 sm:-right-14 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-20"
+                                    className="absolute right-1 sm:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center z-20"
                                     aria-label="Berikutnya"
                                 >
-                                    <ChevronRight size={22} />
+                                    <ChevronRight size={20} />
                                 </button>
                             </>
                         )}
 
-                        <div className="bg-white rounded-xl overflow-hidden shadow-2xl">
-                            <div className="relative bg-slate-100 max-h-[70vh] flex items-center justify-center">
+                        <div className="bg-white rounded-xl overflow-hidden shadow-xl">
+                            <div className="bg-slate-100 max-h-[72vh] flex items-center justify-center">
                                 <img
                                     src={getImageSrc(activeItem)}
                                     alt={activeItem.judul}
-                                    className="w-full h-auto max-h-[70vh] object-contain"
+                                    className="w-full h-auto max-h-[72vh] object-contain"
                                 />
                             </div>
-                            <div className="px-5 py-4 border-t border-slate-100">
-                                <h3 className="text-base sm:text-lg font-semibold text-slate-900">
-                                    {activeItem.judul}
-                                </h3>
-                                <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
-                                    <Calendar size={14} />
-                                    {formatDate(
-                                        activeItem.tanggal ||
-                                            activeItem.created_at
-                                    )}
-                                    {isLightboxOpen && (
-                                        <span className="text-slate-400 ml-2">
-                                            · {lightboxIndex! + 1} /{" "}
-                                            {dataItems.length}
-                                        </span>
-                                    )}
-                                </p>
+                            <div className="px-4 py-3 border-t border-slate-100 flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">
+                                        {activeItem.judul}
+                                    </h3>
+                                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                                        <Calendar size={12} />
+                                        {formatDate(
+                                            activeItem.tanggal ||
+                                                activeItem.created_at
+                                        )}
+                                    </p>
+                                </div>
+                                <span className="text-[11px] text-slate-400 shrink-0 tabular-nums pt-0.5">
+                                    {lightboxIndex! + 1} / {dataItems.length}
+                                </span>
                             </div>
                         </div>
                     </div>

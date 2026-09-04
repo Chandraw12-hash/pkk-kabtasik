@@ -11,12 +11,9 @@ import {
     Volume2,
     VolumeX,
     Circle,
-    Music,
-    Pause,
 } from "lucide-react";
 
 const STORAGE_KEY = "pkk-a11y";
-const MARS_PKK_SRC = "/sound/mars-pkk.mp3";
 
 type Settings = {
     fontScale: number;
@@ -37,18 +34,14 @@ const defaultSettings: Settings = {
 };
 
 // ============================================================
-// MAIN COMPONENT
+// MAIN COMPONENT - FOKUS AKSESIBILITAS
 // ============================================================
 export default function AccessibilityWidget() {
     const [open, setOpen] = useState(false);
     const [s, setS] = useState<Settings>(defaultSettings);
-    const [isPlayingMars, setIsPlayingMars] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-    // ─── LOAD PREFERENSI ───────────────────────────────────────────────────────
+    // ─── LOAD PREFERENSI ──────────────────────────────────────────────────────
     useEffect(() => {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
@@ -64,8 +57,6 @@ export default function AccessibilityWidget() {
     // ─── TERAPKAN AKSESIBILITAS ──────────────────────────────────────────────
     useEffect(() => {
         const root = document.documentElement;
-
-        // Hapus semua kelas dulu
         root.classList.remove(
             "a11y-text-lg",
             "a11y-text-xl",
@@ -75,8 +66,6 @@ export default function AccessibilityWidget() {
             "a11y-space",
             "a11y-font"
         );
-
-        // Tambah kelas sesuai state
         if (s.fontScale === 1) root.classList.add("a11y-text-lg");
         if (s.fontScale === 2) root.classList.add("a11y-text-xl");
         if (s.highContrast) root.classList.add("a11y-contrast");
@@ -84,59 +73,16 @@ export default function AccessibilityWidget() {
         if (s.underlineLinks) root.classList.add("a11y-underline");
         if (s.comfortableSpace) root.classList.add("a11y-space");
         if (s.easyFont) root.classList.add("a11y-font");
-
         localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
     }, [s]);
 
-    // ─── INISIALISASI AUDIO ──────────────────────────────────────────────────
-    useEffect(() => {
-        const audio = new Audio(MARS_PKK_SRC);
-        audio.loop = false;
-        audio.preload = "auto";
-        audio.addEventListener("ended", () => setIsPlayingMars(false));
-        audioRef.current = audio;
-
-        return () => {
-            audio.pause();
-            audio.src = "";
-            audioRef.current = null;
-        };
-    }, []);
-
-    // ─── HANDLER MARS PKK ────────────────────────────────────────────────────
-    const toggleMars = useCallback(() => {
-        const audio = audioRef.current;
-        if (!audio) return;
-
-        if (isPlayingMars) {
-            audio.pause();
-            setIsPlayingMars(false);
-        } else {
-            // Hentikan text-to-speech jika aktif
-            if (isSpeaking) {
-                window.speechSynthesis.cancel();
-                setIsSpeaking(false);
-            }
-            audio.play()
-                .then(() => setIsPlayingMars(true))
-                .catch(() => setIsPlayingMars(false));
-        }
-    }, [isPlayingMars, isSpeaking]);
-
-    // ─── HANDLER TEXT-TO-SPEECH ─────────────────────────────────────────────
+    // ─── TEXT-TO-SPEECH ──────────────────────────────────────────────────────
     const speakPage = useCallback(() => {
         if (!("speechSynthesis" in window)) {
             alert("Browser tidak mendukung pembacaan teks.");
             return;
         }
 
-        // Stop mars jika sedang diputar
-        if (isPlayingMars) {
-            audioRef.current?.pause();
-            setIsPlayingMars(false);
-        }
-
-        // Cancel speech yang sedang berjalan
         window.speechSynthesis.cancel();
 
         const text = document.body?.innerText?.slice(0, 3000) || "";
@@ -149,14 +95,11 @@ export default function AccessibilityWidget() {
         utterance.lang = "id-ID";
         utterance.rate = 1;
         utterance.pitch = 1;
-
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
         utterance.onerror = () => setIsSpeaking(false);
-
-        speechRef.current = utterance;
         window.speechSynthesis.speak(utterance);
-    }, [isPlayingMars]);
+    }, []);
 
     const stopSpeak = useCallback(() => {
         if ("speechSynthesis" in window) {
@@ -173,11 +116,9 @@ export default function AccessibilityWidget() {
     const reset = useCallback(() => {
         setS({ ...defaultSettings });
         localStorage.removeItem(STORAGE_KEY);
-        // Reload halaman untuk efek instan
         window.location.reload();
     }, []);
 
-    // ─── STYLE BUTTON ────────────────────────────────────────────────────────
     const actionBtn = useCallback((active?: boolean) => {
         return `flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-[13px] font-medium border transition-colors text-left ${
             active
@@ -202,7 +143,6 @@ export default function AccessibilityWidget() {
             {/* Modal Widget */}
             {open && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-                    {/* Overlay */}
                     <button
                         type="button"
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -210,7 +150,6 @@ export default function AccessibilityWidget() {
                         onClick={() => setOpen(false)}
                     />
 
-                    {/* Panel */}
                     <div
                         className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200"
                         role="dialog"
@@ -262,7 +201,7 @@ export default function AccessibilityWidget() {
                                     type="button"
                                     className={actionBtn()}
                                     onClick={stopSpeak}
-                                    disabled={!isSpeaking && !isPlayingMars}
+                                    disabled={!isSpeaking}
                                 >
                                     <VolumeX size={16} className="text-slate-500 shrink-0" />
                                     Stop suara
@@ -348,51 +287,8 @@ export default function AccessibilityWidget() {
                                     <RotateCcw size={16} className="text-slate-500 shrink-0" />
                                     Reset semua
                                 </button>
-
-                                {/* Mars PKK - Full Width */}
-                                <button
-                                    type="button"
-                                    className={`${actionBtn(isPlayingMars)} col-span-2`}
-                                    onClick={toggleMars}
-                                >
-                                    {isPlayingMars ? (
-                                        <Pause size={16} className="text-teal-600 shrink-0" />
-                                    ) : (
-                                        <Music size={16} className="text-teal-600 shrink-0" />
-                                    )}
-                                    {isPlayingMars ? "Jeda Mars PKK" : "Putar Mars PKK"}
-                                </button>
                             </div>
 
-                            {/* Indikator Mars PKK */}
-                            {isPlayingMars && (
-                                <div className="mt-3 px-4 py-2.5 rounded-xl bg-teal-50 border border-teal-100 flex items-center gap-3">
-                                    <span className="flex items-end gap-[3px] h-5 shrink-0">
-                                        {[0.6, 1.0, 0.4, 0.8].map((h, i) => (
-                                            <span
-                                                key={i}
-                                                className="w-[3px] rounded-full bg-teal-500"
-                                                style={{
-                                                    height: `${h * 100}%`,
-                                                    animation: `marsEq ${0.55 + i * 0.18}s ease-in-out infinite alternate`,
-                                                }}
-                                            />
-                                        ))}
-                                    </span>
-                                    <p className="text-sm text-teal-700 font-medium">
-                                        Sedang memutar Mars PKK…
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={stopMars}
-                                        className="ml-auto text-teal-600 hover:text-teal-800 transition-colors"
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Footer */}
                             <p className="mt-4 text-[11px] text-slate-400 leading-relaxed text-center">
                                 Preferensi disimpan di perangkat Anda. <br />
                                 Tekan Reset untuk mengembalikan ke default.
@@ -403,28 +299,13 @@ export default function AccessibilityWidget() {
             )}
 
             <style>{`
-                @keyframes marsEq {
-                    from { transform: scaleY(0.3); }
-                    to   { transform: scaleY(1); }
-                }
-
-                .animate-in {
-                    animation-duration: 200ms;
-                }
-
-                .fade-in {
-                    animation-name: fadeIn;
-                }
-
-                .zoom-in {
-                    animation-name: zoomIn;
-                }
-
+                .animate-in { animation-duration: 200ms; }
+                .fade-in { animation-name: fadeIn; }
+                .zoom-in { animation-name: zoomIn; }
                 @keyframes fadeIn {
                     from { opacity: 0; }
                     to { opacity: 1; }
                 }
-
                 @keyframes zoomIn {
                     from { transform: scale(0.95); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
@@ -433,3 +314,4 @@ export default function AccessibilityWidget() {
         </>
     );
 }
+

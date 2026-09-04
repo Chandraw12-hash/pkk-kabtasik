@@ -5,13 +5,41 @@ import { createRoot } from "react-dom/client";
 import { createInertiaApp, router } from "@inertiajs/react";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-
 import { Toaster } from "sonner";
+
 import WelcomeGreeting from "./Pages/Frontend/Layouts/WelcomeGreeting";
+import AccessibilityWidget from "./Pages/Frontend/Layouts/AccessibilityWidget";
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
+
+// 🔥 HALAMAN YANG SUARANYA MATI
+const SILENT_PAGES = [
+    "profil", "program", "berita", "struktur",
+    "sekretariat", "pokja-1", "pokja-2",
+    "pokja-3", "pokja-4", "galeri", "dokumen", "survey"
+];
+
+// 🔥 FUNGSI PAUSE SEMUA AUDIO
+function pauseAllAudio() {
+    const url = window.location.pathname;
+    const isSilent = SILENT_PAGES.some((p) => url.includes(p));
+
+    if (isSilent) {
+        // 🔥 PAUSE SEMUA AUDIO ELEMENT
+        document.querySelectorAll('audio').forEach((audio) => {
+            if (!audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+                console.log("⏹️ AUDIO PAUSED:", audio.src);
+            }
+        });
+
+        // 🔥 PAUSE JUGA LEWAT CUSTOM EVENT
+        window.dispatchEvent(new CustomEvent('pause-audio', {
+            detail: { isSilent, url }
+        }));
+    }
+}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -21,13 +49,17 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.tsx"),
         ),
     setup({ el, App, props }) {
-        AOS.init({
-            duration: 800,
-            once: true,
+        // 🔥 PANTAU NAVIGASI
+        router.on('navigate', () => {
+            setTimeout(pauseAllAudio, 100);
         });
 
-        router.on('navigate', () => {
-            AOS.refresh();
+        // 🔥 PANTAU KLIK LINK
+        document.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            if (target.closest('a')) {
+                setTimeout(pauseAllAudio, 200);
+            }
         });
 
         const root = createRoot(el);
@@ -42,12 +74,13 @@ createInertiaApp({
                         style: { zIndex: 9999 },
                     }}
                 />
-                <WelcomeGreeting />
                 <App {...props} />
+                <WelcomeGreeting />
+                <AccessibilityWidget />
             </>,
         );
     },
     progress: {
-        color: "#0022ffff", // Warna loading bar saat pindah halaman
+        color: "#0022ffff",
     },
 });
