@@ -13,7 +13,8 @@ import {
     User,
     Search,
     Filter,
-    X
+    X,
+    Loader2
 } from "lucide-react";
 
 interface BeritaPendingItem {
@@ -30,6 +31,12 @@ interface BeritaPendingItem {
     created_at?: string;
     created_by?: number;
     created_by_name?: string;
+    user?: {
+        id: number;
+        name: string;
+        username: string;
+        kecamatan: string;
+    };
 }
 
 interface PendingProps {
@@ -41,25 +48,30 @@ interface PendingProps {
         total: number;
         from?: number;
         to?: number;
+        links?: any[];
     };
     kecamatanList?: string[];
     filters?: {
         kecamatan?: string;
         search?: string;
     };
+    totalPending?: number;
 }
 
 export default function BeritaPending() {
-    const { beritaPending, kecamatanList = [], filters = {} } = usePage<{
+    const { beritaPending, kecamatanList = [], filters = {}, totalPending = 0 } = usePage<{
         beritaPending: PendingProps['beritaPending'];
         kecamatanList?: string[];
         filters?: { kecamatan?: string; search?: string };
+        totalPending?: number;
     }>().props;
 
     const items = beritaPending?.data || [];
 
     const [searchQuery, setSearchQuery] = useState(filters.search || "");
     const [selectedKecamatan, setSelectedKecamatan] = useState(filters.kecamatan || "");
+    const [loadingApprove, setLoadingApprove] = useState<number | null>(null);
+    const [loadingReject, setLoadingReject] = useState<number | null>(null);
 
     const handleApprove = (id: number) => {
         const judulInput = document.getElementById(`judul-${id}`) as HTMLInputElement;
@@ -67,23 +79,41 @@ export default function BeritaPending() {
 
         if (!judulInput || !deskripsiInput) return;
 
-        router.put(`/dashboard/berita/${id}/approve`, {
+        if (!confirm('Setujui berita ini?')) return;
+
+        setLoadingApprove(id);
+        router.put(route('be.berita.approve', id), {
             judul: judulInput.value,
             deskripsi: deskripsiInput.value,
+        }, {
+            onSuccess: () => {
+                setLoadingApprove(null);
+            },
+            onError: () => {
+                setLoadingApprove(null);
+            },
         });
     };
 
     const handleReject = (id: number) => {
-        const reason = prompt("Alasan penolakan:");
+        const reason = prompt("Alasan penolakan (opsional):");
         if (reason !== null) {
-            router.put(`/dashboard/berita/${id}/reject`, {
+            setLoadingReject(id);
+            router.put(route('be.berita.reject', id), {
                 reason: reason || "Tidak memenuhi kriteria publikasi.",
+            }, {
+                onSuccess: () => {
+                    setLoadingReject(null);
+                },
+                onError: () => {
+                    setLoadingReject(null);
+                },
             });
         }
     };
 
     const handleFilter = () => {
-        router.get("/dashboard/berita/pending", {
+        router.get(route('be.berita.pending'), {
             search: searchQuery || undefined,
             kecamatan: selectedKecamatan || undefined,
         }, {
@@ -95,7 +125,7 @@ export default function BeritaPending() {
     const handleReset = () => {
         setSearchQuery("");
         setSelectedKecamatan("");
-        router.get("/dashboard/berita/pending", {}, {
+        router.get(route('be.berita.pending'), {}, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -108,6 +138,8 @@ export default function BeritaPending() {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
             });
         } catch {
             return dateString;
@@ -125,7 +157,7 @@ export default function BeritaPending() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                            Berita Perlu Persetujuan
+                            📰 Berita Perlu Persetujuan
                         </h1>
                         <p className="text-sm text-slate-500 mt-1">
                             Tinjau dan kelola berita yang dikirim oleh kader
@@ -135,11 +167,11 @@ export default function BeritaPending() {
                         <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
                             <Clock size={16} className="text-amber-600" />
                             <span className="text-sm font-semibold text-amber-700">
-                                {beritaPending?.total || 0} Menunggu
+                                {totalPending || beritaPending?.total || 0} Menunggu
                             </span>
                         </div>
                         <Link
-                            href="/dashboard/berita"
+                            href={route('be.berita.index')}
                             className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
                         >
                             Lihat Semua Berita
@@ -159,6 +191,7 @@ export default function BeritaPending() {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Cari judul berita..."
                                 className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
                             />
                         </div>
 
@@ -259,149 +292,187 @@ export default function BeritaPending() {
                     </div>
                 ) : (
                     <div className="space-y-5">
-                        {items.map((berita) => (
-                            <div
-                                key={berita.id}
-                                className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-                            >
-                                <div className="p-6">
-                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                                        {/* Thumbnail */}
-                                        <div className="lg:col-span-1">
-                                            <div className="relative w-full aspect-video lg:aspect-square rounded-xl overflow-hidden bg-slate-100">
-                                                {berita.foto_url ? (
-                                                    <img
-                                                        src={berita.foto_url}
-                                                        alt={berita.judul}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).style.display = "none";
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
-                                                        <Eye size={32} className="mb-2" />
-                                                        <span className="text-xs">Tidak ada gambar</span>
+                        {items.map((berita) => {
+                            const isApproving = loadingApprove === berita.id;
+                            const isRejecting = loadingReject === berita.id;
+                            const isProcessing = isApproving || isRejecting;
+
+                            return (
+                                <div
+                                    key={berita.id}
+                                    className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                                >
+                                    <div className="p-6">
+                                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                            {/* Thumbnail */}
+                                            <div className="lg:col-span-1">
+                                                <div className="relative w-full aspect-video lg:aspect-square rounded-xl overflow-hidden bg-slate-100">
+                                                    {berita.foto_url ? (
+                                                        <img
+                                                            src={berita.foto_url}
+                                                            alt={berita.judul}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = "none";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
+                                                            <Eye size={32} className="mb-2" />
+                                                            <span className="text-xs">Tidak ada gambar</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute top-3 left-3">
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full shadow-sm">
+                                                            <Clock size={12} />
+                                                            Pending
+                                                        </span>
                                                     </div>
-                                                )}
-                                                <div className="absolute top-3 left-3">
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full shadow-sm">
-                                                        <Clock size={12} />
-                                                        Pending
-                                                    </span>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Content */}
-                                        <div className="lg:col-span-2 space-y-4">
-                                            {/* Meta Info */}
-                                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1.5">
-                                                    <Calendar size={14} className="text-slate-400" />
-                                                    {formatDate(berita.created_at)}
-                                                </span>
-                                                <span className="flex items-center gap-1.5">
-                                                    <User size={14} className="text-slate-400" />
-                                                    {berita.created_by_name || "Kader"}
-                                                </span>
-                                                {berita.kategori && (
+                                            {/* Content */}
+                                            <div className="lg:col-span-2 space-y-4">
+                                                {/* Meta Info */}
+                                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                                                     <span className="flex items-center gap-1.5">
-                                                        <Tag size={14} className="text-slate-400" />
-                                                        {berita.kategori}
+                                                        <Calendar size={14} className="text-slate-400" />
+                                                        {formatDate(berita.created_at)}
                                                     </span>
-                                                )}
-                                                {berita.kecamatan && (
                                                     <span className="flex items-center gap-1.5">
-                                                        <MapPin size={14} className="text-slate-400" />
-                                                        {berita.kecamatan}
+                                                        <User size={14} className="text-slate-400" />
+                                                        {berita.user?.name || berita.created_by_name || "Kader"}
                                                     </span>
-                                                )}
+                                                    {berita.kategori && (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <Tag size={14} className="text-slate-400" />
+                                                            {berita.kategori}
+                                                        </span>
+                                                    )}
+                                                    {berita.kecamatan && (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <MapPin size={14} className="text-slate-400" />
+                                                            {berita.kecamatan}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Edit Fields */}
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-slate-500 mb-1">
+                                                            Judul Berita
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            id={`judul-${berita.id}`}
+                                                            defaultValue={berita.judul}
+                                                            className="w-full text-base font-semibold text-slate-900 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                                                            placeholder="Masukkan judul berita..."
+                                                            disabled={isProcessing}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-slate-500 mb-1">
+                                                            Deskripsi / Konten
+                                                        </label>
+                                                        <textarea
+                                                            id={`deskripsi-${berita.id}`}
+                                                            defaultValue={berita.deskripsi || berita.konten || ""}
+                                                            className="w-full text-sm text-slate-600 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                                                            rows={3}
+                                                            placeholder="Tulis deskripsi berita..."
+                                                            disabled={isProcessing}
+                                                        />
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            {/* Edit Fields */}
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-500 mb-1">
-                                                        Judul Berita
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        id={`judul-${berita.id}`}
-                                                        defaultValue={berita.judul}
-                                                        className="w-full text-base font-semibold text-slate-900 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
-                                                        placeholder="Masukkan judul berita..."
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-500 mb-1">
-                                                        Deskripsi / Konten
-                                                    </label>
-                                                    <textarea
-                                                        id={`deskripsi-${berita.id}`}
-                                                        defaultValue={berita.deskripsi || berita.konten || ""}
-                                                        className="w-full text-sm text-slate-600 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
-                                                        rows={3}
-                                                        placeholder="Tulis deskripsi berita..."
-                                                    />
-                                                </div>
+                                            {/* Actions */}
+                                            <div className="lg:col-span-1 flex flex-row lg:flex-col gap-2 lg:justify-center">
+                                                <button
+                                                    onClick={() => handleApprove(berita.id)}
+                                                    disabled={isProcessing}
+                                                    className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors w-full ${
+                                                        isApproving
+                                                            ? "bg-teal-400 cursor-not-allowed"
+                                                            : "bg-teal-600 hover:bg-teal-700 text-white"
+                                                    }`}
+                                                >
+                                                    {isApproving ? (
+                                                        <Loader2 size={18} className="animate-spin" />
+                                                    ) : (
+                                                        <CheckCircle size={18} />
+                                                    )}
+                                                    {isApproving ? "Memproses..." : "Setujui"}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReject(berita.id)}
+                                                    disabled={isProcessing}
+                                                    className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors w-full ${
+                                                        isRejecting
+                                                            ? "bg-red-200 cursor-not-allowed"
+                                                            : "bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300"
+                                                    }`}
+                                                >
+                                                    {isRejecting ? (
+                                                        <Loader2 size={18} className="animate-spin" />
+                                                    ) : (
+                                                        <XCircle size={18} />
+                                                    )}
+                                                    {isRejecting ? "Memproses..." : "Tolak"}
+                                                </button>
+                                                <Link
+                                                    href={route('be.berita.edit', berita.id)}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-700 text-sm font-medium rounded-lg transition-colors w-full border border-slate-200"
+                                                >
+                                                    <Edit size={16} />
+                                                    Edit Lengkap
+                                                </Link>
                                             </div>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="lg:col-span-1 flex flex-row lg:flex-col gap-2 lg:justify-center">
-                                            <button
-                                                onClick={() => handleApprove(berita.id)}
-                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors w-full"
-                                            >
-                                                <CheckCircle size={18} />
-                                                Setujui
-                                            </button>
-                                            <button
-                                                onClick={() => handleReject(berita.id)}
-                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 text-sm font-semibold rounded-lg transition-colors w-full"
-                                            >
-                                                <XCircle size={18} />
-                                                Tolak
-                                            </button>
-                                            <Link
-                                                href={`/dashboard/berita/${berita.id}/edit`}
-                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-700 text-sm font-medium rounded-lg transition-colors w-full border border-slate-200"
-                                            >
-                                                <Edit size={16} />
-                                                Edit Lengkap
-                                            </Link>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
 
                 {/* Pagination */}
-                {beritaPending?.last_page > 1 && (
+                {beritaPending?.last_page > 1 && beritaPending?.links && (
                     <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
                         <p className="text-sm text-slate-500">
                             Menampilkan {beritaPending?.from || 0} - {beritaPending?.to || 0} dari {beritaPending?.total || 0}
                         </p>
                         <div className="flex gap-2">
-                            {Array.from({ length: Math.min(beritaPending?.last_page || 1, 5) }, (_, i) => i + 1).map((page) => (
-                                <Link
-                                    key={page}
-                                    href={`?page=${page}`}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                        page === (beritaPending?.current_page || 1)
-                                            ? "bg-teal-600 text-white"
-                                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                    }`}
-                                >
-                                    {page}
-                                </Link>
-                            ))}
-                            {beritaPending?.last_page > 5 && (
-                                <span className="px-4 py-2 text-sm text-slate-400">...</span>
-                            )}
+                            {beritaPending.links.map((link: any, index: number) => {
+                                if (index === 0 || index === beritaPending.links.length - 1) {
+                                    return (
+                                        <Link
+                                            key={index}
+                                            href={link.url || '#'}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                                !link.url
+                                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                            }`}
+                                        />
+                                    );
+                                }
+                                return (
+                                    <Link
+                                        key={index}
+                                        href={link.url || '#'}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                            link.active
+                                                ? "bg-teal-600 text-white"
+                                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 )}

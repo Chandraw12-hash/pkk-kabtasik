@@ -6,13 +6,224 @@ use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class BeritaController extends Controller
 {
+    // ================================================================
+    // 🔥 MOBILE - SUBMIT BERITA
+    // ================================================================
+
     /**
-     * Get list of berita with filters
-     * GET /api/berita
+     * Submit berita dari mobile (kader)
+     * POST /api/berita
      */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'judul' => 'required|string|max:255',
+            'konten' => 'required|string',
+            'kategori' => 'nullable|string|max:50',
+            'kecamatan' => 'nullable|string|max:100',
+            'foto' => 'nullable|string', // base64
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $request->all();
+        $data['slug'] = Str::slug($request->judul) . '-' . uniqid();
+        $data['status'] = 'pending';
+        $data['user_id'] = $request->user()->id;
+        $data['created_by'] = $request->user()->id;
+
+        // 🔥 FIX: Handle foto base64 dengan try-catch
+        if ($request->foto) {
+            try {
+                $data['foto'] = $this->uploadBase64Image($request->foto);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal upload foto: ' . $e->getMessage()
+                ], 400);
+            }
+        }
+
+        $berita = Berita::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita berhasil dikirim, menunggu persetujuan admin.',
+            'data' => $this->formatBerita($berita)
+        ], 201);
+    }
+
+    /**
+     * Get berita milik user yang login
+     * GET /api/berita/saya
+     */
+    public function myBerita(Request $request)
+    {
+        $berita = Berita::where('user_id', $request->user()->id)
+            ->orWhere('created_by', $request->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return $this->formatBerita($item);
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita saya',
+            'data' => $berita
+        ]);
+    }
+
+    /**
+     * Get detail berita milik user sendiri
+     * GET /api/berita/saya/{id}
+     */
+    public function showMyBerita(Request $request, $id)
+    {
+        $berita = Berita::where('id', $id)
+            ->where(function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id)
+                    ->orWhere('created_by', $request->user()->id);
+            })
+            ->first();
+
+        if (!$berita) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->formatBerita($berita)
+        ]);
+    }
+
+    /**
+     * Update berita sendiri (hanya jika status pending)
+     * PUT /api/berita/saya/{id}
+     */
+    public function update(Request $request, $id)
+    {
+        $berita = Berita::where('id', $id)
+            ->where(function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id)
+                    ->orWhere('created_by', $request->user()->id);
+            })
+            ->first();
+
+        if (!$berita) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita tidak ditemukan'
+            ], 404);
+        }
+
+        if ($berita->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita sudah diproses admin, tidak bisa diubah.'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'judul' => 'sometimes|string|max:255',
+            'konten' => 'sometimes|string',
+            'kategori' => 'nullable|string|max:50',
+            'kecamatan' => 'nullable|string|max:100',
+            'foto' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $request->all();
+
+        if ($request->has('judul') && $request->judul !== $berita->judul) {
+            $data['slug'] = Str::slug($request->judul) . '-' . uniqid();
+        }
+
+        if ($request->foto) {
+            if ($berita->foto) {
+                $this->deleteImage($berita->foto);
+            }
+            try {
+                $data['foto'] = $this->uploadBase64Image($request->foto);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal upload foto: ' . $e->getMessage()
+                ], 400);
+            }
+        }
+
+        $berita->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita berhasil diupdate.',
+            'data' => $this->formatBerita($berita)
+        ]);
+    }
+
+    /**
+     * Hapus berita sendiri (hanya jika status pending)
+     * DELETE /api/berita/saya/{id}
+     */
+    public function destroy(Request $request, $id)
+    {
+        $berita = Berita::where('id', $id)
+            ->where(function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id)
+                    ->orWhere('created_by', $request->user()->id);
+            })
+            ->first();
+
+        if (!$berita) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita tidak ditemukan'
+            ], 404);
+        }
+
+        if ($berita->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita sudah diproses admin, tidak bisa dihapus.'
+            ], 403);
+        }
+
+        if ($berita->foto) {
+            $this->deleteImage($berita->foto);
+        }
+
+        $berita->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita berhasil dihapus.'
+        ]);
+    }
+
+    // ================================================================
+    // 🔥 PUBLIC - BERITA
+    // ================================================================
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -20,7 +231,7 @@ class BeritaController extends Controller
         $kecamatan = $request->input('kecamatan');
         $limit = $request->input('limit', 10);
 
-        $berita = Berita::where('status_publikasi', true)
+        $berita = Berita::where('status', 'approved')
             ->when($search, function ($query) use ($search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('judul', 'like', "%{$search}%")
@@ -36,22 +247,10 @@ class BeritaController extends Controller
             ->latest()
             ->paginate($limit)
             ->through(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'judul' => $item->judul,
-                    'slug' => $item->slug,
-                    'konten' => $item->konten,
-                    'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
-                    'kategori' => $item->kategori,
-                    'kecamatan' => $item->kecamatan,
-                    'foto_url' => $item->foto_url ?? null,
-                    'created_at' => $item->created_at?->toIso8601String(),
-                    'created_at_formatted' => $item->created_at?->translatedFormat('d F Y'),
-                ];
+                return $this->formatBeritaPublic($item);
             });
 
-        // Get list of unique kecamatan for filter
-        $kecamatanList = Berita::where('status_publikasi', true)
+        $kecamatanList = Berita::where('status', 'approved')
             ->select('kecamatan')
             ->distinct()
             ->whereNotNull('kecamatan')
@@ -63,19 +262,15 @@ class BeritaController extends Controller
             'data' => $berita,
             'filters' => [
                 'kecamatan' => $kecamatanList,
-                'kategori' => ['Artikel', 'Pemberitaan Desa', 'Pengumuman'],
+                'kategori' => ['Artikel', 'Pemberitaan Desa', 'Pengumuman', 'Kegiatan'],
             ],
         ]);
     }
 
-    /**
-     * Get detail berita by slug
-     * GET /api/berita/{slug}
-     */
     public function show($slug)
     {
         $berita = Berita::where('slug', $slug)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->first();
 
         if (!$berita) {
@@ -85,14 +280,12 @@ class BeritaController extends Controller
             ], 404);
         }
 
-        // Update view count (if views column exists)
         if (method_exists($berita, 'increment')) {
             $berita->increment('views');
         }
 
-        // Berita terkait (same kecamatan)
         $related = Berita::where('id', '!=', $berita->id)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->when($berita->kecamatan, function ($query) use ($berita) {
                 return $query->where('kecamatan', $berita->kecamatan);
             })
@@ -131,13 +324,9 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * Get list of kecamatan for filter
-     * GET /api/berita/kecamatan
-     */
     public function getKecamatan()
     {
-        $kecamatanList = Berita::where('status_publikasi', true)
+        $kecamatanList = Berita::where('status', 'approved')
             ->select('kecamatan')
             ->distinct()
             ->whereNotNull('kecamatan')
@@ -149,29 +338,16 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * Get latest berita for landing page
-     * GET /api/berita/latest
-     */
     public function latest(Request $request)
     {
         $limit = $request->input('limit', 6);
 
-        $berita = Berita::where('status_publikasi', true)
+        $berita = Berita::where('status', 'approved')
             ->latest()
             ->limit($limit)
             ->get()
             ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'judul' => $item->judul,
-                    'slug' => $item->slug,
-                    'kategori' => $item->kategori,
-                    'kecamatan' => $item->kecamatan,
-                    'foto_url' => $item->foto_url ?? null,
-                    'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
-                    'created_at_formatted' => $item->created_at?->translatedFormat('d F Y'),
-                ];
+                return $this->formatBeritaPublic($item);
             });
 
         return response()->json([
@@ -181,30 +357,16 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * Get berita by kategori
-     * GET /api/berita/kategori/{kategori}
-     */
     public function byKategori(Request $request, $kategori)
     {
         $limit = $request->input('limit', 10);
 
-        $berita = Berita::where('status_publikasi', true)
+        $berita = Berita::where('status', 'approved')
             ->where('kategori', $kategori)
             ->latest()
             ->paginate($limit)
             ->through(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'judul' => $item->judul,
-                    'slug' => $item->slug,
-                    'konten' => $item->konten,
-                    'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
-                    'kategori' => $item->kategori,
-                    'kecamatan' => $item->kecamatan,
-                    'foto_url' => $item->foto_url ?? null,
-                    'created_at_formatted' => $item->created_at?->translatedFormat('d F Y'),
-                ];
+                return $this->formatBeritaPublic($item);
             });
 
         return response()->json([
@@ -214,30 +376,16 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * Get berita by kecamatan
-     * GET /api/berita/kecamatan/{kecamatan}
-     */
     public function byKecamatan(Request $request, $kecamatan)
     {
         $limit = $request->input('limit', 10);
 
-        $berita = Berita::where('status_publikasi', true)
+        $berita = Berita::where('status', 'approved')
             ->where('kecamatan', $kecamatan)
             ->latest()
             ->paginate($limit)
             ->through(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'judul' => $item->judul,
-                    'slug' => $item->slug,
-                    'konten' => $item->konten,
-                    'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
-                    'kategori' => $item->kategori,
-                    'kecamatan' => $item->kecamatan,
-                    'foto_url' => $item->foto_url ?? null,
-                    'created_at_formatted' => $item->created_at?->translatedFormat('d F Y'),
-                ];
+                return $this->formatBeritaPublic($item);
             });
 
         return response()->json([
@@ -247,23 +395,14 @@ class BeritaController extends Controller
         ]);
     }
 
-    // ================================================================
-    // 🔥🔥🔥 KECAMATAN TERAKTIF - TANPA DUMMY
-    // ================================================================
-
-    /**
-     * Get top 5 kecamatan with most berita
-     * GET /api/berita/kecamatan-teraktif
-     */
     public function kecamatanTeraktif(Request $request)
     {
         $range = $request->input('range', 'all');
 
-        $query = Berita::where('status_publikasi', true)
+        $query = Berita::where('status', 'approved')
             ->whereNotNull('kecamatan')
             ->where('kecamatan', '!=', '');
 
-        // Filter berdasarkan range
         if ($range === 'month') {
             $query->whereMonth('created_at', now()->month)
                   ->whereYear('created_at', now()->year);
@@ -273,7 +412,6 @@ class BeritaController extends Controller
             $query->whereYear('created_at', now()->year);
         }
 
-        // Group by kecamatan dan hitung
         $data = $query->select('kecamatan', DB::raw('count(*) as total'))
             ->groupBy('kecamatan')
             ->orderBy('total', 'desc')
@@ -286,10 +424,8 @@ class BeritaController extends Controller
                 ];
             });
 
-        // 🔥🔥🔥 HAPUS DATA DUMMY! TAPI PASTIKAN DATA TETAP ARRAY
-        // Kalau data kosong, tetap kirim array kosong
         if ($data->isEmpty()) {
-            $data = collect(); // array kosong
+            $data = collect();
         }
 
         return response()->json([
@@ -303,5 +439,251 @@ class BeritaController extends Controller
                 'range' => $range,
             ],
         ]);
+    }
+
+    // ================================================================
+    // 🔥 ADMIN - APPROVE/REJECT BERITA
+    // ================================================================
+
+    public function pending(Request $request)
+    {
+        $berita = Berita::where('status', 'pending')
+            ->with('user:id,name,username,kecamatan')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($item) {
+                $formatted = $this->formatBerita($item);
+                $formatted['user'] = $item->user ? [
+                    'id' => $item->user->id,
+                    'name' => $item->user->name,
+                    'username' => $item->user->username,
+                    'kecamatan' => $item->user->kecamatan,
+                ] : null;
+                return $formatted;
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $berita,
+            'total' => $berita->count()
+        ]);
+    }
+
+    /**
+     * 🔥 APPROVE - PASTIKAN STATUS 'approved'
+     */
+    public function approve(Request $request, $id)
+    {
+        $berita = Berita::find($id);
+
+        if (!$berita) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita tidak ditemukan'
+            ], 404);
+        }
+
+        if ($berita->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita sudah diproses sebelumnya.'
+            ], 400);
+        }
+
+        // 🔥 VALIDASI INPUT
+        $validated = $request->validate([
+            'judul' => 'sometimes|string|max:255',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        // 🔥 UPDATE DATA
+        $updateData = [
+            'status' => 'approved',        // ← HARUS 'approved'!
+            'status_publikasi' => true,
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+        ];
+
+        // Update judul jika ada
+        if ($request->has('judul') && !empty($request->judul)) {
+            $updateData['judul'] = $request->judul;
+            $updateData['slug'] = Str::slug($request->judul) . '-' . uniqid();
+        }
+
+        // Update konten jika ada
+        if ($request->has('deskripsi') && !empty($request->deskripsi)) {
+            $updateData['konten'] = $request->deskripsi;
+        }
+
+        $berita->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita berhasil disetujui!',
+            'data' => $this->formatBerita($berita)
+        ]);
+    }
+
+    /**
+     * 🔥 REJECT - PASTIKAN STATUS 'rejected'
+     */
+    public function reject(Request $request, $id)
+    {
+        $berita = Berita::find($id);
+
+        if (!$berita) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita tidak ditemukan'
+            ], 404);
+        }
+
+        if ($berita->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berita sudah diproses sebelumnya.'
+            ], 400);
+        }
+
+        $data = [
+            'status' => 'rejected',        // ← HARUS 'rejected'!
+            'status_publikasi' => false,
+            'approved_by' => auth()->id(),
+        ];
+
+        if ($request->has('reason') && !empty($request->reason)) {
+            $data['reject_reason'] = $request->reason;
+        }
+
+        $berita->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita berhasil ditolak.',
+            'data' => $this->formatBerita($berita)
+        ]);
+    }
+
+    // ================================================================
+    // 🔥 HELPER FUNCTIONS
+    // ================================================================
+
+    private function formatBerita($item)
+    {
+        return [
+            'id' => $item->id,
+            'judul' => $item->judul,
+            'slug' => $item->slug,
+            'konten' => $item->konten,
+            'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
+            'kategori' => $item->kategori,
+            'kecamatan' => $item->kecamatan,
+            'foto_url' => $item->foto_url ?? null,
+            'status' => $item->status,
+            'status_label' => $this->getStatusLabel($item->status),
+            'user_id' => $item->user_id,
+            'created_at' => $item->created_at?->toIso8601String(),
+            'created_at_formatted' => $item->created_at?->translatedFormat('d F Y'),
+            'updated_at' => $item->updated_at?->toIso8601String(),
+        ];
+    }
+
+    private function formatBeritaPublic($item)
+    {
+        return [
+            'id' => $item->id,
+            'judul' => $item->judul,
+            'slug' => $item->slug,
+            'konten' => $item->konten,
+            'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
+            'kategori' => $item->kategori,
+            'kecamatan' => $item->kecamatan,
+            'foto_url' => $item->foto_url ?? null,
+            'created_at' => $item->created_at?->toIso8601String(),
+            'created_at_formatted' => $item->created_at?->translatedFormat('d F Y'),
+        ];
+    }
+
+    private function getStatusLabel($status)
+    {
+        $labels = [
+            'pending' => 'Menunggu Persetujuan',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+            'draft' => 'Draft',
+        ];
+        return $labels[$status] ?? ucfirst($status);
+    }
+
+    /**
+     * 🔥 FIX: Upload base64 image - SUPPORT TANPA PREFIX
+     */
+    private function uploadBase64Image($base64Image)
+    {
+        // 🔥 CEK APAKAH ADA PREFIX data:image
+        if (strpos($base64Image, 'data:image') !== false) {
+            $base64Image = explode(',', $base64Image)[1];
+        }
+
+        // 🔥 HAPUS WHITESPACE
+        $base64Image = trim($base64Image);
+
+        // 🔥 DECODE
+        $image = base64_decode($base64Image);
+
+        // 🔥 CEK APAKAH DECODE BERHASIL
+        if ($image === false) {
+            throw new \Exception('Gagal mendecode base64 image');
+        }
+
+        // 🔥 CEK APAKAH IMAGE VALID
+        // Tentukan extension berdasarkan magic bytes
+        $extension = 'jpg';
+        $mimeType = $this->getMimeTypeFromBase64($base64Image);
+
+        if ($mimeType === 'image/png') {
+            $extension = 'png';
+        } elseif ($mimeType === 'image/webp') {
+            $extension = 'webp';
+        } elseif ($mimeType === 'image/gif') {
+            $extension = 'gif';
+        }
+
+        $filename = 'berita-' . time() . '-' . uniqid() . '.' . $extension;
+        $path = storage_path('app/public/berita/' . $filename);
+
+        if (!file_exists(storage_path('app/public/berita'))) {
+            mkdir(storage_path('app/public/berita'), 0775, true);
+        }
+
+        file_put_contents($path, $image);
+
+        return 'berita/' . $filename;
+    }
+
+    /**
+     * Get MIME type from base64 string
+     */
+    private function getMimeTypeFromBase64($base64)
+    {
+        // Cek magic bytes dari base64
+        $decoded = base64_decode($base64);
+        if ($decoded === false) {
+            return 'image/jpeg';
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_buffer($finfo, $decoded);
+        finfo_close($finfo);
+
+        return $mimeType;
+    }
+
+    private function deleteImage($path)
+    {
+        $fullPath = storage_path('app/public/' . $path);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
     }
 }

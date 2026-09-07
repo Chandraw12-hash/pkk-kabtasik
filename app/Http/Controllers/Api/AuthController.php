@@ -51,8 +51,9 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Cek role - boleh kader_dasawisma, pkk, atau admin
-        if (!$user->hasAnyRole(['kader_dasawisma', 'pkk', 'admin'])) {
+        // 🔥 FIX: Tambahkan role 'dasawisma' ke daftar yang diperbolehkan
+        // Cek role - boleh kader_dasawisma, pkk, admin, atau dasawisma
+        if (!$user->hasAnyRole(['kader_dasawisma', 'pkk', 'admin', 'dasawisma'])) {
             return response()->json([
                 'message' => 'Akun ini tidak memiliki akses ke aplikasi mobile.',
             ], 403);

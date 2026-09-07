@@ -11,42 +11,48 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Permission
+        // ─── 1. BUAT PERMISSION ──────────────────────────────────────────────────
         $permissions = [
-            'view-users', 'create-user', 'edit-user', 'delete-user', 'manage-roles',
-            'view-profile', 'edit-profile',
-            'view-kader', 'create-kader', 'edit-kader', 'delete-kader',
+            // Admin
+            'access-admin',
+
+            // Dasawisma (Mobile)
+            'access-dasawisma',
+
+            // Berita - Approve/Reject (khusus Admin)
+            'approve-berita',
+            'reject-berita',
+
+            // Laporan - Approve/Reject (khusus Admin)
+            'approve-laporan',
+            'reject-laporan',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // 2. Buat Role & Assign Permission
+        // ─── 2. ROLE ADMIN ──────────────────────────────────────────────────────────
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->givePermissionTo(Permission::all());
 
-        $userRole = Role::firstOrCreate(['name' => 'user']);
-        $userRole->givePermissionTo(['view-kader', 'create-kader', 'edit-kader', 'delete-kader']);
+        // ─── 3. ROLE DASAWISMA (MOBILE) ──────────────────────────────────────────
+        $dasawismaRole = Role::firstOrCreate(['name' => 'dasawisma']);
+        $dasawismaRole->givePermissionTo(['access-dasawisma']);
 
-        $pkkRole = Role::firstOrCreate(['name' => 'pkk']);
-        $pkkRole->givePermissionTo(['view-kader', 'create-kader', 'edit-kader', 'delete-kader', 'view-profile', 'edit-profile']);
-
-        // 3. Buat User Default untuk Setiap Role
-
-        // 3.1 User Admin
+        // ─── 4. BUAT USER ADMIN ──────────────────────────────────────────────────
         $admin = User::updateOrCreate(
             ['email' => 'admin@pkk.test'],
             [
-                'name' => 'Super Admin PKK',
+                'name' => 'Admin Kabupaten',
                 'username' => 'adminpkk',
                 'password' => bcrypt('password123'),
             ]
         );
         $admin->assignRole($adminRole);
 
-        // 3.2 User PKK
-        $pkk = User::updateOrCreate(
+        // ─── 5. BUAT USER DASAWISMA (MOBILE) ────────────────────────────────────
+        $dasawisma = User::updateOrCreate(
             ['email' => 'pkk@pkk.test'],
             [
                 'name' => 'Pengurus PKK',
@@ -54,17 +60,6 @@ class RolePermissionSeeder extends Seeder
                 'password' => bcrypt('password123'),
             ]
         );
-        $pkk->assignRole($pkkRole);
-
-        // 3.3 User Biasa
-        $user = User::updateOrCreate(
-            ['email' => 'user@pkk.test'],
-            [
-                'name' => 'User Kader',
-                'username' => 'user_biasa',
-                'password' => bcrypt('password123'),
-            ]
-        );
-        $user->assignRole($userRole);
+        $dasawisma->assignRole($dasawismaRole);
     }
 }

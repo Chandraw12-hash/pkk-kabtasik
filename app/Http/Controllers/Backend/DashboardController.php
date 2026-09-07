@@ -6,9 +6,19 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Eviden;
-use App\Models\Indikator;
 use App\Models\User;
-use Illuminate\Support\Facades\Schema;
+use App\Models\Kader;
+use App\Models\DataUmumSekretariat;
+use App\Models\Pokja1;
+use App\Models\Pokja2;
+use App\Models\Pokja3;
+use App\Models\Pokja4;
+use App\Models\Galeri;
+use App\Models\Berita;
+use App\Models\Agenda;
+use App\Models\Infografis;
+use App\Models\LaporanKegiatan;
+use App\Models\Survey;
 
 class DashboardController extends Controller
 {
@@ -17,132 +27,176 @@ class DashboardController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('admin')) {
-            // Mengambil data real dari Database untuk Admin (Global Stats)
-            $totalKader = class_exists('\App\Models\Kader') ? \App\Models\Kader::count() : 320;
-            $totalKegiatan = Eviden::count() > 0 ? Eviden::count() : 145;
-            $totalUsers = User::count() > 0 ? User::count() : 25;
+            // ─── DATA KADER (REAL) ──────────────────────────────────────────────
+            $totalKader = Kader::count();
+            $kaderAktif = Kader::where('status_aktif', true)->count();
 
-            $pendingCount = Eviden::where('status', 'pending')->count();
-            $validCount = Eviden::where('status', 'valid')->count();
-            $rejectedCount = Eviden::where('status', 'ditolak')->count();
+            // ─── DATA POKJA & SEKRETARIAT (REAL) ──────────────────────────────
+            $totalSekretariat = DataUmumSekretariat::count();
+            $totalPokja1 = Pokja1::count();
+            $totalPokja2 = Pokja2::count();
+            $totalPokja3 = Pokja3::count();
+            $totalPokja4 = Pokja4::count();
+            $totalDataPokja = $totalSekretariat + $totalPokja1 + $totalPokja2 + $totalPokja3 + $totalPokja4;
 
-            // Fallback jika status database belum ada isinya agar card statistik tetap hidup
-            if ($pendingCount == 0 && $validCount == 0 && $rejectedCount == 0 && Eviden::count() == 0) {
-                $pendingCount = 8;
-                $validCount = 120;
-                $rejectedCount = 17;
-            }
+            // ─── LAPORAN KEGIATAN (REAL) ──────────────────────────────────────
+            $totalLaporan = LaporanKegiatan::count();
+            $laporanPending = LaporanKegiatan::where('status', 'pending')->count();
+            $laporanApproved = LaporanKegiatan::where('status', 'approved')->count();
+            $laporanRejected = LaporanKegiatan::where('status', 'rejected')->count();
+            $laporanReviewed = LaporanKegiatan::where('status', 'reviewed')->count();
 
+            // ─── EVIDEN (REAL) ──────────────────────────────────────────────────
+            $evidenPending = Eviden::where('status', 'pending')->count();
+            $evidenValid = Eviden::where('status', 'valid')->count();
+            $evidenRejected = Eviden::where('status', 'ditolak')->count();
+
+            // ─── GABUNGKAN LAPORAN + EVIDEN ──────────────────────────────────
+            $totalEvidenMasuk = $totalLaporan + $totalDataPokja;
+            $pendingCount = $laporanPending + $evidenPending;
+            $validCount = $laporanApproved + $evidenValid;
+            $rejectedCount = $laporanRejected + $laporanReviewed + $evidenRejected;
+
+            // ─── DATA KONTEN (REAL) ──────────────────────────────────────────────
+            $totalGaleri = Galeri::count();
+            $totalBerita = Berita::count();
+            $totalAgenda = Agenda::count();
+            $totalInfografis = Infografis::count();
+
+            // ─── SURVEY (REAL) ──────────────────────────────────────────────────
+            $totalSurvey = Survey::count();
+            $surveyPublished = Survey::where('status', 'published')->count();
+
+            // ─── PERSENTASE VERIFIKASI ──────────────────────────────────────────
+            $totalVerifikasi = $validCount + $pendingCount + $rejectedCount;
+            $verifikasiPersentase = $totalVerifikasi > 0
+                ? round(($validCount / $totalVerifikasi) * 100, 0)
+                : 0;
+
+            // ─── STATS (REAL SEMUA) ──────────────────────────────────────────────
             $stats = [
-                'total_kader' => $totalKader,
-                'total_kegiatan' => $totalKegiatan,
-                'total_program' => class_exists('\App\Models\Program') ? \App\Models\Program::count() : 10,
-                'total_users' => $totalUsers,
-                'verifikasi_pending' => $pendingCount,
-                'verifikasi_valid' => $validCount,
-                'verifikasi_ditolak' => $rejectedCount,
+                'totalKader' => $totalKader,
+                'kaderAktif' => $kaderAktif,
+                'totalDataPokja' => $totalDataPokja,
+                'totalLaporan' => $totalLaporan,
+                'totalEvidenMasuk' => $totalEvidenMasuk,
+                'laporanPending' => $pendingCount,
+                'laporanApproved' => $validCount,
+                'laporanRejected' => $rejectedCount,
+                'laporanReviewed' => $laporanReviewed,
+                'totalGaleri' => $totalGaleri,
+                'totalBerita' => $totalBerita,
+                'totalAgenda' => $totalAgenda,
+                'totalInfografis' => $totalInfografis,
+                'totalSurvey' => $totalSurvey,
+                'surveyPublished' => $surveyPublished,
+                'verifikasiPersentase' => $verifikasiPersentase,
             ];
 
-            // Data Grafik Garis per Bulan (Dengan fallback dummy agar tidak datar di 0)
-            $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            $lineData = [];
-            foreach ($months as $index => $month) {
-                $monthNum = $index + 1;
-                $uploadedMonth = Eviden::whereMonth('created_at', $monthNum)->count();
-                $verifiedMonth = Eviden::whereMonth('created_at', $monthNum)->where('status', 'valid')->count();
+            // ─── GRAFIK LINE (REAL) ──────────────────────────────────────────────
+            $lineData = collect(range(5, 0))->map(function ($i) {
+                $date = now()->subMonths($i);
+                $month = $date->format('M');
 
-                $lineData[] = [
+                $total = LaporanKegiatan::whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month)
+                    ->count();
+
+                $terverifikasi = LaporanKegiatan::whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month)
+                    ->where('status', 'approved')
+                    ->count();
+
+                return [
                     'name' => $month,
-                    'uploaded' => $uploadedMonth > 0 ? $uploadedMonth : rand(12, 35),
-                    'verified' => $verifiedMonth > 0 ? $verifiedMonth : rand(8, 25),
+                    'uploaded' => $total,
+                    'verified' => $terverifikasi,
                 ];
-            }
+            })->toArray();
 
-            // Data Grafik Batang per Pokja & Sekretariat (PKK Focus)
+            // ─── GRAFIK BAR (REAL) ──────────────────────────────────────────────
             $barData = [
-                ['name' => 'Pokja I', 'doc' => 42],
-                ['name' => 'Pokja II', 'doc' => 38],
-                ['name' => 'Pokja III', 'doc' => 35],
-                ['name' => 'Pokja IV', 'doc' => 30],
-                ['name' => 'Sekretariat', 'doc' => 20],
+                ['name' => 'Pokja I', 'doc' => $totalPokja1],
+                ['name' => 'Pokja II', 'doc' => $totalPokja2],
+                ['name' => 'Pokja III', 'doc' => $totalPokja3],
+                ['name' => 'Pokja IV', 'doc' => $totalPokja4],
+                ['name' => 'Sekretariat', 'doc' => $totalSekretariat],
             ];
 
+            // ─── PIE DATA (REAL) ──────────────────────────────────────────────────
             $pieData = [
-                ['name' => 'Terverifikasi', 'value' => $stats['verifikasi_valid'], 'color' => '#10b981'],
-                ['name' => 'Pending', 'value' => $stats['verifikasi_pending'], 'color' => '#f59e0b'],
-                ['name' => 'Ditolak', 'value' => $stats['verifikasi_ditolak'], 'color' => '#f43f5e'],
+                ['name' => 'Terverifikasi', 'value' => $validCount, 'color' => '#10b981'],
+                ['name' => 'Pending', 'value' => $pendingCount, 'color' => '#f59e0b'],
+                ['name' => 'Ditolak', 'value' => $rejectedCount, 'color' => '#f43f5e'],
             ];
 
-            // Aktivitas Terbaru (Log khusus kegiatan PKK)
-            $latestEvidens = Eviden::latest()->take(5)->get();
-            $activities = [];
-
-            if ($latestEvidens->count() > 0) {
-                foreach ($latestEvidens as $ev) {
-                    $activities[] = [
-                        'pokja' => isset($ev->pokja) ? $ev->pokja : 'Pokja IV',
-                        'action' => 'Melaporkan Eviden Kegiatan PKK Kabupaten Tasikmalaya',
-                        'time' => $ev->created_at ? $ev->created_at->diffForHumans() : 'Baru saja',
-                    ];
-                }
-            } else {
-                $activities = [
-                    [
-                        'pokja' => 'Pokja I',
-                        'action' => 'Melaporkan Kegiatan Penghayatan dan Pengamalan Pancasila',
-                        'time' => '10 menit yang lalu',
-                    ],
-                    [
-                        'pokja' => 'Pokja II',
-                        'action' => 'Mengunggah Laporan Pelatihan UP2K PKK',
-                        'time' => '25 menit yang lalu',
-                    ],
-                    [
-                        'pokja' => 'Pokja III',
-                        'action' => 'Verifikasi Eviden Aku Hatinya PKK',
-                        'time' => '1 jam yang lalu',
-                    ],
-                    [
-                        'pokja' => 'Pokja IV',
-                        'action' => 'Melaporkan Rekapitulasi Posyandu dan PHBS',
-                        'time' => '3 jam yang lalu',
-                    ],
-                    [
-                        'pokja' => 'Sekretariat',
-                        'action' => 'Memperbarui Data Umum TP PKK Kabupaten',
-                        'time' => 'Kemarin',
-                    ],
+            // ─── AKTIVITAS (REAL DARI DATABASE) ──────────────────────────────────
+            $activities = LaporanKegiatan::latest()->take(5)->get()->map(function ($ev) {
+                $pokjaMapping = [
+                    'pokja1' => 'Pokja I',
+                    'pokja2' => 'Pokja II',
+                    'pokja3' => 'Pokja III',
+                    'pokja4' => 'Pokja IV',
+                    'sekretariat' => 'Sekretariat',
                 ];
-            }
 
-            return Inertia::render('Backend/Dashboard/AdminDashboard', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
+                $pokjaName = $ev->pokja ?? 'Pokja IV';
+                if (isset($pokjaMapping[$pokjaName])) {
+                    $pokjaName = $pokjaMapping[$pokjaName];
+                }
+
+                return [
+                    'pokja' => $pokjaName,
+                    'action' => 'Melaporkan Eviden Kegiatan PKK Kabupaten Tasikmalaya',
+                    'time' => $ev->created_at ? $ev->created_at->diffForHumans() : 'Baru saja',
+                ];
+            })->toArray();
+
+            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
 
         } else {
-            // Data untuk User PKK / Biasa
+            // ─── USER BIASA ──────────────────────────────────────────────────────
             $stats = [
-                'total_kegiatan' => 12,
-                'verifikasi_pending' => 2,
-                'verifikasi_valid' => 9,
-                'verifikasi_ditolak' => 1,
+                'totalKader' => Kader::count(),
+                'kaderAktif' => Kader::where('status_aktif', true)->count(),
+                'totalDataPokja' => 0,
+                'totalLaporan' => LaporanKegiatan::where('user_id', $user->id)->count(),
+                'totalEvidenMasuk' => 0,
+                'laporanPending' => LaporanKegiatan::where('user_id', $user->id)->where('status', 'pending')->count(),
+                'laporanApproved' => LaporanKegiatan::where('user_id', $user->id)->where('status', 'approved')->count(),
+                'laporanRejected' => LaporanKegiatan::where('user_id', $user->id)->where('status', 'rejected')->count(),
+                'laporanReviewed' => LaporanKegiatan::where('user_id', $user->id)->where('status', 'reviewed')->count(),
+                'totalGaleri' => 0,
+                'totalBerita' => 0,
+                'totalAgenda' => 0,
+                'totalInfografis' => 0,
+                'totalSurvey' => 0,
+                'surveyPublished' => 0,
+                'verifikasiPersentase' => 0,
             ];
 
             $lineData = [];
             $barData = [];
+
+            $totalVerifikasi = $stats['laporanApproved'] + $stats['laporanPending'] + $stats['laporanRejected'];
+            $verifikasiPersentase = $totalVerifikasi > 0 ? round(($stats['laporanApproved'] / $totalVerifikasi) * 100, 0) : 0;
+            $stats['verifikasiPersentase'] = $verifikasiPersentase;
+
             $pieData = [
-                ['name' => 'Terverifikasi', 'value' => $stats['verifikasi_valid'], 'color' => '#10b981'],
-                ['name' => 'Pending', 'value' => $stats['verifikasi_pending'], 'color' => '#f59e0b'],
-                ['name' => 'Ditolak', 'value' => $stats['verifikasi_ditolak'], 'color' => '#f43f5e'],
+                ['name' => 'Terverifikasi', 'value' => $stats['laporanApproved'], 'color' => '#10b981'],
+                ['name' => 'Pending', 'value' => $stats['laporanPending'], 'color' => '#f59e0b'],
+                ['name' => 'Ditolak', 'value' => $stats['laporanRejected'], 'color' => '#f43f5e'],
             ];
 
-            $activities = [
-                [
-                    'pokja' => 'Pokja IV',
-                    'action' => 'Mengirim eviden kegiatan mandiri',
-                    'time' => 'Baru saja',
-                ]
-            ];
+            $activities = LaporanKegiatan::where('user_id', $user->id)->latest()->take(5)->get()->map(function ($ev) {
+                return [
+                    'pokja' => $ev->pokja ?? 'Pokja IV',
+                    'action' => 'Melaporkan kegiatan',
+                    'time' => $ev->created_at ? $ev->created_at->diffForHumans() : 'Baru saja',
+                ];
+            })->toArray();
 
-            return Inertia::render('Backend/Dashboard/AdminDashboard', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
+            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
         }
     }
 }

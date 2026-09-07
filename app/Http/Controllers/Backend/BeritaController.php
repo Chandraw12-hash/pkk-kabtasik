@@ -86,13 +86,19 @@ class BeritaController extends Controller
             $query->where('kecamatan', $kecamatan);
         }
 
+        // 🔥 UBAH: Filter menggunakan status
         if ($status !== null && $status !== '') {
-            $query->where('status_publikasi', $status === 'true');
+            if ($status === 'approved') {
+                $query->where('status', 'approved');
+            } elseif ($status === 'pending') {
+                $query->where('status', 'pending');
+            } elseif ($status === 'rejected') {
+                $query->where('status', 'rejected');
+            }
         }
 
         $beritas = $query->paginate($perPage)->withQueryString();
 
-        // Daftar kecamatan unik untuk filter
         $kecamatanList = Berita::select('kecamatan')
             ->distinct()
             ->whereNotNull('kecamatan')
@@ -122,17 +128,14 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * 🔥 STORE - Admin langsung published, Kader pending
-     */
     public function store(Request $request)
     {
         $request->validate([
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
-            'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman',
+            'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
             'kecamatan' => 'nullable|string|max:255',
-            'status_publikasi' => 'boolean',
+            'status' => 'nullable|string|in:pending,approved,rejected',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
@@ -141,26 +144,23 @@ class BeritaController extends Controller
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
         }
 
-        // 🔥🔥🔥 CEK ROLE USER
         $isAdmin = auth()->user()->hasRole('admin');
-        $isPkk = auth()->user()->hasRole('pkk');
+        $status = $isAdmin ? 'approved' : 'pending';
 
-        // 🔥 Admin → langsung published, Kader → pending
-        $isPublished = $isAdmin || $isPkk;
-
-        Berita::create([
+        $berita = Berita::create([
             'judul' => $request->judul,
             'slug' => Str::slug($request->judul) . '-' . time(),
             'konten' => $request->konten,
             'kategori' => $request->kategori,
             'kecamatan' => $request->kecamatan,
-            'status_publikasi' => $isPublished,
-            'status' => $isPublished ? 'published' : 'pending',
+            'status' => $status,
+            'status_publikasi' => $isAdmin,
             'foto' => $fotoPath,
             'created_by' => auth()->id(),
+            'user_id' => auth()->id(),
         ]);
 
-        $message = $isPublished
+        $message = $isAdmin
             ? 'Berita berhasil ditambahkan dan langsung dipublikasikan.'
             : 'Berita berhasil dikirim dan menunggu persetujuan admin.';
 
@@ -184,17 +184,14 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * 🔥 UPDATE - Admin langsung published, Kader pending
-     */
     public function update(Request $request, Berita $berita)
     {
         $request->validate([
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
-            'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman',
+            'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
             'kecamatan' => 'nullable|string|max:255',
-            'status_publikasi' => 'boolean',
+            'status' => 'nullable|string|in:pending,approved,rejected',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
@@ -207,12 +204,8 @@ class BeritaController extends Controller
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
         }
 
-        // 🔥🔥🔥 CEK ROLE USER
         $isAdmin = auth()->user()->hasRole('admin');
-        $isPkk = auth()->user()->hasRole('pkk');
-
-        // 🔥 Admin → published, Kader → pending (kecuali sudah di-approve sebelumnya)
-        $isPublished = $isAdmin || $isPkk || $berita->status === 'published';
+        $status = $isAdmin ? 'approved' : ($berita->status === 'approved' ? 'approved' : 'pending');
 
         $berita->update([
             'judul' => $request->judul,
@@ -220,12 +213,12 @@ class BeritaController extends Controller
             'konten' => $request->konten,
             'kategori' => $request->kategori,
             'kecamatan' => $request->kecamatan,
-            'status_publikasi' => $isPublished,
-            'status' => $isPublished ? 'published' : 'pending',
+            'status' => $status,
+            'status_publikasi' => $status === 'approved',
             'foto' => $fotoPath,
         ]);
 
-        $message = $isPublished
+        $message = $status === 'approved'
             ? 'Berita berhasil diperbarui dan tetap dipublikasikan.'
             : 'Berita berhasil diperbarui dan menunggu persetujuan admin.';
 
@@ -251,33 +244,29 @@ class BeritaController extends Controller
 
     public function toggleStatus(Berita $berita)
     {
+        $newStatus = $berita->status === 'approved' ? 'pending' : 'approved';
+
         $berita->update([
-            'status_publikasi' => !$berita->status_publikasi,
+            'status' => $newStatus,
+            'status_publikasi' => $newStatus === 'approved',
         ]);
 
         return redirect()
             ->back()
-            ->with('success', 'Status berita berhasil diubah.');
+            ->with('success', 'Status berita berhasil diubah menjadi ' . ucfirst($newStatus));
     }
 
     // ================================================================
-    // 🔥🔥🔥 BERITA PENDING - DENGAN FILTER KECAMATAN & SEARCH
+    // 🔥🔥🔥 BERITA PENDING
     // ================================================================
 
-    /**
-     * Display pending berita that need approval
-     * 🔥 Hanya menampilkan berita dari KADER (bukan admin)
-     * 🔥 Support filter search & kecamatan
-     */
     public function pending(Request $request)
     {
         $search = $request->input('search');
         $kecamatan = $request->input('kecamatan');
 
-        $query = Berita::where('status', 'pending')
-            ->whereNotNull('created_by');
+        $query = Berita::where('status', 'pending');
 
-        // 🔥 Filter search
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%")
@@ -285,25 +274,26 @@ class BeritaController extends Controller
             });
         }
 
-        // 🔥 Filter kecamatan
         if ($kecamatan) {
             $query->where('kecamatan', $kecamatan);
         }
 
         $beritaPending = $query->latest()
+            ->with('user:id,name,username,kecamatan')
             ->paginate(10)
             ->withQueryString();
 
-        // 🔥 Daftar kecamatan unik dari berita pending untuk filter
         $kecamatanList = Berita::where('status', 'pending')
             ->whereNotNull('kecamatan')
-            ->whereNotNull('created_by')
             ->distinct()
             ->pluck('kecamatan');
+
+        $totalPending = Berita::where('status', 'pending')->count();
 
         return Inertia::render('Backend/Berita/Pending', [
             'beritaPending' => $beritaPending,
             'kecamatanList' => $kecamatanList,
+            'totalPending' => $totalPending,
             'filters' => [
                 'search' => $search,
                 'kecamatan' => $kecamatan,
@@ -312,7 +302,7 @@ class BeritaController extends Controller
     }
 
     /**
-     * Approve a pending berita
+     * 🔥 APPROVE - PASTIKAN STATUS 'approved'
      */
     public function approve(Request $request, Berita $berita)
     {
@@ -321,13 +311,26 @@ class BeritaController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
-        $berita->update([
-            'judul' => $validated['judul'],
-            'konten' => $validated['deskripsi'] ?? $berita->konten,
-            'status' => 'published',
+        // 🔥 UPDATE DENGAN STATUS 'approved'
+        $updateData = [
+            'status' => 'approved',
             'status_publikasi' => true,
             'approved_at' => now(),
-        ]);
+            'approved_by' => auth()->id(),
+        ];
+
+        // Update judul
+        if ($request->has('judul') && !empty($request->judul)) {
+            $updateData['judul'] = $request->judul;
+            $updateData['slug'] = Str::slug($request->judul) . '-' . uniqid();
+        }
+
+        // Update konten
+        if ($request->has('deskripsi') && !empty($request->deskripsi)) {
+            $updateData['konten'] = $request->deskripsi;
+        }
+
+        $berita->update($updateData);
 
         return redirect()
             ->route('be.berita.pending')
@@ -335,7 +338,7 @@ class BeritaController extends Controller
     }
 
     /**
-     * Reject a pending berita
+     * 🔥 REJECT - PASTIKAN STATUS 'rejected'
      */
     public function reject(Request $request, Berita $berita)
     {
@@ -347,6 +350,7 @@ class BeritaController extends Controller
             'status' => 'rejected',
             'status_publikasi' => false,
             'reject_reason' => $validated['reason'] ?? 'Tidak memenuhi kriteria publikasi.',
+            'approved_by' => auth()->id(),
         ]);
 
         return redirect()
@@ -358,10 +362,6 @@ class BeritaController extends Controller
     // PUBLIC METHODS (FRONTEND)
     // ============================================
 
-    /**
-     * Menampilkan semua berita untuk public (frontend)
-     * Route: /berita
-     */
     public function indexPublic(Request $request)
     {
         $search = $request->get('search');
@@ -369,7 +369,7 @@ class BeritaController extends Controller
         $kecamatan = $request->get('kecamatan');
         $perPage = (int) $request->get('per_page', 9);
 
-        $query = Berita::where('status_publikasi', true)->latest();
+        $query = Berita::where('status', 'approved')->latest();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -388,8 +388,7 @@ class BeritaController extends Controller
 
         $beritas = $query->paginate($perPage);
 
-        // Daftar kecamatan untuk filter
-        $kecamatanList = Berita::where('status_publikasi', true)
+        $kecamatanList = Berita::where('status', 'approved')
             ->select('kecamatan')
             ->distinct()
             ->whereNotNull('kecamatan')
@@ -428,19 +427,14 @@ class BeritaController extends Controller
         ]);
     }
 
-    /**
-     * Menampilkan detail berita untuk public (frontend)
-     * Route: /berita/{slug}
-     */
     public function showPublic($slug)
     {
         $berita = Berita::where('slug', $slug)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->firstOrFail();
 
-        // Berita terkait di kecamatan yang sama
         $beritaLainnya = Berita::where('id', '!=', $berita->id)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->where('kecamatan', $berita->kecamatan)
             ->latest()
             ->take(5)
@@ -458,7 +452,7 @@ class BeritaController extends Controller
 
     public function apiLatestBerita()
     {
-        $berita = Berita::where('status_publikasi', true)
+        $berita = Berita::where('status', 'approved')
             ->latest()
             ->take(3)
             ->get()
@@ -488,7 +482,7 @@ class BeritaController extends Controller
         $kecamatan = $request->input('kecamatan');
         $limit = $request->input('limit', 10);
 
-        $berita = Berita::where('status_publikasi', true)
+        $berita = Berita::where('status', 'approved')
             ->when($search, function ($query) use ($search) {
                 return $query->where('judul', 'like', "%{$search}%")
                     ->orWhere('konten', 'like', "%{$search}%");
@@ -516,7 +510,7 @@ class BeritaController extends Controller
                 ];
             });
 
-        $kecamatanList = Berita::where('status_publikasi', true)
+        $kecamatanList = Berita::where('status', 'approved')
             ->select('kecamatan')
             ->distinct()
             ->whereNotNull('kecamatan')
@@ -535,7 +529,7 @@ class BeritaController extends Controller
     public function apiShow($slug)
     {
         $berita = Berita::where('slug', $slug)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->first();
 
         if (!$berita) {
@@ -546,7 +540,7 @@ class BeritaController extends Controller
         }
 
         $related = Berita::where('id', '!=', $berita->id)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->where('kecamatan', $berita->kecamatan)
             ->latest()
             ->limit(5)
@@ -577,6 +571,19 @@ class BeritaController extends Controller
                 'created_at_formatted' => $berita->tanggal_formatted,
                 'related' => $related,
             ],
+        ]);
+    }
+
+    /**
+     * Get total pending berita (for sidebar badge)
+     */
+    public function pendingCount()
+    {
+        $count = Berita::where('status', 'pending')->count();
+
+        return response()->json([
+            'success' => true,
+            'count' => $count,
         ]);
     }
 }
