@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import MainLayout from "@/Layouts/MainLayout";
+import TextInput from "@/Components/Form/TextInput";
+import Button from "@/Components/UI/Button";
+import Badge from "@/Components/UI/Badge";
+import Table from "@/Components/Data/Table";
+import Pagination from "@/Components/Data/Pagination";
+import Card from "@/Components/UI/Card";
 import { Head, Link, usePage, router } from "@inertiajs/react";
 import {
     CheckCircle,
     XCircle,
     Eye,
-    Edit,
+    Edit2,
     Clock,
     Calendar,
     MapPin,
@@ -14,7 +20,10 @@ import {
     Search,
     Filter,
     X,
-    Loader2
+    RotateCcw,
+    Loader2,
+    Newspaper,
+    AlertTriangle,
 } from "lucide-react";
 
 interface BeritaPendingItem {
@@ -59,8 +68,13 @@ interface PendingProps {
 }
 
 export default function BeritaPending() {
-    const { beritaPending, kecamatanList = [], filters = {}, totalPending = 0 } = usePage<{
-        beritaPending: PendingProps['beritaPending'];
+    const {
+        beritaPending,
+        kecamatanList = [],
+        filters = {},
+        totalPending = 0,
+    } = usePage<{
+        beritaPending: PendingProps["beritaPending"];
         kecamatanList?: string[];
         filters?: { kecamatan?: string; search?: string };
         totalPending?: number;
@@ -69,74 +83,135 @@ export default function BeritaPending() {
     const items = beritaPending?.data || [];
 
     const [searchQuery, setSearchQuery] = useState(filters.search || "");
-    const [selectedKecamatan, setSelectedKecamatan] = useState(filters.kecamatan || "");
+    const [selectedKecamatan, setSelectedKecamatan] = useState(
+        filters.kecamatan || ""
+    );
     const [loadingApprove, setLoadingApprove] = useState<number | null>(null);
     const [loadingReject, setLoadingReject] = useState<number | null>(null);
 
-    const handleApprove = (id: number) => {
-        const judulInput = document.getElementById(`judul-${id}`) as HTMLInputElement;
-        const deskripsiInput = document.getElementById(`deskripsi-${id}`) as HTMLTextAreaElement;
+    // State untuk Modal Profesional
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [rejectReason, setRejectReason] = useState("");
+
+    // Handle buka modal approve
+    const openApproveModal = (id: number) => {
+        setSelectedId(id);
+        setShowApproveModal(true);
+    };
+
+    // Handle buka modal reject
+    const openRejectModal = (id: number) => {
+        setSelectedId(id);
+        setRejectReason("");
+        setShowRejectModal(true);
+    };
+
+    // Konfirmasi approve dari modal
+    const confirmApprove = () => {
+        if (!selectedId) return;
+        const id = selectedId;
+        const judulInput = document.getElementById(
+            `judul-${id}`
+        ) as HTMLInputElement;
+        const deskripsiInput = document.getElementById(
+            `deskripsi-${id}`
+        ) as HTMLTextAreaElement;
 
         if (!judulInput || !deskripsiInput) return;
 
-        if (!confirm('Setujui berita ini?')) return;
-
         setLoadingApprove(id);
-        router.put(route('be.berita.approve', id), {
-            judul: judulInput.value,
-            deskripsi: deskripsiInput.value,
-        }, {
-            onSuccess: () => {
-                setLoadingApprove(null);
+        setShowApproveModal(false);
+
+        router.put(
+            route("be.berita.approve", id),
+            {
+                judul: judulInput.value,
+                deskripsi: deskripsiInput.value,
             },
-            onError: () => {
-                setLoadingApprove(null);
-            },
-        });
+            {
+                onSuccess: () => {
+                    setLoadingApprove(null);
+                },
+                onError: () => {
+                    setLoadingApprove(null);
+                },
+            }
+        );
     };
 
-    const handleReject = (id: number) => {
-        const reason = prompt("Alasan penolakan (opsional):");
-        if (reason !== null) {
-            setLoadingReject(id);
-            router.put(route('be.berita.reject', id), {
-                reason: reason || "Tidak memenuhi kriteria publikasi.",
-            }, {
+    // Konfirmasi reject dari modal
+    const confirmReject = () => {
+        if (!selectedId) return;
+        const id = selectedId;
+        const reason = rejectReason || "Tidak memenuhi kriteria publikasi.";
+
+        setLoadingReject(id);
+        setShowRejectModal(false);
+
+        router.put(
+            route("be.berita.reject", id),
+            { reason: reason },
+            {
                 onSuccess: () => {
                     setLoadingReject(null);
                 },
                 onError: () => {
                     setLoadingReject(null);
                 },
-            });
-        }
+            }
+        );
     };
 
     const handleFilter = () => {
-        router.get(route('be.berita.pending'), {
-            search: searchQuery || undefined,
-            kecamatan: selectedKecamatan || undefined,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            route("be.berita.pending"),
+            {
+                search: searchQuery || undefined,
+                kecamatan: selectedKecamatan || undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
     };
 
     const handleReset = () => {
         setSearchQuery("");
         setSelectedKecamatan("");
-        router.get(route('be.berita.pending'), {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+
+        router.get(
+            route("be.berita.pending"),
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (!url) return;
+
+        router.get(
+            url,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
     };
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return "-";
+
         try {
             return new Date(dateString).toLocaleDateString("id-ID", {
                 day: "numeric",
-                month: "long",
+                month: "short",
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
@@ -146,337 +221,662 @@ export default function BeritaPending() {
         }
     };
 
-    const hasActiveFilter = searchQuery || selectedKecamatan;
+    const hasActiveFilter = Boolean(searchQuery || selectedKecamatan);
+    const pendingCount = totalPending || beritaPending?.total || 0;
 
     return (
         <MainLayout>
             <Head title="Berita Pending - Persetujuan Admin" />
 
-            <div className="py-8">
+            <div className="space-y-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                            📰 Berita Perlu Persetujuan
-                        </h1>
-                        <p className="text-sm text-slate-500 mt-1">
-                            Tinjau dan kelola berita yang dikirim oleh kader
-                        </p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400 flex items-center justify-center border border-teal-100 dark:border-teal-500/20">
+                                <Newspaper size={22} />
+                            </div>
+
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 tracking-tight">
+                                    Berita Perlu Persetujuan
+                                </h1>
+
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Tinjau berita yang dikirim kader sebelum
+                                    dipublikasikan.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                            <Clock size={16} className="text-amber-600" />
-                            <span className="text-sm font-semibold text-amber-700">
-                                {totalPending || beritaPending?.total || 0} Menunggu
+
+                    <div className="flex items-center gap-2.5">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400">
+                            <Clock size={16} />
+                            <span className="text-sm font-semibold">
+                                {pendingCount} Menunggu
                             </span>
                         </div>
+
                         <Link
-                            href={route('be.berita.index')}
-                            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                            href={route("be.berita.index")}
+                            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
                         >
-                            Lihat Semua Berita
+                            Lihat Semua
                         </Link>
                     </div>
                 </div>
 
-                {/* 🔥 Filter Bar */}
-                <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Search */}
-                        <div className="flex-1 relative">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari judul berita..."
-                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
-                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
-                            />
+                {/* Filter Card */}
+                <Card className="overflow-visible dark:bg-slate-800 dark:border-slate-700">
+                    <div className="p-5 sm:p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                                <TextInput
+                                    iconLeft={<Search size={18} />}
+                                    placeholder="Cari judul berita..."
+                                    className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                    containerClassName="relative w-full"
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") handleFilter();
+                                    }}
+                                />
+                            </div>
+
+                            <div className="w-full lg:w-64">
+                                <div className="relative">
+                                    <MapPin
+                                        size={17}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                    />
+                                    <select
+                                        value={selectedKecamatan}
+                                        onChange={(e) =>
+                                            setSelectedKecamatan(
+                                                e.target.value
+                                            )
+                                        }
+                                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-9 py-2.5 text-sm text-slate-700 outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                    >
+                                        <option value="">
+                                            Semua Kecamatan
+                                        </option>
+
+                                        {kecamatanList.map((kec) => (
+                                            <option key={kec} value={kec}>
+                                                {kec}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <svg
+                                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="primary"
+                                    onClick={handleFilter}
+                                    className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700"
+                                >
+                                    <Filter size={16} />
+                                    <span>Filter</span>
+                                </Button>
+
+                                {hasActiveFilter && (
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleReset}
+                                        className="flex items-center justify-center gap-2"
+                                    >
+                                        <RotateCcw size={16} />
+                                        <span>Reset</span>
+                                    </Button>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Filter Kecamatan */}
-                        <div className="w-full sm:w-56 relative">
-                            <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <select
-                                value={selectedKecamatan}
-                                onChange={(e) => setSelectedKecamatan(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white appearance-none"
-                            >
-                                <option value="">Semua Kecamatan</option>
-                                {kecamatanList.map((kec) => (
-                                    <option key={kec} value={kec}>{kec}</option>
-                                ))}
-                            </select>
+                        {hasActiveFilter && (
+                            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                <span className="text-xs font-medium text-slate-400">
+                                    Filter aktif:
+                                </span>
+
+                                {searchQuery && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                        Pencarian: "{searchQuery}"
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearchQuery("");
+                                                setTimeout(handleFilter, 0);
+                                            }}
+                                            className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </span>
+                                )}
+
+                                {selectedKecamatan && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                        Kecamatan: {selectedKecamatan}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedKecamatan("");
+                                                setTimeout(handleFilter, 0);
+                                            }}
+                                            className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
+                {/* Data Table */}
+                <Card className="overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                    <div className="px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                Daftar Pengajuan
+                            </h2>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                Berita yang sedang menunggu pemeriksaan admin
+                            </p>
                         </div>
 
-                        {/* Tombol Aksi */}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handleFilter}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
-                            >
-                                <Filter size={16} />
-                                Filter
-                            </button>
+                        <div className="text-xs text-slate-400">
+                            {beritaPending?.total || 0} data
+                        </div>
+                    </div>
+
+                    {items.length === 0 ? (
+                        <div className="px-6 py-16 text-center">
+                            <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
+                                <Clock size={26} />
+                            </div>
+
+                            <h3 className="mt-4 text-sm font-bold text-slate-700 dark:text-slate-200">
+                                {hasActiveFilter
+                                    ? "Tidak Ada Hasil"
+                                    : "Tidak Ada Berita Pending"}
+                            </h3>
+
+                            <p className="mt-1 text-sm text-slate-400 max-w-md mx-auto">
+                                {hasActiveFilter
+                                    ? "Coba ubah kata kunci atau filter kecamatan."
+                                    : "Semua berita sudah disetujui atau ditolak."}
+                            </p>
+
                             {hasActiveFilter && (
                                 <button
+                                    type="button"
                                     onClick={handleReset}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-lg transition-colors"
+                                    className="mt-4 text-sm font-semibold text-teal-600 hover:text-teal-700"
                                 >
-                                    <X size={16} />
-                                    Reset
+                                    Reset Filter
                                 </button>
                             )}
                         </div>
-                    </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <Table
+                                columns={[
+                                    {
+                                        header: "#",
+                                        className:
+                                            "text-center text-sm font-medium text-slate-400 dark:text-slate-300 w-14",
+                                        headerClassName:
+                                            "text-center w-14",
+                                        render: (
+                                            _item: BeritaPendingItem,
+                                            index: number
+                                        ) => {
+                                            const currentPage =
+                                                beritaPending?.current_page ??
+                                                1;
+                                            const perPage =
+                                                beritaPending?.per_page ?? 10;
 
-                    {/* Active Filters */}
-                    {hasActiveFilter && (
-                        <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-                            <span className="text-xs text-slate-500">Filter aktif:</span>
-                            {searchQuery && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                                    Pencarian: "{searchQuery}"
-                                    <button
-                                        onClick={() => {
-                                            setSearchQuery("");
-                                            handleFilter();
-                                        }}
-                                        className="hover:text-slate-800"
-                                    >
-                                        <X size={12} />
-                                    </button>
-                                </span>
-                            )}
-                            {selectedKecamatan && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                                    Kec: {selectedKecamatan}
-                                    <button
-                                        onClick={() => {
-                                            setSelectedKecamatan("");
-                                            handleFilter();
-                                        }}
-                                        className="hover:text-slate-800"
-                                    >
-                                        <X size={12} />
-                                    </button>
-                                </span>
-                            )}
+                                            return (
+                                                (currentPage - 1) * perPage +
+                                                index +
+                                                1
+                                            );
+                                        },
+                                    },
+                                    {
+                                        header: "Berita",
+                                        className: "min-w-[360px]",
+                                        headerClassName: "min-w-[360px]",
+                                        render: (
+                                            berita: BeritaPendingItem
+                                        ) => {
+                                            const isApproving =
+                                                loadingApprove === berita.id;
+                                            const isRejecting =
+                                                loadingReject === berita.id;
+                                            const isProcessing =
+                                                isApproving || isRejecting;
+
+                                            return (
+                                                <div className="flex items-start gap-4 min-w-[320px]">
+                                                    <div className="relative shrink-0">
+                                                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                                                            {berita.foto_url ? (
+                                                                <img
+                                                                    src={
+                                                                        berita.foto_url
+                                                                    }
+                                                                    alt={
+                                                                        berita.judul
+                                                                    }
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(
+                                                                        e
+                                                                    ) => {
+                                                                        e.currentTarget.style.display =
+                                                                            "none";
+                                                                    }}
+                                                                />
+                                                            ) : berita.foto ? (
+                                                                <img
+                                                                    src={`/storage/${berita.foto}`}
+                                                                    alt={
+                                                                        berita.judul
+                                                                    }
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(
+                                                                        e
+                                                                    ) => {
+                                                                        e.currentTarget.style.display =
+                                                                            "none";
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                                                    <Newspaper
+                                                                        size={
+                                                                            22
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <span className="absolute -top-2 -right-2">
+                                                            <Badge
+                                                                type="warning"
+                                                                className="text-[10px] shadow-sm"
+                                                            >
+                                                                Pending
+                                                            </Badge>
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-5 line-clamp-2">
+                                                            {berita.judul}
+                                                        </p>
+
+                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+                                                            {berita.kategori && (
+                                                                <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                                                    <Tag
+                                                                        size={
+                                                                            11
+                                                                        }
+                                                                    />
+                                                                    {
+                                                                        berita.kategori
+                                                                    }
+                                                                </span>
+                                                            )}
+
+                                                            {berita.kecamatan && (
+                                                                <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                                                    <MapPin
+                                                                        size={
+                                                                            11
+                                                                        }
+                                                                    />
+                                                                    {
+                                                                        berita.kecamatan
+                                                                    }
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[11px] text-slate-400">
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <Calendar
+                                                                    size={11}
+                                                                />
+                                                                {formatDate(
+                                                                    berita.created_at
+                                                                )}
+                                                            </span>
+
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <User
+                                                                    size={11}
+                                                                />
+                                                                {berita.user
+                                                                    ?.name ||
+                                                                    berita.created_by_name ||
+                                                                    "Kader"}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="mt-3 space-y-2">
+                                                            <input
+                                                                type="text"
+                                                                id={`judul-${berita.id}`}
+                                                                defaultValue={
+                                                                    berita.judul
+                                                                }
+                                                                disabled={
+                                                                    isProcessing
+                                                                }
+                                                                aria-label="Judul berita"
+                                                                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                                            />
+
+                                                            <textarea
+                                                                id={`deskripsi-${berita.id}`}
+                                                                defaultValue={
+                                                                    berita.deskripsi ||
+                                                                    berita.konten ||
+                                                                    ""
+                                                                }
+                                                                rows={3}
+                                                                disabled={
+                                                                    isProcessing
+                                                                }
+                                                                aria-label="Deskripsi berita"
+                                                                className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-600 outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        },
+                                    },
+                                    {
+                                        header: "Aksi",
+                                        className:
+                                            "text-center w-44 align-top",
+                                        headerClassName:
+                                            "text-center w-44",
+                                        render: (
+                                            berita: BeritaPendingItem
+                                        ) => {
+                                            const isApproving =
+                                                loadingApprove === berita.id;
+                                            const isRejecting =
+                                                loadingReject === berita.id;
+                                            const isProcessing =
+                                                isApproving || isRejecting;
+
+                                            return (
+                                                <div className="flex flex-col gap-2 min-w-[145px]">
+                                                    <Button
+                                                        variant="primary"
+                                                        onClick={() =>
+                                                            openApproveModal(
+                                                                berita.id
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isProcessing
+                                                        }
+                                                        className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-60"
+                                                    >
+                                                        {isApproving ? (
+                                                            <Loader2
+                                                                size={16}
+                                                                className="animate-spin"
+                                                            />
+                                                        ) : (
+                                                            <CheckCircle
+                                                                size={16}
+                                                            />
+                                                        )}
+
+                                                        <span>
+                                                            {isApproving
+                                                                ? "Memproses..."
+                                                                : "Setujui"}
+                                                        </span>
+                                                    </Button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openRejectModal(
+                                                                berita.id
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isProcessing
+                                                        }
+                                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 hover:border-rose-300 disabled:opacity-60 dark:bg-slate-800 dark:border-rose-500/20 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                                                    >
+                                                        {isRejecting ? (
+                                                            <Loader2
+                                                                size={16}
+                                                                className="animate-spin"
+                                                            />
+                                                        ) : (
+                                                            <XCircle size={16} />
+                                                        )}
+
+                                                        <span>
+                                                            {isRejecting
+                                                                ? "Memproses..."
+                                                                : "Tolak"}
+                                                        </span>
+                                                    </button>
+
+                                                    <Link
+                                                        href={route(
+                                                            "be.berita.edit",
+                                                            berita.id
+                                                        )}
+                                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                        <span>
+                                                            Edit Lengkap
+                                                        </span>
+                                                    </Link>
+
+                                                    <Link
+                                                        href={
+                                                            berita.slug
+                                                                ? `/berita/${berita.slug}`
+                                                                : "#"
+                                                        }
+                                                        target="_blank"
+                                                        className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-400 transition-all hover:bg-slate-50 hover:text-blue-600 dark:hover:bg-slate-700"
+                                                    >
+                                                        <Eye size={14} />
+                                                        Lihat Preview
+                                                    </Link>
+                                                </div>
+                                            );
+                                        },
+                                    },
+                                ]}
+                                data={items}
+                            />
                         </div>
                     )}
-                </div>
 
-                {/* Empty State */}
-                {items.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                            <Clock size={32} className="text-slate-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-slate-700">
-                            {hasActiveFilter ? "Tidak Ada Hasil" : "Tidak Ada Berita Pending"}
-                        </h3>
-                        <p className="text-sm text-slate-400 mt-1">
-                            {hasActiveFilter
-                                ? "Coba ubah kata kunci atau filter kecamatan."
-                                : "Semua berita sudah disetujui atau ditolak."}
-                        </p>
-                        {hasActiveFilter && (
-                            <button
-                                onClick={handleReset}
-                                className="mt-4 text-sm text-teal-600 hover:text-teal-700 font-medium"
-                            >
-                                Reset Filter
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="space-y-5">
-                        {items.map((berita) => {
-                            const isApproving = loadingApprove === berita.id;
-                            const isRejecting = loadingReject === berita.id;
-                            const isProcessing = isApproving || isRejecting;
+                    {beritaPending?.last_page > 1 &&
+                        beritaPending?.links && (
+                            <div className="border-t border-slate-100 dark:border-slate-700 px-5 sm:px-6 py-4 bg-slate-50/40 dark:bg-slate-700/20">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        Menampilkan{" "}
+                                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                                            {beritaPending?.from || 0}
+                                        </span>{" "}
+                                        sampai{" "}
+                                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                                            {beritaPending?.to || 0}
+                                        </span>{" "}
+                                        dari{" "}
+                                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                                            {beritaPending?.total || 0}
+                                        </span>{" "}
+                                        data
+                                    </p>
 
-                            return (
-                                <div
-                                    key={berita.id}
-                                    className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-                                >
-                                    <div className="p-6">
-                                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                                            {/* Thumbnail */}
-                                            <div className="lg:col-span-1">
-                                                <div className="relative w-full aspect-video lg:aspect-square rounded-xl overflow-hidden bg-slate-100">
-                                                    {berita.foto_url ? (
-                                                        <img
-                                                            src={berita.foto_url}
-                                                            alt={berita.judul}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = "none";
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
-                                                            <Eye size={32} className="mb-2" />
-                                                            <span className="text-xs">Tidak ada gambar</span>
-                                                        </div>
-                                                    )}
-                                                    <div className="absolute top-3 left-3">
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full shadow-sm">
-                                                            <Clock size={12} />
-                                                            Pending
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Content */}
-                                            <div className="lg:col-span-2 space-y-4">
-                                                {/* Meta Info */}
-                                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <Calendar size={14} className="text-slate-400" />
-                                                        {formatDate(berita.created_at)}
-                                                    </span>
-                                                    <span className="flex items-center gap-1.5">
-                                                        <User size={14} className="text-slate-400" />
-                                                        {berita.user?.name || berita.created_by_name || "Kader"}
-                                                    </span>
-                                                    {berita.kategori && (
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Tag size={14} className="text-slate-400" />
-                                                            {berita.kategori}
-                                                        </span>
-                                                    )}
-                                                    {berita.kecamatan && (
-                                                        <span className="flex items-center gap-1.5">
-                                                            <MapPin size={14} className="text-slate-400" />
-                                                            {berita.kecamatan}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Edit Fields */}
-                                                <div className="space-y-3">
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-slate-500 mb-1">
-                                                            Judul Berita
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            id={`judul-${berita.id}`}
-                                                            defaultValue={berita.judul}
-                                                            className="w-full text-base font-semibold text-slate-900 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
-                                                            placeholder="Masukkan judul berita..."
-                                                            disabled={isProcessing}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-slate-500 mb-1">
-                                                            Deskripsi / Konten
-                                                        </label>
-                                                        <textarea
-                                                            id={`deskripsi-${berita.id}`}
-                                                            defaultValue={berita.deskripsi || berita.konten || ""}
-                                                            className="w-full text-sm text-slate-600 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
-                                                            rows={3}
-                                                            placeholder="Tulis deskripsi berita..."
-                                                            disabled={isProcessing}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Actions */}
-                                            <div className="lg:col-span-1 flex flex-row lg:flex-col gap-2 lg:justify-center">
-                                                <button
-                                                    onClick={() => handleApprove(berita.id)}
-                                                    disabled={isProcessing}
-                                                    className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors w-full ${
-                                                        isApproving
-                                                            ? "bg-teal-400 cursor-not-allowed"
-                                                            : "bg-teal-600 hover:bg-teal-700 text-white"
-                                                    }`}
-                                                >
-                                                    {isApproving ? (
-                                                        <Loader2 size={18} className="animate-spin" />
-                                                    ) : (
-                                                        <CheckCircle size={18} />
-                                                    )}
-                                                    {isApproving ? "Memproses..." : "Setujui"}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReject(berita.id)}
-                                                    disabled={isProcessing}
-                                                    className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors w-full ${
-                                                        isRejecting
-                                                            ? "bg-red-200 cursor-not-allowed"
-                                                            : "bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300"
-                                                    }`}
-                                                >
-                                                    {isRejecting ? (
-                                                        <Loader2 size={18} className="animate-spin" />
-                                                    ) : (
-                                                        <XCircle size={18} />
-                                                    )}
-                                                    {isRejecting ? "Memproses..." : "Tolak"}
-                                                </button>
-                                                <Link
-                                                    href={route('be.berita.edit', berita.id)}
-                                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-700 text-sm font-medium rounded-lg transition-colors w-full border border-slate-200"
-                                                >
-                                                    <Edit size={16} />
-                                                    Edit Lengkap
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {beritaPending?.last_page > 1 && beritaPending?.links && (
-                    <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
-                        <p className="text-sm text-slate-500">
-                            Menampilkan {beritaPending?.from || 0} - {beritaPending?.to || 0} dari {beritaPending?.total || 0}
-                        </p>
-                        <div className="flex gap-2">
-                            {beritaPending.links.map((link: any, index: number) => {
-                                if (index === 0 || index === beritaPending.links.length - 1) {
-                                    return (
-                                        <Link
-                                            key={index}
-                                            href={link.url || '#'}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                                !link.url
-                                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                            }`}
-                                        />
-                                    );
-                                }
-                                return (
-                                    <Link
-                                        key={index}
-                                        href={link.url || '#'}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                            link.active
-                                                ? "bg-teal-600 text-white"
-                                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                        }`}
+                                    <Pagination
+                                        links={beritaPending.links || []}
+                                        onPageChange={handlePageChange}
                                     />
-                                );
-                            })}
+                                </div>
+                            </div>
+                        )}
+                </Card>
+            </div>
+
+            {/* ====== MODAL KONFIRMASI APPROVE (PROFESIONAL) ====== */}
+            {showApproveModal && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+                    {/* Overlay */}
+                    <div
+                        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+                        onClick={() => setShowApproveModal(false)}
+                    />
+
+                    {/* Modal Box */}
+                    <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 shrink-0 rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400 flex items-center justify-center">
+                                <CheckCircle size={24} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                                    Setujui Berita Ini?
+                                </h3>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                    Berita akan langsung dipublikasikan setelah Anda menyetujui.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowApproveModal(false)}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="mt-6 flex gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowApproveModal(false)}
+                                className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmApprove}
+                                className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                            >
+                                Ya, Setujui
+                            </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
+
+            {/* ====== MODAL KONFIRMASI REJECT (PROFESIONAL) ====== */}
+            {showRejectModal && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+                    {/* Overlay */}
+                    <div
+                        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+                        onClick={() => setShowRejectModal(false)}
+                    />
+
+                    {/* Modal Box */}
+                    <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 shrink-0 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 flex items-center justify-center">
+                                <AlertTriangle size={24} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                                    Tolak Berita Ini?
+                                </h3>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                    Berita akan ditolak dan tidak akan dipublikasikan.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="mt-5">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Alasan Penolakan (Opsional)
+                            </label>
+                            <textarea
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                                rows={3}
+                                placeholder="Tuliskan alasan penolakan..."
+                                className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 outline-none transition-all focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                        </div>
+
+                        <div className="mt-6 flex gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowRejectModal(false)}
+                                className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmReject}
+                                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                            >
+                                Ya, Tolak
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </MainLayout>
     );
 }
