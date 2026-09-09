@@ -14,6 +14,7 @@ use App\Models\Pokja3;
 use App\Models\Pokja4;
 use App\Models\Survey;
 use App\Models\StrukturOrganisasi;
+use App\Models\LaporanKegiatan; // 🔥 TAMBAHKAN
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -23,6 +24,7 @@ class IndexController extends Controller
     {
         $isSurveyActive = true;
 
+        // ─── SURVEY ──────────────────────────────────────────────────────────────
         $testimoniSurvey = Survey::query()
             ->where('status', 'published')
             ->latest()
@@ -38,6 +40,7 @@ class IndexController extends Controller
                 ];
             });
 
+        // ─── BERITA ──────────────────────────────────────────────────────────────
         $beritaTerbaru = Berita::where('status_publikasi', true)
             ->latest()
             ->take(6)
@@ -52,12 +55,11 @@ class IndexController extends Controller
                     'foto' => $item->foto,
                     'foto_url' => $item->foto_url ?? null,
                     'created_at' => $item->created_at,
-                    'link' => $item->slug
-                        ? '/berita/' . $item->slug
-                        : '/berita/' . $item->id,
+                    'link' => $item->slug ? '/berita/' . $item->slug : '/berita/' . $item->id,
                 ];
             });
 
+        // ─── GALERI ──────────────────────────────────────────────────────────────
         $galeriTerbaru = Galeri::latest()
             ->take(8)
             ->get()
@@ -73,6 +75,7 @@ class IndexController extends Controller
                 ];
             });
 
+        // ─── AGENDA ──────────────────────────────────────────────────────────────
         $agendaTerbaru = Agenda::where('status', '!=', 'cancelled')
             ->whereDate('tanggal', '>=', now()->subDays(1))
             ->orderBy('tanggal', 'asc')
@@ -97,8 +100,7 @@ class IndexController extends Controller
                 ];
             });
 
-        $videos = collect([]);
-
+        // ─── INFOGRAFIS ──────────────────────────────────────────────────────────
         $infografis = Infografis::where('status', 'active')
             ->orderBy('created_at', 'desc')
             ->limit(3)
@@ -113,23 +115,14 @@ class IndexController extends Controller
                 ];
             });
 
+        // ─── 🔥 POKJA UNTUK BERANDA (6 TERBARU) ──────────────────────────────────
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
+        $pokja3 = Pokja3::latest()->take(6)->get();
+        $pokja4 = Pokja4::latest()->take(6)->get();
 
-        $pokja3 = Pokja3::select(
-            'id', 'kecamatan', 'nama_kecamatan',
-            'rumah_sehat', 'rumah_tidak_sehat',
-            'pemanfaatan_pekarangan', 'industri_rumah_tangga',
-            'kategori', 'judul_kegiatan', 'deskripsi', 'created_at'
-        )->latest()->take(6)->get();
-
-        $pokja4 = Pokja4::select(
-            'id', 'kecamatan', 'nama_kecamatan',
-            'posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga',
-            'kategori', 'judul_kegiatan', 'deskripsi', 'created_at'
-        )->latest()->take(6)->get();
-
+        // ─── KEBIJAKAN ──────────────────────────────────────────────────────────
         $kebijakan = collect([
             [
                 'id' => 1,
@@ -154,6 +147,7 @@ class IndexController extends Controller
             ],
         ])->map(fn ($item) => (object) $item);
 
+        // ─── CHART ──────────────────────────────────────────────────────────────
         $chartData = collect([
             ['year' => '2019', 'value' => 1.8],
             ['year' => '2020', 'value' => 2.1],
@@ -177,7 +171,7 @@ class IndexController extends Controller
             'berita' => $beritaTerbaru,
             'galeri' => $galeriTerbaru,
             'agenda' => $agendaTerbaru,
-            'videos' => $videos,
+            'videos' => collect([]),
             'infografis' => $infografis,
             'sekretariat' => $sekretariat,
             'pokja1' => $pokja1,
@@ -190,6 +184,36 @@ class IndexController extends Controller
         ]);
     }
 
+    // ─── 🔥 LAPORAN KEGIATAN PUBLIC ───────────────────────────────────────────
+    public function laporanKegiatanPublic(Request $request)
+    {
+        $search = $request->input('search');
+        $pokja = $request->input('pokja');
+        $perPage = (int) $request->input('per_page', 12);
+
+        $laporans = LaporanKegiatan::query()
+            ->with('user:id,name')
+            ->where('status', 'approved')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('judul', 'like', "%{$search}%")
+                        ->orWhere('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('desa_kelurahan', 'like', "%{$search}%")
+                        ->orWhere('nama_dasawisma', 'like', "%{$search}%");
+                });
+            })
+            ->when($pokja, fn ($q) => $q->where('kategori_pokja', $pokja))
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('Frontend/LaporanKegiatan/Index', [
+            'laporans' => $laporans,
+            'filters' => $request->only(['search', 'pokja', 'per_page']),
+        ]);
+    }
+
+    // ─── SURVEY ──────────────────────────────────────────────────────────────
     public function surveyKepuasan()
     {
         return Inertia::render('Frontend/Survey/Index', [
@@ -220,6 +244,7 @@ class IndexController extends Controller
             ->with('success', 'Terima kasih atas partisipasi Anda! 🙏');
     }
 
+    // ─── PROFIL ──────────────────────────────────────────────────────────────
     public function sejarah()
     {
         return Inertia::render('Frontend/Profil/Sejarah');
@@ -235,23 +260,18 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Profil/VisiMisi');
     }
 
-    // ================================================================
-    // 🔥🔥🔥 STRUKTUR ORGANISASI - DARI DATABASE
-    // ================================================================
+    // ─── STRUKTUR ORGANISASI ──────────────────────────────────────────────
     public function strukturOrganisasi()
     {
-        // 🔥 Ambil data ketua (kategori 'ketua')
         $ketua = StrukturOrganisasi::where('kategori', 'ketua')
             ->where('is_active', true)
             ->first();
 
-        // 🔥 Ambil data pimpinan inti (kategori 'pimpinan_inti')
         $pimpinanInti = StrukturOrganisasi::where('kategori', 'pimpinan_inti')
             ->where('is_active', true)
             ->orderBy('urutan', 'asc')
             ->get();
 
-        // 🔥 Ambil data pokja I, II, III, IV
         $pokja = [];
         $pokjaLabels = ['I', 'II', 'III', 'IV'];
         foreach ($pokjaLabels as $num) {
@@ -261,16 +281,6 @@ class IndexController extends Controller
                 ->get();
         }
 
-        // 🔥 DEBUG: Cek data di log
-        \Log::info('Struktur Organisasi Data:', [
-            'ketua' => $ketua ? $ketua->nama : 'null',
-            'pimpinanInti_count' => $pimpinanInti->count(),
-            'pokja_I_count' => $pokja['I']->count(),
-            'pokja_II_count' => $pokja['II']->count(),
-            'pokja_III_count' => $pokja['III']->count(),
-            'pokja_IV_count' => $pokja['IV']->count(),
-        ]);
-
         return Inertia::render('Frontend/Profil/StrukturOrganisasi', [
             'ketua' => $ketua,
             'pimpinanInti' => $pimpinanInti,
@@ -278,6 +288,7 @@ class IndexController extends Controller
         ]);
     }
 
+    // ─── PROGRAM ──────────────────────────────────────────────────────────────
     public function programKerja()
     {
         return Inertia::render('Frontend/Program/ProgramKerja');
@@ -313,6 +324,7 @@ class IndexController extends Controller
         return Inertia::render('Frontend/Program/Dokumen');
     }
 
+    // ─── BERITA ──────────────────────────────────────────────────────────────
     public function berita(Request $request)
     {
         $search = $request->get('search');
@@ -382,6 +394,7 @@ class IndexController extends Controller
         ]);
     }
 
+    // ─── 🔥 DATA POKJA PUBLIC ──────────────────────────────────────────────────
     public function sekretariatPublic(Request $request)
     {
         $search = $request->input('search');
@@ -492,6 +505,7 @@ class IndexController extends Controller
         ]);
     }
 
+    // ─── 🔥 JSON API ──────────────────────────────────────────────────────────
     public function sekretariatJson(Request $request)
     {
         $search = $request->input('search');

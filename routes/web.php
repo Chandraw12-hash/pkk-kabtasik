@@ -58,18 +58,17 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
-    // ============================================
-    // SURVEY KEPUASAN (Public)
-    // ============================================
+    // 🔥 LAPORAN KEGIATAN PUBLIC
+    Route::get('/laporan-kegiatan', [IndexController::class, 'laporanKegiatanPublic'])->name('laporan-kegiatan');
+
+    // Survey
     Route::get('/survey-kepuasan', [FrontendSurveyController::class, 'index'])->name('survey.kepuasan');
     Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])->name('survey.kepuasan.store');
-
-    // Anti-bot: max 5 submit per 10 menit per IP
     Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])
         ->middleware('throttle:5,10')
         ->name('survey.kepuasan.store');
 
-    // Data Publik Sekretariat & Pokja (Inertia)
+    // Data Publik Sekretariat & Pokja
     Route::get('/sekretariat', [IndexController::class, 'sekretariatPublic'])->name('sekretariat');
     Route::get('/pokja-1', [IndexController::class, 'pokja1Public'])->name('pokja1');
     Route::get('/pokja-2', [IndexController::class, 'pokja2Public'])->name('pokja2');
@@ -152,24 +151,20 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     // ============================================
     // 🔥🔥🔥 BERITA - ROUTE KHUSUS HARUS DI ATAS RESOURCE!
     // ============================================
-
-    // 🔥 ROUTE KHUSUS PENDING (DI ATAS RESOURCE)
     Route::get('berita/pending', [BeritaController::class, 'pending'])
         ->name('berita.pending');
 
-    // 🔥 ROUTE APPROVE & REJECT (DI ATAS RESOURCE)
     Route::put('berita/{berita}/approve', [BeritaController::class, 'approve'])
         ->name('berita.approve');
     Route::put('berita/{berita}/reject', [BeritaController::class, 'reject'])
         ->name('berita.reject');
 
-    // 🔥 RESOURCE BERITA (DI BAWAH ROUTE KHUSUS)
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
 
     // ============================================
-    // INFOGRAFIS (Fitur Upload Infografis)
+    // INFOGRAFIS
     // ============================================
     Route::resource('infografis', InfografisController::class)->except(['show']);
     Route::patch('infografis/{infografis}/toggle-status', [InfografisController::class, 'toggleStatus'])
@@ -197,17 +192,22 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->name('agenda.auto-update-status');
 
     // ============================================
-    // LAPORAN KEGIATAN (dari kader mobile)
+    // 🔥🔥🔥 LAPORAN KEGIATAN (BACKEND)
     // ============================================
     Route::resource('laporan-kegiatan', LaporanKegiatanController::class)
         ->names('laporan-kegiatan')
         ->only(['index', 'show', 'destroy']);
+
+    // 🔥 TAMBAHKAN BATCH APPROVE
+    Route::post('laporan-kegiatan/approve-batch', [LaporanKegiatanController::class, 'approveBatch'])
+        ->name('laporan-kegiatan.approve-batch');
 
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])
         ->name('laporan-kegiatan.review');
 
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/approve', [LaporanKegiatanController::class, 'approve'])
         ->name('laporan-kegiatan.approve');
+
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])
         ->name('laporan-kegiatan.reject');
 
@@ -248,11 +248,9 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->names('struktur-organisasi')
         ->except(['show']);
 
-    // 🔥 TAMBAHKAN ROUTE IMPORT EXCEL
     Route::post('struktur-organisasi/import', [StrukturOrganisasiController::class, 'import'])
         ->name('struktur-organisasi.import');
 
-    // Toggle status
     Route::patch('struktur-organisasi/{id}/toggle-status', [StrukturOrganisasiController::class, 'toggleStatus'])
         ->name('struktur-organisasi.toggle-status');
 });

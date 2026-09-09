@@ -11,6 +11,7 @@ use App\Models\Pokja4;
 use App\Models\DataUmumSekretariat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class LaporanKegiatanController extends Controller
@@ -38,16 +39,24 @@ class LaporanKegiatanController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        if (
-            !$request->header('X-Inertia') &&
-            ($request->wantsJson() || $request->ajax())
-        ) {
+        $pendingCount = LaporanKegiatan::where('status', 'pending')->count();
+        $approvedCount = LaporanKegiatan::where('status', 'approved')->count();
+        $rejectedCount = LaporanKegiatan::where('status', 'rejected')->count();
+        $reviewedCount = LaporanKegiatan::where('status', 'reviewed')->count();
+        $totalCount = LaporanKegiatan::count();
+
+        if (!$request->header('X-Inertia') && ($request->wantsJson() || $request->ajax())) {
             return response()->json($laporans);
         }
 
         return Inertia::render('Backend/LaporanKegiatan/Index', [
             'laporans' => $laporans,
             'filters'  => $request->only(['search', 'status', 'pokja', 'per_page']),
+            'pendingCount' => $pendingCount,
+            'approvedCount' => $approvedCount,
+            'rejectedCount' => $rejectedCount,
+            'reviewedCount' => $reviewedCount,
+            'totalCount' => $totalCount,
         ]);
     }
 
@@ -61,34 +70,50 @@ class LaporanKegiatanController extends Controller
     }
 
     /**
-     * Approve laporan dan update statistik Pokja.
-     *
-     * FIX: Sebelumnya, laporan tanpa data kecamatan DITOLAK total —
-     * status tetap 'pending' dan admin tidak diberi tahu kenapa (flash
-     * 'warning' tidak pernah ditampilkan di frontend). Sekarang laporan
-     * TETAP BISA disetujui walau kecamatan kosong; hanya update statistik
-     * Pokja yang di-skip untuk laporan itu (karena statistik butuh
-     * kecamatan sebagai kunci rekap).
+     * 🔥 APPROVE LAPORAN + UPDATE STATISTIK
      */
     public function approve(Request $request, LaporanKegiatan $laporan_kegiatan)
     {
-        // Cek apakah laporan sudah di-approve sebelumnya
         if ($laporan_kegiatan->status === 'approved') {
-            return redirect()
-                ->back()
-                ->with('warning', 'Laporan sudah disetujui sebelumnya.');
+            return redirect()->back()->with('warning', 'Laporan sudah disetujui sebelumnya.');
         }
+
+        Log::info('📝 Approve Laporan:', [
+            'id' => $laporan_kegiatan->id,
+            'judul' => $laporan_kegiatan->judul,
+            'kecamatan' => $laporan_kegiatan->kecamatan,
+            'kategori_pokja' => $laporan_kegiatan->kategori_pokja,
+        ]);
 
         $statistikTerupdate = false;
 
-        // Statistik Pokja cuma bisa diupdate kalau ada kecamatan DAN data_angka.
-        // Kalau salah satu kosong, statistik di-skip tapi laporan tetap approved.
-        if (!empty($laporan_kegiatan->kecamatan) && !empty($laporan_kegiatan->data_angka)) {
-            $this->updateStatistikPokja($laporan_kegiatan);
-            $statistikTerupdate = true;
+        // 🔥 DECODE DATA_ANGKA SAMPAI BENER-BENER ARRAY
+        $dataAngka = $laporan_kegiatan->data_angka;
+        if (is_string($dataAngka)) {
+            $dataAngka = json_decode($dataAngka, true);
+            if (is_string($dataAngka)) {
+                $dataAngka = json_decode($dataAngka, true);
+            }
         }
 
-        // Update status laporan — ini SELALU jalan, terlepas dari statistik.
+        // 🔥 CEK VALID DATA
+        $isValidData = !empty($laporan_kegiatan->kecamatan)
+            && is_array($dataAngka)
+            && !empty($dataAngka)
+            && !(count($dataAngka) === 1 && isset($dataAngka['_dummy']));
+
+        if ($isValidData) {
+            $this->updateStatistikPokja($laporan_kegiatan, $dataAngka);
+            $statistikTerupdate = true;
+            Log::info('✅ Statistik Pokja berhasil diupdate untuk laporan ID: ' . $laporan_kegiatan->id);
+        } else {
+            Log::warning('⚠️ Statistik Pokja GAGAL diupdate:', [
+                'laporan_id' => $laporan_kegiatan->id,
+                'kecamatan' => $laporan_kegiatan->kecamatan,
+                'data_angka' => $dataAngka,
+            ]);
+        }
+
         $laporan_kegiatan->update([
             'status'      => 'approved',
             'reviewed_at' => now(),
@@ -96,18 +121,14 @@ class LaporanKegiatanController extends Controller
         ]);
 
         if ($statistikTerupdate) {
-            return redirect()
-                ->back()
-                ->with('success', 'Laporan berhasil disetujui dan data telah masuk ke statistik Pokja.');
+            return redirect()->back()->with('success', '✅ Laporan berhasil disetujui dan data masuk ke statistik Pokja.');
         }
 
-        return redirect()
-            ->back()
-            ->with('warning', 'Laporan disetujui, tetapi TIDAK masuk ke statistik Pokja karena data kecamatan atau data angka kosong. Lengkapi data laporan ini kalau ingin statistiknya tercatat.');
+        return redirect()->back()->with('warning', '⚠️ Laporan disetujui, tetapi TIDAK masuk ke statistik Pokja karena data tidak valid.');
     }
 
     /**
-     * Reject laporan
+     * 🔥 REJECT LAPORAN
      */
     public function reject(Request $request, LaporanKegiatan $laporan_kegiatan)
     {
@@ -117,199 +138,53 @@ class LaporanKegiatanController extends Controller
             'reviewed_by' => $request->user()->id,
         ]);
 
-        return redirect()
-            ->back()
-            ->with('error', 'Laporan ditolak.');
+        return redirect()->back()->with('error', '❌ Laporan ditolak.');
     }
 
     /**
-     * Update statistik Pokja berdasarkan laporan yang disetujui
+     * 🔥 APPROVE BATCH
      */
-    private function updateStatistikPokja(LaporanKegiatan $laporan)
+    public function approveBatch(Request $request)
     {
-        $kecamatan = $laporan->kecamatan;
-        $pokja = $laporan->kategori_pokja;
-        $dataAngka = $laporan->data_angka ?? [];
+        $ids = $request->input('ids', []);
 
-        // Pastikan kecamatan tidak null
-        if (empty($kecamatan)) {
-            return;
+        if (empty($ids)) {
+            return redirect()->back()->with('warning', 'Tidak ada laporan yang dipilih.');
         }
 
-        switch ($pokja) {
-            case 'I':
-                $this->updatePokja1($kecamatan, $dataAngka);
-                break;
-            case 'II':
-                $this->updatePokja2($kecamatan, $dataAngka);
-                break;
-            case 'III':
-                $this->updatePokja3($kecamatan, $dataAngka);
-                break;
-            case 'IV':
-                $this->updatePokja4($kecamatan, $dataAngka);
-                break;
-            case 'SEKRETARIAT':
-                $this->updateSekretariat($kecamatan, $dataAngka);
-                break;
+        $laporans = LaporanKegiatan::whereIn('id', $ids)
+            ->where('status', 'pending')
+            ->get();
+
+        $count = 0;
+        foreach ($laporans as $laporan) {
+            // 🔥 DECODE DATA_ANGKA
+            $dataAngka = $laporan->data_angka;
+            if (is_string($dataAngka)) {
+                $dataAngka = json_decode($dataAngka, true);
+                if (is_string($dataAngka)) {
+                    $dataAngka = json_decode($dataAngka, true);
+                }
+            }
+
+            $isValidData = !empty($laporan->kecamatan)
+                && is_array($dataAngka)
+                && !empty($dataAngka)
+                && !(count($dataAngka) === 1 && isset($dataAngka['_dummy']));
+
+            if ($isValidData) {
+                $this->updateStatistikPokja($laporan, $dataAngka);
+            }
+
+            $laporan->update([
+                'status' => 'approved',
+                'reviewed_at' => now(),
+                'reviewed_by' => $request->user()->id,
+            ]);
+            $count++;
         }
-    }
 
-    /**
-     * Update statistik Pokja I
-     */
-    private function updatePokja1($kecamatan, $dataAngka)
-    {
-        $pokja = Pokja1::firstOrCreate(
-            ['kecamatan' => $kecamatan],
-            [
-                'nama_kecamatan' => $kecamatan,
-                'kategori' => 'Pokja I',
-                'judul_kegiatan' => 'Rekapitulasi Pokja I - ' . $kecamatan,
-                'deskripsi' => 'Data rekapitulasi Pokja I Kecamatan ' . $kecamatan,
-                'pkbn_l' => 0,
-                'pkbn_p' => 0,
-                'pkdrt_l' => 0,
-                'pkdrt_p' => 0,
-                'pola_asuh_l' => 0,
-                'pola_asuh_p' => 0,
-                'lansia_l' => 0,
-                'lansia_p' => 0,
-                'kader_pokja1_l' => 0,
-                'kader_pokja1_p' => 0,
-            ]
-        );
-
-        $pokja->increment('pkbn_l', $dataAngka['pkbn_l'] ?? 0);
-        $pokja->increment('pkbn_p', $dataAngka['pkbn_p'] ?? 0);
-        $pokja->increment('pkdrt_l', $dataAngka['pkdrt_l'] ?? 0);
-        $pokja->increment('pkdrt_p', $dataAngka['pkdrt_p'] ?? 0);
-        $pokja->increment('pola_asuh_l', $dataAngka['pola_asuh_l'] ?? 0);
-        $pokja->increment('pola_asuh_p', $dataAngka['pola_asuh_p'] ?? 0);
-        $pokja->increment('lansia_l', $dataAngka['lansia_l'] ?? 0);
-        $pokja->increment('lansia_p', $dataAngka['lansia_p'] ?? 0);
-        $pokja->increment('kader_pokja1_l', $dataAngka['kader_pokja1_l'] ?? 0);
-        $pokja->increment('kader_pokja1_p', $dataAngka['kader_pokja1_p'] ?? 0);
-    }
-
-    /**
-     * Update statistik Pokja II
-     */
-    private function updatePokja2($kecamatan, $dataAngka)
-    {
-        $pokja = Pokja2::firstOrCreate(
-            ['kecamatan' => $kecamatan],
-            [
-                'nama_kecamatan' => $kecamatan,
-                'kategori' => 'Pokja II',
-                'judul_kegiatan' => 'Rekapitulasi Pokja II - ' . $kecamatan,
-                'deskripsi' => 'Data rekapitulasi Pokja II Kecamatan ' . $kecamatan,
-                'warga_buta_l' => 0,
-                'warga_buta_p' => 0,
-                'kelompok_belajar_paket_a' => 0,
-                'kelompok_belajar_paket_b' => 0,
-                'kelompok_belajar_paket_c' => 0,
-                'kf' => 0,
-                'paud' => 0,
-                'koperasi_berbadan_hukum' => 0,
-            ]
-        );
-
-        $pokja->increment('warga_buta_l', $dataAngka['warga_buta_l'] ?? 0);
-        $pokja->increment('warga_buta_p', $dataAngka['warga_buta_p'] ?? 0);
-        $pokja->increment('kelompok_belajar_paket_a', $dataAngka['kelompok_belajar_paket_a'] ?? 0);
-        $pokja->increment('kelompok_belajar_paket_b', $dataAngka['kelompok_belajar_paket_b'] ?? 0);
-        $pokja->increment('kelompok_belajar_paket_c', $dataAngka['kelompok_belajar_paket_c'] ?? 0);
-        $pokja->increment('kf', $dataAngka['kf'] ?? 0);
-        $pokja->increment('paud', $dataAngka['paud'] ?? 0);
-        $pokja->increment('koperasi_berbadan_hukum', $dataAngka['koperasi_berbadan_hukum'] ?? 0);
-    }
-
-    /**
-     * Update statistik Pokja III
-     */
-    private function updatePokja3($kecamatan, $dataAngka)
-    {
-        $pokja = Pokja3::firstOrCreate(
-            ['kecamatan' => $kecamatan],
-            [
-                'nama_kecamatan' => $kecamatan,
-                'kategori' => 'Pokja III',
-                'judul_kegiatan' => 'Rekapitulasi Pokja III - ' . $kecamatan,
-                'deskripsi' => 'Data rekapitulasi Pokja III Kecamatan ' . $kecamatan,
-                'rumah_sehat' => 0,
-                'rumah_tidak_sehat' => 0,
-                'pemanfaatan_pekarangan' => 0,
-                'industri_rumah_tangga' => 0,
-            ]
-        );
-
-        $pokja->increment('rumah_sehat', $dataAngka['rumah_sehat'] ?? 0);
-        $pokja->increment('rumah_tidak_sehat', $dataAngka['rumah_tidak_sehat'] ?? 0);
-        $pokja->increment('pemanfaatan_pekarangan', $dataAngka['pemanfaatan_pekarangan'] ?? 0);
-        $pokja->increment('industri_rumah_tangga', $dataAngka['industri_rumah_tangga'] ?? 0);
-    }
-
-    /**
-     * Update statistik Pokja IV
-     */
-    private function updatePokja4($kecamatan, $dataAngka)
-    {
-        $pokja = Pokja4::firstOrCreate(
-            ['kecamatan' => $kecamatan],
-            [
-                'nama_kecamatan' => $kecamatan,
-                'kategori' => 'Pokja IV',
-                'judul_kegiatan' => 'Rekapitulasi Pokja IV - ' . $kecamatan,
-                'deskripsi' => 'Data rekapitulasi Pokja IV Kecamatan ' . $kecamatan,
-                'posyandu' => 0,
-                'akseptor_kb' => 0,
-                'phbs' => 0,
-                'jamban_keluarga' => 0,
-            ]
-        );
-
-        $pokja->increment('posyandu', $dataAngka['posyandu'] ?? 0);
-        $pokja->increment('akseptor_kb', $dataAngka['akseptor_kb'] ?? 0);
-        $pokja->increment('phbs', $dataAngka['phbs'] ?? 0);
-        $pokja->increment('jamban_keluarga', $dataAngka['jamban_keluarga'] ?? 0);
-    }
-
-    /**
-     * Update statistik Sekretariat
-     */
-    private function updateSekretariat($kecamatan, $dataAngka)
-    {
-        $sekretariat = DataUmumSekretariat::firstOrCreate(
-            ['kecamatan' => $kecamatan],
-            [
-                'nama_kecamatan' => $kecamatan,
-                'kategori' => 'Sekretariat',
-                'judul_kegiatan' => 'Rekapitulasi Sekretariat - ' . $kecamatan,
-                'deskripsi' => 'Data rekapitulasi Sekretariat Kecamatan ' . $kecamatan,
-                'jumlah_kk' => 0,
-                'jumlah_dasa_wisma' => 0,
-                'jiwa_l' => 0,
-                'jiwa_p' => 0,
-                'kader_umum_l' => 0,
-                'kader_umum_p' => 0,
-                'kader_khusus_l' => 0,
-                'kader_khusus_p' => 0,
-                'tp_pkk_l' => 0,
-                'tp_pkk_p' => 0,
-            ]
-        );
-
-        $sekretariat->increment('jumlah_kk', $dataAngka['jumlah_kk'] ?? 0);
-        $sekretariat->increment('jumlah_dasa_wisma', $dataAngka['jumlah_dasa_wisma'] ?? 0);
-        $sekretariat->increment('jiwa_l', $dataAngka['jiwa_l'] ?? 0);
-        $sekretariat->increment('jiwa_p', $dataAngka['jiwa_p'] ?? 0);
-        $sekretariat->increment('kader_umum_l', $dataAngka['kader_umum_l'] ?? 0);
-        $sekretariat->increment('kader_umum_p', $dataAngka['kader_umum_p'] ?? 0);
-        $sekretariat->increment('kader_khusus_l', $dataAngka['kader_khusus_l'] ?? 0);
-        $sekretariat->increment('kader_khusus_p', $dataAngka['kader_khusus_p'] ?? 0);
-        $sekretariat->increment('tp_pkk_l', $dataAngka['tp_pkk_l'] ?? 0);
-        $sekretariat->increment('tp_pkk_p', $dataAngka['tp_pkk_p'] ?? 0);
+        return redirect()->back()->with('success', "✅ {$count} laporan berhasil disetujui.");
     }
 
     public function markReviewed(Request $request, LaporanKegiatan $laporan_kegiatan)
@@ -320,9 +195,7 @@ class LaporanKegiatanController extends Controller
             'reviewed_by' => $request->user()->id,
         ]);
 
-        return redirect()
-            ->back()
-            ->with('success', 'Laporan ditandai sudah direview.');
+        return redirect()->back()->with('success', '📋 Laporan ditandai sudah direview.');
     }
 
     public function destroy(LaporanKegiatan $laporan_kegiatan)
@@ -335,6 +208,153 @@ class LaporanKegiatanController extends Controller
 
         return redirect()
             ->route('be.laporan-kegiatan.index')
-            ->with('success', 'Laporan berhasil dihapus.');
+            ->with('success', '🗑️ Laporan berhasil dihapus.');
+    }
+
+    // ─── 🔥 UPDATE STATISTIK POKJA ────────────────────────────────────────────
+    private function updateStatistikPokja(LaporanKegiatan $laporan, array $dataAngka)
+    {
+        $kecamatan = $laporan->kecamatan;
+        $pokja = $laporan->kategori_pokja;
+
+        if (empty($kecamatan) || empty($dataAngka)) {
+            return;
+        }
+
+        Log::info('📊 Update Statistik Pokja:', [
+            'laporan_id' => $laporan->id,
+            'pokja' => $pokja,
+            'kecamatan' => $kecamatan,
+        ]);
+
+        switch ($pokja) {
+            case 'I':  $this->updatePokja1($kecamatan, $dataAngka); break;
+            case 'II': $this->updatePokja2($kecamatan, $dataAngka); break;
+            case 'III': $this->updatePokja3($kecamatan, $dataAngka); break;
+            case 'IV': $this->updatePokja4($kecamatan, $dataAngka); break;
+            case 'SEKRETARIAT': $this->updateSekretariat($kecamatan, $dataAngka); break;
+            default:
+                Log::warning('⚠️ Kategori Pokja tidak dikenal: ' . $pokja);
+        }
+    }
+
+    private function updatePokja1($kecamatan, $dataAngka)
+    {
+        $pokja = Pokja1::firstOrCreate(
+            ['kecamatan' => $kecamatan],
+            [
+                'nama_kecamatan' => $kecamatan,
+                'kategori' => 'Pokja I',
+                'judul_kegiatan' => "Rekapitulasi Pokja I - $kecamatan",
+                'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
+            ]
+        );
+
+        $fields = ['pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p', 'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p', 'kader_pokja1_l', 'kader_pokja1_p'];
+        foreach ($fields as $field) {
+            $value = $dataAngka[$field] ?? 0;
+            if ($value > 0) {
+                $pokja->increment($field, $value);
+            }
+        }
+        $pokja->save();
+
+        Log::info('✅ Pokja I updated untuk: ' . $kecamatan);
+    }
+
+    private function updatePokja2($kecamatan, $dataAngka)
+    {
+        $pokja = Pokja2::firstOrCreate(
+            ['kecamatan' => $kecamatan],
+            [
+                'nama_kecamatan' => $kecamatan,
+                'kategori' => 'Pokja II',
+                'judul_kegiatan' => "Rekapitulasi Pokja II - $kecamatan",
+                'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
+            ]
+        );
+
+        $fields = ['warga_buta_l', 'warga_buta_p', 'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c', 'kf', 'paud', 'koperasi_berbadan_hukum'];
+        foreach ($fields as $field) {
+            $value = $dataAngka[$field] ?? 0;
+            if ($value > 0) {
+                $pokja->increment($field, $value);
+            }
+        }
+        $pokja->save();
+
+        Log::info('✅ Pokja II updated untuk: ' . $kecamatan);
+    }
+
+    private function updatePokja3($kecamatan, $dataAngka)
+    {
+        $pokja = Pokja3::firstOrCreate(
+            ['kecamatan' => $kecamatan],
+            [
+                'nama_kecamatan' => $kecamatan,
+                'kategori' => 'Pokja III',
+                'judul_kegiatan' => "Rekapitulasi Pokja III - $kecamatan",
+                'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
+            ]
+        );
+
+        $fields = ['rumah_sehat', 'rumah_tidak_sehat', 'pemanfaatan_pekarangan', 'industri_rumah_tangga'];
+        foreach ($fields as $field) {
+            $value = $dataAngka[$field] ?? 0;
+            if ($value > 0) {
+                $pokja->increment($field, $value);
+            }
+        }
+        $pokja->save();
+
+        Log::info('✅ Pokja III updated untuk: ' . $kecamatan);
+    }
+
+    private function updatePokja4($kecamatan, $dataAngka)
+    {
+        $pokja = Pokja4::firstOrCreate(
+            ['kecamatan' => $kecamatan],
+            [
+                'nama_kecamatan' => $kecamatan,
+                'kategori' => 'Pokja IV',
+                'judul_kegiatan' => "Rekapitulasi Pokja IV - $kecamatan",
+                'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
+            ]
+        );
+
+        $fields = ['posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga'];
+        foreach ($fields as $field) {
+            $value = $dataAngka[$field] ?? 0;
+            if ($value > 0) {
+                $pokja->increment($field, $value);
+            }
+        }
+        $pokja->save();
+
+        Log::info('✅ Pokja IV updated untuk: ' . $kecamatan);
+    }
+
+    private function updateSekretariat($kecamatan, $dataAngka)
+    {
+        $sekretariat = DataUmumSekretariat::firstOrCreate(
+            ['kecamatan' => $kecamatan],
+            [
+                'nama_kecamatan' => $kecamatan,
+                'kategori' => 'Sekretariat',
+                'judul_kegiatan' => "Rekapitulasi Sekretariat - $kecamatan",
+                'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
+            ]
+        );
+
+        $fields = ['jumlah_kk', 'jumlah_dasa_wisma', 'jiwa_l', 'jiwa_p', 'kader_umum_l', 'kader_umum_p', 'kader_khusus_l', 'kader_khusus_p', 'tp_pkk_l', 'tp_pkk_p'];
+        foreach ($fields as $field) {
+            $value = $dataAngka[$field] ?? 0;
+            if ($value > 0) {
+                $sekretariat->increment($field, $value);
+            }
+        }
+        $sekretariat->save();
+
+        Log::info('✅ Sekretariat updated untuk: ' . $kecamatan);
     }
 }

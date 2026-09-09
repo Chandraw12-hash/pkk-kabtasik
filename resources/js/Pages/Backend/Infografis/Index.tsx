@@ -7,7 +7,7 @@ import Badge from "@/Components/UI/Badge";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import {
     Search,
     Edit2,
@@ -62,9 +62,6 @@ const emptyPagination: PaginatedData<Infografis> = {
 };
 
 export default function Index({ infografis, kategoriList = [], filters = {} }: IndexProps) {
-    const { auth } = usePage<any>().props;
-    const permissions: string[] = auth?.permissions || [];
-
     const [search, setSearch] = useState(filters.search || "");
     const [kategoriFilter, setKategoriFilter] = useState(filters.kategori || "");
     const [perPage, setPerPage] = useState<number>(Number(filters.per_page) || 10);
@@ -72,14 +69,13 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
     const [selectedItem, setSelectedItem] = useState<Infografis | null>(null);
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [localData, setLocalData] = useState<PaginatedData<Infografis>>(
         infografis?.data ? infografis : emptyPagination
     );
     const [isLoading, setIsLoading] = useState(false);
     const isFirstRender = useRef(true);
-
-    const { delete: destroy, processing } = useForm({});
 
     useEffect(() => {
         if (infografis?.data) {
@@ -131,15 +127,24 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
         setShowDeleteModal(true);
     };
 
+    // 🔥 FIX: PAKE ROUTER.DELETE
     const handleDelete = () => {
         if (!selectedItem) return;
 
-        destroy(route("be.infografis.destroy", selectedItem.id), {
+        setIsDeleting(true);
+
+        router.delete(route("be.infografis.destroy", selectedItem.id), {
             preserveScroll: true,
             onSuccess: () => {
                 setShowDeleteModal(false);
                 setSelectedItem(null);
+                setIsDeleting(false);
                 fetchData();
+            },
+            onError: (errors) => {
+                console.error("Delete error:", errors);
+                alert("Gagal menghapus infografis!");
+                setIsDeleting(false);
             },
         });
     };
@@ -436,7 +441,7 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
             {/* Delete Modal */}
             <ConfirmationModal
                 show={showDeleteModal}
-                processing={processing}
+                processing={isDeleting}
                 title="Hapus Infografis"
                 message={
                     selectedItem

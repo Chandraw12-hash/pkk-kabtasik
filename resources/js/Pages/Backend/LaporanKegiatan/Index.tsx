@@ -8,18 +8,17 @@ import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
+import Swal from "sweetalert2";
 import {
     Search,
     Trash2,
     RotateCcw,
     ClipboardList,
     Eye,
-    XCircle,
     ThumbsUp,
     ThumbsDown,
     CheckCircle2,
     AlertTriangle,
-    X,
 } from "lucide-react";
 import axios from "axios";
 
@@ -58,12 +57,11 @@ interface Props {
         pokja?: string;
         per_page?: number | string;
     };
-}
-
-interface FlashProps {
-    success?: string;
-    warning?: string;
-    error?: string;
+    pendingCount?: number;
+    approvedCount?: number;
+    rejectedCount?: number;
+    reviewedCount?: number;
+    totalCount?: number;
 }
 
 const formatTanggal = (d?: string) => {
@@ -89,84 +87,15 @@ const getStatusBadge = (status: string) => {
     return statusMap[status] || { label: status, type: "default" };
 };
 
-// ============================================================
-// TOAST NOTIFICATION
-// Menampilkan flash message dari Laravel (success/warning/error)
-// yang sebelumnya dikirim server tapi tidak pernah ditampilkan.
-// ============================================================
-function FlashToast() {
-    const { props } = usePage<{ flash?: FlashProps }>();
-    const flash = props.flash || {};
-
-    const [visible, setVisible] = useState(false);
-    const [current, setCurrent] = useState<{
-        type: "success" | "warning" | "error";
-        message: string;
-    } | null>(null);
-
-    useEffect(() => {
-        const message = flash.success || flash.warning || flash.error;
-        if (!message) return;
-
-        const type = flash.success
-            ? "success"
-            : flash.warning
-            ? "warning"
-            : "error";
-
-        setCurrent({ type, message });
-        setVisible(true);
-
-        const timer = setTimeout(() => setVisible(false), 5000);
-        return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [flash.success, flash.warning, flash.error]);
-
-    if (!current) return null;
-
-    const styles = {
-        success: {
-            bg: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/40 dark:border-emerald-700",
-            text: "text-emerald-700 dark:text-emerald-200",
-            icon: <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />,
-        },
-        warning: {
-            bg: "bg-amber-50 border-amber-200 dark:bg-amber-900/40 dark:border-amber-700",
-            text: "text-amber-700 dark:text-amber-200",
-            icon: <AlertTriangle size={18} className="text-amber-500 shrink-0" />,
-        },
-        error: {
-            bg: "bg-rose-50 border-rose-200 dark:bg-rose-900/40 dark:border-rose-700",
-            text: "text-rose-700 dark:text-rose-200",
-            icon: <AlertTriangle size={18} className="text-rose-500 shrink-0" />,
-        },
-    }[current.type];
-
-    return (
-        <div
-            className={`fixed top-5 right-5 z-[200] max-w-sm w-full border rounded-2xl shadow-lg px-4 py-3 flex items-start gap-3 transition-all duration-300 ease-in-out ${
-                styles.bg
-            } ${
-                visible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-2 pointer-events-none"
-            }`}
-        >
-            {styles.icon}
-            <p className={`text-sm leading-relaxed flex-1 ${styles.text}`}>
-                {current.message}
-            </p>
-            <button
-                onClick={() => setVisible(false)}
-                className={`shrink-0 hover:opacity-70 ${styles.text}`}
-            >
-                <X size={16} />
-            </button>
-        </div>
-    );
-}
-
-export default function Index({ laporans, filters = {} }: Props) {
+export default function Index({
+    laporans,
+    filters = {},
+    pendingCount = 0,
+    approvedCount = 0,
+    rejectedCount = 0,
+    reviewedCount = 0,
+    totalCount = 0,
+}: Props) {
     const [search, setSearch] = useState(filters.search || "");
     const [status, setStatus] = useState(filters.status || "");
     const [pokja, setPokja] = useState(filters.pokja || "");
@@ -180,7 +109,7 @@ export default function Index({ laporans, filters = {} }: Props) {
     const [actionTarget, setActionTarget] = useState<Laporan | null>(null);
     const first = useRef(true);
 
-    const { delete: destroy, processing, post } = useForm({});
+    const { delete: destroy, processing } = useForm({});
 
     useEffect(() => {
         if (laporans?.data) setLocal(laporans);
@@ -215,65 +144,6 @@ export default function Index({ laporans, filters = {} }: Props) {
         return () => clearTimeout(t);
     }, [search, status, pokja, perPage]);
 
-    const handleDelete = () => {
-        if (!selected) return;
-        destroy(route("be.laporan-kegiatan.destroy", selected.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setShowDelete(false);
-                setSelected(null);
-                fetchData(route("be.laporan-kegiatan.index"), {
-                    search: search || undefined,
-                    status: status || undefined,
-                    pokja: pokja || undefined,
-                    per_page: perPage,
-                });
-            },
-        });
-    };
-
-    const handleApprove = (item: Laporan) => {
-        setActionTarget(item);
-        setShowApproveModal(true);
-    };
-
-    const handleReject = (item: Laporan) => {
-        setActionTarget(item);
-        setShowRejectModal(true);
-    };
-
-    const confirmApprove = () => {
-        if (!actionTarget) return;
-        router.patch(
-            route("be.laporan-kegiatan.approve", actionTarget.id),
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowApproveModal(false);
-                    setActionTarget(null);
-                    refreshData();
-                },
-            }
-        );
-    };
-
-    const confirmReject = () => {
-        if (!actionTarget) return;
-        router.patch(
-            route("be.laporan-kegiatan.reject", actionTarget.id),
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowRejectModal(false);
-                    setActionTarget(null);
-                    refreshData();
-                },
-            }
-        );
-    };
-
     const refreshData = () => {
         fetchData(route("be.laporan-kegiatan.index"), {
             search: search || undefined,
@@ -283,9 +153,125 @@ export default function Index({ laporans, filters = {} }: Props) {
         });
     };
 
+    // 🔥 SWEETALERT - DELETE
+    const handleDelete = () => {
+        if (!selected) return;
+        Swal.fire({
+            title: "Hapus Laporan?",
+            text: `Yakin ingin menghapus laporan "${selected.judul}"?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route("be.laporan-kegiatan.destroy", selected.id), {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setShowDelete(false);
+                        setSelected(null);
+                        refreshData();
+                        Swal.fire({
+                            title: "Terhapus!",
+                            text: "Laporan berhasil dihapus.",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false,
+                        });
+                    },
+                });
+            }
+        });
+    };
+
+    // 🔥 SWEETALERT - APPROVE
+    const handleApprove = (item: Laporan) => {
+        Swal.fire({
+            title: "Setujui Laporan?",
+            html: `
+                <p>Anda yakin ingin menyetujui laporan:</p>
+                <p class="font-bold text-teal-600">"${item.judul}"</p>
+                <p class="text-sm text-slate-500">Data akan masuk ke statistik Pokja ${item.kategori_pokja}</p>
+            `,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#10b981",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "✅ Setujui",
+            cancelButtonText: "Batal",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.patch(
+                    route("be.laporan-kegiatan.approve", item.id),
+                    {},
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            refreshData();
+                            Swal.fire({
+                                title: "Disetujui!",
+                                text: "Laporan berhasil disetujui dan data masuk ke statistik Pokja.",
+                                icon: "success",
+                                timer: 2500,
+                                showConfirmButton: false,
+                            });
+                        },
+                        onError: () => {
+                            Swal.fire({
+                                title: "Gagal!",
+                                text: "Terjadi kesalahan saat menyetujui laporan.",
+                                icon: "error",
+                                timer: 2000,
+                                showConfirmButton: false,
+                            });
+                        },
+                    }
+                );
+            }
+        });
+    };
+
+    // 🔥 SWEETALERT - REJECT
+    const handleReject = (item: Laporan) => {
+        Swal.fire({
+            title: "Tolak Laporan?",
+            html: `
+                <p>Anda yakin ingin menolak laporan:</p>
+                <p class="font-bold text-rose-600">"${item.judul}"</p>
+            `,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#ef4444",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "❌ Tolak",
+            cancelButtonText: "Batal",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.patch(
+                    route("be.laporan-kegiatan.reject", item.id),
+                    {},
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            refreshData();
+                            Swal.fire({
+                                title: "Ditolak!",
+                                text: "Laporan berhasil ditolak.",
+                                icon: "error",
+                                timer: 2000,
+                                showConfirmButton: false,
+                            });
+                        },
+                    }
+                );
+            }
+        });
+    };
+
     const rows = local.data || [];
 
-    // Status options untuk filter
     const statusOptions = [
         { value: "", label: "Semua status" },
         { value: "pending", label: "Menunggu" },
@@ -298,10 +284,9 @@ export default function Index({ laporans, filters = {} }: Props) {
         <MainLayout>
             <Head title="Laporan Kegiatan" />
 
-            <FlashToast />
-
+            {/* ─── HEADER ─── */}
             <div className="mb-6">
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
                     Laporan Kegiatan
                 </h1>
                 <p className="text-sm text-slate-500 mt-0.5">
@@ -309,21 +294,46 @@ export default function Index({ laporans, filters = {} }: Props) {
                 </p>
             </div>
 
+            {/* ─── STATISTIK ─── */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-slate-700">{totalCount}</p>
+                    <p className="text-xs text-slate-400">Total</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
+                    <p className="text-xs text-slate-400">Menunggu</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-emerald-600">{approvedCount}</p>
+                    <p className="text-xs text-slate-400">Disetujui</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-rose-600">{rejectedCount}</p>
+                    <p className="text-xs text-slate-400">Ditolak</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{reviewedCount}</p>
+                    <p className="text-xs text-slate-400">Direview</p>
+                </div>
+            </div>
+
+            {/* ─── FILTER ─── */}
             <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
-                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-700 flex flex-col lg:flex-row gap-3">
+                <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row gap-3">
                     <div className="w-full lg:max-w-xs">
                         <TextInput
                             iconLeft={<Search size={18} />}
                             placeholder="Cari judul, wilayah, dasawisma..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full dark:bg-slate-700 dark:border-slate-600"
+                            className="w-full"
                         />
                     </div>
                     <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm px-3 py-2.5"
+                        className="rounded-xl border border-slate-200 bg-white text-sm px-3 py-2.5"
                     >
                         {statusOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -334,7 +344,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                     <select
                         value={pokja}
                         onChange={(e) => setPokja(e.target.value)}
-                        className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm px-3 py-2.5"
+                        className="rounded-xl border border-slate-200 bg-white text-sm px-3 py-2.5"
                     >
                         <option value="">Semua Pokja</option>
                         <option value="I">Pokja I</option>
@@ -357,6 +367,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                     )}
                 </div>
 
+                {/* ─── TABLE ─── */}
                 <Table
                     isLoading={isLoading}
                     columns={[
@@ -374,7 +385,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                             header: "Laporan",
                             render: (item: Laporan) => (
                                 <div className="min-w-0 py-0.5">
-                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                                    <p className="text-sm font-semibold text-slate-800 truncate">
                                         {item.judul}
                                     </p>
                                     <p className="text-xs text-slate-400 truncate">
@@ -399,7 +410,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                         {
                             header: "Wilayah",
                             render: (item: Laporan) => (
-                                <div className="text-sm text-slate-600 dark:text-slate-300">
+                                <div className="text-sm text-slate-600">
                                     <p>{item.kecamatan || "—"}</p>
                                     {item.desa_kelurahan && (
                                         <p className="text-xs text-slate-400">
@@ -439,36 +450,32 @@ export default function Index({ laporans, filters = {} }: Props) {
                                         <Eye size={15} />
                                     </Link>
 
-                                    {/* Tombol Approve - hanya untuk pending */}
                                     {item.status === "pending" && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleApprove(item)}
-                                            className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
-                                            title="Setujui"
-                                        >
-                                            <ThumbsUp size={15} />
-                                        </button>
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleApprove(item)}
+                                                className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                                                title="Setujui"
+                                            >
+                                                <ThumbsUp size={15} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleReject(item)}
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                                title="Tolak"
+                                            >
+                                                <ThumbsDown size={15} />
+                                            </button>
+                                        </>
                                     )}
 
-                                    {/* Tombol Reject - hanya untuk pending */}
-                                    {item.status === "pending" && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleReject(item)}
-                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                                            title="Tolak"
-                                        >
-                                            <ThumbsDown size={15} />
-                                        </button>
-                                    )}
-
-                                    {/* Tombol Hapus */}
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setSelected(item);
-                                            setShowDelete(true);
+                                            handleDelete();
                                         }}
                                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
                                         title="Hapus"
@@ -498,7 +505,8 @@ export default function Index({ laporans, filters = {} }: Props) {
                     </div>
                 )}
 
-                <div className="px-4 py-4 border-t border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                {/* ─── PAGINATION ─── */}
+                <div className="px-4 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-slate-500">
                         {local.from ?? 0}–{local.to ?? 0} dari {local.total ?? 0}
                     </p>
@@ -508,7 +516,7 @@ export default function Index({ laporans, filters = {} }: Props) {
                             onChange={(e) =>
                                 setPerPage(parseInt(e.target.value, 10))
                             }
-                            className="rounded-lg border border-slate-200 text-sm px-2 py-1.5 dark:bg-slate-700 dark:border-slate-600"
+                            className="rounded-lg border border-slate-200 text-sm px-2 py-1.5"
                         >
                             <option value={10}>10</option>
                             <option value={20}>20</option>
@@ -521,63 +529,6 @@ export default function Index({ laporans, filters = {} }: Props) {
                     </div>
                 </div>
             </Card>
-
-            {/* Modal Konfirmasi Hapus */}
-            <ConfirmationModal
-                show={showDelete}
-                processing={processing}
-                title="Hapus Laporan"
-                message={
-                    selected
-                        ? `Hapus laporan "${selected.judul}"?`
-                        : "Hapus laporan ini?"
-                }
-                onConfirm={handleDelete}
-                onCancel={() => {
-                    setShowDelete(false);
-                    setSelected(null);
-                }}
-            />
-
-            {/* Modal Konfirmasi Approve */}
-            <ConfirmationModal
-                show={showApproveModal}
-                processing={false}
-                title="Setujui Laporan"
-                message={
-                    actionTarget
-                        ? `Anda yakin ingin menyetujui laporan "${actionTarget.judul}"? Data akan masuk ke statistik Pokja ${actionTarget.kategori_pokja}.`
-                        : "Setujui laporan ini?"
-                }
-                onConfirm={confirmApprove}
-                onCancel={() => {
-                    setShowApproveModal(false);
-                    setActionTarget(null);
-                }}
-                confirmText="Setujui"
-                cancelText="Batal"
-                confirmVariant="success"
-            />
-
-            {/* Modal Konfirmasi Reject */}
-            <ConfirmationModal
-                show={showRejectModal}
-                processing={false}
-                title="Tolak Laporan"
-                message={
-                    actionTarget
-                        ? `Anda yakin ingin menolak laporan "${actionTarget.judul}"?`
-                        : "Tolak laporan ini?"
-                }
-                onConfirm={confirmReject}
-                onCancel={() => {
-                    setShowRejectModal(false);
-                    setActionTarget(null);
-                }}
-                confirmText="Tolak"
-                cancelText="Batal"
-                confirmVariant="danger"
-            />
         </MainLayout>
     );
 }

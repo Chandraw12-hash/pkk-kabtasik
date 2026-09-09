@@ -1797,8 +1797,7 @@ export default function Welcome({
                         </p>
                     </div>
 
-                    {agendaBulanIni.length > 0 ? (
-                        <div className="grid lg:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div className="grid lg:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                             {/* ====================================================
                                 KALENDER
                             ==================================================== */}
@@ -1965,50 +1964,52 @@ export default function Welcome({
 
                                 <div className="p-4 sm:p-5 flex-1">
                                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                                        {agendaBulanIni
-                                            .slice(0, 8)
-                                            .map((item) => {
-                                                const date =
-                                                    new Date(
-                                                        item.tanggal
-                                                    );
+                                        {agendaBulanIni.length > 0 ? (
+                                            <>
+                                                {agendaBulanIni
+                                                    .slice(0, 8)
+                                                    .map((item) => {
+                                                        const date =
+                                                            new Date(
+                                                                item.tanggal
+                                                            );
 
-                                                const validDate =
-                                                    !Number.isNaN(
-                                                        date.getTime()
-                                                    );
+                                                        const validDate =
+                                                            !Number.isNaN(
+                                                                date.getTime()
+                                                            );
 
-                                                const formattedDate =
-                                                    validDate
-                                                        ? date.toLocaleDateString(
-                                                              "id-ID",
-                                                              {
-                                                                  day: "2-digit",
-                                                                  month: "short",
-                                                              }
-                                                          )
-                                                        : item.tanggal;
+                                                        const formattedDate =
+                                                            validDate
+                                                                ? date.toLocaleDateString(
+                                                                      "id-ID",
+                                                                      {
+                                                                          day: "2-digit",
+                                                                          month: "short",
+                                                                      }
+                                                                  )
+                                                                : item.tanggal;
 
-                                                const formattedDay =
-                                                    validDate
-                                                        ? date.toLocaleDateString(
-                                                              "id-ID",
-                                                              {
-                                                                  weekday:
-                                                                      "short",
-                                                              }
-                                                          )
-                                                        : "";
+                                                        const formattedDay =
+                                                            validDate
+                                                                ? date.toLocaleDateString(
+                                                                      "id-ID",
+                                                                      {
+                                                                          weekday:
+                                                                              "short",
+                                                                      }
+                                                                  )
+                                                                : "";
 
-                                                const [
-                                                    dateNumber,
-                                                    ...monthParts
-                                                ] =
-                                                    formattedDate.split(
-                                                        " "
-                                                    );
+                                                        const [
+                                                            dateNumber,
+                                                            ...monthParts
+                                                        ] =
+                                                            formattedDate.split(
+                                                                " "
+                                                            );
 
-                                                return (
+                                                        return (
                                                     <button
                                                         type="button"
                                                         key={item.id}
@@ -2067,18 +2068,38 @@ export default function Welcome({
                                                             <span className="block w-1.5 h-1.5 rounded-full bg-teal-600 opacity-70 group-hover:opacity-100" />
                                                         </div>
                                                     </button>
-                                                );
-                                            })}
+                                                        );
+                                                    })}
 
-                                        {agendaBulanIni.length >
-                                            8 && (
-                                            <div className="pt-1 text-center">
-                                                <span className="text-[9px] font-medium text-slate-400">
-                                                    +
-                                                    {agendaBulanIni.length -
-                                                        8}{" "}
-                                                    agenda lainnya
-                                                </span>
+                                                {agendaBulanIni.length >
+                                                    8 && (
+                                                    <div className="pt-1 text-center">
+                                                        <span className="text-[9px] font-medium text-slate-400">
+                                                            +
+                                                            {agendaBulanIni.length -
+                                                                8}{" "}
+                                                            agenda lainnya
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="min-h-[220px] flex flex-col items-center justify-center text-center px-5 py-10">
+                                                <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
+                                                    <CalendarDays
+                                                        size={22}
+                                                        className="text-slate-300"
+                                                    />
+                                                </div>
+
+                                                <h4 className="text-sm font-semibold text-slate-600">
+                                                    Belum Ada Agenda
+                                                </h4>
+
+                                                <p className="mt-1 max-w-xs text-[10px] sm:text-xs text-slate-400 leading-relaxed">
+                                                    Belum terdapat agenda kegiatan yang
+                                                    dijadwalkan pada bulan berjalan.
+                                                </p>
                                             </div>
                                         )}
                                     </div>
@@ -2099,26 +2120,6 @@ export default function Welcome({
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="bg-white border border-slate-200 rounded-xl py-12 px-5 text-center shadow-sm">
-                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
-                                <CalendarDays
-                                    size={22}
-                                    className="text-slate-300"
-                                />
-                            </div>
-
-                            <h3 className="text-sm font-semibold text-slate-600">
-                                Belum Ada Agenda Kegiatan
-                            </h3>
-
-                            <p className="mt-1 text-[10px] sm:text-xs text-slate-400">
-                                Belum terdapat agenda kegiatan yang
-                                dijadwalkan pada bulan ini.
-                            </p>
-                        </div>
-                    )}
-
                     {/* ====================================================
                         TESTIMONI SURVEY
                     ==================================================== */}

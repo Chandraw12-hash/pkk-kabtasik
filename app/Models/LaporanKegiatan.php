@@ -30,11 +30,10 @@ class LaporanKegiatan extends Model
         'reviewed_at' => 'datetime',
     ];
 
-    protected $appends = ['foto_url', 'status_label', 'status_color'];
+    protected $appends = ['foto_url', 'status_label', 'status_color', 'pokja_display'];
 
-    /**
-     * Get foto URL
-     */
+    // ─── ACCESSORS ──────────────────────────────────────────────────────────────
+
     public function getFotoUrlAttribute(): ?string
     {
         if (!$this->foto) {
@@ -46,9 +45,6 @@ class LaporanKegiatan extends Model
         return Storage::disk('public')->url($this->foto);
     }
 
-    /**
-     * Get status label in Indonesian
-     */
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -56,13 +52,10 @@ class LaporanKegiatan extends Model
             'reviewed'  => 'Sudah Direview',
             'approved'  => 'Disetujui ✅',
             'rejected'  => 'Ditolak ❌',
-            default     => $this->status,
+            default     => $this->status ?? 'Unknown',
         };
     }
 
-    /**
-     * Get status color for badge
-     */
     public function getStatusColorAttribute(): string
     {
         return match ($this->status) {
@@ -74,41 +67,41 @@ class LaporanKegiatan extends Model
         };
     }
 
-    /**
-     * Check if laporan is pending
-     */
+    public function getPokjaDisplayAttribute(): string
+    {
+        return match ($this->kategori_pokja) {
+            'I'     => 'Pokja I - Penghayatan & Pengamalan Pancasila',
+            'II'    => 'Pokja II - Pendidikan & Keterampilan',
+            'III'   => 'Pokja III - Pangan, Sandang, Perumahan',
+            'IV'    => 'Pokja IV - Kesehatan & Lingkungan',
+            default => $this->kategori_pokja ?? 'Unknown',
+        };
+    }
+
+    // ─── CHECKERS ──────────────────────────────────────────────────────────────
+
     public function isPending(): bool
     {
         return $this->status === 'pending';
     }
 
-    /**
-     * Check if laporan is approved
-     */
     public function isApproved(): bool
     {
         return $this->status === 'approved';
     }
 
-    /**
-     * Check if laporan is rejected
-     */
     public function isRejected(): bool
     {
         return $this->status === 'rejected';
     }
 
-    /**
-     * Check if laporan is reviewed
-     */
     public function isReviewed(): bool
     {
         return $this->status === 'reviewed';
     }
 
-    /**
-     * Approve laporan
-     */
+    // ─── ACTIONS ──────────────────────────────────────────────────────────────
+
     public function approve(int $reviewerId): void
     {
         $this->update([
@@ -118,9 +111,6 @@ class LaporanKegiatan extends Model
         ]);
     }
 
-    /**
-     * Reject laporan
-     */
     public function reject(int $reviewerId): void
     {
         $this->update([
@@ -130,9 +120,6 @@ class LaporanKegiatan extends Model
         ]);
     }
 
-    /**
-     * Mark as reviewed
-     */
     public function markAsReviewed(int $reviewerId): void
     {
         $this->update([
@@ -142,57 +129,51 @@ class LaporanKegiatan extends Model
         ]);
     }
 
-    /**
-     * Scope: Only pending laporan
-     */
+    // ─── DATA ANGKA HELPERS ──────────────────────────────────────────────────
+
+    public function getDataAngka(): array
+    {
+        return is_array($this->data_angka) ? $this->data_angka : [];
+    }
+
+    public function getDataAngkaField(string $field, $default = 0)
+    {
+        $data = $this->getDataAngka();
+        return $data[$field] ?? $default;
+    }
+
+    // ─── SCOPES ──────────────────────────────────────────────────────────────
+
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
     }
 
-    /**
-     * Scope: Only approved laporan
-     */
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
     }
 
-    /**
-     * Scope: Only rejected laporan
-     */
     public function scopeRejected($query)
     {
         return $query->where('status', 'rejected');
     }
 
-    /**
-     * Scope: Only reviewed laporan
-     */
     public function scopeReviewed($query)
     {
         return $query->where('status', 'reviewed');
     }
 
-    /**
-     * Scope: By kategori pokja
-     */
     public function scopeByPokja($query, string $pokja)
     {
         return $query->where('kategori_pokja', $pokja);
     }
 
-    /**
-     * Scope: By kecamatan
-     */
     public function scopeByKecamatan($query, string $kecamatan)
     {
         return $query->where('kecamatan', $kecamatan);
     }
 
-    /**
-     * Scope: Search by judul or nama_dasawisma
-     */
     public function scopeSearch($query, string $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
@@ -203,35 +184,7 @@ class LaporanKegiatan extends Model
         });
     }
 
-    /**
-     * Get data angka as array with default empty array
-     */
-    public function getDataAngka(): array
-    {
-        return $this->data_angka ?? [];
-    }
-
-    /**
-     * Get specific data angka field
-     */
-    public function getDataAngkaField(string $field, $default = 0)
-    {
-        return $this->data_angka[$field] ?? $default;
-    }
-
-    /**
-     * Get pokja display name
-     */
-    public function getPokjaDisplayAttribute(): string
-    {
-        return match ($this->kategori_pokja) {
-            'I'     => 'Pokja I - Penghayatan & Pengamalan Pancasila',
-            'II'    => 'Pokja II - Pendidikan & Keterampilan',
-            'III'   => 'Pokja III - Pangan, Sandang, Perumahan',
-            'IV'    => 'Pokja IV - Kesehatan & Lingkungan',
-            default => $this->kategori_pokja,
-        };
-    }
+    // ─── RELATIONS ──────────────────────────────────────────────────────────
 
     public function user(): BelongsTo
     {

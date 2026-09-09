@@ -59,7 +59,7 @@ class RolePermissionSeeder extends Seeder
                 'username' => 'pkk_user',
                 'password' => bcrypt('password123'),
             ]
-        );
+    );
         $dasawisma->assignRole($dasawismaRole);
     }
 }

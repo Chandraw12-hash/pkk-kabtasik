@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class InfografisController extends Controller
 {
@@ -29,7 +30,6 @@ class InfografisController extends Controller
 
         $infografis = $query->paginate($perPage)->withQueryString();
 
-        // ⬅️ TAMBAHKAN INI - UBAH DATA JADI ARRAY DENGAN gambar_url
         $infografis->getCollection()->transform(function ($item) {
             $item->gambar_url = $item->gambar ? asset('storage/' . $item->gambar) : null;
             return $item;
@@ -82,7 +82,6 @@ class InfografisController extends Controller
 
     public function edit(Infografis $infografis)
     {
-        // ⬅️ TAMBAHKAN gambar_url DI EDIT
         $infografis->gambar_url = $infografis->gambar ? asset('storage/' . $infografis->gambar) : null;
 
         return Inertia::render('Backend/Infografis/Edit', [
@@ -119,14 +118,36 @@ class InfografisController extends Controller
         return redirect()->route('be.infografis.index')->with('success', 'Infografis berhasil diperbarui.');
     }
 
-    public function destroy(Infografis $infografis)
+    /**
+     * 🔥 FIX: DESTROY PAKE ID (BUKAN MODEL BINDING)
+     */
+    public function destroy($id)
     {
-        if ($infografis->gambar && Storage::disk('public')->exists($infografis->gambar)) {
-            Storage::disk('public')->delete($infografis->gambar);
-        }
-        $infografis->delete();
+        try {
+            $infografis = Infografis::findOrFail($id);
 
-        return redirect()->route('be.infografis.index')->with('success', 'Infografis berhasil dihapus.');
+            // 🔥 HAPUS GAMBAR
+            if ($infografis->gambar && Storage::disk('public')->exists($infografis->gambar)) {
+                Storage::disk('public')->delete($infografis->gambar);
+                Log::info('Infografis gambar dihapus: ' . $infografis->gambar);
+            }
+
+            // 🔥 HAPUS DATA
+            $infografis->delete();
+
+            Log::info('Infografis berhasil dihapus: ID ' . $infografis->id . ' - ' . $infografis->judul);
+
+            return redirect()
+                ->route('be.infografis.index')
+                ->with('success', 'Infografis berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            Log::error('Gagal menghapus infografis: ' . $e->getMessage());
+
+            return redirect()
+                ->route('be.infografis.index')
+                ->with('error', 'Gagal menghapus infografis: ' . $e->getMessage());
+        }
     }
 
     public function toggleStatus(Infografis $infografis)

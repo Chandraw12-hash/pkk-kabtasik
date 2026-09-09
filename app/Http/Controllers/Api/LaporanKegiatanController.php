@@ -10,14 +10,76 @@ use App\Models\Pokja3;
 use App\Models\Pokja4;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class LaporanKegiatanController extends Controller
 {
-    /**
-     * Kader submit laporan kegiatan baru dari mobile.
-     * Laporan ini TIDAK tampil publik — cuma masuk ke daftar admin
-     * di dashboard web (menu "Laporan Kegiatan").
-     */
+    // ─── 🔥 PUBLIC: INDEX (HANYA YANG APPROVED) ────────────────────────────
+    public function index(Request $request)
+    {
+        $query = LaporanKegiatan::with('user')
+            ->where('status', 'approved')
+            ->orderBy('created_at', 'desc');
+
+        if ($request->pokja) {
+            $query->where('kategori_pokja', $request->pokja);
+        }
+
+        if ($request->kecamatan) {
+            $query->where('kecamatan', 'like', '%' . $request->kecamatan . '%');
+        }
+
+        if ($request->desa) {
+            $query->where('desa_kelurahan', 'like', '%' . $request->desa . '%');
+        }
+
+        $laporans = $query->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'data' => $laporans
+        ]);
+    }
+
+    // ─── 🔥 PUBLIC: SHOW DETAIL ─────────────────────────────────────────────
+    public function show($id)
+    {
+        $laporan = LaporanKegiatan::with('user')
+            ->where('status', 'approved')
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $laporan
+        ]);
+    }
+
+    // ─── 🔥 KADER: RIWAYAT LAPORAN SENDIRI ──────────────────────────────────
+    public function myLaporan(Request $request)
+    {
+        $laporans = LaporanKegiatan::where('user_id', $request->user()->id)
+            ->latest()
+            ->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'data' => $laporans
+        ]);
+    }
+
+    // ─── 🔥 KADER: DETAIL LAPORAN SENDIRI ───────────────────────────────────
+    public function showMyLaporan(Request $request, $id)
+    {
+        $laporan = LaporanKegiatan::where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $laporan
+        ]);
+    }
+
+    // ─── 🔥 KADER: SUBMIT LAPORAN ────────────────────────────────────────────
     public function store(Request $request)
     {
         // 🔥 FIX: 'data_angka' datang sebagai STRING JSON
@@ -50,25 +112,54 @@ class LaporanKegiatanController extends Controller
 
         $user = $request->user();
 
-        // 🔥 Ambil kecamatan dari validated atau dari user
         $kecamatan = $validated['kecamatan'] ?? $user->kecamatan ?? null;
         $desaKelurahan = $validated['desa_kelurahan'] ?? $user->desa_kelurahan ?? null;
         $namaDasawisma = $validated['nama_dasawisma'] ?? $user->nama_dasawisma ?? null;
 
-        // 🔥 Logging untuk debugging
         if (empty($kecamatan)) {
-            \Log::warning('Laporan tanpa kecamatan dari user ID: ' . $user->id);
+            Log::warning('Laporan tanpa kecamatan dari user ID: ' . $user->id);
         }
 
-        // 🔥 Simpan laporan
         $dataAngka = $validated['data_angka'] ?? [];
+
+        // ─── 🔥🔥🔥 VALIDASI FIELD PER POKJA ──────────────────────────────────────
+        $pokjaFields = [
+            'I' => ['pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p', 'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p', 'kader_pokja1_l', 'kader_pokja1_p'],
+            'II' => ['warga_buta_l', 'warga_buta_p', 'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c', 'kf', 'paud', 'koperasi_berbadan_hukum'],
+            'III' => ['rumah_sehat', 'rumah_tidak_sehat', 'pemanfaatan_pekarangan', 'industri_rumah_tangga'],
+            'IV' => ['posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga'],
+        ];
+
+        $expectedFields = $pokjaFields[$validated['kategori_pokja']] ?? [];
+        $filteredData = [];
+        foreach ($expectedFields as $field) {
+            $filteredData[$field] = $dataAngka[$field] ?? 0;
+        }
+
+        // 🔥 CEK APAKAH ADA DATA > 0 (BUKAN DUMMY)
+        $isValid = false;
+        foreach ($filteredData as $value) {
+            if ($value > 0) {
+                $isValid = true;
+                break;
+            }
+        }
+
+        if (!$isValid) {
+            return response()->json([
+                'error' => 'Data angka tidak valid. Minimal satu field harus diisi > 0.',
+                'expected_fields' => $expectedFields,
+            ], 422);
+        }
+
+        $dataAngka = $filteredData;
 
         $laporan = LaporanKegiatan::create([
             'user_id' => $user->id,
             'judul' => $validated['judul'],
             'deskripsi' => $validated['deskripsi'] ?? null,
             'kategori_pokja' => $validated['kategori_pokja'],
-            'data_angka' => json_encode($dataAngka),
+            'data_angka' => $dataAngka,
             'foto' => $fotoPath,
             'kecamatan' => $kecamatan,
             'desa_kelurahan' => $desaKelurahan,
@@ -76,8 +167,9 @@ class LaporanKegiatanController extends Controller
             'status' => 'pending',
         ]);
 
-        // 🔥🔥🔥 SINKRONKAN DATA KE POKJA (OTOMATIS)
-        $this->sinkronkanKePokja($laporan);
+        // 🔥🔥🔥 HAPUS SINKRON DI SINI! (Double sinkron penyebab duplikat)
+        // Sinkronisasi HANYA dilakukan saat Admin Approve di Backend
+        // $this->sinkronkanKePokja($laporan);
 
         return response()->json([
             'message' => 'Laporan berhasil dikirim.',
@@ -85,31 +177,84 @@ class LaporanKegiatanController extends Controller
         ], 201);
     }
 
-    /**
-     * 🔥 Sinkronkan laporan dari mobile ke tabel Pokja yang sesuai
-     */
+    // ─── 🔥 KADER: UPDATE LAPORAN (HANYA PENDING) ────────────────────────────
+    public function update(Request $request, $id)
+    {
+        $laporan = LaporanKegiatan::where('user_id', $request->user()->id)
+            ->where('status', 'pending')
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'judul' => 'sometimes|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'kategori_pokja' => 'sometimes|in:I,II,III,IV',
+            'data_angka' => 'nullable|array',
+            'kecamatan' => 'nullable|string|max:255',
+            'desa_kelurahan' => 'nullable|string|max:255',
+            'nama_dasawisma' => 'nullable|string|max:255',
+        ]);
+
+        if (isset($validated['data_angka']) && is_string($validated['data_angka'])) {
+            $validated['data_angka'] = json_decode($validated['data_angka'], true);
+        }
+
+        $laporan->update($validated);
+
+        return response()->json([
+            'message' => 'Laporan berhasil diperbarui.',
+            'data' => $laporan,
+        ]);
+    }
+
+    // ─── 🔥 KADER: HAPUS LAPORAN (HANYA PENDING) ────────────────────────────
+    public function destroy(Request $request, $id)
+    {
+        $laporan = LaporanKegiatan::where('user_id', $request->user()->id)
+            ->where('status', 'pending')
+            ->findOrFail($id);
+
+        if ($laporan->foto) {
+            Storage::disk('public')->delete($laporan->foto);
+        }
+
+        $laporan->delete();
+
+        return response()->json([
+            'message' => 'Laporan berhasil dihapus.',
+        ]);
+    }
+
+    // ─── 🔥 SINKRONKAN KE POKJA (HANYA DIPAKAI UNTUK REPROCESS) ──────────────
+    // 🔥 METHOD INI TIDAK DIPAKE LAGI DI STORE, HANYA UNTUK KEPERLUAN MAINTENANCE
     private function sinkronkanKePokja(LaporanKegiatan $laporan)
     {
         $kecamatan = $laporan->kecamatan;
         if (empty($kecamatan)) {
-            \Log::warning('Sinkronisasi gagal: kecamatan kosong untuk laporan ID: ' . $laporan->id);
+            Log::warning('Sinkronisasi gagal: kecamatan kosong untuk laporan ID: ' . $laporan->id);
             return;
         }
 
-        // 🔥 Decode data_angka
-        $dataAngka = [];
-        if (is_string($laporan->data_angka)) {
-            $dataAngka = json_decode($laporan->data_angka, true);
-        } elseif (is_array($laporan->data_angka)) {
-            $dataAngka = $laporan->data_angka;
+        $dataAngka = $laporan->data_angka;
+        if (is_string($dataAngka)) {
+            $dataAngka = json_decode($dataAngka, true);
+        }
+        if (is_string($dataAngka)) {
+            $dataAngka = json_decode($dataAngka, true);
         }
 
         if (!is_array($dataAngka) || empty($dataAngka)) {
-            \Log::warning('Sinkronisasi gagal: data_angka kosong untuk laporan ID: ' . $laporan->id);
+            Log::warning('Sinkronisasi gagal: data_angka kosong untuk laporan ID: ' . $laporan->id);
             return;
         }
 
-        \Log::info('Sinkronisasi Pokja ' . $laporan->kategori_pokja . ' untuk kecamatan: ' . $kecamatan);
+        if (count($dataAngka) === 1 && isset($dataAngka['_dummy'])) {
+            Log::warning('⚠️ data_angka hanya dummy, skip sinkronisasi:', [
+                'laporan_id' => $laporan->id,
+            ]);
+            return;
+        }
+
+        Log::info('Sinkronisasi Pokja ' . $laporan->kategori_pokja . ' untuk kecamatan: ' . $kecamatan);
 
         switch ($laporan->kategori_pokja) {
             case 'I':
@@ -125,18 +270,15 @@ class LaporanKegiatanController extends Controller
                 $this->sinkronkanPokja4($kecamatan, $dataAngka);
                 break;
             default:
-                \Log::warning('Kategori Pokja tidak dikenal: ' . $laporan->kategori_pokja);
+                Log::warning('Kategori Pokja tidak dikenal: ' . $laporan->kategori_pokja);
         }
     }
 
-    /**
-     * 🔥 Sinkronkan ke Pokja 1
-     */
+    // ─── SINKRON POKJA 1 ──────────────────────────────────────────────────────
     private function sinkronkanPokja1($kecamatan, $data)
     {
         $pokja = Pokja1::firstOrNew(['kecamatan' => $kecamatan]);
 
-        // 🔥 Update semua field dengan nilai dari data_angka
         $pokja->pkbn_l = ($pokja->pkbn_l ?? 0) + ($data['pkbn_l'] ?? 0);
         $pokja->pkbn_p = ($pokja->pkbn_p ?? 0) + ($data['pkbn_p'] ?? 0);
         $pokja->pkdrt_l = ($pokja->pkdrt_l ?? 0) + ($data['pkdrt_l'] ?? 0);
@@ -148,19 +290,16 @@ class LaporanKegiatanController extends Controller
         $pokja->kader_pokja1_l = ($pokja->kader_pokja1_l ?? 0) + ($data['kader_pokja1_l'] ?? 0);
         $pokja->kader_pokja1_p = ($pokja->kader_pokja1_p ?? 0) + ($data['kader_pokja1_p'] ?? 0);
 
-        // 🔥 Set field wajib
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja I';
         $pokja->judul_kegiatan = "Rekapitulasi Pokja I - $kecamatan";
         $pokja->deskripsi = "Data rekapitulasi otomatis dari laporan mobile";
         $pokja->save();
 
-        \Log::info('Pokja 1 berhasil disinkronkan untuk: ' . $kecamatan);
+        Log::info('Pokja 1 berhasil disinkronkan untuk: ' . $kecamatan);
     }
 
-    /**
-     * 🔥 Sinkronkan ke Pokja 2
-     */
+    // ─── SINKRON POKJA 2 ──────────────────────────────────────────────────────
     private function sinkronkanPokja2($kecamatan, $data)
     {
         $pokja = Pokja2::firstOrNew(['kecamatan' => $kecamatan]);
@@ -180,12 +319,10 @@ class LaporanKegiatanController extends Controller
         $pokja->deskripsi = "Data rekapitulasi otomatis dari laporan mobile";
         $pokja->save();
 
-        \Log::info('Pokja 2 berhasil disinkronkan untuk: ' . $kecamatan);
+        Log::info('Pokja 2 berhasil disinkronkan untuk: ' . $kecamatan);
     }
 
-    /**
-     * 🔥 Sinkronkan ke Pokja 3
-     */
+    // ─── SINKRON POKJA 3 ──────────────────────────────────────────────────────
     private function sinkronkanPokja3($kecamatan, $data)
     {
         $pokja = Pokja3::firstOrNew(['kecamatan' => $kecamatan]);
@@ -201,12 +338,10 @@ class LaporanKegiatanController extends Controller
         $pokja->deskripsi = "Data rekapitulasi otomatis dari laporan mobile";
         $pokja->save();
 
-        \Log::info('Pokja 3 berhasil disinkronkan untuk: ' . $kecamatan);
+        Log::info('Pokja 3 berhasil disinkronkan untuk: ' . $kecamatan);
     }
 
-    /**
-     * 🔥 Sinkronkan ke Pokja 4
-     */
+    // ─── SINKRON POKJA 4 ──────────────────────────────────────────────────────
     private function sinkronkanPokja4($kecamatan, $data)
     {
         $pokja = Pokja4::firstOrNew(['kecamatan' => $kecamatan]);
@@ -222,32 +357,6 @@ class LaporanKegiatanController extends Controller
         $pokja->deskripsi = "Data rekapitulasi otomatis dari laporan mobile";
         $pokja->save();
 
-        \Log::info('Pokja 4 berhasil disinkronkan untuk: ' . $kecamatan);
-    }
-
-    /**
-     * Riwayat laporan milik kader yang sedang login SAJA
-     */
-    public function index(Request $request)
-    {
-        $laporans = LaporanKegiatan::where('user_id', $request->user()->id)
-            ->latest()
-            ->paginate(10);
-
-        return response()->json($laporans);
-    }
-
-    /**
-     * Detail 1 laporan milik sendiri
-     */
-    public function show(Request $request, LaporanKegiatan $laporan_kegiatan)
-    {
-        if ($laporan_kegiatan->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Laporan tidak ditemukan.',
-            ], 404);
-        }
-
-        return response()->json($laporan_kegiatan);
+        Log::info('Pokja 4 berhasil disinkronkan untuk: ' . $kecamatan);
     }
 }

@@ -213,7 +213,7 @@ export default function Footer() {
                             <div className="mt-5 pt-5 border-t border-white/10">
                                 <p className="text-xs text-slate-500">Dikelola oleh</p>
                                 <p className="text-sm text-slate-300 font-medium mt-0.5">
-                                    Dishubkominfo Kab. Tasikmalaya Dan anak pkl
+                                    Dishubkominfo Kab. Tasikmalaya
                                 </p>
                             </div>
                         </div>
