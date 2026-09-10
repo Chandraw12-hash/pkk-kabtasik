@@ -22,14 +22,6 @@ import {
     Eye,
     Newspaper,
     X,
-    Sparkles,
-    Handshake,
-    Shirt,
-    Home,
-    HeartPulse,
-    Building2,
-    Trees,
-    ClipboardList,
     CalendarDays,
     Images,
 } from "lucide-react";
@@ -138,118 +130,6 @@ const DATA_MENU = [
     },
 ];
 
-const PROGRAM_POKOK = [
-    {
-        id: 1,
-        nama: "Penghayatan dan Pengamalan Pancasila",
-        icon: Sparkles,
-        poin: [
-            "Meningkatkan pemahaman nilai Pancasila dalam keluarga.",
-            "Membina karakter dan budi pekerti.",
-            "Mendorong kehidupan beragama yang harmonis.",
-            "Menumbuhkan cinta tanah air.",
-        ],
-    },
-    {
-        id: 2,
-        nama: "Gotong Royong",
-        icon: Handshake,
-        poin: [
-            "Meningkatkan kebersamaan di lingkungan.",
-            "Melaksanakan kegiatan sosial.",
-            "Membantu sesama.",
-            "Menjaga kerukunan warga.",
-        ],
-    },
-    {
-        id: 3,
-        nama: "Pangan",
-        icon: Utensils,
-        poin: [
-            "Pemenuhan pangan lewat halaman asri.",
-            "Keanekaragaman konsumsi pangan.",
-            "Makanan bergizi, seimbang, aman.",
-            "Penyediaan makanan tambahan.",
-        ],
-    },
-    {
-        id: 4,
-        nama: "Sandang",
-        icon: Shirt,
-        poin: [
-            "Sandang layak dan sehat.",
-            "Produk lokal.",
-            "Keterampilan menjahit.",
-            "Usaha kecil sandang.",
-        ],
-    },
-    {
-        id: 5,
-        nama: "Perumahan dan Tata Laksana Rumah Tangga",
-        icon: Home,
-        poin: [
-            "Rumah sehat dan layak.",
-            "Tata laksana rumah tangga.",
-            "Hidup bersih dan hemat energi.",
-            "Pemanfaatan ruang optimal.",
-        ],
-    },
-    {
-        id: 6,
-        nama: "Pendidikan dan Keterampilan",
-        icon: GraduationCap,
-        poin: [
-            "Pendidikan anak dan keluarga.",
-            "Keterampilan anggota keluarga.",
-            "Literasi dan minat baca.",
-            "PAUD dan pendidikan nonformal.",
-        ],
-    },
-    {
-        id: 7,
-        nama: "Kesehatan",
-        icon: HeartPulse,
-        poin: [
-            "Kesehatan ibu dan anak.",
-            "PHBS.",
-            "Posyandu dan imunisasi.",
-            "Cegah stunting.",
-        ],
-    },
-    {
-        id: 8,
-        nama: "Pengembangan Kehidupan Berkoperasi",
-        icon: Building2,
-        poin: [
-            "Partisipasi koperasi.",
-            "Usaha ekonomi keluarga.",
-            "UMKM perempuan.",
-            "Literasi keuangan.",
-        ],
-    },
-    {
-        id: 9,
-        nama: "Kelestarian Lingkungan Hidup",
-        icon: Trees,
-        poin: [
-            "Kebersihan lingkungan.",
-            "Penghijauan dan sampah.",
-            "Hemat air dan energi.",
-            "Cegah pencemaran.",
-        ],
-    },
-    {
-        id: 10,
-        nama: "Perencanaan Sehat",
-        icon: ClipboardList,
-        poin: [
-            "Perencanaan keluarga.",
-            "KB bertanggung jawab.",
-            "Kesehatan reproduksi.",
-            "Generasi sehat.",
-        ],
-    },
-];
 
 const FALLBACK_IMAGES = {
     hero: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
@@ -304,13 +184,23 @@ const getImageFallback = (
     return FALLBACK_IMAGES[type];
 };
 
+const parseTanggal = (tanggal: string): Date => {
+    // Parse YYYY-MM-DD sebagai tanggal lokal agar tidak bergeser hari.
+    const match = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(tanggal.trim());
+    if (match) {
+        const [, year, month, day] = match;
+        return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+    return new Date(tanggal);
+};
+
 const formatTanggal = (
     tanggal?: string,
     options?: Intl.DateTimeFormatOptions
 ): string => {
     if (!tanggal) return "-";
 
-    const date = new Date(tanggal);
+    const date = parseTanggal(tanggal);
 
     if (Number.isNaN(date.getTime())) {
         return tanggal;
@@ -320,7 +210,7 @@ const formatTanggal = (
 };
 
 const isSameMonth = (tanggal: string, date: Date): boolean => {
-    const agendaDate = new Date(tanggal);
+    const agendaDate = parseTanggal(tanggal);
 
     if (Number.isNaN(agendaDate.getTime())) {
         return false;
@@ -562,9 +452,6 @@ export default function Welcome({
     const [selectedInfografis, setSelectedInfografis] =
         useState<InfografisItem | null>(null);
 
-    const [selectedProgram, setSelectedProgram] = useState<
-        (typeof PROGRAM_POKOK)[number] | null
-    >(null);
 
     const [selectedAgenda, setSelectedAgenda] =
         useState<AgendaItem | null>(null);
@@ -614,7 +501,6 @@ export default function Welcome({
     const heroAnim = useScrollAnimation();
     const sambutanAnim = useScrollAnimation();
     const dataAnim = useScrollAnimation();
-    const programAnim = useScrollAnimation();
     const kabarAnim = useScrollAnimation();
     const agendaAnim = useScrollAnimation();
 
@@ -623,9 +509,7 @@ export default function Welcome({
     // ========================================================
 
     const modalOpen =
-        selectedProgram !== null ||
-        selectedAgenda !== null ||
-        selectedInfografis !== null;
+        selectedAgenda !== null || selectedInfografis !== null;
 
     useEffect(() => {
         if (!modalOpen) return;
@@ -648,7 +532,6 @@ export default function Welcome({
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
-                setSelectedProgram(null);
                 setSelectedAgenda(null);
                 setSelectedInfografis(null);
             }
@@ -665,7 +548,6 @@ export default function Welcome({
     // FOCUS TRAP PER MODAL
     // ========================================================
 
-    const programModalRef = useFocusTrap(selectedProgram !== null);
     const infografisModalRef = useFocusTrap(selectedInfografis !== null);
     const agendaModalRef = useFocusTrap(selectedAgenda !== null);
 
@@ -687,7 +569,7 @@ export default function Welcome({
         const agendaMap = new Map<number, AgendaItem[]>();
 
         agendaBulanIni.forEach((item) => {
-            const date = new Date(item.tanggal);
+            const date = parseTanggal(item.tanggal);
 
             if (Number.isNaN(date.getTime())) {
                 return;
@@ -1043,10 +925,10 @@ export default function Welcome({
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-[240px] sm:max-w-none mx-auto">
                         <Link
-                            href="#tentang"
+                            href="/program-kerja"
                             className="inline-flex items-center justify-center gap-2 min-h-[44px] bg-teal-600 hover:bg-teal-500 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors focus:ring-2 focus:ring-teal-400 focus:outline-none"
                         >
-                            Jelajahi Program
+                            Lihat Program Kerja
                             <ArrowRight
                                 size={15}
                                 aria-hidden="true"
@@ -1209,8 +1091,8 @@ export default function Welcome({
                                     komunikasi, informasi, dan
                                     transparansi kegiatan PKK kepada
                                     masyarakat luas. Melalui media
-                                    digital ini, kami berharap 10
-                                    program kerja Pokok PKK dapat
+                                    digital ini, kami berharap informasi
+                                    program kerja PKK dapat
                                     diakses dengan mudah serta
                                     memberikan manfaat nyata bagi
                                     pembinaan kesejahteraan keluarga
@@ -1233,8 +1115,8 @@ export default function Welcome({
                                     Tujuan utama pembuatan website PKK
                                     Kabupaten adalah untuk
                                     mengoptimalkan pengelolaan data,
-                                    mempercepat pelaporan 10 program
-                                    pokok PKK, serta meningkatkan
+                                    mempercepat pelaporan program
+                                    PKK, serta meningkatkan
                                     transparansi dan penyebaran
                                     informasi kegiatan pemberdayaan
                                     keluarga kepada masyarakat
@@ -1364,132 +1246,6 @@ export default function Welcome({
                 </div>
             </section>
 
-            {/* ========================================================
-                10 PROGRAM POKOK PKK
-            ======================================================== */}
-
-            <section
-                ref={programAnim.ref}
-                className={`py-12 sm:py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up ${
-                    programAnim.isVisible ? "show" : ""
-                }`}
-                aria-labelledby="program-pokok-title"
-            >
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="rounded-2xl border border-teal-100 bg-teal-50/80 p-6 sm:p-8 lg:p-10">
-                        <h2
-                            id="program-pokok-title"
-                            className="text-center text-xl md:text-2xl font-bold text-slate-800 mb-8"
-                        >
-                            10 Program Pokok PKK
-                        </h2>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-                            {PROGRAM_POKOK.map((item) => (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    onClick={() =>
-                                        setSelectedProgram(item)
-                                    }
-                                    className="flex flex-col items-center text-center rounded-xl p-4 sm:p-5 bg-white/70 hover:bg-white hover:shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-                                    aria-label={`Lihat detail ${item.nama}`}
-                                >
-                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-yellow-400 bg-white flex items-center justify-center mb-3">
-                                        <item.icon
-                                            size={26}
-                                            className="text-teal-700"
-                                            strokeWidth={1.6}
-                                        />
-                                    </div>
-
-                                    <span className="text-xs sm:text-[13px] font-medium text-teal-800 leading-snug">
-                                        {item.nama}
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ========================================================
-                MODAL PROGRAM
-            ======================================================== */}
-
-            {selectedProgram && (
-                <div
-                    className="fixed inset-0 z-[999] flex items-center justify-center p-4"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="program-modal-title"
-                >
-                    <button
-                        type="button"
-                        className="absolute inset-0 bg-slate-900/40"
-                        aria-label="Tutup detail program"
-                        onClick={() =>
-                            setSelectedProgram(null)
-                        }
-                    />
-
-                    <div
-                        ref={programModalRef}
-                        tabIndex={-1}
-                        className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto focus:outline-none"
-                    >
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setSelectedProgram(null)
-                            }
-                            className="absolute top-4 right-4 w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-                            aria-label="Tutup detail program"
-                        >
-                            <X size={16} />
-                        </button>
-
-                        <div className="flex flex-col items-center text-center mb-5">
-                            <div className="w-16 h-16 rounded-full border-[3px] border-yellow-400 flex items-center justify-center mb-3">
-                                <selectedProgram.icon
-                                    size={30}
-                                    className="text-teal-700"
-                                    strokeWidth={1.6}
-                                />
-                            </div>
-
-                            <h3
-                                id="program-modal-title"
-                                className="text-lg font-semibold text-teal-700"
-                            >
-                                {selectedProgram.nama}
-                            </h3>
-                        </div>
-
-                        <p className="text-sm text-slate-500 mb-3">
-                            Dilaksanakan paling sedikit dengan cara:
-                        </p>
-
-                        <ol className="space-y-2.5 text-sm text-slate-600">
-                            {selectedProgram.poin.map((p, i) => (
-                                <li
-                                    key={i}
-                                    className="flex gap-2"
-                                >
-                                    <span className="text-teal-700 font-medium shrink-0">
-                                        {String.fromCharCode(
-                                            97 + i
-                                        )}
-                                        .
-                                    </span>
-
-                                    <span>{p}</span>
-                                </li>
-                            ))}
-                        </ol>
-                    </div>
-                </div>
-            )}
 
             {/* ========================================================
                 KABAR BERITA
@@ -1969,47 +1725,44 @@ export default function Welcome({
                                                 {agendaBulanIni
                                                     .slice(0, 8)
                                                     .map((item) => {
-                                                        const date =
-                                                            new Date(
-                                                                item.tanggal
-                                                            );
+                                                const date = parseTanggal(item.tanggal);
 
-                                                        const validDate =
-                                                            !Number.isNaN(
-                                                                date.getTime()
-                                                            );
+                                                const validDate =
+                                                    !Number.isNaN(
+                                                        date.getTime()
+                                                    );
 
-                                                        const formattedDate =
-                                                            validDate
-                                                                ? date.toLocaleDateString(
-                                                                      "id-ID",
-                                                                      {
-                                                                          day: "2-digit",
-                                                                          month: "short",
-                                                                      }
-                                                                  )
-                                                                : item.tanggal;
+                                                const formattedDate =
+                                                    validDate
+                                                        ? date.toLocaleDateString(
+                                                              "id-ID",
+                                                              {
+                                                                  day: "2-digit",
+                                                                  month: "short",
+                                                              }
+                                                          )
+                                                        : item.tanggal;
 
-                                                        const formattedDay =
-                                                            validDate
-                                                                ? date.toLocaleDateString(
-                                                                      "id-ID",
-                                                                      {
-                                                                          weekday:
-                                                                              "short",
-                                                                      }
-                                                                  )
-                                                                : "";
+                                                const formattedDay =
+                                                    validDate
+                                                        ? date.toLocaleDateString(
+                                                              "id-ID",
+                                                              {
+                                                                  weekday:
+                                                                      "short",
+                                                              }
+                                                          )
+                                                        : "";
 
-                                                        const [
-                                                            dateNumber,
-                                                            ...monthParts
-                                                        ] =
-                                                            formattedDate.split(
-                                                                " "
-                                                            );
+                                                const [
+                                                    dateNumber,
+                                                    ...monthParts
+                                                ] =
+                                                    formattedDate.split(
+                                                        " "
+                                                    );
 
-                                                        return (
+                                                return (
                                                     <button
                                                         type="button"
                                                         key={item.id}
@@ -2068,16 +1821,13 @@ export default function Welcome({
                                                             <span className="block w-1.5 h-1.5 rounded-full bg-teal-600 opacity-70 group-hover:opacity-100" />
                                                         </div>
                                                     </button>
-                                                        );
+                                                );
                                                     })}
 
-                                                {agendaBulanIni.length >
-                                                    8 && (
+                                                {agendaBulanIni.length > 8 && (
                                                     <div className="pt-1 text-center">
                                                         <span className="text-[9px] font-medium text-slate-400">
-                                                            +
-                                                            {agendaBulanIni.length -
-                                                                8}{" "}
+                                                            +{agendaBulanIni.length - 8}{" "}
                                                             agenda lainnya
                                                         </span>
                                                     </div>
@@ -2086,19 +1836,13 @@ export default function Welcome({
                                         ) : (
                                             <div className="min-h-[220px] flex flex-col items-center justify-center text-center px-5 py-10">
                                                 <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
-                                                    <CalendarDays
-                                                        size={22}
-                                                        className="text-slate-300"
-                                                    />
+                                                    <CalendarDays size={22} className="text-slate-300" aria-hidden="true" />
                                                 </div>
-
                                                 <h4 className="text-sm font-semibold text-slate-600">
                                                     Belum Ada Agenda
                                                 </h4>
-
                                                 <p className="mt-1 max-w-xs text-[10px] sm:text-xs text-slate-400 leading-relaxed">
-                                                    Belum terdapat agenda kegiatan yang
-                                                    dijadwalkan pada bulan berjalan.
+                                                    Belum terdapat agenda kegiatan yang dijadwalkan pada bulan berjalan.
                                                 </p>
                                             </div>
                                         )}
@@ -2120,6 +1864,7 @@ export default function Welcome({
                                 </div>
                             </div>
                         </div>
+
                     {/* ====================================================
                         TESTIMONI SURVEY
                     ==================================================== */}
