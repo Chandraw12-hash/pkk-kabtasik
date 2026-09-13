@@ -57,6 +57,25 @@ class BeritaController extends Controller
         'Taraju',
     ];
 
+    /**
+     * Pesan validasi Bahasa Indonesia (reusable)
+     */
+    private const VALIDATION_MESSAGES = [
+        'judul.required' => 'Judul berita wajib diisi.',
+        'judul.string' => 'Judul berita harus berupa teks.',
+        'judul.max' => 'Judul berita maksimal 255 karakter.',
+        'konten.required' => 'Konten berita wajib diisi.',
+        'konten.string' => 'Konten berita harus berupa teks.',
+        'kategori.required' => 'Kategori wajib dipilih.',
+        'kategori.in' => 'Kategori tidak valid.',
+        'kecamatan.max' => 'Nama kecamatan maksimal 255 karakter.',
+        'foto.image' => 'File harus berupa gambar.',
+        'foto.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP.',
+        'foto.max' => 'Ukuran gambar maksimal 5MB.',
+        'status.in' => 'Status tidak valid.',
+        'reason.max' => 'Alasan penolakan maksimal 500 karakter.',
+    ];
+
     // ============================================
     // BACKEND METHODS
     // ============================================
@@ -86,14 +105,14 @@ class BeritaController extends Controller
             $query->where('kecamatan', $kecamatan);
         }
 
-        // 🔥 UBAH: Filter menggunakan status
+        // ✅ FIX: Handle berbagai format filter status
         if ($status !== null && $status !== '') {
-            if ($status === 'approved') {
-                $query->where('status', 'approved');
-            } elseif ($status === 'pending') {
-                $query->where('status', 'pending');
-            } elseif ($status === 'rejected') {
-                $query->where('status', 'rejected');
+            if (in_array($status, ['approved', 'pending', 'rejected', 'draft'])) {
+                $query->where('status', $status);
+            } elseif ($status === 'true' || $status === '1') {
+                $query->where('status_publikasi', true);
+            } elseif ($status === 'false' || $status === '0') {
+                $query->where('status_publikasi', false);
             }
         }
 
@@ -128,16 +147,23 @@ class BeritaController extends Controller
         ]);
     }
 
+    /**
+     * STORE — Simpan berita baru
+     * ✅ FIX: Admin hormati pilihan checkbox, Kader otomatis pending
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'konten' => 'required|string',
-            'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
-            'kecamatan' => 'nullable|string|max:255',
-            'status' => 'nullable|string|in:pending,approved,rejected',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
+        $validated = $request->validate(
+            [
+                'judul' => 'required|string|max:255',
+                'konten' => 'required|string',
+                'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
+                'kecamatan' => 'nullable|string|max:255',
+                'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'status_publikasi' => 'nullable|boolean',
+            ],
+            self::VALIDATION_MESSAGES
+        );
 
         $fotoPath = null;
         if ($request->hasFile('foto')) {
@@ -145,23 +171,33 @@ class BeritaController extends Controller
         }
 
         $isAdmin = auth()->user()->hasRole('admin');
-        $status = $isAdmin ? 'approved' : 'pending';
 
-        $berita = Berita::create([
-            'judul' => $request->judul,
-            'slug' => Str::slug($request->judul) . '-' . time(),
-            'konten' => $request->konten,
-            'kategori' => $request->kategori,
-            'kecamatan' => $request->kecamatan,
+        // ✅ FIX: Admin hormati pilihan dari form, Kader otomatis pending
+        if ($isAdmin) {
+            $statusPublikasi = (bool) $request->input('status_publikasi', false);
+            $status = $statusPublikasi ? 'approved' : 'draft';
+        } else {
+            $statusPublikasi = false;
+            $status = 'pending';
+        }
+
+        Berita::create([
+            'judul' => $validated['judul'],
+            'slug' => Str::slug($validated['judul']) . '-' . time(),
+            'konten' => $validated['konten'],
+            'kategori' => $validated['kategori'],
+            'kecamatan' => $validated['kecamatan'] ?? null,
             'status' => $status,
-            'status_publikasi' => $isAdmin,
+            'status_publikasi' => $statusPublikasi,
             'foto' => $fotoPath,
             'created_by' => auth()->id(),
             'user_id' => auth()->id(),
         ]);
 
         $message = $isAdmin
-            ? 'Berita berhasil ditambahkan dan langsung dipublikasikan.'
+            ? ($statusPublikasi
+                ? 'Berita berhasil ditambahkan dan langsung dipublikasikan.'
+                : 'Berita berhasil disimpan sebagai draft.')
             : 'Berita berhasil dikirim dan menunggu persetujuan admin.';
 
         return redirect()
@@ -184,17 +220,26 @@ class BeritaController extends Controller
         ]);
     }
 
+    /**
+     * UPDATE — Perbarui berita
+     * ✅ FIX: Admin hormati pilihan checkbox
+     */
     public function update(Request $request, Berita $berita)
     {
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'konten' => 'required|string',
-            'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
-            'kecamatan' => 'nullable|string|max:255',
-            'status' => 'nullable|string|in:pending,approved,rejected',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
+        $validated = $request->validate(
+            [
+                'judul' => 'required|string|max:255',
+                'konten' => 'required|string',
+                'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
+                'kecamatan' => 'nullable|string|max:255',
+                'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'remove_image' => 'nullable|boolean',
+                'status_publikasi' => 'nullable|boolean',
+            ],
+            self::VALIDATION_MESSAGES
+        );
 
+        // === HANDLE FOTO ===
         $fotoPath = $berita->foto;
 
         if ($request->hasFile('foto')) {
@@ -202,24 +247,40 @@ class BeritaController extends Controller
                 Storage::disk('public')->delete($fotoPath);
             }
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
+        } elseif ($request->boolean('remove_image') && $fotoPath) {
+            if (Storage::disk('public')->exists($fotoPath)) {
+                Storage::disk('public')->delete($fotoPath);
+            }
+            $fotoPath = null;
         }
 
+        // === HANDLE STATUS ===
         $isAdmin = auth()->user()->hasRole('admin');
-        $status = $isAdmin ? 'approved' : ($berita->status === 'approved' ? 'approved' : 'pending');
+
+        // ✅ FIX: Admin hormati pilihan, Kader tetap pending
+        if ($isAdmin) {
+            $statusPublikasi = (bool) $request->input('status_publikasi', false);
+            $status = $statusPublikasi ? 'approved' : 'draft';
+        } else {
+            $statusPublikasi = false;
+            $status = 'pending';
+        }
 
         $berita->update([
-            'judul' => $request->judul,
-            'slug' => Str::slug($request->judul) . '-' . $berita->id,
-            'konten' => $request->konten,
-            'kategori' => $request->kategori,
-            'kecamatan' => $request->kecamatan,
+            'judul' => $validated['judul'],
+            'slug' => Str::slug($validated['judul']) . '-' . $berita->id . '-' . time(),
+            'konten' => $validated['konten'],
+            'kategori' => $validated['kategori'],
+            'kecamatan' => $validated['kecamatan'] ?? null,
             'status' => $status,
-            'status_publikasi' => $status === 'approved',
+            'status_publikasi' => $statusPublikasi,
             'foto' => $fotoPath,
         ]);
 
-        $message = $status === 'approved'
-            ? 'Berita berhasil diperbarui dan tetap dipublikasikan.'
+        $message = $isAdmin
+            ? ($statusPublikasi
+                ? 'Berita berhasil diperbarui dan dipublikasikan.'
+                : 'Berita berhasil diperbarui sebagai draft.')
             : 'Berita berhasil diperbarui dan menunggu persetujuan admin.';
 
         return redirect()
@@ -244,20 +305,22 @@ class BeritaController extends Controller
 
     public function toggleStatus(Berita $berita)
     {
-        $newStatus = $berita->status === 'approved' ? 'pending' : 'approved';
+        $newStatus = $berita->status === 'approved' ? 'draft' : 'approved';
 
         $berita->update([
             'status' => $newStatus,
             'status_publikasi' => $newStatus === 'approved',
         ]);
 
+        $statusLabel = $newStatus === 'approved' ? 'Dipublikasikan' : 'Draft';
+
         return redirect()
             ->back()
-            ->with('success', 'Status berita berhasil diubah menjadi ' . ucfirst($newStatus));
+            ->with('success', "Status berita berhasil diubah menjadi: {$statusLabel}");
     }
 
     // ================================================================
-    // 🔥🔥🔥 BERITA PENDING
+    // BERITA PENDING
     // ================================================================
 
     public function pending(Request $request)
@@ -302,16 +365,19 @@ class BeritaController extends Controller
     }
 
     /**
-     * 🔥 APPROVE - PASTIKAN STATUS 'approved'
+     * APPROVE — Setujui berita pending
+     * ✅ FIX: judul & deskripsi jadi nullable
      */
     public function approve(Request $request, Berita $berita)
     {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
-        ]);
+        $validated = $request->validate(
+            [
+                'judul' => 'nullable|string|max:255',
+                'deskripsi' => 'nullable|string',
+            ],
+            self::VALIDATION_MESSAGES
+        );
 
-        // 🔥 UPDATE DENGAN STATUS 'approved'
         $updateData = [
             'status' => 'approved',
             'status_publikasi' => true,
@@ -319,14 +385,12 @@ class BeritaController extends Controller
             'approved_by' => auth()->id(),
         ];
 
-        // Update judul
-        if ($request->has('judul') && !empty($request->judul)) {
+        if ($request->filled('judul')) {
             $updateData['judul'] = $request->judul;
             $updateData['slug'] = Str::slug($request->judul) . '-' . uniqid();
         }
 
-        // Update konten
-        if ($request->has('deskripsi') && !empty($request->deskripsi)) {
+        if ($request->filled('deskripsi')) {
             $updateData['konten'] = $request->deskripsi;
         }
 
@@ -338,13 +402,16 @@ class BeritaController extends Controller
     }
 
     /**
-     * 🔥 REJECT - PASTIKAN STATUS 'rejected'
+     * REJECT — Tolak berita pending
      */
     public function reject(Request $request, Berita $berita)
     {
-        $validated = $request->validate([
-            'reason' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validate(
+            [
+                'reason' => 'nullable|string|max:500',
+            ],
+            self::VALIDATION_MESSAGES
+        );
 
         $berita->update([
             'status' => 'rejected',
@@ -535,7 +602,7 @@ class BeritaController extends Controller
         if (!$berita) {
             return response()->json([
                 'success' => false,
-                'message' => 'Berita tidak ditemukan',
+                'message' => 'Berita tidak ditemukan.',
             ], 404);
         }
 

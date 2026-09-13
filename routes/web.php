@@ -58,12 +58,16 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
-    // 🔥 LAPORAN KEGIATAN PUBLIC
+    // ✅ AGENDA — Redirect ke section agenda di beranda
+    Route::get('/agenda', function () {
+        return redirect('/#data');
+    })->name('agenda');
+
+    // Laporan Kegiatan Public
     Route::get('/laporan-kegiatan', [IndexController::class, 'laporanKegiatanPublic'])->name('laporan-kegiatan');
 
     // Survey
     Route::get('/survey-kepuasan', [FrontendSurveyController::class, 'index'])->name('survey.kepuasan');
-    Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])->name('survey.kepuasan.store');
     Route::post('/survey-kepuasan', [FrontendSurveyController::class, 'store'])
         ->middleware('throttle:5,10')
         ->name('survey.kepuasan.store');
@@ -77,7 +81,7 @@ Route::as('fe.')->group(function () {
 });
 
 // ============================================
-// API ROUTES (JSON untuk AJAX/Axios)
+// API ROUTES (JSON untuk AJAX/Axios/Mobile)
 // ============================================
 Route::prefix('api')->name('api.')->group(function () {
     Route::get('/sekretariat', [IndexController::class, 'sekretariatJson'])->name('sekretariat');
@@ -85,6 +89,11 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/pokja-2', [IndexController::class, 'pokja2Json'])->name('pokja2');
     Route::get('/pokja-3', [IndexController::class, 'pokja3Json'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Json'])->name('pokja4');
+
+    // API Berita (mobile)
+    Route::get('/berita/latest', [BeritaController::class, 'apiLatestBerita'])->name('berita.latest');
+    Route::get('/berita', [BeritaController::class, 'apiIndex'])->name('berita.index');
+    Route::get('/berita/{slug}', [BeritaController::class, 'apiShow'])->name('berita.show');
 });
 
 // ============================================
@@ -95,7 +104,9 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [LoginController::class, 'store'])->middleware('throttle:5,1');
 });
 
-Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+Route::post('/logout', [LoginController::class, 'destroy'])
+    ->name('logout')
+    ->middleware('auth');
 
 // ============================================
 // BACKEND ROUTES (Protected with Auth)
@@ -149,16 +160,22 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->except(['show']);
 
     // ============================================
-    // 🔥🔥🔥 BERITA - ROUTE KHUSUS HARUS DI ATAS RESOURCE!
+    // BERITA — Route khusus HARUS DI ATAS resource
     // ============================================
     Route::get('berita/pending', [BeritaController::class, 'pending'])
         ->name('berita.pending');
+    Route::get('berita/pending-count', [BeritaController::class, 'pendingCount'])
+        ->name('berita.pending-count');
 
-    Route::put('berita/{berita}/approve', [BeritaController::class, 'approve'])
+    Route::post('berita/{berita}/approve', [BeritaController::class, 'approve'])
         ->name('berita.approve');
-    Route::put('berita/{berita}/reject', [BeritaController::class, 'reject'])
+    Route::post('berita/{berita}/reject', [BeritaController::class, 'reject'])
         ->name('berita.reject');
 
+    Route::post('berita/{berita}/toggle-status', [BeritaController::class, 'toggleStatus'])
+        ->name('berita.toggle-status');
+
+    // Resource Berita
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
@@ -171,7 +188,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->name('infografis.toggle-status');
 
     // ============================================
-    // AGENDA
+    // AGENDA (Backend)
     // ============================================
     Route::resource('agenda', AgendaController::class)
         ->names('agenda')
@@ -192,13 +209,12 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->name('agenda.auto-update-status');
 
     // ============================================
-    // 🔥🔥🔥 LAPORAN KEGIATAN (BACKEND)
+    // LAPORAN KEGIATAN (BACKEND)
     // ============================================
     Route::resource('laporan-kegiatan', LaporanKegiatanController::class)
         ->names('laporan-kegiatan')
         ->only(['index', 'show', 'destroy']);
 
-    // 🔥 TAMBAHKAN BATCH APPROVE
     Route::post('laporan-kegiatan/approve-batch', [LaporanKegiatanController::class, 'approveBatch'])
         ->name('laporan-kegiatan.approve-batch');
 
@@ -215,10 +231,10 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     // SURVEY KEPUASAN (Backend Admin)
     // ============================================
     Route::get('/survey', [SurveyController::class, 'index'])->name('survey.index');
+    Route::get('/survey/export', [SurveyController::class, 'export'])->name('survey.export');
     Route::get('/survey/{survey}', [SurveyController::class, 'show'])->name('survey.show');
     Route::patch('/survey/{survey}/toggle-status', [SurveyController::class, 'toggleStatus'])->name('survey.toggle-status');
     Route::delete('/survey/{survey}', [SurveyController::class, 'destroy'])->name('survey.destroy');
-    Route::get('/survey/export', [SurveyController::class, 'export'])->name('survey.export');
 
     // User Management
     Route::resource('users', UserController::class)
@@ -242,7 +258,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     });
 
     // ============================================
-    // 🔥🔥🔥 STRUKTUR ORGANISASI (CRUD + IMPORT)
+    // STRUKTUR ORGANISASI (CRUD + IMPORT)
     // ============================================
     Route::resource('struktur-organisasi', StrukturOrganisasiController::class)
         ->names('struktur-organisasi')

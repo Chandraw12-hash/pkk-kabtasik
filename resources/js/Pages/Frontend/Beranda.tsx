@@ -393,14 +393,7 @@ const useFocusTrap = (isOpen: boolean) => {
 };
 
 // ============================================================
-// KOMPONEN GAMBAR DENGAN FALLBACK (state React, bukan DOM manual)
-// ------------------------------------------------------------
-// Menggantikan pola lama yang memanipulasi DOM langsung lewat
-// event.currentTarget.style / querySelector di dalam onError.
-// Manipulasi DOM manual seperti itu bisa "ditimpa ulang" saat
-// React me-render ulang komponen, sehingga fallback ikon bisa
-// hilang lagi walau gambar tetap gagal dimuat. Dengan state,
-// tampilan fallback selalu konsisten dengan status gambar.
+// KOMPONEN GAMBAR DENGAN FALLBACK
 // ============================================================
 
 const InfografisThumbnail = ({
@@ -552,7 +545,7 @@ export default function Welcome({
     const agendaModalRef = useFocusTrap(selectedAgenda !== null);
 
     // ========================================================
-    // KALENDER — DIHITUNG SEKALI PER BULAN/AGENDA, BUKAN TIAP RENDER
+    // KALENDER
     // ========================================================
 
     const calendarCells = useMemo(() => {
@@ -655,6 +648,7 @@ export default function Welcome({
     return (
         <div className="min-h-screen flex flex-col bg-white text-slate-800 font-['Poppins',_sans-serif]">
             <Head>
+                {/* ===== FONTS ===== */}
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link
                     rel="preconnect"
@@ -662,18 +656,40 @@ export default function Welcome({
                     crossOrigin="anonymous"
                 />
 
-                {/* Font weight dipangkas dari 6 varian ke 4 yang benar-benar
-                    dipakai di desain (400/500/600/700), mengurangi beban
-                    render-blocking di awal muat halaman. */}
                 <link
                     href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
                     rel="stylesheet"
                 />
 
+                {/* ===== TITLE ===== */}
                 <title>
                     PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri
                 </title>
 
+                {/* ===== FAVICON — logo Tasik muncul di tab browser ===== */}
+                <link
+                    rel="icon"
+                    type="image/png"
+                    href="/assets/logo/logotasik.png"
+                />
+                <link
+                    rel="shortcut icon"
+                    type="image/png"
+                    href="/assets/logo/logotasik.png"
+                />
+                <link
+                    rel="apple-touch-icon"
+                    href="/assets/logo/logotasik.png"
+                />
+
+                {/* ===== VIEWPORT & THEME COLOR ===== */}
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1.0"
+                />
+                <meta name="theme-color" content="#0D9488" />
+
+                {/* ===== BASIC SEO ===== */}
                 <meta
                     name="description"
                     content="Situs resmi Tim Penggerak PKK Kabupaten Tasikmalaya: informasi program kerja, data, kebijakan, dan berita seputar pemberdayaan dan kesejahteraan keluarga."
@@ -692,6 +708,7 @@ export default function Welcome({
                     href="https://pkk.tasikmalayakab.go.id"
                 />
 
+                {/* ===== OG TAGS (WhatsApp, Facebook, LinkedIn) ===== */}
                 <meta
                     property="og:title"
                     content="PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri"
@@ -712,10 +729,6 @@ export default function Welcome({
 
                 <script type="application/ld+json">{jsonLd}</script>
             </Head>
-
-            {/* ========================================================
-                CUSTOM STYLE
-            ======================================================== */}
 
             <style>{`
                 .anim-fade-up {
@@ -847,14 +860,10 @@ export default function Welcome({
                 }
             `}</style>
 
-            {/* ========================================================
-                NAVBAR
-            ======================================================== */}
-
             <Navbar />
 
             {/* ========================================================
-                HERO SECTION — TIDAK DIUBAH (sesuai permintaan)
+                HERO SECTION
             ======================================================== */}
 
             <section
@@ -943,8 +952,6 @@ export default function Welcome({
                         </Link>
                     </div>
 
-                    {/* LOGO MARQUEE */}
-
                     <div
                         className="logo-marquee-container"
                         aria-label="Mitra dan instansi terkait"
@@ -974,8 +981,6 @@ export default function Welcome({
                         </div>
                     </div>
                 </div>
-
-                {/* SLIDER INDICATOR */}
 
                 <div
                     className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5"
@@ -1007,7 +1012,7 @@ export default function Welcome({
             </section>
 
             {/* ========================================================
-                SAMBUTAN KETUA
+                SAMBUTAN KETUA — FOTO FULL SAMPAI KAKI
             ======================================================== */}
 
             <section
@@ -1021,12 +1026,12 @@ export default function Welcome({
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
                         <div className="w-full lg:w-5/12">
-                            <div className="rounded-3xl overflow-hidden shadow-xl bg-slate-100">
+                            <div className="rounded-3xl overflow-hidden shadow-xl bg-slate-50 border border-slate-200">
                                 <img
-                                    src="/assets/images/ketuapkk.png"
+                                    src="/assets/images/ketuapkk.jpg"
                                     alt="Ketua TP PKK Kabupaten Tasikmalaya"
                                     loading="lazy"
-                                    className="w-full h-[280px] sm:h-[360px] md:h-[440px] object-cover object-top"
+                                    className="w-full h-auto max-h-[600px] object-contain object-center"
                                     onError={(event) => {
                                         const target =
                                             event.currentTarget;
@@ -1554,10 +1559,7 @@ export default function Welcome({
                     </div>
 
                     <div className="grid lg:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                            {/* ====================================================
-                                KALENDER
-                            ==================================================== */}
-
+                            {/* KALENDER */}
                             <div className="border-b lg:border-b-0 lg:border-r border-slate-200">
                                 <div className="px-5 py-4 border-b border-slate-100 bg-white">
                                     <div className="flex items-center justify-between">
@@ -1690,10 +1692,7 @@ export default function Welcome({
                                 </div>
                             </div>
 
-                            {/* ====================================================
-                                DAFTAR AGENDA
-                            ==================================================== */}
-
+                            {/* DAFTAR AGENDA */}
                             <div className="flex flex-col">
                                 <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50/70">
                                     <div className="flex items-center justify-between gap-4">
@@ -1865,10 +1864,7 @@ export default function Welcome({
                             </div>
                         </div>
 
-                    {/* ====================================================
-                        TESTIMONI SURVEY
-                    ==================================================== */}
-
+                    {/* TESTIMONI SURVEY */}
                     {testimoniSurvey.length > 0 && (
                         <div className="mt-14">
                             <div className="text-center mb-8">
@@ -1932,10 +1928,7 @@ export default function Welcome({
                         </div>
                     )}
 
-                    {/* ====================================================
-                        SURVEY CTA
-                    ==================================================== */}
-
+                    {/* SURVEY CTA */}
                     {isSurveyActive && (
                         <div className="mt-10 rounded-xl border border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="min-w-0">
@@ -2086,10 +2079,6 @@ export default function Welcome({
                     </div>
                 </div>
             )}
-
-            {/* ========================================================
-                FOOTER
-            ======================================================== */}
 
             <Footer />
         </div>

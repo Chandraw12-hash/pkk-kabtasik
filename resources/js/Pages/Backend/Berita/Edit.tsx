@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import Card from "@/Components/UI/Card";
 import TextInput from "@/Components/Form/TextInput";
@@ -13,7 +13,6 @@ const KATEGORI_OPTIONS = [
     "Pemberitaan Desa",
 ];
 
-// 39 KECAMATAN KABUPATEN TASIKMALAYA (RESMI, sesuai Permendagri No. 137 Tahun 2017)
 const KECAMATAN_OPTIONS = [
     "Bantarkalong",
     "Bojongasih",
@@ -72,47 +71,37 @@ interface EditBeritaProps {
     kecamatanList?: string[];
 }
 
-export default function EditBerita({ berita, kecamatanList = [] }: EditBeritaProps) {
-    const { data, setData, put, processing, errors } = useForm({
+export default function EditBerita({
+    berita,
+    kecamatanList = [],
+}: EditBeritaProps) {
+    // ✅ FIX: useForm murni, TANPA FormData manual
+    const { data, setData, post, processing, errors } = useForm({
+        _method: "put",
         judul: berita.judul || "",
         kategori: berita.kategori || "Kegiatan",
         kecamatan: berita.kecamatan || "",
         konten: berita.konten || "",
         foto: null as File | null,
+        remove_image: false,
         status_publikasi: berita.status_publikasi ?? true,
-        _method: "put",
     });
 
-    const [previewImage, setPreviewImage] = React.useState<string | null>(
+    const [previewImage, setPreviewImage] = useState<string | null>(
         berita.foto ? `/storage/${berita.foto}` : null
     );
-    const [removeImage, setRemoveImage] = React.useState(false);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const formData = new FormData();
-        formData.append("_method", "put");
-        formData.append("judul", data.judul);
-        formData.append("kategori", data.kategori);
-        formData.append("kecamatan", data.kecamatan || "");
-        formData.append("konten", data.konten);
-        formData.append("status_publikasi", data.status_publikasi ? "1" : "0");
-
-        if (data.foto) {
-            formData.append("foto", data.foto);
-        }
-
-        if (removeImage) {
-            formData.append("remove_image", "true");
-        }
-
-        put(route("be.berita.update", berita.id), {
-            data: formData,
+        // ✅ FIX: Kirim pakai POST, tapi _method: "put" sudah di-set
+        // forceFormData: true WAJIB karena ada upload file
+        post(route("be.berita.update", berita.id), {
+            forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
+                // Optional: reset preview image setelah sukses
                 setPreviewImage(null);
-                setRemoveImage(false);
             },
         });
     };
@@ -122,20 +111,21 @@ export default function EditBerita({ berita, kecamatanList = [] }: EditBeritaPro
         if (file) {
             setData("foto", file);
             setPreviewImage(URL.createObjectURL(file));
-            setRemoveImage(false);
+            setData("remove_image", false);
         }
     };
 
     const handleRemoveImage = () => {
         setPreviewImage(null);
-        setRemoveImage(true);
         setData("foto", null);
+        setData("remove_image", true);
     };
 
     const selectClass =
         "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
 
-    const kecamatanOptions = kecamatanList.length > 0 ? kecamatanList : KECAMATAN_OPTIONS;
+    const kecamatanOptions =
+        kecamatanList.length > 0 ? kecamatanList : KECAMATAN_OPTIONS;
 
     return (
         <MainLayout>
@@ -159,61 +149,93 @@ export default function EditBerita({ berita, kecamatanList = [] }: EditBeritaPro
             </div>
 
             <Card className="dark:bg-slate-800 dark:border-slate-700">
-                <form onSubmit={submit} className="p-6 space-y-6" encType="multipart/form-data">
+                <form
+                    onSubmit={submit}
+                    className="p-6 space-y-6"
+                    encType="multipart/form-data"
+                >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Judul */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Judul Berita <span className="text-rose-500">*</span>
+                                Judul Berita{" "}
+                                <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
                                 placeholder="Masukkan judul berita"
                                 value={data.judul}
-                                onChange={(e) => setData("judul", e.target.value)}
+                                onChange={(e) =>
+                                    setData("judul", e.target.value)
+                                }
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.judul && <div className="text-rose-500 text-xs mt-1">{errors.judul}</div>}
+                            {errors.judul && (
+                                <div className="text-rose-500 text-xs mt-1">
+                                    {errors.judul}
+                                </div>
+                            )}
                         </div>
 
+                        {/* Kategori */}
                         <div>
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Kategori <span className="text-rose-500">*</span>
+                                Kategori{" "}
+                                <span className="text-rose-500">*</span>
                             </label>
                             <select
                                 value={data.kategori}
-                                onChange={(e) => setData("kategori", e.target.value)}
+                                onChange={(e) =>
+                                    setData("kategori", e.target.value)
+                                }
                                 className={selectClass}
                             >
+                                <option value="">Pilih Kategori</option>
                                 {KATEGORI_OPTIONS.map((k) => (
-                                    <option key={k} value={k}>{k}</option>
+                                    <option key={k} value={k}>
+                                        {k}
+                                    </option>
                                 ))}
                             </select>
-                            {errors.kategori && <div className="text-rose-500 text-xs mt-1">{errors.kategori}</div>}
+                            {errors.kategori && (
+                                <div className="text-rose-500 text-xs mt-1">
+                                    {errors.kategori}
+                                </div>
+                            )}
                         </div>
 
+                        {/* Kecamatan */}
                         <div>
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
                                 Kecamatan
                             </label>
                             <select
                                 value={data.kecamatan}
-                                onChange={(e) => setData("kecamatan", e.target.value)}
+                                onChange={(e) =>
+                                    setData("kecamatan", e.target.value)
+                                }
                                 className={selectClass}
                             >
                                 <option value="">Pilih Kecamatan</option>
                                 {kecamatanOptions.map((k) => (
-                                    <option key={k} value={k}>{k}</option>
+                                    <option key={k} value={k}>
+                                        {k}
+                                    </option>
                                 ))}
                             </select>
-                            {errors.kecamatan && <div className="text-rose-500 text-xs mt-1">{errors.kecamatan}</div>}
+                            {errors.kecamatan && (
+                                <div className="text-rose-500 text-xs mt-1">
+                                    {errors.kecamatan}
+                                </div>
+                            )}
                         </div>
 
+                        {/* Gambar */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
                                 Gambar Utama / Cover
                             </label>
 
-                            {/* Preview Gambar Saat Ini */}
-                            {previewImage && !removeImage && (
+                            {previewImage && (
                                 <div className="relative inline-block mb-3">
                                     <img
                                         src={previewImage}
@@ -224,13 +246,13 @@ export default function EditBerita({ berita, kecamatanList = [] }: EditBeritaPro
                                         type="button"
                                         onClick={handleRemoveImage}
                                         className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
+                                        title="Hapus gambar"
                                     >
                                         <X size={14} />
                                     </button>
                                 </div>
                             )}
 
-                            {/* Input File */}
                             <input
                                 type="file"
                                 accept="image/*"
@@ -242,37 +264,60 @@ export default function EditBerita({ berita, kecamatanList = [] }: EditBeritaPro
                                     File terpilih: {data.foto.name}
                                 </p>
                             )}
-                            {errors.foto && <div className="text-rose-500 text-xs mt-1">{errors.foto}</div>}
+                            {errors.foto && (
+                                <div className="text-rose-500 text-xs mt-1">
+                                    {errors.foto}
+                                </div>
+                            )}
                         </div>
 
+                        {/* Konten */}
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Konten Berita <span className="text-rose-500">*</span>
+                                Konten Berita{" "}
+                                <span className="text-rose-500">*</span>
                             </label>
                             <textarea
                                 value={data.konten}
-                                onChange={(e) => setData("konten", e.target.value)}
+                                onChange={(e) =>
+                                    setData("konten", e.target.value)
+                                }
                                 rows={8}
                                 placeholder="Tulis isi berita di sini..."
                                 className={selectClass}
                             />
-                            {errors.konten && <div className="text-rose-500 text-xs mt-1">{errors.konten}</div>}
+                            {errors.konten && (
+                                <div className="text-rose-500 text-xs mt-1">
+                                    {errors.konten}
+                                </div>
+                            )}
                         </div>
 
+                        {/* Status Publikasi */}
                         <div className="flex items-center gap-2 md:col-span-2">
                             <input
                                 id="status_publikasi"
                                 type="checkbox"
                                 checked={data.status_publikasi}
-                                onChange={(e) => setData("status_publikasi", e.target.checked)}
+                                onChange={(e) =>
+                                    setData(
+                                        "status_publikasi",
+                                        e.target.checked
+                                    )
+                                }
                                 className="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
                             />
-                            <label htmlFor="status_publikasi" className="text-sm text-slate-600 dark:text-slate-300">
-                                Publikasikan langsung (Draft jika tidak dicentang)
+                            <label
+                                htmlFor="status_publikasi"
+                                className="text-sm text-slate-600 dark:text-slate-300"
+                            >
+                                Publikasikan langsung (Draft jika tidak
+                                dicentang)
                             </label>
                         </div>
                     </div>
 
+                    {/* Tombol Aksi */}
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <Link
                             href={route("be.berita.index")}
@@ -287,7 +332,11 @@ export default function EditBerita({ berita, kecamatanList = [] }: EditBeritaPro
                             className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
                         >
                             <Save size={16} />
-                            <span>{processing ? "Menyimpan..." : "Simpan Perubahan"}</span>
+                            <span>
+                                {processing
+                                    ? "Menyimpan..."
+                                    : "Simpan Perubahan"}
+                            </span>
                         </Button>
                     </div>
                 </form>

@@ -18,9 +18,6 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-// ============================================================
-// INTERFACE
-// ============================================================
 interface BeritaItem {
     id: number;
     judul: string;
@@ -63,13 +60,10 @@ interface KecamatanTeraktifItem {
 }
 
 const DEFAULT_KATEGORI = "Kegiatan";
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 10;
 const FALLBACK_IMAGE =
     "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80";
 
-// ============================================================
-// UTILITY
-// ============================================================
 const getBeritaImageSrc = (item: BeritaItem): string => {
     return (
         item.foto_url ||
@@ -105,9 +99,6 @@ const getDeskripsi = (item: BeritaItem): string => {
     );
 };
 
-// ============================================================
-// SIDEBAR: KECAMATAN TERAKTIF
-// ============================================================
 function KecamatanTeraktifWidget({
     data,
     isLoading,
@@ -173,7 +164,7 @@ function KecamatanTeraktifWidget({
                 </div>
             ) : data.length > 0 ? (
                 <ul className="space-y-2.5">
-                    {data.slice(0, 5).map((item, i) => {
+                    {data.slice(0, 10).map((item, i) => {
                         const isTop = i === 0;
                         const pct = Math.round((item.total / maxTotal) * 100);
                         return (
@@ -238,9 +229,6 @@ function KecamatanTeraktifWidget({
     );
 }
 
-// ============================================================
-// MAIN
-// ============================================================
 export default function Berita({
     berita = [],
     pagination: initialPagination,

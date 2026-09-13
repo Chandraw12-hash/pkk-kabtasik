@@ -7,7 +7,7 @@ import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
 import {
     Search,
     Edit2,
@@ -17,12 +17,8 @@ import {
     Newspaper,
     Eye,
     MapPin,
-    CheckCircle,
-    XCircle,
-    Filter
 } from "lucide-react";
 import { PaginatedData } from "@/types/model";
-import axios from "axios";
 
 interface Berita {
     id: number;
@@ -32,6 +28,7 @@ interface Berita {
     kategori: string;
     kecamatan: string | null;
     foto: string | null;
+    status: string;
     status_publikasi: boolean;
     created_at: string;
     user?: { id: number; name: string };
@@ -72,17 +69,62 @@ const KATEGORI_OPTIONS = [
     "Pemberitaan Desa",
 ];
 
-export default function Index({ beritas, kecamatanList = [], filters = {} }: IndexProps) {
+export default function Index({
+    beritas,
+    kecamatanList = [],
+    filters = {},
+}: IndexProps) {
     const { auth } = usePage<any>().props;
-    const permissions: string[] = auth?.permissions || [];
 
-    const canCreate = permissions.includes("berita.create") || true;
-    const canEdit = permissions.includes("berita.edit") || true;
-    const canDelete = permissions.includes("berita.delete") || true;
+    // ✅ FIX: Struktur auth dari HandleInertiaRequests:
+    // {
+    //   auth: {
+    //     user: { ... },
+    //     roles: ["admin"],              ← DI SINI
+    //     permissions: ["berita.create"] ← DI SINI
+    //   }
+    // }
+    const permissions: string[] = Array.isArray(auth?.permissions)
+        ? auth.permissions
+        : [];
+
+    const roles: string[] = Array.isArray(auth?.roles) ? auth.roles : [];
+
+    // Cek apakah user adalah admin (handle berbagai format string/object)
+    const isAdmin = roles.some((r: any) => {
+        if (typeof r === "string") {
+            return r.toLowerCase().includes("admin");
+        }
+        if (typeof r === "object" && r !== null && "name" in r) {
+            return String(r.name).toLowerCase().includes("admin");
+        }
+        return false;
+    });
+
+    // ✅ Permission logic:
+    // - Kalau gak login → false
+    // - Kalau admin → true (semua boleh)
+    // - Kalau ada permission spesifik → cek
+    const hasPermission = (perm: string): boolean => {
+        if (!auth?.user) return false;
+        if (isAdmin) return true;
+        if (permissions.length > 0) {
+            return permissions.includes(perm);
+        }
+        return false;
+    };
+
+    const canCreate = hasPermission("berita.create");
+    const canEdit = hasPermission("berita.edit");
+    const canDelete = hasPermission("berita.delete");
 
     const [search, setSearch] = useState(filters.search || "");
-    const [kategoriFilter, setKategoriFilter] = useState(filters.kategori || "");
-    const [kecamatanFilter, setKecamatanFilter] = useState(filters.kecamatan || "");
+    const [kategoriFilter, setKategoriFilter] = useState(
+        filters.kategori || ""
+    );
+    const [kecamatanFilter, setKecamatanFilter] = useState(
+        filters.kecamatan || ""
+    );
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [perPage, setPerPage] = useState<number>(
         Number(filters.per_page) || 10
@@ -98,40 +140,36 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
 
     const { delete: destroy, processing } = useForm({});
 
+    // Sync local state ketika props dari server berubah
     useEffect(() => {
         if (beritas?.data) {
             setLocalBeritas(beritas);
         }
     }, [beritas]);
 
+    // ✅ Pakai router.get biar URL sinkron dengan filter
     const fetchData = () => {
         setIsLoading(true);
 
-        const url = route("be.berita.index");
-        const params = {
-            search: search || undefined,
-            kategori: kategoriFilter || undefined,
-            kecamatan: kecamatanFilter || undefined,
-            status: statusFilter || undefined,
-            per_page: perPage,
-        };
-
-        axios
-            .get(url, {
-                params,
-                headers: { Accept: "application/json" },
-            })
-            .then((res) => {
-                if (res.data && typeof res.data === "object" && "data" in res.data) {
-                    setLocalBeritas(res.data);
-                }
-            })
-            .catch((err) => {
-                console.error("Error fetching berita:", err);
-            })
-            .finally(() => setIsLoading(false));
+        router.get(
+            route("be.berita.index"),
+            {
+                search: search || undefined,
+                kategori: kategoriFilter || undefined,
+                kecamatan: kecamatanFilter || undefined,
+                status: statusFilter || undefined,
+                per_page: perPage,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["beritas", "kecamatanList", "filters"],
+                onFinish: () => setIsLoading(false),
+            }
+        );
     };
 
+    // Debounce search + filter
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
@@ -143,6 +181,7 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
         }, 350);
 
         return () => clearTimeout(timeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, kategoriFilter, kecamatanFilter, statusFilter, perPage]);
 
     const openDeleteModal = (berita: Berita) => {
@@ -175,27 +214,47 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
         if (!url) return;
 
         setIsLoading(true);
-        axios
-            .get(url, {
-                headers: { Accept: "application/json" },
-            })
-            .then((res) => {
-                if (res.data && typeof res.data === "object" && "data" in res.data) {
-                    setLocalBeritas(res.data);
-                }
-            })
-            .catch((err) => {
-                console.error("Error fetching page:", err);
-            })
-            .finally(() => setIsLoading(false));
+        router.get(
+            url,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["beritas"],
+                onFinish: () => setIsLoading(false),
+            }
+        );
     };
 
-    const getStatusBadge = (status: boolean) => {
-        if (status) {
+    // ✅ Status badge pakai field `status` (bukan OR dengan status_publikasi)
+    const getStatusBadge = (berita: Berita) => {
+        if (berita.status === "approved") {
             return <Badge type="success">Published</Badge>;
+        }
+        if (berita.status === "pending") {
+            return <Badge type="warning">Pending</Badge>;
+        }
+        if (berita.status === "rejected") {
+            return <Badge type="danger">Rejected</Badge>;
         }
         return <Badge type="default">Draft</Badge>;
     };
+
+    // ✅ Handle URL foto absolute
+    const getFotoUrl = (foto: string | null): string | null => {
+        if (!foto) return null;
+        if (foto.startsWith("http")) return foto;
+        if (foto.startsWith("/")) return foto;
+        return `/storage/${foto}`;
+    };
+
+    const hasActiveFilter = Boolean(
+        search ||
+            kategoriFilter ||
+            kecamatanFilter ||
+            statusFilter ||
+            perPage !== 10
+    );
 
     return (
         <MainLayout>
@@ -245,18 +304,24 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                         >
                             <option value="">Semua Kategori</option>
                             {KATEGORI_OPTIONS.map((k) => (
-                                <option key={k} value={k}>{k}</option>
+                                <option key={k} value={k}>
+                                    {k}
+                                </option>
                             ))}
                         </select>
 
                         <select
                             value={kecamatanFilter}
-                            onChange={(e) => setKecamatanFilter(e.target.value)}
+                            onChange={(e) =>
+                                setKecamatanFilter(e.target.value)
+                            }
                             className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
                         >
                             <option value="">Semua Kecamatan</option>
                             {kecamatanList.map((k) => (
-                                <option key={k} value={k}>{k}</option>
+                                <option key={k} value={k}>
+                                    {k}
+                                </option>
                             ))}
                         </select>
 
@@ -266,11 +331,12 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                             className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
                         >
                             <option value="">Semua Status</option>
-                            <option value="true">Published</option>
-                            <option value="false">Draft</option>
+                            <option value="approved">Published</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
                         </select>
 
-                        {(search || kategoriFilter || kecamatanFilter || statusFilter || perPage !== 10) && (
+                        {hasActiveFilter && (
                             <Button
                                 variant="secondary"
                                 onClick={handleReset}
@@ -296,9 +362,12 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                                 render: (_: Berita, index: number) => {
                                     const currentPage =
                                         localBeritas.current_page ?? 1;
-                                    const perPageVal = localBeritas.per_page ?? 10;
+                                    const perPageVal =
+                                        localBeritas.per_page ?? 10;
                                     return (
-                                        (currentPage - 1) * perPageVal + index + 1
+                                        (currentPage - 1) * perPageVal +
+                                        index +
+                                        1
                                     );
                                 },
                             },
@@ -306,25 +375,28 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                                 header: "Foto",
                                 className: "w-20 text-center",
                                 headerClassName: "text-center w-20",
-                                render: (berita: Berita) => (
-                                    <div className="flex justify-center">
-                                        {berita.foto ? (
-                                            <img
-                                                src={`/storage/${berita.foto}`}
-                                                alt={berita.judul}
-                                                className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display =
-                                                        "none";
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
-                                                <Newspaper size={20} />
-                                            </div>
-                                        )}
-                                    </div>
-                                ),
+                                render: (berita: Berita) => {
+                                    const fotoUrl = getFotoUrl(berita.foto);
+                                    return (
+                                        <div className="flex justify-center">
+                                            {fotoUrl ? (
+                                                <img
+                                                    src={fotoUrl}
+                                                    alt={berita.judul}
+                                                    className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display =
+                                                            "none";
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
+                                                    <Newspaper size={20} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                },
                             },
                             {
                                 header: "Judul & Kategori",
@@ -336,7 +408,10 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                                             {berita.judul}
                                         </p>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <Badge type="info" className="text-[10px]">
+                                            <Badge
+                                                type="info"
+                                                className="text-[10px]"
+                                            >
                                                 {berita.kategori || "Umum"}
                                             </Badge>
                                             {berita.kecamatan && (
@@ -355,7 +430,7 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                                 headerClassName: "text-center w-28",
                                 render: (berita: Berita) => (
                                     <div className="flex justify-center">
-                                        {getStatusBadge(berita.status_publikasi)}
+                                        {getStatusBadge(berita)}
                                     </div>
                                 ),
                             },
@@ -366,7 +441,11 @@ export default function Index({ beritas, kecamatanList = [], filters = {} }: Ind
                                 render: (berita: Berita) => (
                                     <div className="flex items-center justify-center gap-1">
                                         <Link
-                                            href={`/berita/${berita.slug}`}
+                                            href={
+                                                berita.slug
+                                                    ? `/berita/${berita.slug}`
+                                                    : `/berita/${berita.id}`
+                                            }
                                             target="_blank"
                                             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                             title="Lihat"

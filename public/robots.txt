@@ -1,2 +1,56 @@
+# ============================================================
+# robots.txt — Tim Penggerak PKK Kabupaten Tasikmalaya
+# ============================================================
+# File ini memberi tahu bot mesin pencari (Google, Bing, dll)
+# halaman mana yang boleh dan tidak boleh di-crawl.
+# ============================================================
+
+# Berlaku untuk semua bot
 User-agent: *
-Disallow:
+Allow: /
+
+# ------------------------------------------------------------
+# Halaman yang TIDAK BOLEH di-crawl (halaman internal/admin)
+# ------------------------------------------------------------
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /logout
+Disallow: /register
+Disallow: /password/
+Disallow: /api/
+Disallow: /storage/framework/
+Disallow: /vendor/
+
+# ------------------------------------------------------------
+# File yang TIDAK BOLEH di-crawl (file konfigurasi & sistem)
+# ------------------------------------------------------------
+Disallow: /*.env
+Disallow: /*.log
+Disallow: /*.sql
+Disallow: /.git/
+Disallow: /node_modules/
+
+# ------------------------------------------------------------
+# Bot tertentu yang diblokir total (bot spam/scraper jahat)
+# ------------------------------------------------------------
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# ------------------------------------------------------------
+# Crawl delay — jeda antar request (biar server gak berat)
+# ------------------------------------------------------------
+Crawl-delay: 1
+
+# ------------------------------------------------------------
+# Sitemap — lokasi sitemap.xml
+# ------------------------------------------------------------
+Sitemap: https://pkk.tasikmalayakab.go.id/sitemap.xml

@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\Berita;
+use App\Models\LaporanKegiatan;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,12 +37,29 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        // ✅ Hitung pending (berita + laporan) untuk admin
+        $pendingBerita = 0;
+        $pendingLaporan = 0;
+
+        if ($user && $user->hasAnyRole(['admin', 'super-admin'])) {
+            $pendingBerita = Berita::where('status', 'pending')->count();
+            $pendingLaporan = LaporanKegiatan::where('status', 'pending')->count();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
-                'roles' => $request->user()?->getRoleNames(),
-                'permissions' => $request->user()?->getAllPermissions()->pluck('name'),
+                'user' => $user,
+                'roles' => $user?->getRoleNames(),
+                'permissions' => $user?->getAllPermissions()->pluck('name'),
+            ],
+            // ✅ TAMBAH: Pending counts untuk notifikasi lonceng
+            'pending_counts' => [
+                'berita' => $pendingBerita,
+                'laporan' => $pendingLaporan,
+                'total' => $pendingBerita + $pendingLaporan,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
@@ -50,7 +69,7 @@ class HandleInertiaRequests extends Middleware
             'app_settings' => function () {
                 return \Illuminate\Support\Facades\Cache::remember('app_settings', 3600, function () {
                     return \Illuminate\Support\Facades\DB::table('settings')
-                        ->whereIn('key', ['app_name', 'app_logo', 'primary_color']) // Ditambahkan primary_color di sini
+                        ->whereIn('key', ['app_name', 'app_logo', 'primary_color'])
                         ->pluck('value', 'key');
                 });
             },

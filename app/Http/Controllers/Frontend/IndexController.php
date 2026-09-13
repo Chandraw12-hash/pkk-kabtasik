@@ -41,7 +41,7 @@ class IndexController extends Controller
             });
 
         // ─── BERITA ──────────────────────────────────────────────────────────────
-        $beritaTerbaru = Berita::where('status_publikasi', true)
+        $beritaTerbaru = Berita::where('status', 'approved')
             ->latest()
             ->take(6)
             ->get()
@@ -145,7 +145,7 @@ class IndexController extends Controller
                 'file_path' => '#',
                 'urutan' => 3,
             ],
-        ])->map(fn ($item) => (object) $item);
+        ])->map(fn($item) => (object) $item);
 
         // ─── CHART ──────────────────────────────────────────────────────────────
         $chartData = collect([
@@ -202,7 +202,7 @@ class IndexController extends Controller
                         ->orWhere('nama_dasawisma', 'like', "%{$search}%");
                 });
             })
-            ->when($pokja, fn ($q) => $q->where('kategori_pokja', $pokja))
+            ->when($pokja, fn($q) => $q->where('kategori_pokja', $pokja))
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -331,7 +331,7 @@ class IndexController extends Controller
         $kategori = $request->get('kategori');
         $kecamatan = $request->get('kecamatan');
 
-        $query = Berita::where('status_publikasi', true)->latest();
+        $query = Berita::where('status', 'approved')->latest();
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -380,10 +380,11 @@ class IndexController extends Controller
             ->when(is_numeric($slug), function ($q) use ($slug) {
                 $q->orWhere('id', $slug);
             })
+            ->where('status', 'approved')
             ->firstOrFail();
 
         $beritaLainnya = Berita::where('id', '!=', $berita->id)
-            ->where('status_publikasi', true)
+            ->where('status', 'approved')
             ->latest()
             ->take(5)
             ->get();

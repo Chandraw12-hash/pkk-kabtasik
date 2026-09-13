@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <!-- Beranda -->
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/</loc>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- Profil -->
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/profil/sejarah</loc>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/profil/tugas-fungsi</loc>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/profil/visi-misi</loc>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/profil/struktur-organisasi</loc>
+        <priority>0.6</priority>
+    </url>
+
+    <!-- Program -->
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/program/program-kerja</loc>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/program/galeri-kegiatan</loc>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- Data -->
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/sekretariat</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/pokja-1</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/pokja-2</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/pokja-3</loc>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/pokja-4</loc>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- Berita -->
+    <url>
+        <loc>https://pkk.tasikmalayakab.go.id/berita</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+</urlset>

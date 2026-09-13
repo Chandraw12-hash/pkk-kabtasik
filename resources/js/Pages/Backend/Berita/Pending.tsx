@@ -124,7 +124,8 @@ export default function BeritaPending() {
         setLoadingApprove(id);
         setShowApproveModal(false);
 
-        router.put(
+        // ✅ FIX: Ganti 'put' jadi 'post'
+        router.post(
             route("be.berita.approve", id),
             {
                 judul: judulInput.value,
@@ -150,7 +151,8 @@ export default function BeritaPending() {
         setLoadingReject(id);
         setShowRejectModal(false);
 
-        router.put(
+        // ✅ FIX: Ganti 'put' jadi 'post'
+        router.post(
             route("be.berita.reject", id),
             { reason: reason },
             {
@@ -762,16 +764,14 @@ export default function BeritaPending() {
                 </Card>
             </div>
 
-            {/* ====== MODAL KONFIRMASI APPROVE (PROFESIONAL) ====== */}
+            {/* ====== MODAL KONFIRMASI APPROVE ====== */}
             {showApproveModal && (
                 <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-                    {/* Overlay */}
                     <div
                         className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
                         onClick={() => setShowApproveModal(false)}
                     />
 
-                    {/* Modal Box */}
                     <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 shrink-0 rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400 flex items-center justify-center">
@@ -813,16 +813,14 @@ export default function BeritaPending() {
                 </div>
             )}
 
-            {/* ====== MODAL KONFIRMASI REJECT (PROFESIONAL) ====== */}
+            {/* ====== MODAL KONFIRMASI REJECT ====== */}
             {showRejectModal && (
                 <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-                    {/* Overlay */}
                     <div
                         className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
                         onClick={() => setShowRejectModal(false)}
                     />
 
-                    {/* Modal Box */}
                     <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 shrink-0 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 flex items-center justify-center">

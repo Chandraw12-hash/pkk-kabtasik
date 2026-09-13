@@ -45,7 +45,7 @@ const seragamResmi = {
         "Penampilan harus rapi, sopan, dan mencerminkan identitas organisasi",
     ],
 
-    image: "/assets/images/seragam.png",
+    image: "/assets/images/ketuapkk.jpg",
 };
 
 export default function KetentuanSeragam() {

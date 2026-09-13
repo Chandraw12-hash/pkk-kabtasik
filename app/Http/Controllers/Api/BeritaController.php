@@ -290,7 +290,7 @@ class BeritaController extends Controller
                 return $query->where('kecamatan', $berita->kecamatan);
             })
             ->latest()
-            ->limit(5)
+            ->limit(10)
             ->get()
             ->map(function ($item) {
                 return [
@@ -415,7 +415,7 @@ class BeritaController extends Controller
         $data = $query->select('kecamatan', DB::raw('count(*) as total'))
             ->groupBy('kecamatan')
             ->orderBy('total', 'desc')
-            ->limit(5)
+            ->limit(10)
             ->get()
             ->map(function ($item) {
                 return [

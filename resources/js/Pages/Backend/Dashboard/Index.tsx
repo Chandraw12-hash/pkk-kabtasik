@@ -5,6 +5,7 @@ import Card from "@/Components/UI/Card";
 import ChartLine from "@/Components/Data/Charts/ChartLine";
 import ChartBar from "@/Components/Data/Charts/ChartBar";
 import ChartPie from "@/Components/Data/Charts/ChartPie";
+import NotificationBell from "../NotificationBell";// ✅ TAMBAH
 import { Head } from "@inertiajs/react";
 import {
     FileText,
@@ -56,7 +57,6 @@ export default function Dashboard({
     pieData = [],
     activities = [],
 }: DashboardProps) {
-    // Hitung total verifikasi untuk persentase
     const totalVerifikasi = stats.laporanApproved + stats.laporanPending + stats.laporanRejected + stats.laporanReviewed;
     const validPercentage = totalVerifikasi > 0 ? Math.round((stats.laporanApproved / totalVerifikasi) * 100) : 0;
 
@@ -88,6 +88,8 @@ export default function Dashboard({
                         <Calendar size={15} className="text-slate-400" />
                         <span>Tahun 2026</span>
                     </div>
+                    {/* ✅ LONCENG NOTIFIKASI */}
+                    <NotificationBell />
                     <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors">
                         <Download size={16} />
                         Unduh Rekap
@@ -214,7 +216,6 @@ export default function Dashboard({
                         </div>
                     </Card>
 
-                    {/* ─── AKTIVITAS ─── */}
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between">
                         <div>
                             <div className="flex items-center justify-between mb-5">
