@@ -6,8 +6,10 @@ import { Home, ArrowLeft, Search } from "lucide-react";
 
 export default function NotFound() {
     return (
-        <div className="min-h-screen flex flex-col bg-white text-slate-800 pt-14">
-            <Head title="Halaman Tidak Ditemukan — TP PKK Kab. Tasikmalaya" />
+        <div className="min-h-screen flex flex-col bg-white text-slate-800 pt-14 font-['Poppins',_sans-serif]">
+            <Head title="Halaman Tidak Ditemukan — TP PKK Kab. Tasikmalaya">
+                <meta name="robots" content="noindex, nofollow" />
+            </Head>
             <Navbar />
 
             <main className="flex-grow flex items-center justify-center px-4 py-16">

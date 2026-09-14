@@ -35,6 +35,9 @@ use App\Http\Controllers\Frontend\SurveyController as FrontendSurveyController;
 // ============================================
 use App\Http\Controllers\Backend\StrukturOrganisasiController;
 
+// ✅ TAMBAH: Weather Controller
+use App\Http\Controllers\Api\WeatherController;
+
 // ============================================
 // FRONTEND ROUTES (Public)
 // ============================================
@@ -58,7 +61,7 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
-    // ✅ AGENDA — Redirect ke section agenda di beranda
+    // AGENDA — Redirect ke section agenda di beranda
     Route::get('/agenda', function () {
         return redirect('/#data');
     })->name('agenda');
@@ -94,6 +97,9 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/berita/latest', [BeritaController::class, 'apiLatestBerita'])->name('berita.latest');
     Route::get('/berita', [BeritaController::class, 'apiIndex'])->name('berita.index');
     Route::get('/berita/{slug}', [BeritaController::class, 'apiShow'])->name('berita.show');
+
+    // ✅ TAMBAH: API Cuaca
+    Route::get('/weather', [WeatherController::class, 'current'])->name('weather');
 });
 
 // ============================================

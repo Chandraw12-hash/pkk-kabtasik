@@ -10,6 +10,11 @@ import { Head, Link } from "@inertiajs/react";
 import Navbar from "./Layouts/Navbar";
 import Footer from "./Layouts/Footer";
 
+// ============================================================
+// ✅ TAMBAH: Import Weather Widget
+// ============================================================
+import WeatherWidget from "./Components/WeatherWidget";
+
 import {
     Users,
     Heart,
@@ -185,7 +190,6 @@ const getImageFallback = (
 };
 
 const parseTanggal = (tanggal: string): Date => {
-    // Parse YYYY-MM-DD sebagai tanggal lokal agar tidak bergeser hari.
     const match = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(tanggal.trim());
     if (match) {
         const [, year, month, day] = match;
@@ -324,12 +328,7 @@ const useHeroCarousel = <T,>(
 };
 
 // ============================================================
-// CUSTOM HOOK - FOCUS TRAP (untuk aksesibilitas modal)
-// ------------------------------------------------------------
-// Menjaga fokus keyboard tetap berada di dalam modal selagi
-// modal terbuka (Tab / Shift+Tab tidak "bocor" ke elemen di
-// belakang overlay), dan mengembalikan fokus ke elemen pemicu
-// begitu modal ditutup.
+// CUSTOM HOOK - FOCUS TRAP
 // ============================================================
 
 const FOCUSABLE_SELECTOR =
@@ -666,7 +665,7 @@ export default function Welcome({
                     PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri
                 </title>
 
-                {/* ===== FAVICON — logo Tasik muncul di tab browser ===== */}
+                {/* ===== FAVICON ===== */}
                 <link
                     rel="icon"
                     type="image/png"
@@ -708,7 +707,7 @@ export default function Welcome({
                     href="https://pkk.tasikmalayakab.go.id"
                 />
 
-                {/* ===== OG TAGS (WhatsApp, Facebook, LinkedIn) ===== */}
+                {/* ===== OG TAGS ===== */}
                 <meta
                     property="og:title"
                     content="PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri"
@@ -1012,152 +1011,125 @@ export default function Welcome({
             </section>
 
             {/* ========================================================
-                SAMBUTAN KETUA — FOTO FULL SAMPAI KAKI
-            ======================================================== */}
+    SAMBUTAN KETUA — FOTO FULL SAMPAI KAKI
+======================================================== */}
 
-            <section
-                ref={sambutanAnim.ref}
-                id="tentang"
-                className={`py-12 sm:py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up scroll-mt-20 ${
-                    sambutanAnim.isVisible ? "show" : ""
-                }`}
-                aria-labelledby="sambutan-title"
-            >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
-                        <div className="w-full lg:w-5/12">
-                            <div className="rounded-3xl overflow-hidden shadow-xl bg-slate-50 border border-slate-200">
-                                <img
-                                    src="/assets/images/ketuapkk.jpg"
-                                    alt="Ketua TP PKK Kabupaten Tasikmalaya"
-                                    loading="lazy"
-                                    className="w-full h-auto max-h-[600px] object-contain object-center"
-                                    onError={(event) => {
-                                        const target =
-                                            event.currentTarget;
+<section
+    ref={sambutanAnim.ref}
+    id="tentang"
+    className={`py-12 sm:py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up scroll-mt-20 ${
+        sambutanAnim.isVisible ? "show" : ""
+    }`}
+    aria-labelledby="sambutan-title"
+>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
+            <div className="w-full lg:w-5/12">
+                {/* Foto tanpa kotak */}
+                <div className="w-full flex items-center justify-center">
+                    <img
+                        src="/assets/images/ketuapkk.jpg"
+                        alt="Ketua TP PKK Kabupaten Tasikmalaya"
+                        loading="lazy"
+                        className="w-full h-auto max-h-[600px] object-contain object-center"
+                        onError={(event) => {
+                            const target =
+                                event.currentTarget;
 
-                                        if (
-                                            target.src !==
-                                            getImageFallback("ketua")
-                                        ) {
-                                            target.src =
-                                                getImageFallback(
-                                                    "ketua"
-                                                );
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            <div className="mt-4 text-center lg:text-left">
-                                <h3 className="text-lg font-semibold text-slate-900">
-                                    Hj. Retno Widyastuti, S.E
-                                </h3>
-
-                                <p className="text-sm text-slate-500 mt-0.5">
-                                    Ketua TP PKK Kabupaten Tasikmalaya
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="w-full lg:w-7/12">
-                            <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
-                                Sambutan
-                            </p>
-
-                            <h2
-                                id="sambutan-title"
-                                className="text-2xl md:text-3xl font-semibold text-slate-900 mb-6"
-                            >
-                                Sambutan Ketua TP PKK Kabupaten
-                                Tasikmalaya
-                            </h2>
-
-                            <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
-                                <p className="italic text-slate-700">
-                                    Assalaamu'alaikum wa rahmatullah
-                                    wa barakaatuh,
-                                    <br />
-                                    Sampurasun,
-                                </p>
-
-                                <p>
-                                    Puji dan Syukur Kami Panjatkan
-                                    Kepada Allah SWT karena atas rahmat
-                                    dan karunia-Nya, kita dapat hadir
-                                    dan meluncurkan website resmi Tim
-                                    Penggerak PKK Kabupaten
-                                    Tasikmalaya.
-                                </p>
-
-                                <p>
-                                    Kami menyambut baik kehadiran
-                                    website ini sebagai sarana
-                                    komunikasi, informasi, dan
-                                    transparansi kegiatan PKK kepada
-                                    masyarakat luas. Melalui media
-                                    digital ini, kami berharap informasi
-                                    program kerja PKK dapat
-                                    diakses dengan mudah serta
-                                    memberikan manfaat nyata bagi
-                                    pembinaan kesejahteraan keluarga
-                                    di wilayah Kabupaten Tasikmalaya.
-                                </p>
-
-                                <p>
-                                    Gerakan PKK berfokus pada
-                                    pemberdayaan keluarga demi
-                                    mewujudkan masyarakat yang maju,
-                                    mandiri, dan sejahtera. Oleh karena
-                                    itu, dukungan serta kerja sama dari
-                                    seluruh pengurus, kader, dan
-                                    instansi pemerintah sangat kami
-                                    harapkan untuk menyukseskan setiap
-                                    program yang kami laksanakan.
-                                </p>
-
-                                <p>
-                                    Tujuan utama pembuatan website PKK
-                                    Kabupaten adalah untuk
-                                    mengoptimalkan pengelolaan data,
-                                    mempercepat pelaporan program
-                                    PKK, serta meningkatkan
-                                    transparansi dan penyebaran
-                                    informasi kegiatan pemberdayaan
-                                    keluarga kepada masyarakat
-                                    khususnya Kabupaten Tasikmalaya
-                                    secara digital.
-                                </p>
-
-                                <p>
-                                    Akhir kata, semoga website ini
-                                    dapat bermanfaat dan berguna bagi
-                                    banyak pihak terutama untuk
-                                    meningkatkan kualitas informasi
-                                    publik di Kabupaten Tasikmalaya.
-                                    Terima kasih.
-                                </p>
-
-                                <p className="italic text-slate-700 pt-2">
-                                    Wassalamu'alaikum warahmatullahi wa
-                                    barakatuh.
-                                </p>
-                            </div>
-
-                            <div className="mt-8 pt-6 border-t border-slate-200">
-                                <p className="font-semibold text-slate-900">
-                                    Hj. Retno Widyastuti, S.E
-                                </p>
-
-                                <p className="text-sm text-slate-500 mt-0.5">
-                                    Ketua Tim Penggerak PKK Kabupaten
-                                    Tasikmalaya
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                            if (
+                                target.src !==
+                                getImageFallback("ketua")
+                            ) {
+                                target.src =
+                                    getImageFallback(
+                                        "ketua"
+                                    );
+                            }
+                        }}
+                    />
                 </div>
-            </section>
+
+                <div className="mt-4 text-center lg:text-left">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                        Hj. Retno Widyastuti, S.E
+                    </h3>
+
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Ketua TP PKK Kabupaten Tasikmalaya
+                    </p>
+                </div>
+            </div>
+
+            <div className="w-full lg:w-7/12">
+                <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
+                    Sambutan
+                </p>
+
+                <h2
+                    id="sambutan-title"
+                    className="text-2xl md:text-3xl font-semibold text-slate-900 mb-6"
+                >
+                    Sambutan Ketua TP PKK Kabupaten
+                    Tasikmalaya
+                </h2>
+
+                <div className="space-y-4 text-slate-600 text-[15px] leading-relaxed">
+                    <p className="italic text-slate-700">
+                        Assalaamu'alaikum wa rahmatullah wa
+                        barakaatuh,
+                        <br />
+                        Sampurasun,
+                    </p>
+
+                    <p>
+                        Puji syukur kepada Allah SWT, website
+                        resmi Tim Penggerak PKK Kabupaten
+                        Tasikmalaya ini hadir sebagai sarana
+                        informasi, komunikasi, dan transparansi
+                        kegiatan PKK kepada masyarakat.
+                    </p>
+
+                    <p>
+                        Melalui media digital ini, kami berharap
+                        program-program PKK dapat diakses dengan
+                        mudah serta memberikan manfaat nyata bagi
+                        pembinaan kesejahteraan keluarga di
+                        Kabupaten Tasikmalaya.
+                    </p>
+
+                    <p>
+                        Dukungan dan kerja sama dari seluruh
+                        pengurus, kader, dan instansi pemerintah
+                        sangat kami harapkan untuk menyukseskan
+                        setiap program PKK.
+                    </p>
+
+                    <p>
+                        Semoga website ini bermanfaat dan
+                        meningkatkan kualitas informasi publik
+                        di Kabupaten Tasikmalaya. Terima kasih.
+                    </p>
+
+                    <p className="italic text-slate-700 pt-2">
+                        Wassalamu'alaikum warahmatullahi wa
+                        barakatuh.
+                    </p>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                    <p className="font-semibold text-slate-900">
+                        Hj. Retno Widyastuti, S.E
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Ketua Tim Penggerak PKK Kabupaten
+                        Tasikmalaya
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
             {/* ========================================================
                 DATA POKJA
@@ -1303,55 +1275,91 @@ export default function Welcome({
                                         : item.tanggal || "-";
 
                                 return (
-                                    <article
-                                        key={item.id}
-                                        className="group bg-white rounded-xl overflow-hidden border border-slate-200 hover:shadow-md transition-shadow duration-200 flex flex-col"
-                                    >
-                                        <Link
-                                            href={href}
-                                            className="relative block aspect-[16/10] bg-slate-100 overflow-hidden"
-                                            aria-label={`Baca berita ${item.judul}`}
-                                        >
-                                            <img
-                                                src={imageSrc}
-                                                alt={item.judul}
-                                                loading="lazy"
-                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                                                onError={(event) => {
-                                                    const target =
-                                                        event.currentTarget;
+                                   <article
+    key={item.id}
+    className="group bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-teal-200 hover:shadow-lg transition-all duration-300 flex flex-col"
+>
+    {/* GAMBAR */}
+    <Link
+        href={href}
+        className="relative block aspect-[16/10] bg-slate-100 overflow-hidden"
+        aria-label={`Baca berita ${item.judul}`}
+    >
+        <img
+            src={imageSrc}
+            alt={item.judul}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(event) => {
+                const target = event.currentTarget;
 
-                                                    if (
-                                                        target.src !==
-                                                        window.location.origin +
-                                                            getImageFallback(
-                                                                "berita"
-                                                            )
-                                                    ) {
-                                                        target.src =
-                                                            getImageFallback(
-                                                                "berita"
-                                                            );
-                                                    }
-                                                }}
-                                            />
-                                        </Link>
+                if (
+                    target.src !==
+                    window.location.origin +
+                        getImageFallback("berita")
+                ) {
+                    target.src =
+                        getImageFallback("berita");
+                }
+            }}
+        />
 
-                                        <div className="p-5 flex flex-col flex-grow text-center">
-                                            <h3 className="text-[15px] sm:text-base font-semibold text-slate-900 leading-snug mb-2 line-clamp-2">
-                                                <Link
-                                                    href={href}
-                                                    className="hover:text-teal-700 transition-colors"
-                                                >
-                                                    {item.judul}
-                                                </Link>
-                                            </h3>
+        {/* Badge kategori overlay di gambar */}
+        <span className="absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-md bg-white/95 backdrop-blur-sm text-teal-700 text-[10px] font-bold tracking-wider uppercase shadow-sm">
+            Berita
+        </span>
+    </Link>
 
-                                            <p className="text-xs text-slate-400 mt-auto">
-                                                {tanggal}
-                                            </p>
-                                        </div>
-                                    </article>
+    {/* KONTEN */}
+    <div className="p-5 flex flex-col flex-grow">
+        {/* Judul — max 2 baris */}
+        <h3
+            className="text-[15px] sm:text-base font-bold text-slate-900 leading-snug mb-2 group-hover:text-teal-700 transition-colors"
+            style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+            }}
+        >
+            <Link href={href}>
+                {item.judul}
+            </Link>
+        </h3>
+
+        {/* Deskripsi — max 3 baris */}
+        <p
+            className="text-[13px] text-slate-500 leading-relaxed mb-4 flex-grow"
+            style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+            }}
+        >
+            {item.deskripsi_singkat ||
+                item.deskripsi ||
+                "Baca selengkapnya untuk mengetahui informasi terbaru dari TP PKK Kabupaten Tasikmalaya."}
+        </p>
+
+        {/* FOOTER: tanggal + link */}
+        <div className="flex items-center justify-between pt-3 mt-auto border-t border-slate-100">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <CalendarDays size={12} strokeWidth={2} />
+                <span className="font-medium">{tanggal}</span>
+            </div>
+
+            <Link
+                href={href}
+                className="inline-flex items-center gap-0.5 text-[11px] font-bold text-teal-700 hover:text-teal-800 transition-colors"
+            >
+                Baca
+                <ChevronRight size={12} strokeWidth={2.5} />
+            </Link>
+        </div>
+    </div>
+</article>
                                 );
                             })}
                         </div>
@@ -2079,6 +2087,11 @@ export default function Welcome({
                     </div>
                 </div>
             )}
+
+            {/* ========================================================
+                ✅ TAMBAH: WEATHER WIDGET (Tab Kanan Tengah)
+            ======================================================== */}
+            <WeatherWidget />
 
             <Footer />
         </div>

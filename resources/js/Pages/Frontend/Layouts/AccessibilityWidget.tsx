@@ -1,4 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import {
     Accessibility,
     X,
@@ -34,29 +39,47 @@ const defaultSettings: Settings = {
 };
 
 // ============================================================
-// MAIN COMPONENT - FOKUS AKSESIBILITAS
+// MAIN COMPONENT — AKSESIBILITAS
 // ============================================================
 export default function AccessibilityWidget() {
     const [open, setOpen] = useState(false);
-    const [s, setS] = useState<Settings>(defaultSettings);
+    const [settings, setSettings] = useState<Settings>(defaultSettings);
     const [isSpeaking, setIsSpeaking] = useState(false);
 
-    // ─── LOAD PREFERENSI ──────────────────────────────────────────────────────
+    const dialogRef = useRef<HTMLDivElement | null>(null);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+    // ─────────────────────────────────────────────────────────
+    // LOAD PREFERENSI TERSIMPAN
+    // ─────────────────────────────────────────────────────────
     useEffect(() => {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                setS({ ...defaultSettings, ...parsed });
-            }
+
+            if (!raw) return;
+
+            const parsed = JSON.parse(raw) as Partial<Settings>;
+
+            setSettings({
+                ...defaultSettings,
+                ...parsed,
+                fontScale: Math.min(
+                    2,
+                    Math.max(0, Number(parsed.fontScale) || 0)
+                ),
+            });
         } catch {
-            // ignore
+            // Abaikan data localStorage yang tidak valid.
         }
     }, []);
 
-    // ─── TERAPKAN AKSESIBILITAS ──────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
+    // TERAPKAN PREFERENSI KE HTML ROOT
+    // ─────────────────────────────────────────────────────────
     useEffect(() => {
         const root = document.documentElement;
+
         root.classList.remove(
             "a11y-text-lg",
             "a11y-text-xl",
@@ -66,252 +89,705 @@ export default function AccessibilityWidget() {
             "a11y-space",
             "a11y-font"
         );
-        if (s.fontScale === 1) root.classList.add("a11y-text-lg");
-        if (s.fontScale === 2) root.classList.add("a11y-text-xl");
-        if (s.highContrast) root.classList.add("a11y-contrast");
-        if (s.grayscale) root.classList.add("a11y-gray");
-        if (s.underlineLinks) root.classList.add("a11y-underline");
-        if (s.comfortableSpace) root.classList.add("a11y-space");
-        if (s.easyFont) root.classList.add("a11y-font");
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-    }, [s]);
 
-    // ─── TEXT-TO-SPEECH ──────────────────────────────────────────────────────
+        if (settings.fontScale === 1) {
+            root.classList.add("a11y-text-lg");
+        }
+
+        if (settings.fontScale === 2) {
+            root.classList.add("a11y-text-xl");
+        }
+
+        if (settings.highContrast) {
+            root.classList.add("a11y-contrast");
+        }
+
+        if (settings.grayscale) {
+            root.classList.add("a11y-gray");
+        }
+
+        if (settings.underlineLinks) {
+            root.classList.add("a11y-underline");
+        }
+
+        if (settings.comfortableSpace) {
+            root.classList.add("a11y-space");
+        }
+
+        if (settings.easyFont) {
+            root.classList.add("a11y-font");
+        }
+
+        try {
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(settings)
+            );
+        } catch {
+            // Abaikan jika storage tidak tersedia.
+        }
+    }, [settings]);
+
+    // ─────────────────────────────────────────────────────────
+    // BACA HALAMAN
+    // ─────────────────────────────────────────────────────────
     const speakPage = useCallback(() => {
         if (!("speechSynthesis" in window)) {
-            alert("Browser tidak mendukung pembacaan teks.");
             return;
         }
 
         window.speechSynthesis.cancel();
 
-        const text = document.body?.innerText?.slice(0, 3000) || "";
+        const pageText =
+            document.body?.innerText?.replace(/\s+/g, " ").trim() || "";
+
+        const text = pageText.slice(0, 3000);
+
         if (!text) {
-            alert("Tidak ada teks untuk dibaca.");
             return;
         }
 
         const utterance = new SpeechSynthesisUtterance(text);
+
         utterance.lang = "id-ID";
-        utterance.rate = 1;
+        utterance.rate = 0.95;
         utterance.pitch = 1;
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
+
+        utterance.onstart = () => {
+            setIsSpeaking(true);
+        };
+
+        utterance.onend = () => {
+            setIsSpeaking(false);
+        };
+
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+        };
+
+        setIsSpeaking(true);
         window.speechSynthesis.speak(utterance);
     }, []);
 
+    // ─────────────────────────────────────────────────────────
+    // HENTIKAN PEMBACAAN
+    // ─────────────────────────────────────────────────────────
     const stopSpeak = useCallback(() => {
         if ("speechSynthesis" in window) {
             window.speechSynthesis.cancel();
-            setIsSpeaking(false);
         }
+
+        setIsSpeaking(false);
     }, []);
 
-    // ─── HANDLER UPDATE ──────────────────────────────────────────────────────
-    const update = useCallback((patch: Partial<Settings>) => {
-        setS((prev) => ({ ...prev, ...patch }));
+    // Pastikan suara berhenti ketika komponen dilepas.
+    useEffect(() => {
+        return () => {
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
     }, []);
 
+    // ─────────────────────────────────────────────────────────
+    // UPDATE SETTING
+    // ─────────────────────────────────────────────────────────
+    const update = useCallback(
+        (patch: Partial<Settings>) => {
+            setSettings((previous) => ({
+                ...previous,
+                ...patch,
+            }));
+        },
+        []
+    );
+
+    // ─────────────────────────────────────────────────────────
+    // RESET
+    // ─────────────────────────────────────────────────────────
     const reset = useCallback(() => {
-        setS({ ...defaultSettings });
-        localStorage.removeItem(STORAGE_KEY);
-        window.location.reload();
+        setSettings(defaultSettings);
+
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch {
+            // Abaikan jika storage tidak tersedia.
+        }
+
+        setIsSpeaking(false);
+        stopSpeak();
+    }, [stopSpeak]);
+
+    // ─────────────────────────────────────────────────────────
+    // BUKA PANEL
+    // ─────────────────────────────────────────────────────────
+    const openPanel = useCallback(() => {
+        setOpen(true);
     }, []);
 
-    const actionBtn = useCallback((active?: boolean) => {
-        return `flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-[13px] font-medium border transition-colors text-left ${
-            active
-                ? "border-teal-600 bg-teal-50 text-teal-800 ring-1 ring-teal-200"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
-        }`;
-    }, []);
+    // ─────────────────────────────────────────────────────────
+    // TUTUP PANEL
+    // ─────────────────────────────────────────────────────────
+    const closePanel = useCallback(() => {
+        setOpen(false);
+        stopSpeak();
 
-    // ─── RENDER ──────────────────────────────────────────────────────────────
+        requestAnimationFrame(() => {
+            triggerRef.current?.focus();
+        });
+    }, [stopSpeak]);
+
+    // ─────────────────────────────────────────────────────────
+    // ESC + FOCUS TRAP
+    // ─────────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!open) return;
+
+        const previouslyFocused =
+            document.activeElement as HTMLElement | null;
+
+        requestAnimationFrame(() => {
+            closeButtonRef.current?.focus();
+        });
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!dialogRef.current) return;
+
+            if (event.key === "Escape") {
+                event.preventDefault();
+                closePanel();
+                return;
+            }
+
+            if (event.key !== "Tab") return;
+
+            const focusableElements = Array.from(
+                dialogRef.current.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+            ).filter(
+                (element) => element.offsetParent !== null
+            );
+
+            if (focusableElements.length === 0) {
+                event.preventDefault();
+                dialogRef.current.focus();
+                return;
+            }
+
+            const first = focusableElements[0];
+            const last =
+                focusableElements[focusableElements.length - 1];
+
+            if (
+                event.shiftKey &&
+                document.activeElement === first
+            ) {
+                event.preventDefault();
+                last.focus();
+            } else if (
+                !event.shiftKey &&
+                document.activeElement === last
+            ) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
+
+            if (document.body.contains(previouslyFocused)) {
+                previouslyFocused?.focus?.();
+            }
+        };
+    }, [closePanel, open]);
+
+    // ─────────────────────────────────────────────────────────
+    // STYLE TOMBOL AKSI
+    // ─────────────────────────────────────────────────────────
+    const actionButtonClass = useCallback(
+        (active = false, disabled = false) =>
+            [
+                "group flex items-center gap-3 w-full min-h-[52px]",
+                "px-3.5 py-3 rounded-xl text-left",
+                "border transition-colors duration-150",
+                "focus:outline-none focus-visible:ring-2",
+                "focus-visible:ring-teal-500 focus-visible:ring-offset-1",
+                active
+                    ? "border-teal-200 bg-teal-50 text-teal-800"
+                    : "border-slate-200 bg-white text-slate-700",
+                disabled
+                    ? "opacity-45 cursor-not-allowed"
+                    : "hover:border-teal-200 hover:bg-slate-50",
+            ].join(" "),
+        []
+    );
+
+    // ─────────────────────────────────────────────────────────
+    // RENDER
+    // ─────────────────────────────────────────────────────────
     return (
         <>
-            {/* Tombol Floating */}
+            {/* ====================================================
+                FLOATING ACCESSIBILITY BUTTON
+                Saat halaman dibuka, hanya tombol kecil ini yang
+                tampil. Panel tidak dibuka otomatis.
+            ==================================================== */}
             <button
+                ref={triggerRef}
                 type="button"
-                onClick={() => setOpen(true)}
-                className="fixed bottom-5 right-5 z-[60] w-12 h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2"
+                onClick={openPanel}
                 aria-label="Buka pengaturan aksesibilitas"
+                aria-haspopup="dialog"
+                aria-expanded={open}
+                className="
+                    fixed right-5 bottom-5 z-[60]
+                    flex h-12 w-12 items-center justify-center
+                    rounded-full
+                    bg-teal-700 text-white
+                    shadow-[0_8px_24px_rgba(15,118,110,0.22)]
+                    transition-colors duration-150
+                    hover:bg-teal-800
+                    focus:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-teal-500
+                    focus-visible:ring-offset-2
+                "
             >
-                <Accessibility size={22} strokeWidth={1.75} />
+                <Accessibility
+                    size={21}
+                    strokeWidth={1.9}
+                    aria-hidden="true"
+                />
             </button>
 
-            {/* Modal Widget */}
+            {/* ====================================================
+                ACCESSIBILITY DIALOG
+                Tidak tampil otomatis saat website dibuka.
+                X / Escape / klik overlay = kembali ke halaman.
+            ==================================================== */}
             {open && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-                    <button
-                        type="button"
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-                        aria-label="Tutup panel"
-                        onClick={() => setOpen(false)}
-                    />
-
+                <div
+                    className="
+                        fixed inset-0 z-[70]
+                        flex items-center justify-center
+                        bg-slate-950/45
+                        p-4
+                        backdrop-blur-[2px]
+                    "
+                    role="presentation"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            closePanel();
+                        }
+                    }}
+                >
                     <div
-                        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200"
+                        ref={dialogRef}
+                        tabIndex={-1}
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="a11y-title"
+                        aria-describedby="a11y-description"
+                        className="
+                            relative w-full max-w-lg
+                            overflow-hidden
+                            rounded-2xl
+                            border border-slate-200
+                            bg-white
+                            shadow-[0_24px_70px_rgba(15,23,42,0.22)]
+                        "
+                        onMouseDown={(event) =>
+                            event.stopPropagation()
+                        }
                     >
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-5">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-widest uppercase text-teal-100/80">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
-                                        Fitur Aksesibilitas
-                                    </span>
-                                    <h2 id="a11y-title" className="text-lg font-bold text-white mt-1">
+                        {/* ====================================================
+                            HEADER
+                        ==================================================== */}
+                        <div className="border-b border-teal-700/20 bg-teal-700 px-5 py-5 sm:px-6">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                    <div className="mb-1.5 flex items-center gap-2">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-teal-200" />
+
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-teal-100">
+                                            Fitur Aksesibilitas
+                                        </p>
+                                    </div>
+
+                                    <h2
+                                        id="a11y-title"
+                                        className="text-lg font-semibold tracking-tight text-white sm:text-xl"
+                                    >
                                         Pengaturan Aksesibilitas
                                     </h2>
+
+                                    <p
+                                        id="a11y-description"
+                                        className="mt-1.5 max-w-md text-sm leading-relaxed text-teal-50/85"
+                                    >
+                                        Sesuaikan tampilan website
+                                        agar lebih nyaman digunakan.
+                                    </p>
                                 </div>
+
                                 <button
+                                    ref={closeButtonRef}
                                     type="button"
-                                    onClick={() => setOpen(false)}
-                                    className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-                                    aria-label="Tutup"
+                                    onClick={closePanel}
+                                    aria-label="Tutup pengaturan aksesibilitas"
+                                    className="
+                                        flex h-9 w-9 shrink-0
+                                        items-center justify-center
+                                        rounded-lg
+                                        bg-white/10
+                                        text-white
+                                        transition-colors
+                                        hover:bg-white/15
+                                        focus:outline-none
+                                        focus-visible:ring-2
+                                        focus-visible:ring-white/70
+                                    "
                                 >
-                                    <X size={18} />
+                                    <X
+                                        size={18}
+                                        strokeWidth={1.9}
+                                        aria-hidden="true"
+                                    />
                                 </button>
                             </div>
-                            <p className="text-sm text-teal-100/70 mt-1.5">
-                                Sesuaikan tampilan website sesuai kebutuhan Anda
-                            </p>
                         </div>
 
-                        {/* Content */}
-                        <div className="p-5">
-                            <div className="grid grid-cols-2 gap-2.5">
-                                {/* Baca Halaman */}
+                        {/* ====================================================
+                            CONTENT
+                        ==================================================== */}
+                        <div className="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+                            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                {/* BACA HALAMAN */}
                                 <button
                                     type="button"
-                                    className={actionBtn(isSpeaking)}
+                                    className={actionButtonClass(
+                                        isSpeaking
+                                    )}
                                     onClick={speakPage}
                                     disabled={isSpeaking}
+                                    aria-pressed={isSpeaking}
                                 >
-                                    <Volume2 size={16} className="text-teal-600 shrink-0" />
-                                    {isSpeaking ? "Membaca..." : "Baca halaman"}
+                                    <span
+                                        className={`
+                                            flex h-9 w-9 shrink-0
+                                            items-center justify-center
+                                            rounded-lg
+                                            ${
+                                                isSpeaking
+                                                    ? "bg-teal-100 text-teal-700"
+                                                    : "bg-slate-50 text-teal-700"
+                                            }
+                                        `}
+                                    >
+                                        <Volume2
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-[13px] font-semibold text-slate-800">
+                                            {isSpeaking
+                                                ? "Sedang membaca"
+                                                : "Baca halaman"}
+                                        </span>
+
+                                        <span className="mt-0.5 block text-[10px] text-slate-400">
+                                            Baca teks halaman
+                                        </span>
+                                    </span>
                                 </button>
 
-                                {/* Stop Suara */}
+                                {/* STOP SUARA */}
                                 <button
                                     type="button"
-                                    className={actionBtn()}
+                                    className={actionButtonClass(
+                                        false,
+                                        !isSpeaking
+                                    )}
                                     onClick={stopSpeak}
                                     disabled={!isSpeaking}
                                 >
-                                    <VolumeX size={16} className="text-slate-500 shrink-0" />
-                                    Stop suara
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                        <VolumeX
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-[13px] font-semibold text-slate-800">
+                                            Stop suara
+                                        </span>
+
+                                        <span className="mt-0.5 block text-[10px] text-slate-400">
+                                            Hentikan pembacaan
+                                        </span>
+                                    </span>
                                 </button>
 
-                                {/* Perbesar Teks */}
+                                {/* PERBESAR TEKS */}
                                 <button
                                     type="button"
-                                    className={actionBtn(s.fontScale > 0)}
-                                    onClick={() => update({ fontScale: Math.min(2, s.fontScale + 1) })}
+                                    className={actionButtonClass(
+                                        settings.fontScale > 0
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            fontScale: Math.min(
+                                                2,
+                                                settings.fontScale + 1
+                                            ),
+                                        })
+                                    }
+                                    aria-label="Perbesar ukuran teks"
                                 >
-                                    <Plus size={16} className="text-teal-600 shrink-0" />
-                                    Perbesar teks
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-teal-700">
+                                        <Plus
+                                            size={18}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Perbesar teks
+                                    </span>
                                 </button>
 
-                                {/* Perkecil Teks */}
+                                {/* PERKECIL TEKS */}
                                 <button
                                     type="button"
-                                    className={actionBtn()}
-                                    onClick={() => update({ fontScale: Math.max(0, s.fontScale - 1) })}
-                                    disabled={s.fontScale === 0}
+                                    className={actionButtonClass(
+                                        false,
+                                        settings.fontScale === 0
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            fontScale: Math.max(
+                                                0,
+                                                settings.fontScale - 1
+                                            ),
+                                        })
+                                    }
+                                    disabled={settings.fontScale === 0}
+                                    aria-label="Perkecil ukuran teks"
                                 >
-                                    <Minus size={16} className="text-slate-500 shrink-0" />
-                                    Perkecil teks
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                        <Minus
+                                            size={18}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Perkecil teks
+                                    </span>
                                 </button>
 
-                                {/* Kontras Tinggi */}
+                                {/* KONTRAS TINGGI */}
                                 <button
                                     type="button"
-                                    className={actionBtn(s.highContrast)}
-                                    onClick={() => update({ highContrast: !s.highContrast })}
+                                    className={actionButtonClass(
+                                        settings.highContrast
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            highContrast:
+                                                !settings.highContrast,
+                                        })
+                                    }
+                                    aria-pressed={
+                                        settings.highContrast
+                                    }
                                 >
-                                    <Contrast size={16} className="text-teal-600 shrink-0" />
-                                    Kontras tinggi
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-teal-700">
+                                        <Contrast
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Kontras tinggi
+                                    </span>
                                 </button>
 
-                                {/* Abu-abu */}
+                                {/* ABU-ABU */}
                                 <button
                                     type="button"
-                                    className={actionBtn(s.grayscale)}
-                                    onClick={() => update({ grayscale: !s.grayscale })}
+                                    className={actionButtonClass(
+                                        settings.grayscale
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            grayscale:
+                                                !settings.grayscale,
+                                        })
+                                    }
+                                    aria-pressed={
+                                        settings.grayscale
+                                    }
                                 >
-                                    <Circle size={16} className="text-slate-400 shrink-0" />
-                                    Abu-abu
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                        <Circle
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Abu-abu
+                                    </span>
                                 </button>
 
-                                {/* Garis Link */}
+                                {/* GARIS LINK */}
                                 <button
                                     type="button"
-                                    className={actionBtn(s.underlineLinks)}
-                                    onClick={() => update({ underlineLinks: !s.underlineLinks })}
+                                    className={actionButtonClass(
+                                        settings.underlineLinks
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            underlineLinks:
+                                                !settings.underlineLinks,
+                                        })
+                                    }
+                                    aria-pressed={
+                                        settings.underlineLinks
+                                    }
                                 >
-                                    <Underline size={16} className="text-teal-600 shrink-0" />
-                                    Garis link
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-teal-700">
+                                        <Underline
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Garis link
+                                    </span>
                                 </button>
 
-                                {/* Spasi Nyaman */}
+                                {/* SPASI NYAMAN */}
                                 <button
                                     type="button"
-                                    className={actionBtn(s.comfortableSpace)}
-                                    onClick={() => update({ comfortableSpace: !s.comfortableSpace })}
+                                    className={actionButtonClass(
+                                        settings.comfortableSpace
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            comfortableSpace:
+                                                !settings.comfortableSpace,
+                                        })
+                                    }
+                                    aria-pressed={
+                                        settings.comfortableSpace
+                                    }
                                 >
-                                    <Type size={16} className="text-teal-600 shrink-0" />
-                                    Spasi nyaman
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-teal-700">
+                                        <Type
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Spasi nyaman
+                                    </span>
                                 </button>
 
-                                {/* Font Mudah Baca */}
+                                {/* FONT MUDAH BACA */}
                                 <button
                                     type="button"
-                                    className={actionBtn(s.easyFont)}
-                                    onClick={() => update({ easyFont: !s.easyFont })}
+                                    className={actionButtonClass(
+                                        settings.easyFont
+                                    )}
+                                    onClick={() =>
+                                        update({
+                                            easyFont:
+                                                !settings.easyFont,
+                                        })
+                                    }
+                                    aria-pressed={
+                                        settings.easyFont
+                                    }
                                 >
-                                    <Type size={16} className="text-teal-600 shrink-0" />
-                                    Font mudah baca
-                                </button>
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-teal-700">
+                                        <Type
+                                            size={17}
+                                            strokeWidth={1.9}
+                                            aria-hidden="true"
+                                        />
+                                    </span>
 
-                                {/* Reset */}
-                                <button
-                                    type="button"
-                                    className={actionBtn()}
-                                    onClick={reset}
-                                >
-                                    <RotateCcw size={16} className="text-slate-500 shrink-0" />
-                                    Reset semua
+                                    <span className="text-[13px] font-semibold text-slate-800">
+                                        Font mudah baca
+                                    </span>
                                 </button>
                             </div>
 
-                            <p className="mt-4 text-[11px] text-slate-400 leading-relaxed text-center">
-                                Preferensi disimpan di perangkat Anda. <br />
-                                Tekan Reset untuk mengembalikan ke default.
-                            </p>
+                            {/* RESET */}
+                            <div className="mt-5 border-t border-slate-100 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={reset}
+                                    className="
+                                        flex w-full items-center
+                                        justify-center gap-2
+                                        rounded-lg
+                                        border border-slate-200
+                                        bg-white
+                                        px-4 py-2.5
+                                        text-xs font-semibold
+                                        text-slate-600
+                                        transition-colors
+                                        hover:border-slate-300
+                                        hover:bg-slate-50
+                                        hover:text-slate-800
+                                        focus:outline-none
+                                        focus-visible:ring-2
+                                        focus-visible:ring-teal-500
+                                        focus-visible:ring-offset-1
+                                    "
+                                >
+                                    <RotateCcw
+                                        size={15}
+                                        strokeWidth={1.9}
+                                        aria-hidden="true"
+                                    />
+                                    Reset semua pengaturan
+                                </button>
+
+                                <p className="mt-3 text-center text-[10px] leading-relaxed text-slate-400">
+                                    Preferensi disimpan di perangkat Anda.
+                                    <br />
+                                    Pengaturan dapat dikembalikan kapan saja.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
-
-            <style>{`
-                .animate-in { animation-duration: 200ms; }
-                .fade-in { animation-name: fadeIn; }
-                .zoom-in { animation-name: zoomIn; }
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes zoomIn {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-            `}</style>
         </>
     );
 }
-
