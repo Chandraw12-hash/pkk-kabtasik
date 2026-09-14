@@ -10,24 +10,19 @@ use App\Models\User;
 class AuthController extends Controller
 {
     /**
-     * Login khusus untuk aplikasi mobile kader Dasa Wisma.
-     * Hanya role 'user' yang boleh lewat sini — admin & pkk tetap
-     * lewat login web biasa (LoginController), sesuai kesepakatan
-     * supaya dashboard web tidak "kebanjiran" akun kader lapangan.
+     * Login khusus untuk aplikasi mobile (kader & admin).
+     * Support login pakai USERNAME atau EMAIL.
      */
     public function login(Request $request)
     {
-        // FIX: username & email sama-sama opsional, tapi salah satu WAJIB ada.
-        // Sebelumnya 'username' => 'required' bikin validasi selalu gagal
-        // kalau Flutter cuma kirim 'email' — dan itu yang bikin redirect 302.
+        // Username & email sama-sama opsional, tapi salah satu WAJIB ada.
         $request->validate([
             'username' => 'required_without:email|string',
-            'email' => 'required_without:username|email',
+            'email'    => 'required_without:username|email',
             'password' => 'required|string',
         ]);
 
-        // FIX: bungkus dalam closure supaya orWhere tidak ikut match
-        // saat salah satu field (username/email) tidak dikirim/null.
+        // Cari user by username ATAU email
         $user = User::where(function ($query) use ($request) {
                 if ($request->filled('username')) {
                     $query->where('username', $request->username);
@@ -40,6 +35,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
+                'success' => false,
                 'message' => 'Username/Email atau password salah.',
             ], 401);
         }
@@ -47,14 +43,15 @@ class AuthController extends Controller
         // Cek status user
         if ($user->status !== 'active') {
             return response()->json([
+                'success' => false,
                 'message' => 'Akun Anda tidak aktif. Silakan hubungi admin.',
             ], 403);
         }
 
-        // 🔥 FIX: Tambahkan role 'dasawisma' ke daftar yang diperbolehkan
         // Cek role - boleh kader_dasawisma, pkk, admin, atau dasawisma
         if (!$user->hasAnyRole(['kader_dasawisma', 'pkk', 'admin', 'dasawisma'])) {
             return response()->json([
+                'success' => false,
                 'message' => 'Akun ini tidak memiliki akses ke aplikasi mobile.',
             ], 403);
         }
@@ -64,17 +61,31 @@ class AuthController extends Controller
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
+        // 🔥 Tentukan primary role (prioritas)
+        $primaryRole = 'dasawisma';
+        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'user'];
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        foreach ($priority as $role) {
+            if (in_array($role, $userRoles)) {
+                $primaryRole = $role;
+                break;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil.',
             'data' => [
                 'token' => $token,
                 'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
+                    'id'       => $user->id,
+                    'name'     => $user->name,
                     'username' => $user->username,
-                    'email' => $user->email,
-                    'roles' => $user->roles->pluck('name'),
+                    'email'    => $user->email,
+                    'status'   => $user->status,
+                    'roles'    => $user->roles->pluck('name'),
+                    'role'     => $primaryRole,   // ← TAMBAH INI
                 ],
             ],
         ]);
@@ -94,21 +105,34 @@ class AuthController extends Controller
     }
 
     /**
-     * Profil kader yang sedang login
+     * Profil user yang sedang login
      */
     public function me(Request $request)
     {
         $user = $request->user();
 
+        // Tentukan primary role
+        $primaryRole = 'dasawisma';
+        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'user'];
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        foreach ($priority as $role) {
+            if (in_array($role, $userRoles)) {
+                $primaryRole = $role;
+                break;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
+                'id'       => $user->id,
+                'name'     => $user->name,
                 'username' => $user->username,
-                'email' => $user->email,
-                'status' => $user->status,
-                'roles' => $user->roles->pluck('name'),
+                'email'    => $user->email,
+                'status'   => $user->status,
+                'roles'    => $user->roles->pluck('name'),
+                'role'     => $primaryRole,   // ← TAMBAH INI
             ],
         ]);
     }

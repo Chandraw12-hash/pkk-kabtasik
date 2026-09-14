@@ -41,6 +41,40 @@ class LaporanKegiatanController extends Controller
         ]);
     }
 
+    // ============================================================
+    // 🔥🔥🔥 ADMIN: INDEX SEMUA LAPORAN (PENDING, APPROVED, REJECTED)
+    // ============================================================
+    // Endpoint: GET /api/admin/laporan-kegiatan
+    // Dipakai di mobile admin untuk halaman "Verifikasi Laporan"
+    // ============================================================
+    public function adminIndex(Request $request)
+    {
+        $query = LaporanKegiatan::with('user')
+            ->orderBy('created_at', 'desc');
+
+        // Filter optional (bisa dipakai di frontend untuk filter)
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+        if ($request->pokja) {
+            $query->where('kategori_pokja', $request->pokja);
+        }
+        if ($request->kecamatan) {
+            $query->where('kecamatan', 'like', '%' . $request->kecamatan . '%');
+        }
+        if ($request->desa) {
+            $query->where('desa_kelurahan', 'like', '%' . $request->desa . '%');
+        }
+
+        // 🔥 Admin: return SEMUA data (no pagination)
+        $laporans = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $laporans,
+        ]);
+    }
+
     // ─── 🔥 PUBLIC: SHOW DETAIL ─────────────────────────────────────────────
     public function show($id)
     {
@@ -82,7 +116,6 @@ class LaporanKegiatanController extends Controller
     // ─── 🔥 KADER: SUBMIT LAPORAN ────────────────────────────────────────────
     public function store(Request $request)
     {
-        // 🔥 FIX: 'data_angka' datang sebagai STRING JSON
         if ($request->has('data_angka') && is_string($request->data_angka)) {
             $decoded = json_decode($request->data_angka, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
@@ -122,7 +155,6 @@ class LaporanKegiatanController extends Controller
 
         $dataAngka = $validated['data_angka'] ?? [];
 
-        // ─── 🔥🔥🔥 VALIDASI FIELD PER POKJA ──────────────────────────────────────
         $pokjaFields = [
             'I' => ['pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p', 'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p', 'kader_pokja1_l', 'kader_pokja1_p'],
             'II' => ['warga_buta_l', 'warga_buta_p', 'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c', 'kf', 'paud', 'koperasi_berbadan_hukum'],
@@ -136,7 +168,6 @@ class LaporanKegiatanController extends Controller
             $filteredData[$field] = $dataAngka[$field] ?? 0;
         }
 
-        // 🔥 CEK APAKAH ADA DATA > 0 (BUKAN DUMMY)
         $isValid = false;
         foreach ($filteredData as $value) {
             if ($value > 0) {
@@ -166,10 +197,6 @@ class LaporanKegiatanController extends Controller
             'nama_dasawisma' => $namaDasawisma,
             'status' => 'pending',
         ]);
-
-        // 🔥🔥🔥 HAPUS SINKRON DI SINI! (Double sinkron penyebab duplikat)
-        // Sinkronisasi HANYA dilakukan saat Admin Approve di Backend
-        // $this->sinkronkanKePokja($laporan);
 
         return response()->json([
             'message' => 'Laporan berhasil dikirim.',
@@ -224,8 +251,95 @@ class LaporanKegiatanController extends Controller
         ]);
     }
 
-    // ─── 🔥 SINKRONKAN KE POKJA (HANYA DIPAKAI UNTUK REPROCESS) ──────────────
-    // 🔥 METHOD INI TIDAK DIPAKE LAGI DI STORE, HANYA UNTUK KEPERLUAN MAINTENANCE
+    // ============================================================
+    // 🔥 APPROVE & REJECT LAPORAN (ADMIN)
+    // ============================================================
+
+    public function approve(Request $request, $id)
+    {
+        try {
+            $laporan = LaporanKegiatan::findOrFail($id);
+
+            if ($laporan->status === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Laporan ini sudah disetujui sebelumnya.',
+                ], 400);
+            }
+
+            $laporan->update([
+                'status' => 'approved',
+                'reviewed_at' => now(),
+                'reviewed_by' => $request->user()->id,
+            ]);
+
+            $this->sinkronkanKePokja($laporan);
+
+            Log::info('✅ Laporan #' . $id . ' di-APPROVE oleh user #' . $request->user()->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan berhasil disetujui dan data Pokja telah disinkronkan.',
+                'data' => $laporan->fresh(['user']),
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Laporan tidak ditemukan.',
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('❌ Error approve laporan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal approve: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function reject(Request $request, $id)
+    {
+        try {
+            $laporan = LaporanKegiatan::findOrFail($id);
+
+            if ($laporan->status === 'rejected') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Laporan ini sudah ditolak sebelumnya.',
+                ], 400);
+            }
+
+            $request->validate([
+                'alasan' => 'nullable|string|max:500',
+            ]);
+
+            $laporan->update([
+                'status' => 'rejected',
+                'reviewed_at' => now(),
+                'reviewed_by' => $request->user()->id,
+            ]);
+
+            Log::info('❌ Laporan #' . $id . ' di-REJECT oleh user #' . $request->user()->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan berhasil ditolak.',
+                'data' => $laporan->fresh(['user']),
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Laporan tidak ditemukan.',
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('❌ Error reject laporan: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal reject: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ─── 🔥 SINKRONKAN KE POKJA ──────────────────────────────────────────────
     private function sinkronkanKePokja(LaporanKegiatan $laporan)
     {
         $kecamatan = $laporan->kecamatan;

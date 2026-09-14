@@ -14,7 +14,6 @@ use App\Http\Controllers\Api\AgendaApiController;
 Route::post('/login', [AuthController::class, 'login']);
 
 // ─── LAPORAN KEGIATAN (PUBLIC) ────────────────────────────────────────────
-// 🔥 PINDAHKAN KE PUBLIC BIAR BISA DILIHAT SEMUA ORANG
 Route::get('/laporan-kegiatan', [LaporanKegiatanController::class, 'index']);
 Route::get('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'show']);
 
@@ -46,11 +45,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────────────────
-    // 🔥 STORE, UPDATE, DELETE HARUS AUTH
     Route::post('/laporan-kegiatan', [LaporanKegiatanController::class, 'store']);
+
+    // 🔥 FIX: TAMBAH APPROVE/REJECT DI ATAS ROUTE PUT GENERIC
+    Route::put('/laporan-kegiatan/{id}/approve', [LaporanKegiatanController::class, 'approve']);
+    Route::put('/laporan-kegiatan/{id}/reject', [LaporanKegiatanController::class, 'reject']);
+
+    // Route generic (harus SETELAH approve/reject, biar ga ketangkep)
     Route::put('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'update']);
     Route::delete('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'destroy']);
     Route::get('/laporan-kegiatan/saya', [LaporanKegiatanController::class, 'myLaporan']);
+
+    // 🔥🔥🔥 FIX: ADMIN — LAPORAN KEGIATAN (SEMUA STATUS)
+    // Dipakai di mobile admin untuk halaman "Verifikasi Laporan"
+    Route::get('/admin/laporan-kegiatan', [LaporanKegiatanController::class, 'adminIndex']);
 
     // ─── BERITA (MOBILE CRUD) ─────────────────────────────────────────────
     Route::post('/berita', [BeritaController::class, 'store']);
