@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\KecamatanScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +32,23 @@ class LaporanKegiatan extends Model
     ];
 
     protected $appends = ['foto_url', 'status_label', 'status_color', 'pokja_display'];
+
+    // ============================================================
+    // 🔥 TAMBAH: GLOBAL SCOPE — Auto Filter Kecamatan
+    // ============================================================
+    /**
+     * Global Scope untuk filter otomatis berdasarkan kecamatan user.
+     *
+     * Kalau user login role 'kecamatan' → auto filter WHERE kecamatan = user.kecamatan
+     * Kalau user login role 'admin' → ga ada filter (lihat semua)
+     *
+     * Kalau perlu bypass (misal export semua):
+     * LaporanKegiatan::withoutGlobalScope(KecamatanScope::class)->get();
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new KecamatanScope);
+    }
 
     // ─── ACCESSORS ──────────────────────────────────────────────────────────────
 

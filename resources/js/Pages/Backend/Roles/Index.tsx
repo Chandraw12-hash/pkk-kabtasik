@@ -8,7 +8,19 @@ import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import Table from "@/Components/Data/Table";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
-import { ShieldCheck, Edit2, Trash2, Search, RotateCcw, Shield, Users, Key, Lock, UserCog } from "lucide-react";
+import {
+    ShieldCheck,
+    Edit2,
+    Trash2,
+    Search,
+    RotateCcw,
+    Shield,
+    Users,
+    Key,
+    Lock,
+    UserCog,
+    MapPin, // ✅ TAMBAH
+} from "lucide-react";
 import { PaginatedData, Role } from "@/types/model";
 import axios from "axios";
 
@@ -26,6 +38,7 @@ const getRoleIcon = (roleName: string) => {
         operator: UserCog,
         'admin-pkk': ShieldCheck,
         kader_dasawisma: Users,
+        kecamatan: MapPin, // ✅ TAMBAH
     };
     return iconMap[roleName] || Shield;
 };
@@ -36,6 +49,7 @@ const getRoleColor = (roleName: string) => {
         operator: "bg-blue-50 text-blue-600 border-blue-100",
         'admin-pkk': "bg-purple-50 text-purple-600 border-purple-100",
         kader_dasawisma: "bg-teal-50 text-teal-600 border-teal-100",
+        kecamatan: "bg-cyan-50 text-cyan-600 border-cyan-100", // ✅ TAMBAH
     };
     return colorMap[roleName] || "bg-slate-50 text-slate-600 border-slate-100";
 };

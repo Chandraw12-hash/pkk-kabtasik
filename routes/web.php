@@ -30,13 +30,21 @@ use App\Http\Controllers\Backend\InfografisController;
 use App\Http\Controllers\Backend\SurveyController;
 use App\Http\Controllers\Frontend\SurveyController as FrontendSurveyController;
 
-// ============================================
-// STRUKTUR ORGANISASI
-// ============================================
+// Struktur Organisasi
 use App\Http\Controllers\Backend\StrukturOrganisasiController;
 
-// ✅ TAMBAH: Weather Controller
+// Weather
 use App\Http\Controllers\Api\WeatherController;
+
+// ============================================
+// KECAMATAN CONTROLLERS
+// ============================================
+use App\Http\Controllers\Backend\Kecamatan\DashboardKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\LaporanKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\RekapKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\ExportKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\PrintKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\BeritaKecamatanController; // ✅ TAMBAH INI
 
 // ============================================
 // FRONTEND ROUTES (Public)
@@ -98,7 +106,7 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/berita', [BeritaController::class, 'apiIndex'])->name('berita.index');
     Route::get('/berita/{slug}', [BeritaController::class, 'apiShow'])->name('berita.show');
 
-    // ✅ TAMBAH: API Cuaca
+    // API Cuaca
     Route::get('/weather', [WeatherController::class, 'current'])->name('weather');
 });
 
@@ -115,7 +123,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth');
 
 // ============================================
-// BACKEND ROUTES (Protected with Auth)
+// BACKEND ROUTES (Protected with Auth) — ADMIN KABUPATEN
 // ============================================
 Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function () {
 
@@ -275,4 +283,49 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
 
     Route::patch('struktur-organisasi/{id}/toggle-status', [StrukturOrganisasiController::class, 'toggleStatus'])
         ->name('struktur-organisasi.toggle-status');
+
+}); // ← TUTUP GRUP DASHBOARD
+
+// ============================================================
+// ROUTES: ADMIN SEKRETARIAT KECAMATAN (DI LUAR GRUP DASHBOARD)
+// ============================================================
+Route::prefix('kecamatan')
+    ->name('kecamatan.')
+    ->middleware(['auth', 'kecamatan'])
+    ->group(function () {
+
+    // ─── DASHBOARD ────────────────────────────────────────────────
+    Route::get('/', [DashboardKecamatanController::class, 'index'])
+        ->name('dashboard');
+
+    // ─── LAPORAN (VIEW ONLY) ──────────────────────────────────────
+    Route::get('laporan', [LaporanKecamatanController::class, 'index'])
+        ->name('laporan.index');
+    Route::get('laporan/{id}', [LaporanKecamatanController::class, 'show'])
+        ->name('laporan.show');
+
+    // ✅ ─── BERITA KECAMATAN (VIEW ONLY) ──────────────────────────
+    Route::get('berita', [BeritaKecamatanController::class, 'index'])
+        ->name('berita.index');
+    Route::get('berita/{id}', [BeritaKecamatanController::class, 'show'])
+        ->name('berita.show');
+
+    // ─── REKAP ────────────────────────────────────────────────────
+    Route::get('rekap/kecamatan', [RekapKecamatanController::class, 'kecamatan'])
+        ->name('rekap.kecamatan');
+    Route::get('rekap/desa', [RekapKecamatanController::class, 'desa'])
+        ->name('rekap.desa');
+    Route::get('rekap/dasa-wisma', [RekapKecamatanController::class, 'dasaWisma'])
+        ->name('rekap.dasa-wisma');
+
+    // ─── EXPORT ───────────────────────────────────────────────────
+    Route::get('export/excel', [ExportKecamatanController::class, 'excel'])
+        ->name('export.excel');
+    Route::get('export/pdf', [ExportKecamatanController::class, 'pdf'])
+        ->name('export.pdf');
+
+    // ─── PRINT ────────────────────────────────────────────────────
+    Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])
+        ->name('print');
+
 });

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             AdminUserSeeder::class, // <-- Pastikan ini ada di sini
             IndikatorSeeder::class,
+            RoleKecamatanSeeder::class,
         ]);
     }
 }

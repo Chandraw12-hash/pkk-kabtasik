@@ -25,6 +25,7 @@ class RoleController extends Controller
         $perPage = $request->per_page ?? 10;
 
         $roles = Role::with('permissions')
+            ->withCount('users')  // ✅ TAMBAH INI
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
@@ -96,4 +97,3 @@ class RoleController extends Controller
             ->with('success', 'Role berhasil dihapus');
     }
 }
-?>

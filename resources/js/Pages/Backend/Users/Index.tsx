@@ -15,11 +15,12 @@ import {
     RotateCcw,
     UserPlus,
     Shield,
-    User as UserIcon,  // ← rename jadi UserIcon
+    User as UserIcon,
     Mail,
     Phone,
     CheckCircle,
-    XCircle
+    XCircle,
+    MapPin,  // ✅ TAMBAH
 } from "lucide-react";
 import { PaginatedData, User } from "@/types/model";
 import { usePage } from "@inertiajs/react";
@@ -61,6 +62,8 @@ const getRoleBadge = (roleName: string) => {
         operator: { label: "Operator", color: "bg-blue-100 text-blue-700 border-blue-200" },
         kader_dasawisma: { label: "Kader", color: "bg-teal-100 text-teal-700 border-teal-200" },
         'admin-pkk': { label: "Admin PKK", color: "bg-purple-100 text-purple-700 border-purple-200" },
+        // ✅ TAMBAH: role kecamatan
+        kecamatan: { label: "Kecamatan", color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
     };
     return roleMap[roleName] || { label: roleName, color: "bg-gray-100 text-gray-700 border-gray-200" };
 };
@@ -150,6 +153,7 @@ export default function Index({ users, filters = {} }: IndexProps) {
         { value: "operator", label: "Operator" },
         { value: "kader_dasawisma", label: "Kader" },
         { value: "admin-pkk", label: "Admin PKK" },
+        { value: "kecamatan", label: "Admin Kecamatan" },  // ✅ TAMBAH
     ];
 
     const statusOptions = [
@@ -284,6 +288,23 @@ export default function Index({ users, filters = {} }: IndexProps) {
                             render: (user: User) => (
                                 <span className="text-sm text-slate-500 dark:text-slate-400">
                                     {user.no_hp || "-"}
+                                </span>
+                            ),
+                        },
+                        // ✅ TAMBAH: Kolom Kecamatan
+                        {
+                            header: "Kecamatan",
+                            className: "w-32",
+                            render: (user: User | any) => (
+                                <span className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
+                                    {user.kecamatan ? (
+                                        <>
+                                            <MapPin size={12} className="text-cyan-600" />
+                                            {user.kecamatan}
+                                        </>
+                                    ) : (
+                                        <span className="text-slate-300 italic">-</span>
+                                    )}
                                 </span>
                             ),
                         },

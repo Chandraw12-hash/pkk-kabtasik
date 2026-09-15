@@ -1,19 +1,39 @@
 import React, { FormEventHandler } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
+import SelectInput from "@/Components/Form/SelectInput";
 import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, MapPin } from "lucide-react";
 import { Role, User } from "@/types/model";
 
 interface EditProps {
-    user: User & { username?: string };
+    user: User & { username?: string; kecamatan?: string };
     roles: Role[];
     userRoles: string[];
+    kecamatanList: string[];  // ✅ TAMBAH INI
 }
 
-export default function Edit({ user, roles, userRoles }: EditProps) {
+/**
+ * 39 Kecamatan Kabupaten Tasikmalaya
+ * Fallback kalau props `kecamatanList` dari controller kosong
+ */
+const KECAMATAN_FALLBACK = [
+    'Bantarkalong', 'Bojongasih', 'Bojonggambir', 'Ciawi', 'Cibalong',
+    'Cigalontang', 'Cikalong', 'Cikatomas', 'Cineam', 'Cipatujah',
+    'Cisayong', 'Culamega', 'Gunungtanjung', 'Jamanis', 'Jatiwaras',
+    'Kadipaten', 'Karangjaya', 'Karangnunggal', 'Leuwisari', 'Mangunreja',
+    'Manonjaya', 'Padakembang', 'Pagerageung', 'Pancatengah', 'Parungponteng',
+    'Puspahiang', 'Rajapolah', 'Salawu', 'Salopa', 'Sariwangi',
+    'Singaparna', 'Sodonghilir', 'Sukahening', 'Sukaraja', 'Sukarame',
+    'Sukaratu', 'Sukaresik', 'Tanjungjaya', 'Taraju',
+];
+
+export default function Edit({ user, roles, userRoles, kecamatanList }: EditProps) {
+    // ✅ Pakai props dari controller, fallback ke list statis
+    const kecamatans = kecamatanList?.length ? kecamatanList : KECAMATAN_FALLBACK;
+
     const { data, setData, put, processing, errors } = useForm({
         name: user.name || "",
         username: user.username || "",
@@ -21,6 +41,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
         password: "",
         password_confirmation: "",
         roles: userRoles || ([] as string[]),
+        kecamatan: user.kecamatan || "",  // ✅ TAMBAH — isi dari data user
     });
 
     const handleSubmit: FormEventHandler = (e) => {
@@ -39,6 +60,9 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
             setData("roles", [...currentRoles, roleName]);
         }
     };
+
+    // ✅ Cek apakah role "kecamatan" sedang dipilih
+    const isKecamatanRole = data.roles.includes("kecamatan");
 
     return (
         <MainLayout>
@@ -135,7 +159,7 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                 </div>
 
                                 {/* Confirm Password */}
-                                <div className="space-y-2">
+                                <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-bold text-slate-700 dark:text-slate-200">
                                         Konfirmasi Password
                                     </label>
@@ -152,6 +176,38 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                                         className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                     />
                                 </div>
+
+                                {/* ✅ KECAMATAN — MUNCUL KALAU ROLE = "kecamatan" */}
+                                {isKecamatanRole && (
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                            <MapPin size={14} className="text-cyan-600" />
+                                            Wilayah Kecamatan
+                                            <span className="text-rose-500">*</span>
+                                        </label>
+                                        <SelectInput
+                                            value={data.kecamatan}
+                                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                                setData("kecamatan", e.target.value)
+                                            }
+                                            error={errors.kecamatan}
+                                            className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                        >
+                                            <option value="">
+                                                -- Pilih Kecamatan --
+                                            </option>
+                                            {kecamatans.map((kec) => (
+                                                <option key={kec} value={kec}>
+                                                    {kec}
+                                                </option>
+                                            ))}
+                                        </SelectInput>
+                                        <p className="text-xs text-slate-400">
+                                            Pilih kecamatan yang menjadi wilayah kerja user ini.
+                                            Wajib diisi untuk role "kecamatan".
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -246,6 +302,9 @@ export default function Edit({ user, roles, userRoles }: EditProps) {
                         </h4>
                         <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80">
                             Password hanya perlu diisi jika Anda ingin memperbarui sandi akun kader. Jika dibiarkan kosong, password lama tetap akan digunakan.
+                        </p>
+                        <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80 mt-2">
+                            <strong>Catatan:</strong> Untuk role <strong>kecamatan</strong>, kolom Wilayah Kecamatan wajib diisi.
                         </p>
                     </div>
                 </div>

@@ -5,14 +5,33 @@ import SelectInput from "@/Components/Form/SelectInput";
 import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { Role } from "@/types/model";
 
 interface CreateProps {
     roles: Role[];
+    kecamatanList: string[];  // ✅ TAMBAH INI — daftar 39 kecamatan
 }
 
-export default function Create({ roles }: CreateProps) {
+/**
+ * 39 Kecamatan Kabupaten Tasikmalaya
+ * Fallback kalau props `kecamatanList` dari controller kosong
+ */
+const KECAMATAN_FALLBACK = [
+    'Bantarkalong', 'Bojongasih', 'Bojonggambir', 'Ciawi', 'Cibalong',
+    'Cigalontang', 'Cikalong', 'Cikatomas', 'Cineam', 'Cipatujah',
+    'Cisayong', 'Culamega', 'Gunungtanjung', 'Jamanis', 'Jatiwaras',
+    'Kadipaten', 'Karangjaya', 'Karangnunggal', 'Leuwisari', 'Mangunreja',
+    'Manonjaya', 'Padakembang', 'Pagerageung', 'Pancatengah', 'Parungponteng',
+    'Puspahiang', 'Rajapolah', 'Salawu', 'Salopa', 'Sariwangi',
+    'Singaparna', 'Sodonghilir', 'Sukahening', 'Sukaraja', 'Sukarame',
+    'Sukaratu', 'Sukaresik', 'Tanjungjaya', 'Taraju',
+];
+
+export default function Create({ roles, kecamatanList }: CreateProps) {
+    // ✅ Pakai props dari controller, fallback ke list statis
+    const kecamatans = kecamatanList?.length ? kecamatanList : KECAMATAN_FALLBACK;
+
     const { data, setData, post, processing, errors } = useForm({
         name: "",
         username: "",
@@ -20,6 +39,7 @@ export default function Create({ roles }: CreateProps) {
         password: "",
         password_confirmation: "",
         roles: [] as string[],
+        kecamatan: "",  // ✅ TAMBAH INI
     });
 
     const handleSubmit: FormEventHandler = (e) => {
@@ -38,6 +58,9 @@ export default function Create({ roles }: CreateProps) {
             setData("roles", [...currentRoles, roleName]);
         }
     };
+
+    // ✅ Cek apakah role "kecamatan" sedang dipilih
+    const isKecamatanRole = data.roles.includes("kecamatan");
 
     return (
         <MainLayout>
@@ -135,7 +158,7 @@ export default function Create({ roles }: CreateProps) {
                                 </div>
 
                                 {/* Confirm Password */}
-                                <div className="space-y-2">
+                                <div className="space-y-2 md:col-span-2">
                                     <label className="text-sm font-bold text-slate-700 dark:text-slate-200">
                                         Konfirmasi Password
                                     </label>
@@ -152,6 +175,38 @@ export default function Create({ roles }: CreateProps) {
                                         className="w-full"
                                     />
                                 </div>
+
+                                {/* ✅ KECAMATAN — MUNCUL KALAU ROLE = "kecamatan" */}
+                                {isKecamatanRole && (
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                            <MapPin size={14} className="text-teal-600" />
+                                            Wilayah Kecamatan
+                                            <span className="text-rose-500">*</span>
+                                        </label>
+                                        <SelectInput
+                                            value={data.kecamatan}
+                                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                                setData("kecamatan", e.target.value)
+                                            }
+                                            error={errors.kecamatan}
+                                            className="w-full"
+                                        >
+                                            <option value="">
+                                                -- Pilih Kecamatan --
+                                            </option>
+                                            {kecamatans.map((kec) => (
+                                                <option key={kec} value={kec}>
+                                                    {kec}
+                                                </option>
+                                            ))}
+                                        </SelectInput>
+                                        <p className="text-xs text-slate-400">
+                                            Pilih kecamatan yang menjadi wilayah kerja user ini.
+                                            Wajib diisi untuk role "kecamatan".
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -249,6 +304,10 @@ export default function Create({ roles }: CreateProps) {
                             <li>Gunakan kombinasi password yang kuat.</li>
                             <li>
                                 Satu user dapat memiliki lebih dari satu role.
+                            </li>
+                            <li>
+                                Untuk role <strong>kecamatan</strong>, wajib pilih
+                                wilayah kecamatan.
                             </li>
                         </ul>
                     </div>

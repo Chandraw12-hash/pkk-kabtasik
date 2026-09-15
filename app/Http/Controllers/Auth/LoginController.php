@@ -59,6 +59,22 @@ class LoginController extends Controller
 
             $request->session()->regenerate();
 
+            // ============================================================
+            // 🔥 REDIRECT BERDASARKAN ROLE
+            // ============================================================
+            $user = Auth::user();
+
+            // Kalau role kecamatan → redirect ke /kecamatan
+            if ($user->hasRole('kecamatan')) {
+                return redirect()->intended('/kecamatan');
+            }
+
+            // Kalau role admin → redirect ke /dashboard
+            if ($user->hasRole('admin')) {
+                return redirect()->intended(route('be.dashboard'));
+            }
+
+            // Fallback: redirect ke dashboard
             return redirect()->intended(route('be.dashboard'));
         }
 

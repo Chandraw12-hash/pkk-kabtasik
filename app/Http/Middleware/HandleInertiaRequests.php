@@ -11,17 +11,11 @@ class HandleInertiaRequests extends Middleware
 {
     /**
      * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
      */
     protected $rootView = 'app';
 
     /**
      * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
      */
     public function version(Request $request): ?string
     {
@@ -30,16 +24,14 @@ class HandleInertiaRequests extends Middleware
 
     /**
      * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
      */
     public function share(Request $request): array
     {
         $user = $request->user();
 
-        // ✅ Hitung pending (berita + laporan) untuk admin
+        // ============================================================
+        // PENDING COUNTS — Berita (admin kabupaten aja)
+        // ============================================================
         $pendingBerita = 0;
         $pendingLaporan = 0;
 
@@ -48,24 +40,48 @@ class HandleInertiaRequests extends Middleware
             $pendingLaporan = LaporanKegiatan::where('status', 'pending')->count();
         }
 
+        // ============================================================
+        // PENDING COUNTS KECAMATAN — Khusus Admin Kecamatan
+        // ============================================================
+        // Query otomatis filter by Global Scope (KecamatanScope)
+        $pendingLaporanKecamatan = 0;
+        $approvedLaporanKecamatan = 0;
+        $pendingBeritaKecamatan = 0; // 🔥 TAMBAH: berita pending khusus kecamatan
+
+        if ($user && $user->hasRole('kecamatan') && !empty($user->kecamatan)) {
+            $pendingLaporanKecamatan = LaporanKegiatan::where('status', 'pending')->count();
+            $approvedLaporanKecamatan = LaporanKegiatan::where('status', 'approved')->count();
+            $pendingBeritaKecamatan = Berita::where('status', 'pending')->count(); // 🔥 TAMBAH
+        }
+
         return [
             ...parent::share($request),
+
             'auth' => [
                 'user' => $user,
                 'roles' => $user?->getRoleNames(),
                 'permissions' => $user?->getAllPermissions()->pluck('name'),
             ],
-            // ✅ TAMBAH: Pending counts untuk notifikasi lonceng
+
+            // ✅ Pending counts untuk admin kabupaten (lonceng notifikasi)
             'pending_counts' => [
                 'berita' => $pendingBerita,
                 'laporan' => $pendingLaporan,
                 'total' => $pendingBerita + $pendingLaporan,
+
+                // 🔥 Pending counts untuk admin kecamatan
+                'laporan_pending' => $pendingLaporanKecamatan,
+                'laporan_approved' => $approvedLaporanKecamatan,
+                'berita_pending' => $pendingBeritaKecamatan, // 🔥 TAMBAH
+                'total_kecamatan' => $pendingLaporanKecamatan + $pendingBeritaKecamatan, // 🔥 gabung laporan + berita
             ],
+
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'message' => fn () => $request->session()->get('message'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+
             'app_settings' => function () {
                 return \Illuminate\Support\Facades\Cache::remember('app_settings', 3600, function () {
                     return \Illuminate\Support\Facades\DB::table('settings')
