@@ -1,6 +1,9 @@
 import React from "react";
 import { Head, Link } from "@inertiajs/react";
 import AdminKecamatanLayout from "@/Components/Layout/AdminKecamatanLayout";
+import StatCard from "@/Components/UI/SatistikCard";
+import Card from "@/Components/UI/Card";
+import Badge from "@/Components/UI/Badge";
 import {
     FileText,
     CheckCircle2,
@@ -9,8 +12,8 @@ import {
     Building2,
     Home,
     ArrowRight,
-    BarChart3,
-    MapPin,
+    Calendar,
+    ShieldCheck,
 } from "lucide-react";
 
 interface StatistikProps {
@@ -55,318 +58,217 @@ export default function Dashboard({
             ? Math.round((statistik.totalApproved / totalLaporan) * 100)
             : 0;
 
-    const persentasePending =
-        totalLaporan > 0
-            ? Math.round((statistik.totalPending / totalLaporan) * 100)
-            : 0;
-
     return (
         <AdminKecamatanLayout>
             <Head title={`Dashboard Admin Kecamatan ${kecamatan}`} />
 
             <div className="space-y-6">
-                {/* ============================================================
-                    HEADER
-                ============================================================ */}
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                {/* ─── HEADER ─── */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-100 text-[11px] font-semibold">
-                                <MapPin className="w-3.5 h-3.5" />
-                                Admin Kecamatan
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400">
+                                Sistem Informasi TP PKK
                             </span>
-
-                            <span className="text-slate-300">•</span>
-
-                            <span className="text-xs text-slate-400 font-medium">
-                                TP PKK Kabupaten Tasikmalaya
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                Kecamatan {kecamatan}
                             </span>
                         </div>
-
-                        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                             Dashboard Kecamatan
                         </h1>
-
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Monitoring dan pengelolaan data PKK Kecamatan{" "}
-                            <span className="font-semibold text-teal-600 dark:text-teal-400">
-                                {kecamatan}
-                            </span>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                            Monitoring dan pengelolaan data PKK Kecamatan {kecamatan}.
                         </p>
                     </div>
-
-                    <div className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
-                        <div className="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950 flex items-center justify-center">
-                            <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                        </div>
-
-                        <div>
-                            <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
-                                Wilayah
-                            </p>
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                                {kecamatan}
-                            </p>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300">
+                            <Calendar size={15} className="text-slate-400 dark:text-slate-500" />
+                            <span>Tahun {new Date().getFullYear()}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* ============================================================
-                    STATISTIK LAPORAN
-                ============================================================ */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* ─── STATISTIK LAPORAN ─── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard
+                        title="Total Laporan"
+                        value={statistik.totalLaporan.toLocaleString()}
                         icon={FileText}
-                        label="Total Laporan"
-                        value={statistik.totalLaporan}
-                        color="teal"
+                        color="bg-teal-600"
+                        className="border-l-4 border-teal-600 dark:bg-slate-800"
+                        textColor="white"
+                        description="Seluruh Laporan"
                     />
-
                     <StatCard
+                        title="Disetujui"
+                        value={statistik.totalApproved.toLocaleString()}
                         icon={CheckCircle2}
-                        label="Disetujui"
-                        value={statistik.totalApproved}
-                        color="green"
+                        color="bg-emerald-600"
+                        className="border-l-4 border-emerald-600 dark:bg-slate-800"
+                        textColor="white"
+                        description="Telah diverifikasi"
                     />
-
                     <StatCard
+                        title="Menunggu Validasi"
+                        value={statistik.totalPending.toLocaleString()}
                         icon={Clock}
-                        label="Menunggu"
-                        value={statistik.totalPending}
-                        color="amber"
+                        color="bg-amber-500"
+                        className="border-l-4 border-amber-500 dark:bg-slate-800"
+                        textColor="white"
+                        description="Perlu Pengecekan"
                     />
-
                     <StatCard
+                        title="Ditolak/Revisi"
+                        value={statistik.totalRejected.toLocaleString()}
                         icon={XCircle}
-                        label="Ditolak"
-                        value={statistik.totalRejected}
-                        color="red"
+                        color="bg-rose-500"
+                        className="border-l-4 border-rose-500 dark:bg-slate-800"
+                        textColor="white"
+                        description="Butuh Perbaikan"
                     />
                 </div>
 
-                {/* ============================================================
-                    STATUS LAPORAN
-                ============================================================ */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 lg:p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950 flex items-center justify-center">
-                                    <CheckCircle2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                                </div>
-
-                                <div>
-                                    <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                                        Status Laporan Kecamatan
-                                    </h2>
-
-                                    <p className="text-xs text-slate-400 mt-0.5">
-                                        Ringkasan proses verifikasi laporan kegiatan
-                                    </p>
-                                </div>
+                {/* ─── VERIFIKASI ─── */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2.5 bg-teal-50 dark:bg-teal-900/50 rounded-xl">
+                                <ShieldCheck size={20} className="text-teal-600 dark:text-teal-400" />
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-6">
-                            <StatusSummary
-                                label="Disetujui"
-                                value={statistik.totalApproved}
-                                color="text-green-600 dark:text-green-400"
-                            />
-
-                            <StatusSummary
-                                label="Menunggu"
-                                value={statistik.totalPending}
-                                color="text-amber-500"
-                            />
-
-                            <StatusSummary
-                                label="Ditolak"
-                                value={statistik.totalRejected}
-                                color="text-red-500"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-5">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-medium text-slate-500">
-                                Tingkat persetujuan
-                            </span>
-
-                            <span className="text-xs font-bold text-teal-600 dark:text-teal-400">
-                                {persentaseApproved}%
-                            </span>
-                        </div>
-
-                        <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-teal-500 rounded-full transition-all duration-500"
-                                style={{
-                                    width: `${persentaseApproved}%`,
-                                }}
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between mt-2">
-                            <span className="text-[10px] text-slate-400">
-                                {statistik.totalApproved} laporan disetujui
-                            </span>
-
-                            <span className="text-[10px] text-slate-400">
-                                {persentasePending}% masih menunggu
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ============================================================
-                    DATA WILAYAH
-                ============================================================ */}
-                <div>
-                    <div className="mb-4">
-                        <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                            Data Wilayah
-                        </h2>
-
-                        <p className="text-xs text-slate-400 mt-0.5">
-                            Ringkasan wilayah administrasi dan kelompok PKK
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InfoCard
-                            icon={Building2}
-                            title="Desa / Kelurahan"
-                            value={statistik.totalDesa}
-                            description="Wilayah yang berada dalam kecamatan"
-                            color="blue"
-                        />
-
-                        <InfoCard
-                            icon={Home}
-                            title="Dasa Wisma"
-                            value={statistik.totalDasaWisma}
-                            description="Data kelompok Dasa Wisma"
-                            color="purple"
-                        />
-                    </div>
-                </div>
-
-                {/* ============================================================
-                    REKAP PER POKJA
-                ============================================================ */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="p-5 lg:p-6 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950 flex items-center justify-center shrink-0">
-                                    <BarChart3 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                                </div>
-
-                                <div>
-                                    <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                                        Rekap Laporan Per Pokja
-                                    </h2>
-
-                                    <p className="text-xs text-slate-400 mt-0.5">
-                                        Distribusi laporan kegiatan di Kecamatan{" "}
-                                        {kecamatan}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="p-5 lg:p-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <PokjaCard
-                                label="Pokja I"
-                                value={rekapPokja.I}
-                            />
-
-                            <PokjaCard
-                                label="Pokja II"
-                                value={rekapPokja.II}
-                            />
-
-                            <PokjaCard
-                                label="Pokja III"
-                                value={rekapPokja.III}
-                            />
-
-                            <PokjaCard
-                                label="Pokja IV"
-                                value={rekapPokja.IV}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* ============================================================
-                    LAPORAN TERBARU
-                ============================================================ */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="p-5 lg:p-6 border-b border-slate-200 dark:border-slate-800">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
-                                <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                                    Laporan Terbaru
-                                </h2>
-
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                    Aktivitas laporan terbaru dari Kecamatan{" "}
-                                    {kecamatan}
+                                <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                    Status Laporan Kecamatan
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Sebanyak <strong className="text-teal-600 dark:text-teal-400">{persentaseApproved}%</strong> dari total laporan kegiatan telah disetujui.
                                 </p>
                             </div>
-
-                            <Link
-                                href="/kecamatan/laporan"
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
-                            >
-                                Lihat Semua
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
                         </div>
+                        <div className="flex items-center gap-6">
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400">Disetujui</p>
+                                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                    {statistik.totalApproved}
+                                </p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400">Menunggu</p>
+                                <p className="text-lg font-bold text-amber-500 dark:text-amber-400">
+                                    {statistik.totalPending}
+                                </p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400">Ditolak</p>
+                                <p className="text-lg font-bold text-rose-500 dark:text-rose-400">
+                                    {statistik.totalRejected}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-3 w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            style={{ width: `${persentaseApproved}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* ─── DATA WILAYAH & REKAP PER POKJA ─── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* DATA WILAYAH */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                        <StatCard
+                            title="Desa / Kelurahan"
+                            value={statistik.totalDesa.toLocaleString()}
+                            icon={Building2}
+                            color="bg-blue-600"
+                            className="border-l-4 border-blue-600 dark:bg-slate-800"
+                            textColor="white"
+                            description="Wilayah Administrasi"
+                        />
+                        <StatCard
+                            title="Dasa Wisma"
+                            value={statistik.totalDasaWisma.toLocaleString()}
+                            icon={Home}
+                            color="bg-purple-600"
+                            className="border-l-4 border-purple-600 dark:bg-slate-800"
+                            textColor="white"
+                            description="Kelompok PKK"
+                        />
+                    </div>
+
+                    {/* REKAP PER POKJA */}
+                    <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base mb-1">
+                            Rekap Laporan Per Pokja
+                        </h3>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+                            Distribusi laporan kegiatan di Kecamatan {kecamatan}
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <PokjaCard label="Pokja I" value={rekapPokja.I} color="teal" />
+                            <PokjaCard label="Pokja II" value={rekapPokja.II} color="blue" />
+                            <PokjaCard label="Pokja III" value={rekapPokja.III} color="purple" />
+                            <PokjaCard label="Pokja IV" value={rekapPokja.IV} color="pink" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── LAPORAN TERBARU ─── */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-5">
+                        <div>
+                            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base">
+                                Laporan Terbaru
+                            </h3>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                Aktivitas laporan terbaru dari Kecamatan {kecamatan}
+                            </p>
+                        </div>
+                        <Link
+                            href="/kecamatan/laporan"
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/50 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
+                        >
+                            Lihat Semua
+                            <ArrowRight size={14} />
+                        </Link>
                     </div>
 
                     {laporanTerbaru.length > 0 ? (
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {laporanTerbaru.map((item) => {
-                                const badge = getStatusBadge(item.status);
+                        <div className="space-y-4">
+                            {laporanTerbaru.map((item, i) => {
+                                const statusMap: Record<string, { label: string; type: any }> = {
+                                    pending: { label: "Menunggu", type: "warning" },
+                                    approved: { label: "Disetujui", type: "success" },
+                                    rejected: { label: "Ditolak", type: "danger" },
+                                    reviewed: { label: "Direview", type: "info" },
+                                };
+                                const badgeInfo = statusMap[item.status] || { label: item.status, type: "default" };
 
                                 return (
-                                    <div
-                                        key={item.id}
-                                        className="p-4 lg:px-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                                                <FileText className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                                            </div>
-
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                                                    {item.judul}
-                                                </p>
-
-                                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                                        Pokja {item.kategori_pokja}
-                                                    </span>
-
-                                                    <span
-                                                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.class}`}
-                                                    >
-                                                        {badge.label}
-                                                    </span>
-
-                                                    <span className="text-[10px] text-slate-400">
-                                                        {formatDate(
-                                                            item.created_at
-                                                        )}
-                                                    </span>
-                                                </div>
+                                    <div key={item.id} className="flex gap-3.5 relative">
+                                        {i !== laporanTerbaru.length - 1 && (
+                                            <div className="absolute left-[9px] top-7 bottom-[-16px] w-0.5 bg-slate-100 dark:bg-slate-700"></div>
+                                        )}
+                                        <div className="w-5 h-5 mt-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center shrink-0 z-10">
+                                            <div className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+                                        </div>
+                                        <div className="min-w-0 flex-1 pb-1">
+                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                                                {item.judul}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Badge type="info" className="text-[10px]">
+                                                    Pokja {item.kategori_pokja}
+                                                </Badge>
+                                                <Badge type={badgeInfo.type} className="text-[10px]">
+                                                    {badgeInfo.label}
+                                                </Badge>
+                                                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                                    {formatDate(item.created_at)}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -374,62 +276,13 @@ export default function Dashboard({
                             })}
                         </div>
                     ) : (
-                        <div className="p-12 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                                <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                            </div>
-
-                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                                Belum Ada Laporan
-                            </p>
-
-                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                                Belum ada laporan masuk di Kecamatan{" "}
-                                {kecamatan}
-                            </p>
-                        </div>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">
+                            Belum ada laporan masuk di Kecamatan {kecamatan}.
+                        </p>
                     )}
                 </div>
             </div>
         </AdminKecamatanLayout>
-    );
-}
-
-// ============================================================
-// HELPER: STATUS BADGE
-// ============================================================
-
-function getStatusBadge(status: string) {
-    const map: Record<
-        string,
-        {
-            label: string;
-            class: string;
-        }
-    > = {
-        pending: {
-            label: "Menunggu",
-            class: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
-        },
-        approved: {
-            label: "Disetujui",
-            class: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
-        },
-        rejected: {
-            label: "Ditolak",
-            class: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
-        },
-        reviewed: {
-            label: "Direview",
-            class: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
-        },
-    };
-
-    return (
-        map[status] || {
-            label: status,
-            class: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
-        }
     );
 }
 
@@ -446,174 +299,37 @@ function formatDate(date: string) {
 }
 
 // ============================================================
-// SUB-COMPONENT: STAT CARD
-// ============================================================
-
-function StatCard({
-    icon: Icon,
-    label,
-    value,
-    color,
-}: {
-    icon: React.ElementType;
-    label: string;
-    value: number;
-    color: "teal" | "green" | "amber" | "red";
-}) {
-    const colorClasses = {
-        teal: {
-            bg: "bg-teal-50 dark:bg-teal-950",
-            icon: "text-teal-600 dark:text-teal-400",
-        },
-        green: {
-            bg: "bg-green-50 dark:bg-green-950",
-            icon: "text-green-600 dark:text-green-400",
-        },
-        amber: {
-            bg: "bg-amber-50 dark:bg-amber-950",
-            icon: "text-amber-600 dark:text-amber-400",
-        },
-        red: {
-            bg: "bg-red-50 dark:bg-red-950",
-            icon: "text-red-600 dark:text-red-400",
-        },
-    };
-
-    const c = colorClasses[color];
-
-    return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 lg:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="text-[10px] lg:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">
-                        {label}
-                    </p>
-
-                    <p className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                        {value.toLocaleString("id-ID")}
-                    </p>
-                </div>
-
-                <div
-                    className={`w-10 h-10 lg:w-11 lg:h-11 rounded-xl ${c.bg} flex items-center justify-center shrink-0`}
-                >
-                    <Icon
-                        className={`w-5 h-5 lg:w-5.5 lg:h-5.5 ${c.icon}`}
-                    />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ============================================================
-// SUB-COMPONENT: STATUS SUMMARY
-// ============================================================
-
-function StatusSummary({
-    label,
-    value,
-    color,
-}: {
-    label: string;
-    value: number;
-    color: string;
-}) {
-    return (
-        <div className="text-center">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wide">
-                {label}
-            </p>
-
-            <p className={`text-lg font-bold mt-0.5 ${color}`}>
-                {value.toLocaleString("id-ID")}
-            </p>
-        </div>
-    );
-}
-
-// ============================================================
-// SUB-COMPONENT: INFO CARD
-// ============================================================
-
-function InfoCard({
-    icon: Icon,
-    title,
-    value,
-    description,
-    color,
-}: {
-    icon: React.ElementType;
-    title: string;
-    value: number;
-    description: string;
-    color: "blue" | "purple";
-}) {
-    const colorClasses = {
-        blue: {
-            bg: "bg-blue-50 dark:bg-blue-950",
-            icon: "text-blue-600 dark:text-blue-400",
-        },
-        purple: {
-            bg: "bg-purple-50 dark:bg-purple-950",
-            icon: "text-purple-600 dark:text-purple-400",
-        },
-    };
-
-    const c = colorClasses[color];
-
-    return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 lg:p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-                <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        {title}
-                    </p>
-
-                    <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                        {value.toLocaleString("id-ID")}
-                    </p>
-
-                    <p className="text-xs text-slate-400 mt-1">
-                        {description}
-                    </p>
-                </div>
-
-                <div
-                    className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl ${c.bg} flex items-center justify-center shrink-0`}
-                >
-                    <Icon className={`w-6 h-6 lg:w-7 lg:h-7 ${c.icon}`} />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ============================================================
 // SUB-COMPONENT: POKJA CARD
 // ============================================================
 
 function PokjaCard({
     label,
     value,
+    color,
 }: {
     label: string;
     value: number;
+    color: 'teal' | 'blue' | 'purple' | 'pink';
 }) {
+    const colorMap = {
+        teal: { dot: 'bg-teal-500', text: 'text-teal-600 dark:text-teal-400' },
+        blue: { dot: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
+        purple: { dot: 'bg-purple-500', text: 'text-purple-600 dark:text-purple-400' },
+        pink: { dot: 'bg-pink-500', text: 'text-pink-600 dark:text-pink-400' },
+    };
+    const c = colorMap[color];
+
     return (
-        <div className="p-4 lg:p-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+        <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                     {label}
                 </p>
-
-                <div className="w-2 h-2 rounded-full bg-teal-500" />
+                <div className={`w-2 h-2 rounded-full ${c.dot}`} />
             </div>
-
-            <p className="text-2xl lg:text-3xl font-bold text-teal-600 dark:text-teal-400 mt-3">
+            <p className={`text-2xl font-bold ${c.text} mt-3`}>
                 {value.toLocaleString("id-ID")}
             </p>
-
             <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                 total laporan
             </p>

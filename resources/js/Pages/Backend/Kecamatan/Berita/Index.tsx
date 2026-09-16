@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminKecamatanLayout from '../../../../Components/Layout/AdminKecamatanLayout';
+import TextInput from "@/Components/Form/TextInput";
+import Button from "@/Components/UI/Button";
+import Badge from "@/Components/UI/Badge";
+import Table from "@/Components/Data/Table";
+import Pagination from "@/Components/Data/Pagination";
+import Card from "@/Components/UI/Card";
+import StatCard from "@/Components/UI/SatistikCard";
 import {
     Newspaper,
     Search,
@@ -8,9 +15,10 @@ import {
     Calendar,
     User as UserIcon,
     Filter,
+    RotateCcw,
     FileText,
-    CheckCircle2,
     Clock,
+    CheckCircle2,
     XCircle,
 } from 'lucide-react';
 
@@ -40,6 +48,9 @@ interface BeritasPaginated {
     current_page: number;
     last_page: number;
     total: number;
+    from: number;
+    to: number;
+    per_page: number;
 }
 
 interface Stats {
@@ -64,41 +75,53 @@ interface Props {
 }
 
 export default function Index({ beritas, stats, kecamatan, filters }: Props) {
-    const [search, setSearch] = React.useState(filters.search || '');
-    const [status, setStatus] = React.useState(filters.status || '');
+    const [search, setSearch] = useState(filters.search || '');
+    const [status, setStatus] = useState(filters.status || '');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleFilter = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/kecamatan/berita', { search, status }, { preserveState: true });
+    const handleFilter = () => {
+        setIsLoading(true);
+        router.get('/kecamatan/berita', 
+            { search, status }, 
+            { 
+                preserveState: true,
+                preserveScroll: true,
+                onFinish: () => setIsLoading(false)
+            }
+        );
+    };
+    
+    const handleReset = () => {
+        setSearch('');
+        setStatus('');
+        setIsLoading(true);
+        router.get('/kecamatan/berita', {}, { 
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsLoading(false)
+        });
     };
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <CheckCircle2 size={12} /> Disetujui
-                    </span>
-                );
-            case 'pending':
-                return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200">
-                        <Clock size={12} /> Menunggu
-                    </span>
-                );
-            case 'rejected':
-                return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200">
-                        <XCircle size={12} /> Ditolak
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-50 text-slate-600 border border-slate-200">
-                        <FileText size={12} /> Draft
-                    </span>
-                );
-        }
+    const hasActiveFilter = Boolean(search || status);
+
+    const getStatusBadgeType = (status: string): any => {
+        const map: Record<string, string> = {
+            pending: 'warning',
+            approved: 'success',
+            rejected: 'danger',
+            draft: 'default',
+        };
+        return map[status] || 'default';
+    };
+    
+    const getStatusBadgeLabel = (status: string) => {
+        const map: Record<string, string> = {
+            pending: 'Menunggu',
+            approved: 'Disetujui',
+            rejected: 'Ditolak',
+            draft: 'Draft',
+        };
+        return map[status] || status;
     };
 
     return (
@@ -106,153 +129,209 @@ export default function Index({ beritas, stats, kecamatan, filters }: Props) {
             <Head title={`Berita Kecamatan ${kecamatan}`} />
 
             {/* Header */}
-            <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-                        <Newspaper size={20} className="text-teal-600" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-slate-900">
-                            Berita Kecamatan {kecamatan}
-                        </h1>
-                        <p className="text-sm text-slate-500">
-                            Monitoring berita dari kader di wilayah kecamatan Anda
-                        </p>
-                    </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
+                        Berita Kecamatan {kecamatan}
+                    </h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                        Monitoring berita dari kader di wilayah kecamatan Anda
+                    </p>
                 </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total</p>
-                    <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
-                </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[10px] font-semibold text-amber-500 uppercase tracking-wider">Menunggu</p>
-                    <p className="text-2xl font-bold text-amber-600 mt-1">{stats.pending}</p>
-                </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Disetujui</p>
-                    <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.approved}</p>
-                </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[10px] font-semibold text-rose-500 uppercase tracking-wider">Ditolak</p>
-                    <p className="text-2xl font-bold text-rose-600 mt-1">{stats.rejected}</p>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard
+                    title="Total Berita"
+                    value={stats.total.toLocaleString()}
+                    icon={FileText}
+                    color="bg-teal-600"
+                    className="border-l-4 border-teal-600 dark:bg-slate-800"
+                    textColor="white"
+                />
+                <StatCard
+                    title="Disetujui"
+                    value={stats.approved.toLocaleString()}
+                    icon={CheckCircle2}
+                    color="bg-emerald-600"
+                    className="border-l-4 border-emerald-600 dark:bg-slate-800"
+                    textColor="white"
+                />
+                <StatCard
+                    title="Menunggu"
+                    value={stats.pending.toLocaleString()}
+                    icon={Clock}
+                    color="bg-amber-500"
+                    className="border-l-4 border-amber-500 dark:bg-slate-800"
+                    textColor="white"
+                />
+                <StatCard
+                    title="Ditolak"
+                    value={stats.rejected.toLocaleString()}
+                    icon={XCircle}
+                    color="bg-rose-500"
+                    className="border-l-4 border-rose-500 dark:bg-slate-800"
+                    textColor="white"
+                />
             </div>
 
-            {/* Filter */}
-            <form onSubmit={handleFilter} className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-                <div className="flex flex-col md:flex-row gap-3">
-                    <div className="flex-1 relative">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari judul berita..."
-                            className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
+            {/* Main Content */}
+            <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
+                {/* Filter Section */}
+                <div className="p-6 border-b border-slate-50 dark:border-slate-700">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative flex-1 min-w-[200px]">
+                            <TextInput
+                                iconLeft={<Search size={18} />}
+                                placeholder="Cari judul berita..."
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                containerClassName="relative w-full"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                            />
+                        </div>
+
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="pending">Menunggu</option>
+                            <option value="approved">Disetujui</option>
+                            <option value="rejected">Ditolak</option>
+                            <option value="draft">Draft</option>
+                        </select>
+
+                        <Button
+                            variant="primary"
+                            onClick={handleFilter}
+                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
+                        >
+                            <Filter size={16} />
+                            <span>Filter</span>
+                        </Button>
+                        
+                        {hasActiveFilter && (
+                            <Button
+                                variant="secondary"
+                                onClick={handleReset}
+                                className="flex items-center gap-2"
+                            >
+                                <RotateCcw size={16} />
+                                <span>Reset</span>
+                            </Button>
+                        )}
                     </div>
-                    <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    >
-                        <option value="">Semua Status</option>
-                        <option value="pending">Menunggu</option>
-                        <option value="approved">Disetujui</option>
-                        <option value="rejected">Ditolak</option>
-                        <option value="draft">Draft</option>
-                    </select>
-                    <button
-                        type="submit"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                    >
-                        <Filter size={16} /> Filter
-                    </button>
                 </div>
-            </form>
 
-            {/* List Berita */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                {beritas.data.length === 0 ? (
-                    <div className="p-12 text-center">
-                        <Newspaper size={40} className="text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500 text-sm">Belum ada berita dari kecamatan ini.</p>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-slate-100">
-                        {beritas.data.map((item) => (
-                            <div key={item.id} className="p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors">
-                                {/* Thumbnail */}
-                                <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-slate-100">
-                                    {item.foto_url ? (
-                                        <img src={item.foto_url} alt={item.judul} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <Newspaper size={24} className="text-slate-300" />
+                {/* Table */}
+                <div className="overflow-x-hidden">
+                    <Table
+                        isLoading={isLoading}
+                        columns={[
+                            {
+                                header: "Berita",
+                                className: "w-auto",
+                                headerClassName: "w-auto",
+                                render: (item: BeritaItem) => (
+                                    <div className="flex items-start gap-4 min-w-[250px]">
+                                        <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700">
+                                            {item.foto_url ? (
+                                                <img src={item.foto_url} alt={item.judul} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <Newspaper size={20} className="text-slate-300 dark:text-slate-500" />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1.5">
-                                        {getStatusBadge(item.status)}
-                                        <span className="text-[10px] font-semibold text-teal-600 uppercase tracking-wider">
-                                            {item.kategori}
-                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm line-clamp-2 mb-1.5">
+                                                {item.judul}
+                                            </h3>
+                                            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Calendar size={14} className="text-slate-400 dark:text-slate-500" /> 
+                                                    {item.tanggal_formatted}
+                                                </span>
+                                                {item.user?.name && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <UserIcon size={14} className="text-slate-400 dark:text-slate-500" /> 
+                                                        {item.user.name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h3 className="font-semibold text-slate-800 text-sm line-clamp-2 mb-1">
-                                        {item.judul}
-                                    </h3>
-                                    <div className="flex items-center gap-4 text-xs text-slate-400">
-                                        <span className="flex items-center gap-1">
-                                            <Calendar size={12} /> {item.tanggal_formatted}
-                                        </span>
-                                        {item.user?.name && (
-                                            <span className="flex items-center gap-1">
-                                                <UserIcon size={12} /> {item.user.name}
-                                            </span>
-                                        )}
+                                ),
+                            },
+                            {
+                                header: "Kategori",
+                                className: "w-32",
+                                headerClassName: "w-32",
+                                render: (item: BeritaItem) => (
+                                    <Badge type="info" className="text-[10px]">
+                                        {item.kategori}
+                                    </Badge>
+                                ),
+                            },
+                            {
+                                header: "Status",
+                                className: "w-32",
+                                headerClassName: "w-32",
+                                render: (item: BeritaItem) => (
+                                    <Badge type={getStatusBadgeType(item.status)}>
+                                        {getStatusBadgeLabel(item.status)}
+                                    </Badge>
+                                ),
+                            },
+                            {
+                                header: "Aksi",
+                                headerClassName: "text-center w-28",
+                                className: "text-center w-28",
+                                render: (item: BeritaItem) => (
+                                    <div className="flex items-center justify-center">
+                                        <Link
+                                            href={`/kecamatan/berita/${item.id}`}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 text-xs font-semibold hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
+                                        >
+                                            <Eye size={14} />
+                                            Detail
+                                        </Link>
                                     </div>
-                                </div>
-
-                                {/* Action */}
-                                <Link
-                                    href={`/kecamatan/berita/${item.id}`}
-                                    className="shrink-0 p-2 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors"
-                                    aria-label="Lihat detail"
-                                >
-                                    <Eye size={18} />
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                                ),
+                            },
+                        ]}
+                        data={beritas.data || []}
+                        emptyMessage="Belum ada berita dari kecamatan ini."
+                    />
+                </div>
 
                 {/* Pagination */}
-                {beritas.last_page > 1 && (
-                    <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-center gap-1">
-                        {beritas.links.map((link, idx) => (
-                            <Link
-                                key={idx}
-                                href={link.url || '#'}
-                                className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                                    link.active
-                                        ? 'bg-teal-600 text-white font-semibold'
-                                        : link.url
-                                        ? 'text-slate-600 hover:bg-slate-100'
-                                        : 'text-slate-300 pointer-events-none'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        Menampilkan{" "}
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {beritas.from ?? 0}
+                        </span>{" "}
+                        sampai{" "}
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {beritas.to ?? 0}
+                        </span>{" "}
+                        dari{" "}
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {beritas.total ?? 0}
+                        </span>{" "}
+                        berita
+                    </p>
+
+                    <Pagination
+                        links={beritas.links || []}
+                    />
+                </div>
+            </Card>
         </AdminKecamatanLayout>
     );
 }
