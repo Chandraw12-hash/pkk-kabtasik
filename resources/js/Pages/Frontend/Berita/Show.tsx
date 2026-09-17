@@ -125,12 +125,12 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
     const imageSrc = getImageSrc(berita);
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 pt-14 overflow-x-hidden">
+        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 overflow-x-hidden">
             <Head title={`${berita.judul} — PKK Kabupaten Tasikmalaya`} />
             <Navbar />
 
-            {/* ===== HERO ===== */}
-            <header className="relative w-full min-h-[280px] sm:min-h-[320px] lg:min-h-[380px] flex items-end overflow-hidden">
+            {/* ===== HERO (FIXED: navbar transparan friendly) ===== */}
+            <header className="relative w-full min-h-[340px] sm:min-h-[380px] lg:min-h-[440px] flex items-end overflow-hidden">
                 {imageSrc ? (
                     <img
                         src={imageSrc}
@@ -143,12 +143,14 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                 ) : (
                     <div className="absolute inset-0 bg-slate-700" />
                 )}
+                {/* ✅ Overlay lebih gelap di atas — biar teks navbar kelihatan */}
                 <div
-                    className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/55 to-slate-900/35"
+                    className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/60 to-slate-900/60"
                     aria-hidden="true"
                 />
 
-                <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-8 sm:pb-10">
+                {/* ✅ pt-24 / pt-28 — biar konten turun, ga ketutup navbar */}
+                <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-8 sm:pb-10">
                     <nav
                         className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-white/80 mb-4"
                         aria-label="Breadcrumb"

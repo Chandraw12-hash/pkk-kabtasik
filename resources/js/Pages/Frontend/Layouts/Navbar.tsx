@@ -41,15 +41,18 @@ export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [openMobileSubmenu, setOpenMobileSubmenu] = useState<string | null>(null);
 
-    // ⭐ Cek apakah lagi di halaman Beranda
+    // ✅ FIX: Cek apakah di halaman dengan hero banner (beranda ATAU berita)
+    // Navbar transparan di halaman yang punya hero banner besar.
     const isHomePage = currentUrl === "/" || currentUrl === route("fe.beranda");
+    const isBeritaPage = currentUrl.startsWith("/berita");
 
-    // Navbar transparan HANYA di homepage + belum discroll
-    const isTransparent = isHomePage && !isScrolled;
+    // Navbar transparan HANYA di halaman yang punya hero banner + belum discroll.
+    const isTransparent = (isHomePage || isBeritaPage) && !isScrolled;
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener("scroll", handleScroll);
+        handleScroll(); // set initial state
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -99,7 +102,7 @@ export default function Navbar() {
         <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
                 !isTransparent
-                    ? "bg-white/98 backdrop-blur-md shadow-sm border-b border-slate-200"
+                    ? "bg-[#0072BC]/98 backdrop-blur-md shadow-md border-b border-[#005A94]"
                     : "bg-transparent"
             }`}
         >
@@ -117,18 +120,10 @@ export default function Navbar() {
                                 className="h-8 sm:h-9 w-auto"
                             />
                             <div className="flex flex-col leading-tight">
-                                <span
-                                    className={`text-sm sm:text-base font-bold tracking-tight transition-colors duration-300 ${
-                                        !isTransparent ? "text-slate-900" : "text-white"
-                                    }`}
-                                >
+                                <span className="text-sm sm:text-base font-bold tracking-tight text-white">
                                     TP PKK
                                 </span>
-                                <span
-                                    className={`text-[9px] sm:text-[10px] font-medium tracking-[0.1em] uppercase transition-colors duration-300 ${
-                                        !isTransparent ? "text-[#0072BC]" : "text-[#FFC72C]"
-                                    }`}
-                                >
+                                <span className="text-[9px] sm:text-[10px] font-medium tracking-[0.1em] uppercase text-[#FFC72C]">
                                     Kab. Tasikmalaya
                                 </span>
                             </div>
@@ -145,40 +140,24 @@ export default function Navbar() {
                                     {hasSubmenu ? (
                                         <button
                                             type="button"
-                                            className={`flex items-center gap-1 px-4 py-2 text-[14px] font-medium transition-colors duration-300 ${
-                                                !isTransparent
-                                                    ? "text-slate-600 hover:text-[#0072BC]"
-                                                    : "text-white/90 hover:text-white"
-                                            }`}
+                                            className="flex items-center gap-1 px-4 py-2 text-[14px] font-medium text-white/90 hover:text-white transition-colors duration-300"
                                         >
                                             <span>{link.name}</span>
                                             <ChevronDown
                                                 size={14}
-                                                className={`transition-transform duration-200 group-hover:rotate-180 ${
-                                                    !isTransparent
-                                                        ? "text-slate-400 group-hover:text-[#FFC72C]"
-                                                        : "text-white/60 group-hover:text-white"
-                                                }`}
+                                                className="text-white/60 group-hover:text-[#FFC72C] transition-transform duration-200 group-hover:rotate-180"
                                             />
                                         </button>
                                     ) : (
                                         <Link
                                             href={link.href}
-                                            className={`flex items-center gap-1 px-4 py-2 text-[14px] font-medium transition-colors duration-300 ${
-                                                !isTransparent
-                                                    ? "text-slate-600 hover:text-[#0072BC]"
-                                                    : "text-white/90 hover:text-white"
-                                            }`}
+                                            className="flex items-center gap-1 px-4 py-2 text-[14px] font-medium text-white/90 hover:text-white transition-colors duration-300"
                                         >
                                             <span>{link.name}</span>
                                         </Link>
                                     )}
 
-                                    <span
-                                        className={`absolute left-4 right-4 -bottom-px h-px scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center ${
-                                            !isTransparent ? "bg-[#0072BC]" : "bg-white"
-                                        }`}
-                                    />
+                                    <span className="absolute left-4 right-4 -bottom-px h-px scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center bg-[#FFC72C]" />
 
                                     {hasSubmenu && (
                                         <div className="absolute left-0 mt-1 w-64 bg-white rounded-lg shadow-lg shadow-slate-900/10 border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-1 group-hover:translate-y-0">
@@ -189,7 +168,7 @@ export default function Navbar() {
                                                         <Link
                                                             key={sub.name}
                                                             href={sub.href}
-                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-[#0072BC] hover:bg-slate-50 transition-colors"
+                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-[#0072BC] hover:bg-[#EAF3FA] transition-colors"
                                                         >
                                                             <SubIcon
                                                                 size={15}
@@ -213,11 +192,7 @@ export default function Navbar() {
                             {auth?.user ? (
                                 <Link
                                     href={route("be.dashboard")}
-                                    className={`inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 ${
-                                        !isTransparent
-                                            ? "text-white bg-[#0072BC] hover:bg-[#FFC72C]"
-                                            : "text-[#0072BC] bg-white hover:bg-slate-50"
-                                    }`}
+                                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 text-[#0072BC] bg-white hover:bg-slate-50"
                                 >
                                     <LayoutDashboard size={16} />
                                     Dashboard
@@ -225,11 +200,7 @@ export default function Navbar() {
                             ) : (
                                 <Link
                                     href={route("login")}
-                                    className={`inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 ${
-                                        !isTransparent
-                                            ? "text-white bg-[#0072BC] hover:bg-[#FFC72C]"
-                                            : "text-[#0072BC] bg-white hover:bg-slate-50"
-                                    }`}
+                                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 text-[#0072BC] bg-white hover:bg-slate-50"
                                 >
                                     <LogIn size={16} />
                                     Login
@@ -241,11 +212,7 @@ export default function Navbar() {
                             type="button"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             aria-label={isMobileMenuOpen ? "Tutup menu" : "Buka menu"}
-                            className={`lg:hidden p-2.5 rounded-lg transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC72C] ${
-                                !isTransparent
-                                    ? "text-slate-600 hover:text-[#0072BC]"
-                                    : "text-white/80 hover:text-white"
-                            }`}
+                            className="lg:hidden p-2.5 rounded-lg transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC72C] text-white/90 hover:text-white"
                         >
                             {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
                         </button>
@@ -280,7 +247,7 @@ export default function Navbar() {
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className="flex items-center gap-3 min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-[#0072BC] hover:bg-slate-50 rounded-xl transition-colors"
+                                    className="flex items-center gap-3 min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-[#0072BC] hover:bg-[#EAF3FA] rounded-xl transition-colors"
                                 >
                                     <Icon size={18} className="text-slate-400 flex-shrink-0" />
                                     <span>{link.name}</span>
@@ -294,7 +261,7 @@ export default function Navbar() {
                                     type="button"
                                     onClick={() => toggleMobileSubmenu(link.name)}
                                     aria-expanded={isOpen}
-                                    className="w-full flex items-center justify-between min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-[#0072BC] hover:bg-slate-50 rounded-xl transition-colors"
+                                    className="w-full flex items-center justify-between min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-[#0072BC] hover:bg-[#EAF3FA] rounded-xl transition-colors"
                                 >
                                     <span className="flex items-center gap-3">
                                         <Icon size={18} className="text-slate-400 flex-shrink-0" />
@@ -318,7 +285,7 @@ export default function Navbar() {
                                                 <Link
                                                     key={sub.name}
                                                     href={sub.href}
-                                                    className="flex items-center gap-3 min-h-[44px] px-3 py-2 text-sm text-slate-600 hover:text-[#0072BC] hover:bg-slate-50 rounded-lg transition-colors"
+                                                    className="flex items-center gap-3 min-h-[44px] px-3 py-2 text-sm text-slate-600 hover:text-[#0072BC] hover:bg-[#EAF3FA] rounded-lg transition-colors"
                                                 >
                                                     <SubIcon size={15} className="text-slate-400 flex-shrink-0" />
                                                     <span>{sub.name}</span>
@@ -336,7 +303,7 @@ export default function Navbar() {
                         {auth?.user ? (
                             <Link
                                 href={route("be.dashboard")}
-                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-[#0072BC] hover:bg-[#FFC72C] rounded-xl transition-colors"
+                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-[#0072BC] hover:bg-[#005A94] rounded-xl transition-colors"
                             >
                                 <LayoutDashboard size={18} />
                                 Dashboard
@@ -344,7 +311,7 @@ export default function Navbar() {
                         ) : (
                             <Link
                                 href={route("login")}
-                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-[#0072BC] hover:bg-[#FFC72C] rounded-xl transition-colors"
+                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-[#0072BC] hover:bg-[#005A94] rounded-xl transition-colors"
                             >
                                 <LogIn size={18} />
                                 Login

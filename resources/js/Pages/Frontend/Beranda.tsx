@@ -245,7 +245,8 @@ const useHeroCarousel = <T,>(items: T[], interval: number = 5000) => {
 // CUSTOM HOOK - FOCUS TRAP
 // ============================================================
 
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1])`;';
+// ✅ FIX: Hapus backtick & titik koma nyasar di akhir string
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 const useFocusTrap = (isOpen: boolean) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -454,12 +455,12 @@ export default function Welcome({
                 .logo-marquee-container { width: 100%; max-width: 320px; margin: 1.5rem auto 0; overflow: hidden; mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); }
                 .logo-marquee-track { display: flex; align-items: center; width: max-content; animation: logo-marquee 18s linear infinite; }
                 .logo-marquee-track:hover { animation-play-state: paused; }
-                .logo-marquee-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; flex-shrink: 0; width: 110px; padding: 0 0.5rem; }
+                .logo-marquee-item { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 0.3rem; flex-shrink: 0; width: 110px; min-height: 68px; padding: 0 0.5rem; }
                 .logo-marquee-item img { height: 42px; width: auto; max-width: 86px; object-fit: contain; }
-                .logo-marquee-item .label { font-size: 9px; color: rgba(255,255,255,0.9); font-weight: 500; text-align: center; line-height: 1.2; text-shadow: 0 1px 3px rgba(0,0,0,0.35); white-space: nowrap; }
+                .logo-marquee-item .label { display: block; width: 100%; font-size: 9px; color: rgba(255,255,255,0.9); font-weight: 500; text-align: center; line-height: 1.25; text-shadow: 0 1px 3px rgba(0,0,0,0.35); white-space: normal; word-break: break-word; overflow-wrap: break-word; }
                 @media (min-width: 640px) {
                     .logo-marquee-container { max-width: 420px; }
-                    .logo-marquee-item { width: 130px; }
+                    .logo-marquee-item { width: 130px; min-height: 78px; }
                     .logo-marquee-item img { height: 52px; max-width: 100px; }
                     .logo-marquee-item .label { font-size: 10px; }
                 }
@@ -529,12 +530,12 @@ export default function Welcome({
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-[240px] sm:max-w-none mx-auto">
             <Link
-                href="/program-kerja"
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] bg-[#0072BC] hover:bg-[#FFC72C] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-[#FFC72C] focus:ring-offset-2 border border-[#FFC72C]/30"
-            >
-                Lihat Program Kerja
-                <ArrowRight size={15} aria-hidden="true" className="ml-1" />
-            </Link>
+    href="/profil/sejarah"
+    className="inline-flex items-center justify-center gap-2 min-h-[44px] bg-[#0072BC] hover:bg-[#FFC72C] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-[#FFC72C] focus:ring-offset-2 border border-[#FFC72C]/30"
+>
+    Lihat Profil PKK
+    <ArrowRight size={15} aria-hidden="true" className="ml-1" />
+</Link>
 
             <Link
                 href="#data"
