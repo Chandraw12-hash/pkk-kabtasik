@@ -126,7 +126,7 @@ export default function GaleriKegiatan({
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
                     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                         <div>
-                            <p className="text-teal-700 text-[11px] font-semibold tracking-wider uppercase mb-1">
+                            <p className="text-[#0072BC] text-[11px] font-semibold tracking-wider uppercase mb-1">
                                 Program
                             </p>
                             <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
@@ -153,12 +153,12 @@ export default function GaleriKegiatan({
                                     onChange={(e) =>
                                         setSearchQuery(e.target.value)
                                     }
-                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white"
+                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-[#0072BC] bg-white"
                                 />
                             </div>
                             <button
                                 type="submit"
-                                className="shrink-0 px-3.5 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors"
+                                className="shrink-0 px-3.5 py-2 text-xs font-semibold text-white bg-[#0072BC] hover:bg-[#0072BC] rounded-lg transition-colors"
                             >
                                 Cari
                             </button>
@@ -188,7 +188,7 @@ export default function GaleriKegiatan({
                                             key={item.id}
                                             type="button"
                                             onClick={() => openLightbox(index)}
-                                            className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100 border border-slate-200 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2"
+                                            className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100 border border-slate-200 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0072BC] focus-visible:ring-offset-2"
                                         >
                                             <img
                                                 src={imageSrc}
@@ -245,7 +245,7 @@ export default function GaleriKegiatan({
                                                 }}
                                                 className={`min-w-[32px] h-8 px-1.5 flex items-center justify-center rounded-md border text-xs font-medium transition-colors ${
                                                     link.active
-                                                        ? "bg-teal-700 text-white border-teal-700"
+                                                        ? "bg-[#0072BC] text-white border-[#0072BC]"
                                                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 disabled:opacity-40"
                                                 }`}
                                                 dangerouslySetInnerHTML={{

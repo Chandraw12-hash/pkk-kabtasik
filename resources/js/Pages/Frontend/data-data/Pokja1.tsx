@@ -366,7 +366,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                 {/* ─── HEADER ─── */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <p className="text-teal-600 text-xs font-semibold tracking-wider uppercase">
+                        <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase">
                             Pokja I
                         </p>
                         <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">
@@ -387,7 +387,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                         </button>
                         <button
                             type="button"
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0072BC] hover:bg-[#0072BC] rounded-lg transition-colors"
                         >
                             <Download size={15} />
                             Ekspor
@@ -408,7 +408,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kecamatan..."
-                                className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0072BC] focus:border-transparent bg-white"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -416,7 +416,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                             <select
                                 value={perPage}
                                 onChange={(e) => setPerPage(Number(e.target.value))}
-                                className="border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                className="border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0072BC] focus:border-transparent"
                             >
                                 <option value="10">10</option>
                                 <option value="25">25</option>
@@ -429,7 +429,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                         <button
                             type="button"
                             onClick={() => setSearch("")}
-                            className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                            className="text-sm text-[#0072BC] hover:text-[#0072BC] font-medium"
                         >
                             Reset filter
                         </button>
@@ -439,7 +439,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                 {/* ─── LOADING ─── */}
                 {isLoading && (
                     <div className="flex flex-col items-center justify-center py-12">
-                        <div className="w-10 h-10 border-4 border-slate-200 border-t-teal-600 rounded-full animate-spin"></div>
+                        <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0072BC] rounded-full animate-spin"></div>
                         <p className="text-sm text-slate-500 mt-3">Memuat data...</p>
                     </div>
                 )}
@@ -527,7 +527,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                                         </div>
                                         <div className="pt-2 border-t border-slate-100 flex items-center gap-3">
                                             <span className="text-xs text-slate-400">Persentase P</span>
-                                            <span className="font-semibold text-teal-600">
+                                            <span className="font-semibold text-[#0072BC]">
                                                 {percentP.toFixed(1)}%
                                             </span>
                                         </div>
@@ -626,7 +626,7 @@ export default function Pokja1({ data, filters = {} }: Props) {
                                         >
                                             <ChevronLeft size={16} />
                                         </button>
-                                        <span className="px-4 py-2 border border-teal-600 rounded-lg bg-teal-600 text-white font-semibold text-sm min-w-[40px] text-center">
+                                        <span className="px-4 py-2 border border-[#0072BC] rounded-lg bg-[#0072BC] text-white font-semibold text-sm min-w-[40px] text-center">
                                             {localData.current_page || 1}
                                         </span>
                                         <button

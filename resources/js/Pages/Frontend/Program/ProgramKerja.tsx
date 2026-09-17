@@ -231,7 +231,7 @@ export default function ProgramKerja() {
             <section className="py-20 lg:py-24 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-12">
-                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                        <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-2">
                             Inisiatif Strategis
                         </p>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
@@ -250,14 +250,14 @@ export default function ProgramKerja() {
                                 className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 transition-colors flex flex-col"
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
                                         <program.icon
                                             size={18}
-                                            className="text-teal-600"
+                                            className="text-[#0072BC]"
                                         />
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 bg-teal-50 px-2.5 py-1 rounded">
+                                        <span className="text-[10px] font-semibold tracking-wide uppercase text-[#0072BC] bg-[#0072BC]/10 px-2.5 py-1 rounded">
                                             {program.pokja}
                                         </span>
                                         <span className="text-2xl font-bold text-slate-200">
@@ -282,7 +282,7 @@ export default function ProgramKerja() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
                         <div>
-                            <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                            <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-2">
                                 Dokumen Resmi
                             </p>
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
@@ -300,7 +300,7 @@ export default function ProgramKerja() {
                                 href="https://docs.google.com/uc?export=download&id=1gLUaaGr-XlrQQvc346A50YaIJEUy87mR"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-5 py-3 rounded-xl shadow-sm transition-colors"
+                                className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-sm px-5 py-3 rounded-xl shadow-sm transition-colors"
                             >
                                 <FileSpreadsheet size={18} />
                                 Unduh File Excel (.XLSX)
@@ -317,7 +317,7 @@ export default function ProgramKerja() {
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-colors ${
                                         activeTab === tab
-                                            ? "bg-teal-600 text-white shadow-sm"
+                                            ? "bg-[#0072BC] text-white shadow-sm"
                                             : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
                                     }`}
                                 >
@@ -345,7 +345,7 @@ export default function ProgramKerja() {
                                     {filteredData.map((item) => (
                                         <tr key={item.id} className="hover:bg-white/80 transition-colors">
                                             <td className="py-4 px-6 font-medium text-slate-900 whitespace-nowrap">
-                                                <span className="inline-block bg-teal-50 text-teal-700 text-[10px] font-bold px-2.5 py-1 rounded">
+                                                <span className="inline-block bg-[#0072BC]/10 text-[#0072BC] text-[10px] font-bold px-2.5 py-1 rounded">
                                                     {item.kategori}
                                                 </span>
                                             </td>
@@ -384,7 +384,7 @@ export default function ProgramKerja() {
             {/* ==================== CTA ==================== */}
             <section className="py-20 lg:py-24 bg-white border-t border-slate-100">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-3">
+                    <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-3">
                         Bersama PKK Tasikmalaya
                     </p>
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
@@ -398,7 +398,7 @@ export default function ProgramKerja() {
                     <div className="flex flex-wrap items-center justify-center gap-3">
                         <Link
                             href="#"
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
                         >
                             Mulai Berkontribusi
                             <ChevronRight size={15} />

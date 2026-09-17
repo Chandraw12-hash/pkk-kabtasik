@@ -191,7 +191,7 @@ export default function Pokja3({ data }: Props) {
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 w-full">
                 {/* ===== BREADCRUMB ===== */}
                 <nav className="flex items-center gap-2 text-sm text-slate-500">
-                    <Link href="/" className="hover:text-teal-600 transition-colors">
+                    <Link href="/" className="hover:text-[#0072BC] transition-colors">
                         Beranda
                     </Link>
                     <span className="text-slate-300">/</span>
@@ -200,7 +200,7 @@ export default function Pokja3({ data }: Props) {
 
                 {/* Judul */}
                 <div>
-                    <p className="text-teal-600 text-xs font-semibold tracking-wide uppercase mb-1">
+                    <p className="text-[#0072BC] text-xs font-semibold tracking-wide uppercase mb-1">
                         Pokja III
                     </p>
                     <h2 className="text-2xl font-bold text-slate-900">
@@ -219,7 +219,7 @@ export default function Pokja3({ data }: Props) {
                             <label className="text-sm font-medium text-slate-600">
                                 Kecamatan
                             </label>
-                            <select className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-teal-500">
+                            <select className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0072BC]">
                                 <option value="">Semua Kecamatan</option>
                             </select>
                         </div>
@@ -227,7 +227,7 @@ export default function Pokja3({ data }: Props) {
                             <label className="text-sm font-medium text-slate-600">
                                 Tahun
                             </label>
-                            <select className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-teal-500">
+                            <select className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0072BC]">
                                 <option value="2026">2026</option>
                                 <option value="2025">2025</option>
                             </select>
@@ -235,7 +235,7 @@ export default function Pokja3({ data }: Props) {
                     </div>
                     <button
                         type="button"
-                        className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
                     >
                         <Filter size={15} />
                         Terapkan Filter
@@ -295,8 +295,8 @@ export default function Pokja3({ data }: Props) {
                                 {totalIndustri.toLocaleString("id-ID")}
                             </p>
                         </div>
-                        <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-                            <Building2 size={18} className="text-teal-600" />
+                        <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
+                            <Building2 size={18} className="text-[#0072BC]" />
                         </div>
                     </div>
                 </div>
@@ -375,7 +375,7 @@ export default function Pokja3({ data }: Props) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kecamatan..."
-                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-teal-500 bg-white"
+                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#0072BC] bg-white"
                             />
                         </div>
                     </div>
@@ -464,7 +464,7 @@ export default function Pokja3({ data }: Props) {
                                         href={link.url}
                                         className={`px-3 py-1.5 border rounded-lg font-medium transition-colors ${
                                             link.active
-                                                ? "border-teal-600 bg-teal-600 text-white"
+                                                ? "border-[#0072BC] bg-[#0072BC] text-white"
                                                 : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}

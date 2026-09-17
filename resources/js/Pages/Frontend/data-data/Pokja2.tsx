@@ -247,7 +247,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 w-full">
                 {/* ===== BREADCRUMB ===== */}
                 <nav className="flex items-center gap-2 text-sm text-slate-500">
-                    <Link href="/" className="hover:text-teal-600 transition-colors">
+                    <Link href="/" className="hover:text-[#0072BC] transition-colors">
                         Beranda
                     </Link>
                     <span className="text-slate-300">/</span>
@@ -256,7 +256,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
 
                 {/* ===== JUDUL ===== */}
                 <div>
-                    <p className="text-teal-600 text-xs font-semibold tracking-wide uppercase mb-1">
+                    <p className="text-[#0072BC] text-xs font-semibold tracking-wide uppercase mb-1">
                         Pokja II
                     </p>
                     <h2 className="text-2xl font-bold text-slate-900">
@@ -280,7 +280,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kecamatan..."
-                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-teal-500 bg-white"
+                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#0072BC] bg-white"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                             <select
                                 value={perPage}
                                 onChange={(e) => setPerPage(Number(e.target.value))}
-                                className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-teal-500"
+                                className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0072BC]"
                             >
                                 <option value="10">10</option>
                                 <option value="25">25</option>
@@ -312,7 +312,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                 {/* ===== LOADING ===== */}
                 {isLoading && (
                     <div className="text-center py-4">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0072BC]"></div>
                         <p className="text-sm text-slate-500 mt-2">Memuat data...</p>
                     </div>
                 )}
@@ -357,8 +357,8 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                     {totalKoperasi.toLocaleString("id-ID")}
                                 </p>
                             </div>
-                            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-                                <Store size={18} className="text-teal-600" />
+                            <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
+                                <Store size={18} className="text-[#0072BC]" />
                             </div>
                         </div>
 
@@ -441,7 +441,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                         </div>
                                         <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
                                             <span className="text-xs text-slate-400">Persentase P</span>
-                                            <span className="font-bold text-teal-600">
+                                            <span className="font-bold text-[#0072BC]">
                                                 {percentP.toFixed(1)}%
                                             </span>
                                         </div>
@@ -583,7 +583,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                 >
                                     <ChevronLeft size={14} />
                                 </button>
-                                <span className="px-3 py-1.5 border border-teal-600 rounded-lg bg-teal-600 text-white font-medium">
+                                <span className="px-3 py-1.5 border border-[#0072BC] rounded-lg bg-[#0072BC] text-white font-medium">
                                     {localData.current_page || 1}
                                 </span>
                                 <button

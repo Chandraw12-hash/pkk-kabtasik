@@ -133,9 +133,9 @@ export default function TugasFungsi() {
                         {/* Tugas Pokok */}
                         <div>
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                <div className="w-9 h-9 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
                                     <CheckCircle
-                                        className="text-teal-600"
+                                        className="text-[#0072BC]"
                                         size={18}
                                     />
                                 </div>
@@ -149,7 +149,7 @@ export default function TugasFungsi() {
                                         key={i}
                                         className="flex items-start gap-3"
                                     >
-                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0" />
+                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#0072BC] flex-shrink-0" />
                                         <p className="text-slate-600 text-[15px] leading-relaxed">
                                             {tugas}
                                         </p>
@@ -161,9 +161,9 @@ export default function TugasFungsi() {
                         {/* Fungsi Strategis */}
                         <div>
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                <div className="w-9 h-9 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
                                     <Sparkles
-                                        className="text-teal-600"
+                                        className="text-[#0072BC]"
                                         size={18}
                                     />
                                 </div>
@@ -177,10 +177,10 @@ export default function TugasFungsi() {
                                         key={i}
                                         className="border border-slate-200 rounded-xl p-5"
                                     >
-                                        <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center mb-3">
+                                        <div className="w-9 h-9 rounded-lg bg-[#0072BC]/10 flex items-center justify-center mb-3">
                                             <f.icon
                                                 size={16}
-                                                className="text-teal-600"
+                                                className="text-[#0072BC]"
                                             />
                                         </div>
                                         <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
@@ -206,7 +206,7 @@ export default function TugasFungsi() {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-12">
-                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                        <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-2">
                             Pilar Utama Gerakan
                         </p>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
@@ -223,9 +223,9 @@ export default function TugasFungsi() {
                         {programPokok.map((prog, i) => (
                             <div
                                 key={i}
-                                className="bg-white border border-slate-200 rounded-xl p-5 hover:border-teal-300 transition-colors flex flex-col justify-between"
+                                className="bg-white border border-slate-200 rounded-xl p-5 hover:border-[#FFC72C] transition-colors flex flex-col justify-between"
                             >
-                                <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 font-bold text-xs mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-[#0072BC]/10 flex items-center justify-center text-[#0072BC] font-bold text-xs mb-3">
                                     {String(i + 1).padStart(2, "0")}
                                 </div>
                                 <h3 className="text-slate-800 text-sm font-semibold leading-snug">
@@ -246,7 +246,7 @@ export default function TugasFungsi() {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-12">
-                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                        <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-2">
                             Detail Pelaksanaan
                         </p>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
@@ -266,7 +266,7 @@ export default function TugasFungsi() {
                                 className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition-colors"
                             >
                                 <div className="flex items-start gap-3">
-                                    <span className="text-teal-600 font-semibold text-sm min-w-[28px]">
+                                    <span className="text-[#0072BC] font-semibold text-sm min-w-[28px]">
                                         {String(i + 1).padStart(2, "0")}
                                     </span>
                                     <p className="text-slate-600 text-sm leading-relaxed">

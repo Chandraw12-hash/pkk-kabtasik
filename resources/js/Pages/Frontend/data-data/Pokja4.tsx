@@ -200,7 +200,7 @@ export default function Pokja4({ data, filters = {} }: Props) {
             <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 w-full">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm text-slate-500">
-                    <Link href="/" className="hover:text-teal-600 transition-colors">
+                    <Link href="/" className="hover:text-[#0072BC] transition-colors">
                         Beranda
                     </Link>
                     <span className="text-slate-300">/</span>
@@ -209,7 +209,7 @@ export default function Pokja4({ data, filters = {} }: Props) {
 
                 {/* Judul */}
                 <div>
-                    <p className="text-teal-600 text-xs font-semibold tracking-wide uppercase mb-1">
+                    <p className="text-[#0072BC] text-xs font-semibold tracking-wide uppercase mb-1">
                         Pokja IV
                     </p>
                     <h2 className="text-2xl font-bold text-slate-900">
@@ -233,7 +233,7 @@ export default function Pokja4({ data, filters = {} }: Props) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kecamatan..."
-                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-teal-500 bg-white"
+                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#0072BC] bg-white"
                             />
                         </div>
                     </div>
@@ -273,8 +273,8 @@ export default function Pokja4({ data, filters = {} }: Props) {
                                 {totalKb.toLocaleString("id-ID")}
                             </p>
                         </div>
-                        <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-                            <Activity size={18} className="text-teal-600" />
+                        <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
+                            <Activity size={18} className="text-[#0072BC]" />
                         </div>
                     </div>
 
@@ -381,7 +381,7 @@ export default function Pokja4({ data, filters = {} }: Props) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kecamatan..."
-                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-teal-500 bg-white"
+                                className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#0072BC] bg-white"
                             />
                         </div>
                     </div>
@@ -460,7 +460,7 @@ export default function Pokja4({ data, filters = {} }: Props) {
                                         href={link.url}
                                         className={`px-3 py-1.5 border rounded-lg font-medium transition-colors ${
                                             link.active
-                                                ? "border-teal-600 bg-teal-600 text-white"
+                                                ? "border-[#0072BC] bg-[#0072BC] text-white"
                                                 : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}

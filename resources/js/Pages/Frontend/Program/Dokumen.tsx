@@ -85,7 +85,7 @@ export default function Dokumen() {
                                 placeholder="Cari nama dokumen atau kata kunci..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white text-slate-800 placeholder:text-slate-400"
+                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#0072BC] bg-white text-slate-800 placeholder:text-slate-400"
                             />
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -95,7 +95,7 @@ export default function Dokumen() {
                                     onClick={() => setActiveFilter(kat)}
                                     className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
                                         activeFilter === kat
-                                            ? "bg-teal-600 text-white"
+                                            ? "bg-[#0072BC] text-white"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                                 >
@@ -112,7 +112,7 @@ export default function Dokumen() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-1">
+                            <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-1">
                                 Dokumen
                             </p>
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
@@ -121,7 +121,7 @@ export default function Dokumen() {
                         </div>
                         <Link
                             href="#"
-                            className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                            className="text-sm font-medium text-[#0072BC] hover:text-[#0072BC] transition-colors"
                         >
                             Lihat Semua
                         </Link>
@@ -134,13 +134,13 @@ export default function Dokumen() {
                                 className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 transition-colors flex flex-col"
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
                                         <item.icon
                                             size={18}
-                                            className="text-teal-600"
+                                            className="text-[#0072BC]"
                                         />
                                     </div>
-                                    <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 bg-teal-50 px-2.5 py-1 rounded">
+                                    <span className="text-[10px] font-semibold tracking-wide uppercase text-[#0072BC] bg-[#0072BC]/10 px-2.5 py-1 rounded">
                                         {item.kategori}
                                     </span>
                                 </div>
@@ -155,7 +155,7 @@ export default function Dokumen() {
                                         <Clock size={12} />
                                         {item.date}
                                     </span>
-                                    <button className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors">
+                                    <button className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0072BC] hover:text-[#0072BC] transition-colors">
                                         <FileDown size={14} />
                                         Download
                                     </button>
@@ -170,7 +170,7 @@ export default function Dokumen() {
             <section className="py-16 lg:py-20 bg-white border-t border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-8">
-                        <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-1">
+                        <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-1">
                             Dokumen
                         </p>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
@@ -184,15 +184,15 @@ export default function Dokumen() {
                                 key={item.id}
                                 className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 transition-colors flex items-start gap-5"
                             >
-                                <div className="w-11 h-11 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                                <div className="w-11 h-11 rounded-lg bg-[#0072BC]/10 flex items-center justify-center flex-shrink-0">
                                     <item.icon
                                         size={18}
-                                        className="text-teal-600"
+                                        className="text-[#0072BC]"
                                     />
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600">
+                                        <span className="text-[10px] font-semibold tracking-wide uppercase text-[#0072BC]">
                                             {item.kategori}
                                         </span>
                                         <span className="text-slate-300">•</span>
@@ -206,7 +206,7 @@ export default function Dokumen() {
                                     <p className="text-slate-500 text-sm leading-relaxed mb-4">
                                         {item.desc}
                                     </p>
-                                    <button className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors">
+                                    <button className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0072BC] hover:text-[#0072BC] transition-colors">
                                         <FileDown size={14} />
                                         Unduh Laporan
                                     </button>
@@ -241,7 +241,7 @@ export default function Dokumen() {
             {/* ==================== CTA HELP ==================== */}
             <section className="py-16 lg:py-20 bg-white border-t border-slate-100">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-3">
+                    <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-3">
                         Bantuan
                     </p>
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
@@ -254,7 +254,7 @@ export default function Dokumen() {
                     <div className="flex flex-wrap items-center justify-center gap-3">
                         <Link
                             href="#"
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
+                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
                         >
                             <PhoneCall size={15} />
                             Hubungi Admin

@@ -115,7 +115,7 @@ export default function MarsPkk() {
             {/* Header halaman */}
             <section className="bg-slate-50 border-b border-slate-100">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-                    <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                    <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-2">
                         Program
                     </p>
                     <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">
@@ -136,8 +136,8 @@ export default function MarsPkk() {
                             {/* Cover + info */}
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div
-                                    className={`w-14 h-14 rounded-xl bg-teal-700 flex items-center justify-center shrink-0 shadow-sm ${
-                                        isPlaying ? "ring-2 ring-teal-300 ring-offset-2" : ""
+                                    className={`w-14 h-14 rounded-xl bg-[#0072BC] flex items-center justify-center shrink-0 shadow-sm ${
+                                        isPlaying ? "ring-2 ring-[#0072BC] ring-offset-2" : ""
                                     }`}
                                 >
                                     <Music size={22} className="text-white" />
@@ -159,7 +159,7 @@ export default function MarsPkk() {
                                         type="button"
                                         onClick={skipBackward}
                                         title="Mundur 10 detik"
-                                        className="p-1.5 text-slate-400 hover:text-teal-700 transition-colors rounded-md"
+                                        className="p-1.5 text-slate-400 hover:text-[#0072BC] transition-colors rounded-md"
                                     >
                                         <SkipBack size={18} />
                                     </button>
@@ -167,7 +167,7 @@ export default function MarsPkk() {
                                         type="button"
                                         id="mars-pkk-play-btn"
                                         onClick={() => setIsPlaying((p) => !p)}
-                                        className="w-11 h-11 rounded-full bg-teal-700 hover:bg-teal-600 flex items-center justify-center text-white transition-colors shadow-md"
+                                        className="w-11 h-11 rounded-full bg-[#0072BC] hover:bg-[#0072BC] flex items-center justify-center text-white transition-colors shadow-md"
                                         aria-label={
                                             isPlaying
                                                 ? "Jeda Mars PKK"
@@ -188,7 +188,7 @@ export default function MarsPkk() {
                                         type="button"
                                         onClick={skipForward}
                                         title="Maju 10 detik"
-                                        className="p-1.5 text-slate-400 hover:text-teal-700 transition-colors rounded-md"
+                                        className="p-1.5 text-slate-400 hover:text-[#0072BC] transition-colors rounded-md"
                                     >
                                         <SkipForward size={18} />
                                     </button>
@@ -200,7 +200,7 @@ export default function MarsPkk() {
                                     </span>
                                     <div className="relative flex-1 h-1.5 bg-slate-200 rounded-full">
                                         <div
-                                            className="absolute top-0 left-0 h-full bg-teal-600 rounded-full pointer-events-none transition-[width] duration-100"
+                                            className="absolute top-0 left-0 h-full bg-[#0072BC] rounded-full pointer-events-none transition-[width] duration-100"
                                             style={{
                                                 width: `${progressPercent}%`,
                                             }}
@@ -228,7 +228,7 @@ export default function MarsPkk() {
                                     <button
                                         type="button"
                                         onClick={() => setIsMuted((m) => !m)}
-                                        className="text-slate-400 hover:text-teal-700 transition-colors"
+                                        className="text-slate-400 hover:text-[#0072BC] transition-colors"
                                         aria-label={isMuted ? "Suara nyala" : "Bisukan"}
                                     >
                                         {isMuted || volume === 0 ? (
@@ -259,7 +259,7 @@ export default function MarsPkk() {
                                 <a
                                     href="/sound/mars-pkk.mp3"
                                     download
-                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-teal-700 border border-slate-200 hover:border-teal-200 px-3 py-1.5 rounded-lg transition-colors"
+                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-[#0072BC] border border-slate-200 hover:border-[#FFC72C] px-3 py-1.5 rounded-lg transition-colors"
                                 >
                                     <Download size={13} />
                                     Unduh
@@ -274,7 +274,7 @@ export default function MarsPkk() {
             <section id="lirik" className="py-14 lg:py-16 bg-white">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-8 sm:mb-10">
-                        <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-1.5">
+                        <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-1.5">
                             Lirik
                         </p>
                         <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
@@ -356,7 +356,7 @@ export default function MarsPkk() {
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-800 self-start sm:self-auto"
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0072BC] hover:text-[#0072BC] self-start sm:self-auto"
                                 >
                                     <Share2 size={14} />
                                     Bagikan
@@ -370,8 +370,8 @@ export default function MarsPkk() {
             {/* CTA ringkas */}
             <section className="py-12 lg:py-14 bg-slate-50 border-t border-slate-100">
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center mx-auto mb-3">
-                        <Users size={18} className="text-teal-700" />
+                    <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center mx-auto mb-3">
+                        <Users size={18} className="text-[#0072BC]" />
                     </div>
                     <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">
                         Ingin bergabung menjadi kader?
@@ -383,7 +383,7 @@ export default function MarsPkk() {
                     <div className="flex flex-wrap items-center justify-center gap-2.5">
                         <Link
                             href="/profil/tugas-fungsi"
-                            className="inline-flex items-center gap-2 bg-teal-700 hover:bg-teal-600 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors"
                         >
                             Pelajari organisasi
                         </Link>

@@ -119,10 +119,10 @@ export default function VisiMisi() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* ---------- VISI ---------- */}
                     <div className="text-center mb-10 sm:mb-12">
-                        <h2 className="text-teal-600 text-base sm:text-lg md:text-xl font-bold tracking-wider uppercase mb-3">
+                        <h2 className="text-[#0072BC] text-base sm:text-lg md:text-xl font-bold tracking-wider uppercase mb-3">
                             VISI
                         </h2>
-                        <div className="max-w-3xl mx-auto bg-teal-50/70 border border-teal-100 rounded-2xl px-6 py-6 sm:px-8 sm:py-7 shadow-sm">
+                        <div className="max-w-3xl mx-auto bg-[#0072BC]/10/70 border border-[#0072BC]/20 rounded-2xl px-6 py-6 sm:px-8 sm:py-7 shadow-sm">
                             <p className="text-slate-900 text-sm sm:text-base lg:text-lg font-medium leading-relaxed">
                                 &ldquo;Terwujudnya keluarga berdaya dan sejahtera untuk mendukung asta cita menuju Indonesia emas 2045&rdquo;
                             </p>
@@ -131,7 +131,7 @@ export default function VisiMisi() {
 
                     {/* ---------- MISI ---------- */}
                     <div className="text-center mb-8 sm:mb-10 max-w-3xl mx-auto">
-                        <h2 className="text-teal-600 text-base sm:text-lg md:text-xl font-bold tracking-wider uppercase mb-2">
+                        <h2 className="text-[#0072BC] text-base sm:text-lg md:text-xl font-bold tracking-wider uppercase mb-2">
                             MISI
                         </h2>
                         <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
@@ -146,20 +146,20 @@ export default function VisiMisi() {
                             return (
                                 <div
                                     key={i}
-                                    className={`bg-white border border-slate-200 rounded-xl p-5 sm:p-6 hover:border-teal-300 hover:shadow-md transition-all duration-300 flex flex-col ${
+                                    className={`bg-white border border-slate-200 rounded-xl p-5 sm:p-6 hover:border-[#FFC72C] hover:shadow-md transition-all duration-300 flex flex-col ${
                                         i === 4
                                             ? "sm:col-span-2 lg:col-span-1"
                                             : ""
                                     }`}
                                 >
                                     <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
                                             <Icon
                                                 size={17}
-                                                className="text-teal-600"
+                                                className="text-[#0072BC]"
                                             />
                                         </div>
-                                        <span className="text-[10px] sm:text-xs font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full">
+                                        <span className="text-[10px] sm:text-xs font-bold text-[#0072BC] bg-[#0072BC]/10 px-2.5 py-1 rounded-full">
                                             {i + 1}
                                         </span>
                                     </div>
@@ -186,7 +186,7 @@ export default function VisiMisi() {
                 }`}
             >
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <span className="text-teal-600 text-xs font-semibold tracking-[0.2em] uppercase mb-2 block">
+                    <span className="text-[#0072BC] text-xs font-semibold tracking-[0.2em] uppercase mb-2 block">
                         Dokumentasi Resmi
                     </span>
                     <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-3">
@@ -228,7 +228,7 @@ export default function VisiMisi() {
                         <a
                             href="/assets/images/Visi%20Misi%20PKK.jpg"
                             download
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-full transition-colors shadow-sm"
+                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-full transition-colors shadow-sm"
                         >
                             <Download size={15} /> Unduh Poster
                         </a>
@@ -256,7 +256,7 @@ export default function VisiMisi() {
                     <div className="flex flex-wrap items-center justify-center gap-3">
                         <Link
                             href="/program-kerja"
-                            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-colors shadow-sm"
+                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-colors shadow-sm"
                         >
                             Program Kerja
                             <ChevronRight size={15} />

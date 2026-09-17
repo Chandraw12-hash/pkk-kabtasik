@@ -130,13 +130,13 @@ function KecamatanTeraktifWidget({
         <div className="bg-white rounded-xl border border-slate-200 p-4 lg:sticky lg:top-28">
             <div className="flex items-center justify-between gap-2 mb-1">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                    <TrendingUp size={14} className="text-teal-700 shrink-0" />
+                    <TrendingUp size={14} className="text-[#0072BC] shrink-0" />
                     Kecamatan teraktif
                 </h3>
                 <select
                     value={range}
                     onChange={(e) => onRangeChange(e.target.value)}
-                    className="text-[11px] border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-600 focus:outline-none focus:border-teal-500"
+                    className="text-[11px] border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-600 focus:outline-none focus:border-[#0072BC]"
                     aria-label="Rentang waktu"
                 >
                     {rangeOptions.map((opt) => (
@@ -175,7 +175,7 @@ function KecamatanTeraktifWidget({
                                 <span
                                     className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 ${
                                         isTop
-                                            ? "bg-teal-700 text-white"
+                                            ? "bg-[#0072BC] text-white"
                                             : "bg-slate-100 text-slate-500"
                                     }`}
                                 >
@@ -200,8 +200,8 @@ function KecamatanTeraktifWidget({
                                         <div
                                             className={`h-full rounded-full ${
                                                 isTop
-                                                    ? "bg-teal-700"
-                                                    : "bg-teal-400"
+                                                    ? "bg-[#0072BC]"
+                                                    : "bg-[#0072BC]/80"
                                             }`}
                                             style={{ width: `${pct}%` }}
                                         />
@@ -218,7 +218,7 @@ function KecamatanTeraktifWidget({
                         <button
                             type="button"
                             onClick={() => onRangeChange("all")}
-                            className="text-xs text-teal-700 hover:text-teal-800 mt-1 font-medium"
+                            className="text-xs text-[#0072BC] hover:text-[#0072BC] mt-1 font-medium"
                         >
                             Lihat semua
                         </button>
@@ -407,7 +407,7 @@ export default function Berita({
             {/* Header */}
             <div className="bg-white border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-                    <p className="text-teal-700 text-[11px] font-semibold tracking-wider uppercase mb-1">
+                    <p className="text-[#0072BC] text-[11px] font-semibold tracking-wider uppercase mb-1">
                         Informasi
                     </p>
                     <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
@@ -431,7 +431,7 @@ export default function Berita({
                                 aria-pressed={activeFilter === kat}
                                 className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                                     activeFilter === kat
-                                        ? "bg-teal-700 text-white"
+                                        ? "bg-[#0072BC] text-white"
                                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }`}
                             >
@@ -448,7 +448,7 @@ export default function Berita({
                                     onChange={(e) =>
                                         setSelectedKecamatan(e.target.value)
                                     }
-                                    className="text-xs border border-slate-200 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-teal-500 max-w-[42%] sm:max-w-[160px]"
+                                    className="text-xs border border-slate-200 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-[#0072BC] max-w-[42%] sm:max-w-[160px]"
                                 >
                                     <option value="">Semua kecamatan</option>
                                     {kecamatanList.map((k) => (
@@ -470,7 +470,7 @@ export default function Berita({
                                     onChange={(e) =>
                                         setSearchQuery(e.target.value)
                                     }
-                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white placeholder:text-slate-400"
+                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-[#0072BC] bg-white placeholder:text-slate-400"
                                 />
                             </div>
                         </div>
@@ -478,7 +478,7 @@ export default function Berita({
                             <button
                                 type="button"
                                 onClick={handleReset}
-                                className="inline-flex items-center gap-1 text-xs text-teal-700 hover:text-teal-800 font-medium self-start sm:self-auto"
+                                className="inline-flex items-center gap-1 text-xs text-[#0072BC] hover:text-[#0072BC] font-medium self-start sm:self-auto"
                             >
                                 <X size={13} />
                                 Reset
@@ -505,7 +505,7 @@ export default function Berita({
                         <div className="flex-1 min-w-0 order-2 lg:order-1">
                             {isLoading ? (
                                 <div className="text-center py-14">
-                                    <div className="inline-block animate-spin rounded-full h-7 w-7 border-2 border-teal-700 border-t-transparent" />
+                                    <div className="inline-block animate-spin rounded-full h-7 w-7 border-2 border-[#0072BC] border-t-transparent" />
                                     <p className="text-slate-500 text-sm mt-2.5">
                                         Memuat berita...
                                     </p>
@@ -541,7 +541,7 @@ export default function Berita({
                                                         <div className="flex-1 min-w-0 p-2.5 flex flex-col justify-between">
                                                             <div>
                                                                 <div className="flex flex-wrap items-center gap-1 mb-0.5 text-[10px] text-slate-400">
-                                                                    <span className="font-medium text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded">
+                                                                    <span className="font-medium text-[#0072BC] bg-[#0072BC]/10 px-1.5 py-0.5 rounded">
                                                                         {item.kategori ||
                                                                             DEFAULT_KATEGORI}
                                                                     </span>
@@ -562,7 +562,7 @@ export default function Berita({
                                                                 <h2 className="text-[13px] font-semibold text-slate-900 leading-snug line-clamp-2">
                                                                     <Link
                                                                         href={href}
-                                                                        className="hover:text-teal-800"
+                                                                        className="hover:text-[#0072BC]"
                                                                     >
                                                                         {item.judul}
                                                                     </Link>
@@ -575,7 +575,7 @@ export default function Berita({
                                                                 </span>
                                                                 <Link
                                                                     href={href}
-                                                                    className="inline-flex items-center gap-0.5 text-[11px] font-medium text-teal-700 hover:text-teal-800"
+                                                                    className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#0072BC] hover:text-[#0072BC]"
                                                                 >
                                                                     Baca
                                                                     <ArrowRight size={11} />
@@ -628,7 +628,7 @@ export default function Berita({
                                                             className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-semibold ${
                                                                 currentPage ===
                                                                 page
-                                                                    ? "bg-teal-700 text-white"
+                                                                    ? "bg-[#0072BC] text-white"
                                                                     : "border border-slate-200 text-slate-600 hover:bg-slate-100"
                                                             }`}
                                                         >
@@ -666,7 +666,7 @@ export default function Berita({
                                     <button
                                         type="button"
                                         onClick={handleReset}
-                                        className="text-xs font-medium text-teal-700 border border-teal-200 hover:bg-teal-50 px-3 py-1.5 rounded-md"
+                                        className="text-xs font-medium text-[#0072BC] border border-[#0072BC]/30 hover:bg-[#0072BC]/10 px-3 py-1.5 rounded-md"
                                     >
                                         Reset filter
                                     </button>
@@ -710,7 +710,7 @@ export default function Berita({
                         Update kegiatan TP PKK ke email Anda.
                     </p>
                     {newsletterStatus === "success" ? (
-                        <div className="inline-flex items-center gap-1.5 text-teal-700 bg-teal-50 border border-teal-100 rounded-md px-3 py-2 text-xs">
+                        <div className="inline-flex items-center gap-1.5 text-[#0072BC] bg-[#0072BC]/10 border border-[#0072BC]/20 rounded-md px-3 py-2 text-xs">
                             <CheckCircle2 size={14} />
                             Email berhasil didaftarkan.
                         </div>
@@ -731,14 +731,14 @@ export default function Berita({
                                     onChange={(e) =>
                                         setNewsletterEmail(e.target.value)
                                     }
-                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:border-teal-500"
+                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:border-[#0072BC]"
                                     required
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={newsletterStatus === "loading"}
-                                className="sm:w-auto px-4 py-2 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-md disabled:opacity-60"
+                                className="sm:w-auto px-4 py-2 text-xs font-semibold text-white bg-[#0072BC] hover:bg-[#0072BC] rounded-md disabled:opacity-60"
                             >
                                 {newsletterStatus === "loading"
                                     ? "..."

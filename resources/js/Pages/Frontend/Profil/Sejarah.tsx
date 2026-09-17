@@ -48,7 +48,7 @@ export default function Sejarah() {
 
                         {/* Teks Sejarah */}
                         <div className="w-full lg:w-7/12">
-                            <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                            <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-2">
                                 Jejak Langkah Sejarah
                             </p>
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">

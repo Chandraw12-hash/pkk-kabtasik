@@ -62,7 +62,7 @@ export default function KetentuanSeragam() {
 
                         {/* ==================== KIRI ==================== */}
                         <div className="w-full lg:w-7/12">
-                            <p className="text-teal-600 text-sm font-semibold tracking-wide uppercase mb-2">
+                            <p className="text-[#0072BC] text-sm font-semibold tracking-wide uppercase mb-2">
                                 Standar Penampilan
                             </p>
 
@@ -81,12 +81,12 @@ export default function KetentuanSeragam() {
                                     return (
                                         <div
                                             key={i}
-                                            className="bg-white border border-slate-200 rounded-xl p-5 hover:border-teal-300 hover:shadow-sm transition-all duration-300"
+                                            className="bg-white border border-slate-200 rounded-xl p-5 hover:border-[#FFC72C] hover:shadow-sm transition-all duration-300"
                                         >
-                                            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center mb-3">
+                                            <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center mb-3">
                                                 <Icon
                                                     size={18}
-                                                    className="text-teal-600"
+                                                    className="text-[#0072BC]"
                                                 />
                                             </div>
 
@@ -120,10 +120,10 @@ export default function KetentuanSeragam() {
                             {/* ==================== KETENTUAN ==================== */}
                             <div className="border border-slate-200 rounded-xl p-6 bg-white">
                                 <div className="flex items-center gap-3 mb-5">
-                                    <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                                    <div className="w-9 h-9 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
                                         <CheckCircle
                                             size={18}
-                                            className="text-teal-600"
+                                            className="text-[#0072BC]"
                                         />
                                     </div>
 
@@ -140,7 +140,7 @@ export default function KetentuanSeragam() {
                                         >
                                             <Check
                                                 size={15}
-                                                className="text-teal-600 mt-1 flex-shrink-0"
+                                                className="text-[#0072BC] mt-1 flex-shrink-0"
                                             />
 
                                             <p className="text-slate-600 text-sm leading-relaxed">

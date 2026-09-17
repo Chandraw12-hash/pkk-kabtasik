@@ -395,12 +395,12 @@ export default function StrukturOrganisasi({
             ring === "gold"
                 ? "border-yellow-400"
                 : ring === "teal"
-                  ? "border-teal-500"
+                  ? "border-[#0072BC]"
                   : "border-slate-200";
 
         return (
             <div
-                className={`rounded-full overflow-hidden bg-teal-50 border-2 ${ringClass} flex items-center justify-center shrink-0`}
+                className={`rounded-full overflow-hidden bg-[#0072BC]/10 border-2 ${ringClass} flex items-center justify-center shrink-0`}
                 style={{
                     width: size,
                     height: size,
@@ -419,7 +419,7 @@ export default function StrukturOrganisasi({
                 ) : (
                     <User
                         size={size * 0.38}
-                        className="text-teal-600/50"
+                        className="text-[#0072BC]/50"
                     />
                 )}
             </div>
@@ -455,7 +455,7 @@ export default function StrukturOrganisasi({
                 }
                 className={`struktur-card w-full bg-white rounded-2xl border px-4 py-5 flex flex-col items-center text-center ${
                     isSelected
-                        ? "border-teal-500 ring-2 ring-teal-100"
+                        ? "border-[#0072BC] ring-2 ring-[#0072BC]/20"
                         : "border-slate-200"
                 }`}
             >
@@ -577,7 +577,7 @@ export default function StrukturOrganisasi({
                 <div className="relative w-full max-w-lg max-h-[88vh] overflow-y-auto bg-white rounded-3xl shadow-2xl">
                     <div className="sticky top-0 z-10 bg-white px-5 sm:px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-xl bg-[#0072BC]/10 text-[#0072BC] flex items-center justify-center">
                                 <Icon size={18} />
                             </div>
 
@@ -705,7 +705,7 @@ export default function StrukturOrganisasi({
                                             onClick={
                                                 prev
                                             }
-                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm hover:border-teal-300 text-slate-700 flex items-center justify-center"
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm hover:border-[#FFC72C] text-slate-700 flex items-center justify-center"
                                         >
                                             <ChevronLeft
                                                 size={
@@ -719,7 +719,7 @@ export default function StrukturOrganisasi({
                                             onClick={
                                                 next
                                             }
-                                            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm hover:border-teal-300 text-slate-700 flex items-center justify-center"
+                                            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm hover:border-[#FFC72C] text-slate-700 flex items-center justify-center"
                                         >
                                             <ChevronRight
                                                 size={
@@ -747,7 +747,7 @@ export default function StrukturOrganisasi({
                                                         className={`h-2 rounded-full transition-all ${
                                                             idx ===
                                                             index
-                                                                ? "w-6 bg-teal-600"
+                                                                ? "w-6 bg-[#0072BC]"
                                                                 : "w-2 bg-slate-300"
                                                         }`}
                                                     />
@@ -808,10 +808,10 @@ export default function StrukturOrganisasi({
 
                 <main className="flex-1 flex items-center justify-center px-4">
                     <div className="text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-5">
+                        <div className="w-16 h-16 rounded-2xl bg-[#0072BC]/10 flex items-center justify-center mx-auto mb-5">
                             <Users
                                 size={30}
-                                className="text-teal-600"
+                                className="text-[#0072BC]"
                             />
                         </div>
 
@@ -867,7 +867,7 @@ export default function StrukturOrganisasi({
             <section className="relative overflow-hidden bg-slate-50 border-b border-slate-100 pt-24 sm:pt-28 pb-12 sm:pb-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-3">
+                        <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-3">
                             Kepengurusan
                         </p>
 
@@ -875,7 +875,7 @@ export default function StrukturOrganisasi({
                             Struktur Organisasi
                         </h1>
 
-                        <div className="w-12 h-1 bg-teal-600 rounded-full mt-5 mb-5" />
+                        <div className="w-12 h-1 bg-[#0072BC] rounded-full mt-5 mb-5" />
 
                         <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-2xl">
                             Struktur kepengurusan Tim
@@ -956,7 +956,7 @@ export default function StrukturOrganisasi({
                             {/* DESKRIPSI */}
 
                             <div className="w-full lg:w-7/12 lg:pt-5">
-                                <p className="text-teal-700 text-sm font-medium tracking-wide uppercase mb-2">
+                                <p className="text-[#0072BC] text-sm font-medium tracking-wide uppercase mb-2">
                                     Ketua TP PKK
                                 </p>
 
@@ -993,7 +993,7 @@ export default function StrukturOrganisasi({
                                             ketua
                                         )
                                     }
-                                    className="struktur-button mt-6 inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-5 py-3 rounded-lg"
+                                    className="struktur-button mt-6 inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white text-sm font-medium px-5 py-3 rounded-lg"
                                 >
                                     Lihat Profil Lengkap
 
@@ -1023,7 +1023,7 @@ export default function StrukturOrganisasi({
                     {/* HEADER */}
 
                     <div className="text-center mb-12">
-                        <p className="text-teal-700 text-xs font-semibold tracking-wider uppercase mb-2">
+                        <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-2">
                             Struktur Kepengurusan
                         </p>
 
@@ -1032,7 +1032,7 @@ export default function StrukturOrganisasi({
                             Kabupaten Tasikmalaya
                         </h2>
 
-                        <div className="w-10 h-0.5 bg-teal-600 mx-auto mb-4" />
+                        <div className="w-10 h-0.5 bg-[#0072BC] mx-auto mb-4" />
 
                         <p className="text-slate-500 text-sm md:text-base max-w-2xl mx-auto">
                             Struktur kepengurusan yang
@@ -1169,12 +1169,12 @@ export default function StrukturOrganisasi({
                                                 className="struktur-card w-full h-full bg-white rounded-2xl border border-slate-200 p-6 text-left group"
                                             >
                                                 <div className="flex items-center justify-between mb-5">
-                                                    <div className="w-11 h-11 rounded-xl bg-teal-50 group-hover:bg-teal-600 flex items-center justify-center transition-colors">
+                                                    <div className="w-11 h-11 rounded-xl bg-[#0072BC]/10 group-hover:bg-[#0072BC] flex items-center justify-center transition-colors">
                                                         <Icon
                                                             size={
                                                                 20
                                                             }
-                                                            className="text-teal-600 group-hover:text-white transition-colors"
+                                                            className="text-[#0072BC] group-hover:text-white transition-colors"
                                                         />
                                                     </div>
 
@@ -1198,7 +1198,7 @@ export default function StrukturOrganisasi({
                                                     }
                                                 </p>
 
-                                                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-teal-600">
+                                                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-[#0072BC]">
                                                     Lihat Pengurus
 
                                                     <ArrowRight
@@ -1298,7 +1298,7 @@ export default function StrukturOrganisasi({
                                         null
                                     )
                                 }
-                                className="mt-7 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-6 py-3 rounded-lg transition-colors"
+                                className="mt-7 bg-[#0072BC] hover:bg-[#0072BC] text-white text-sm font-medium px-6 py-3 rounded-lg transition-colors"
                             >
                                 Tutup
                             </button>
