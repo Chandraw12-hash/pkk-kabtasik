@@ -39,39 +39,28 @@ export default function Navbar() {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [openMobileSubmenu, setOpenMobileSubmenu] = useState<string | null>(
-        null
-    );
+    const [openMobileSubmenu, setOpenMobileSubmenu] = useState<string | null>(null);
 
-    // ⭐ Cek apakah lagi di halaman Beranda — satu-satunya halaman yang punya
-    // hero image gelap di belakang navbar, jadi satu-satunya yang boleh transparan.
+    // ⭐ Cek apakah lagi di halaman Beranda
     const isHomePage = currentUrl === "/" || currentUrl === route("fe.beranda");
 
-    // ⭐ Navbar transparan HANYA jika di homepage DAN belum discroll.
-    // Di halaman lain (Program, Berita, Profil, dst) selalu solid dari awal.
+    // Navbar transparan HANYA di homepage + belum discroll
     const isTransparent = isHomePage && !isScrolled;
 
     useEffect(() => {
-        const handleScroll = () => {
-            // 🔥 Ubah threshold jadi 50px biar lebih smooth
-            setIsScrolled(window.scrollY > 50);
-        };
+        const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Tutup menu saat pindah halaman
     useEffect(() => {
         setIsMobileMenuOpen(false);
         setOpenMobileSubmenu(null);
     }, [currentUrl]);
 
-    // Kunci scroll body saat menu mobile terbuka
     useEffect(() => {
         document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
-        return () => {
-            document.body.style.overflow = "";
-        };
+        return () => { document.body.style.overflow = ""; };
     }, [isMobileMenuOpen]);
 
     const navLinks: NavLink[] = [
@@ -81,31 +70,11 @@ export default function Navbar() {
             href: "#",
             icon: User,
             submenu: [
-                {
-                    name: "Sejarah",
-                    href: route("fe.profil.sejarah"),
-                    icon: FileText,
-                },
-                {
-                    name: "Tugas Pokok dan Fungsi",
-                    href: route("fe.profil.tugasFungsi"),
-                    icon: Award,
-                },
-                {
-                    name: "Visi & Misi",
-                    href: route("fe.profil.visiMisi"),
-                    icon: BookOpen,
-                },
-                {
-                    name: "Struktur Organisasi",
-                    href: route("fe.profil.strukturOrganisasi"),
-                    icon: Building2,
-                },
-                {
-                    name: "Ketentuan Seragam",
-                    href: route("fe.profil.ketentuanSeragam"),
-                    icon: Shirt,
-                },
+                { name: "Sejarah", href: route("fe.profil.sejarah"), icon: FileText },
+                { name: "Tugas Pokok dan Fungsi", href: route("fe.profil.tugasFungsi"), icon: Award },
+                { name: "Visi & Misi", href: route("fe.profil.visiMisi"), icon: BookOpen },
+                { name: "Struktur Organisasi", href: route("fe.profil.strukturOrganisasi"), icon: Building2 },
+                { name: "Ketentuan Seragam", href: route("fe.profil.ketentuanSeragam"), icon: Shirt },
             ],
         },
         {
@@ -113,26 +82,10 @@ export default function Navbar() {
             href: "#",
             icon: BookOpen,
             submenu: [
-                {
-                    name: "Program Kerja",
-                    href: route("fe.program.programKerja"),
-                    icon: Briefcase,
-                },
-                {
-                    name: "Galeri Kegiatan",
-                    href: route("fe.program.galeriKegiatan"),
-                    icon: Image,
-                },
-                {
-                    name: "Mars PKK",
-                    href: route("fe.program.marsPkk"),
-                    icon: Music,
-                },
-                {
-                    name: "Dokumen",
-                    href: route("fe.program.dokumen"),
-                    icon: FolderOpen,
-                },
+                { name: "Program Kerja", href: route("fe.program.programKerja"), icon: Briefcase },
+                { name: "Galeri Kegiatan", href: route("fe.program.galeriKegiatan"), icon: Image },
+                { name: "Mars PKK", href: route("fe.program.marsPkk"), icon: Music },
+                { name: "Dokumen", href: route("fe.program.dokumen"), icon: FolderOpen },
             ],
         },
         { name: "Berita", href: route("fe.berita"), icon: Calendar },
@@ -155,12 +108,12 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link
                         href={route("fe.beranda")}
-                        className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-lg"
+                        className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC72C] rounded-lg"
                     >
                         <div className="flex items-center gap-2.5 sm:gap-3">
                             <img
                                 src="/assets/logo/logotasik.png"
-                                alt="Logo Kab. Tasikmalaya"
+                                alt="Logo PKK Kab. Tasikmalaya"
                                 className="h-8 sm:h-9 w-auto"
                             />
                             <div className="flex flex-col leading-tight">
@@ -173,7 +126,7 @@ export default function Navbar() {
                                 </span>
                                 <span
                                     className={`text-[9px] sm:text-[10px] font-medium tracking-[0.1em] uppercase transition-colors duration-300 ${
-                                        !isTransparent ? "text-teal-700" : "text-teal-200"
+                                        !isTransparent ? "text-[#0072BC]" : "text-[#FFC72C]"
                                     }`}
                                 >
                                     Kab. Tasikmalaya
@@ -185,8 +138,7 @@ export default function Navbar() {
                     {/* Desktop nav */}
                     <div className="hidden lg:flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2">
                         {navLinks.map((link) => {
-                            const hasSubmenu =
-                                link.submenu && link.submenu.length > 0;
+                            const hasSubmenu = link.submenu && link.submenu.length > 0;
 
                             return (
                                 <div key={link.name} className="relative group">
@@ -195,17 +147,16 @@ export default function Navbar() {
                                             type="button"
                                             className={`flex items-center gap-1 px-4 py-2 text-[14px] font-medium transition-colors duration-300 ${
                                                 !isTransparent
-                                                    ? "text-slate-600 hover:text-teal-700"
+                                                    ? "text-slate-600 hover:text-[#0072BC]"
                                                     : "text-white/90 hover:text-white"
                                             }`}
-                                            aria-haspopup="true"
                                         >
                                             <span>{link.name}</span>
                                             <ChevronDown
                                                 size={14}
                                                 className={`transition-transform duration-200 group-hover:rotate-180 ${
                                                     !isTransparent
-                                                        ? "text-slate-400 group-hover:text-teal-600"
+                                                        ? "text-slate-400 group-hover:text-[#FFC72C]"
                                                         : "text-white/60 group-hover:text-white"
                                                 }`}
                                             />
@@ -215,7 +166,7 @@ export default function Navbar() {
                                             href={link.href}
                                             className={`flex items-center gap-1 px-4 py-2 text-[14px] font-medium transition-colors duration-300 ${
                                                 !isTransparent
-                                                    ? "text-slate-600 hover:text-teal-700"
+                                                    ? "text-slate-600 hover:text-[#0072BC]"
                                                     : "text-white/90 hover:text-white"
                                             }`}
                                         >
@@ -225,7 +176,7 @@ export default function Navbar() {
 
                                     <span
                                         className={`absolute left-4 right-4 -bottom-px h-px scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-center ${
-                                            !isTransparent ? "bg-teal-600" : "bg-white"
+                                            !isTransparent ? "bg-[#0072BC]" : "bg-white"
                                         }`}
                                     />
 
@@ -238,15 +189,13 @@ export default function Navbar() {
                                                         <Link
                                                             key={sub.name}
                                                             href={sub.href}
-                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-teal-700 hover:bg-slate-50 transition-colors"
+                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:text-[#0072BC] hover:bg-slate-50 transition-colors"
                                                         >
                                                             <SubIcon
                                                                 size={15}
                                                                 className="text-slate-400 flex-shrink-0"
                                                             />
-                                                            <span>
-                                                                {sub.name}
-                                                            </span>
+                                                            <span>{sub.name}</span>
                                                         </Link>
                                                     );
                                                 })}
@@ -266,8 +215,8 @@ export default function Navbar() {
                                     href={route("be.dashboard")}
                                     className={`inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 ${
                                         !isTransparent
-                                            ? "text-white bg-teal-700 hover:bg-teal-800"
-                                            : "text-teal-700 bg-white hover:bg-teal-50"
+                                            ? "text-white bg-[#0072BC] hover:bg-[#FFC72C]"
+                                            : "text-[#0072BC] bg-white hover:bg-slate-50"
                                     }`}
                                 >
                                     <LayoutDashboard size={16} />
@@ -278,8 +227,8 @@ export default function Navbar() {
                                     href={route("login")}
                                     className={`inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-300 ${
                                         !isTransparent
-                                            ? "text-white bg-teal-700 hover:bg-teal-800"
-                                            : "text-teal-700 bg-white hover:bg-teal-50"
+                                            ? "text-white bg-[#0072BC] hover:bg-[#FFC72C]"
+                                            : "text-[#0072BC] bg-white hover:bg-slate-50"
                                     }`}
                                 >
                                     <LogIn size={16} />
@@ -290,26 +239,15 @@ export default function Navbar() {
 
                         <button
                             type="button"
-                            onClick={() =>
-                                setIsMobileMenuOpen(!isMobileMenuOpen)
-                            }
-                            aria-label={
-                                isMobileMenuOpen
-                                    ? "Tutup menu navigasi"
-                                    : "Buka menu navigasi"
-                            }
-                            aria-expanded={isMobileMenuOpen}
-                            className={`lg:hidden p-2.5 rounded-lg transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label={isMobileMenuOpen ? "Tutup menu" : "Buka menu"}
+                            className={`lg:hidden p-2.5 rounded-lg transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC72C] ${
                                 !isTransparent
-                                    ? "text-slate-600 hover:text-teal-700 hover:bg-slate-50"
-                                    : "text-white/80 hover:text-white hover:bg-white/10"
+                                    ? "text-slate-600 hover:text-[#0072BC]"
+                                    : "text-white/80 hover:text-white"
                             }`}
                         >
-                            {isMobileMenuOpen ? (
-                                <X size={22} />
-                            ) : (
-                                <Menu size={22} />
-                            )}
+                            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
                         </button>
                     </div>
                 </div>
@@ -320,7 +258,6 @@ export default function Navbar() {
                 <div
                     className="lg:hidden fixed inset-0 top-14 sm:top-16 bg-slate-900/40 z-40"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    aria-hidden="true"
                 />
             )}
 
@@ -334,8 +271,7 @@ export default function Navbar() {
             >
                 <div className="max-h-[calc(100vh-3.5rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto px-4 py-3 space-y-1">
                     {navLinks.map((link) => {
-                        const hasSubmenu =
-                            link.submenu && link.submenu.length > 0;
+                        const hasSubmenu = link.submenu && link.submenu.length > 0;
                         const isOpen = openMobileSubmenu === link.name;
                         const Icon = link.icon;
 
@@ -344,12 +280,9 @@ export default function Navbar() {
                                 <Link
                                     key={link.name}
                                     href={link.href}
-                                    className="flex items-center gap-3 min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition-colors"
+                                    className="flex items-center gap-3 min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-[#0072BC] hover:bg-slate-50 rounded-xl transition-colors"
                                 >
-                                    <Icon
-                                        size={18}
-                                        className="text-slate-400 flex-shrink-0"
-                                    />
+                                    <Icon size={18} className="text-slate-400 flex-shrink-0" />
                                     <span>{link.name}</span>
                                 </Link>
                             );
@@ -359,32 +292,23 @@ export default function Navbar() {
                             <div key={link.name} className="rounded-xl">
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        toggleMobileSubmenu(link.name)
-                                    }
+                                    onClick={() => toggleMobileSubmenu(link.name)}
                                     aria-expanded={isOpen}
-                                    className="w-full flex items-center justify-between min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-teal-700 hover:bg-slate-50 rounded-xl transition-colors"
+                                    className="w-full flex items-center justify-between min-h-[48px] px-3 py-2.5 text-[15px] font-medium text-slate-700 hover:text-[#0072BC] hover:bg-slate-50 rounded-xl transition-colors"
                                 >
                                     <span className="flex items-center gap-3">
-                                        <Icon
-                                            size={18}
-                                            className="text-slate-400 flex-shrink-0"
-                                        />
+                                        <Icon size={18} className="text-slate-400 flex-shrink-0" />
                                         {link.name}
                                     </span>
                                     <ChevronDown
                                         size={16}
-                                        className={`text-slate-400 transition-transform duration-200 ${
-                                            isOpen ? "rotate-180" : ""
-                                        }`}
+                                        className={`text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                                     />
                                 </button>
 
                                 <div
                                     className={`overflow-hidden transition-all duration-200 ${
-                                        isOpen
-                                            ? "max-h-96 opacity-100"
-                                            : "max-h-0 opacity-0"
+                                        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                                     }`}
                                 >
                                     <div className="ml-3 pl-3 border-l border-slate-200 space-y-0.5 py-1 mb-1">
@@ -394,12 +318,9 @@ export default function Navbar() {
                                                 <Link
                                                     key={sub.name}
                                                     href={sub.href}
-                                                    className="flex items-center gap-3 min-h-[44px] px-3 py-2 text-sm text-slate-600 hover:text-teal-700 hover:bg-slate-50 rounded-lg transition-colors"
+                                                    className="flex items-center gap-3 min-h-[44px] px-3 py-2 text-sm text-slate-600 hover:text-[#0072BC] hover:bg-slate-50 rounded-lg transition-colors"
                                                 >
-                                                    <SubIcon
-                                                        size={15}
-                                                        className="text-slate-400 flex-shrink-0"
-                                                    />
+                                                    <SubIcon size={15} className="text-slate-400 flex-shrink-0" />
                                                     <span>{sub.name}</span>
                                                 </Link>
                                             );
@@ -415,7 +336,7 @@ export default function Navbar() {
                         {auth?.user ? (
                             <Link
                                 href={route("be.dashboard")}
-                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl transition-colors"
+                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-[#0072BC] hover:bg-[#FFC72C] rounded-xl transition-colors"
                             >
                                 <LayoutDashboard size={18} />
                                 Dashboard
@@ -423,7 +344,7 @@ export default function Navbar() {
                         ) : (
                             <Link
                                 href={route("login")}
-                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl transition-colors"
+                                className="flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 text-[15px] font-semibold text-white bg-[#0072BC] hover:bg-[#FFC72C] rounded-xl transition-colors"
                             >
                                 <LogIn size={18} />
                                 Login
