@@ -39,7 +39,7 @@ interface WeatherData {
 
 type WeatherIconComponent = React.ComponentType<{
     size?: number;
-    strokeWidth?: number;
+    strokeWidth?: string;
     className?: string;
 }>;
 
@@ -51,7 +51,7 @@ const WEATHER_ICONS: Record<string, WeatherIconComponent> = {
     "cloud-drizzle": CloudDrizzle,
     "cloud-rain": CloudRain,
     "cloud-snow": CloudSnow,
-    "cloud-lightning": CloudLightning,
+    "cloud-lightening": CloudLightning,
 };
 
 export default function WeatherWidget() {
@@ -75,9 +75,7 @@ export default function WeatherWidget() {
 
         try {
             const response = await axios.get("/api/weather", {
-                headers: {
-                    Accept: "application/json",
-                },
+                headers: { Accept: "application/json" },
             });
 
             if (response.data?.success && response.data?.data) {
@@ -115,7 +113,6 @@ export default function WeatherWidget() {
     // ============================================================
     const closePanel = useCallback(() => {
         setIsOpen(false);
-
         requestAnimationFrame(() => {
             triggerRef.current?.focus();
         });
@@ -125,12 +122,9 @@ export default function WeatherWidget() {
     // ESC + CLICK DI LUAR + FOCUS TRAP
     // ============================================================
     useEffect(() => {
-        if (!isOpen) {
-            return;
-        }
+        if (!isOpen) return;
 
-        const previouslyFocused =
-            document.activeElement as HTMLElement | null;
+        const previouslyFocused = document.activeElement as HTMLElement | null;
 
         requestAnimationFrame(() => {
             closeButtonRef.current?.focus();
@@ -138,12 +132,7 @@ export default function WeatherWidget() {
 
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node | null;
-
-            if (
-                panelRef.current &&
-                target &&
-                !panelRef.current.contains(target)
-            ) {
+            if (panelRef.current && target && !panelRef.current.contains(target)) {
                 closePanel();
             }
         };
@@ -155,15 +144,13 @@ export default function WeatherWidget() {
                 return;
             }
 
-            if (event.key !== "Tab" || !panelRef.current) {
-                return;
-            }
+            if (event.key !== "Tab" || !panelRef.current) return;
 
             const focusableElements = Array.from(
                 panelRef.current.querySelectorAll<HTMLElement>(
                     'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
                 )
-            ).filter((element) => element.offsetParent !== null);
+            ).filter((el) => el.offsetParent !== null);
 
             if (focusableElements.length === 0) {
                 event.preventDefault();
@@ -172,19 +159,12 @@ export default function WeatherWidget() {
             }
 
             const first = focusableElements[0];
-            const last =
-                focusableElements[focusableElements.length - 1];
+            const last = focusableElements[focusableElements.length - 1];
 
-            if (
-                event.shiftKey &&
-                document.activeElement === first
-            ) {
+            if (event.shiftKey && document.activeElement === first) {
                 event.preventDefault();
                 last.focus();
-            } else if (
-                !event.shiftKey &&
-                document.activeElement === last
-            ) {
+            } else if (!event.shiftKey && document.activeElement === last) {
                 event.preventDefault();
                 first.focus();
             }
@@ -226,16 +206,9 @@ export default function WeatherWidget() {
     // FORMAT WAKTU UPDATE
     // ============================================================
     const formatUpdated = (iso?: string) => {
-        if (!iso) {
-            return "—";
-        }
-
+        if (!iso) return "—";
         const date = new Date(iso);
-
-        if (Number.isNaN(date.getTime())) {
-            return iso;
-        }
-
+        if (Number.isNaN(date.getTime())) return iso;
         return date.toLocaleString("id-ID", {
             day: "numeric",
             month: "short",
@@ -244,26 +217,19 @@ export default function WeatherWidget() {
         });
     };
 
-    const panelTitle =
-        weather?.location || "Kabupaten Tasikmalaya";
-
+    const panelTitle = weather?.location || "Kabupaten Tasikmalaya";
     const hasWeather = Boolean(weather);
 
     return (
         <>
             {/* =========================================================
-                FLOATING WEATHER TRIGGER
-                Tetap tampil di desktop DAN mobile.
+                FLOATING WEATHER TRIGGER — WARNA BIRU PKK
             ========================================================= */}
             <button
                 ref={triggerRef}
                 type="button"
-                onClick={() => setIsOpen((previous) => !previous)}
-                aria-label={
-                    isOpen
-                        ? "Tutup informasi cuaca"
-                        : "Buka informasi cuaca"
-                }
+                onClick={() => setIsOpen((prev) => !prev)}
+                aria-label={isOpen ? "Tutup informasi cuaca" : "Buka informasi cuaca"}
                 aria-expanded={isOpen}
                 aria-haspopup="dialog"
                 className="
@@ -273,16 +239,14 @@ export default function WeatherWidget() {
                     gap-1.5
                     min-h-[112px] w-[40px]
                     rounded-r-xl
-                    border border-l-0 border-teal-700/30
-                    bg-teal-700 text-white
+                    border border-l-0 border-[#0072BC]/30
+                    bg-[#0072BC] text-white
                     px-1.5 py-3.5
                     shadow-[0_10px_26px_-14px_rgba(15,118,110,0.65)]
                     transition-colors duration-150
-                    hover:bg-teal-800
+                    hover:bg-[#FFC72C] hover:text-[#0072BC]
                     focus:outline-none
-                    focus-visible:ring-2
-                    focus-visible:ring-teal-500
-                    focus-visible:ring-offset-2
+                    focus-visible:ring-2 focus-visible:ring-[#FFC72C] focus-visible:ring-offset-2
                     sm:min-h-[124px]
                     sm:w-[42px]
                     sm:px-2
@@ -290,25 +254,14 @@ export default function WeatherWidget() {
             >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white">
                     {isLoading ? (
-                        <span
-                            className="block h-3.5 w-3.5 animate-pulse rounded-full bg-white/45"
-                            aria-hidden="true"
-                        />
+                        <span className="block h-3.5 w-3.5 animate-pulse rounded-full bg-white/45" aria-hidden="true" />
                     ) : (
-                        getWeatherIcon(
-                            weather?.weather.icon,
-                            17,
-                            "text-white"
-                        )
+                        getWeatherIcon(weather?.weather.icon, 17, "text-white")
                     )}
                 </span>
 
                 <span className="text-[10px] font-semibold tracking-wide sm:text-[11px]">
-                    {isLoading
-                        ? "—"
-                        : weather
-                        ? `${Math.round(weather.temperature)}°`
-                        : "Cuaca"}
+                    {isLoading ? "—" : weather ? `${Math.round(weather.temperature)}°` : "Cuaca"}
                 </span>
 
                 <span
@@ -320,9 +273,7 @@ export default function WeatherWidget() {
             </button>
 
             {/* =========================================================
-                DETAIL PANEL
-                Desktop: menempel di sisi kiri.
-                Mobile: tetap di layar, tetapi lebarnya mengikuti viewport.
+                DETAIL PANEL — WARNA BIRU PKK
             ========================================================= */}
             <div
                 ref={panelRef}
@@ -350,18 +301,12 @@ export default function WeatherWidget() {
                 <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-5">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-teal-700">
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#0072BC]">
                                 Informasi Cuaca
                             </p>
 
                             <div className="mt-1 flex min-w-0 items-center gap-1.5">
-                                <MapPin
-                                    size={13}
-                                    strokeWidth={2}
-                                    className="shrink-0 text-slate-400"
-                                    aria-hidden="true"
-                                />
-
+                                <MapPin size={13} strokeWidth={2} className="shrink-0 text-slate-400" aria-hidden="true" />
                                 <span className="truncate text-[11px] font-medium text-slate-600">
                                     {panelTitle}
                                 </span>
@@ -379,22 +324,17 @@ export default function WeatherWidget() {
                                     rounded-lg
                                     text-slate-500
                                     transition-colors duration-150
-                                    hover:bg-teal-50 hover:text-teal-700
+                                    hover:bg-[#0072BC] hover:text-white
                                     disabled:cursor-not-allowed
                                     disabled:opacity-50
                                     focus:outline-none
-                                    focus-visible:ring-2
-                                    focus-visible:ring-teal-500
+                                    focus-visible:ring-2 focus-visible:ring-[#FFC72C]
                                 "
                             >
                                 <RefreshCw
                                     size={14}
                                     strokeWidth={2}
-                                    className={
-                                        isRefreshing
-                                            ? "animate-spin"
-                                            : ""
-                                    }
+                                    className={isRefreshing ? "animate-spin" : ""}
                                     aria-hidden="true"
                                 />
                             </button>
@@ -411,39 +351,25 @@ export default function WeatherWidget() {
                                     transition-colors duration-150
                                     hover:bg-slate-100 hover:text-slate-800
                                     focus:outline-none
-                                    focus-visible:ring-2
-                                    focus-visible:ring-teal-500
+                                    focus-visible:ring-2 focus-visible:ring-[#FFC72C]
                                 "
                             >
-                                <X
-                                    size={14}
-                                    strokeWidth={2}
-                                    aria-hidden="true"
-                                />
+                                <X size={14} strokeWidth={2} aria-hidden="true" />
                             </button>
                         </div>
                     </div>
 
                     <div className="mt-5 flex items-center gap-4">
-                        <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-xl border border-teal-100 bg-white text-teal-700 shadow-sm sm:h-[62px] sm:w-[62px]">
+                        <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-xl border border-teal-100 bg-white text-[#0072BC] shadow-sm sm:h-[62px] sm:w-[62px]">
                             {hasWeather ? (
-                                getWeatherIcon(
-                                    weather?.weather.icon,
-                                    29
-                                )
+                                getWeatherIcon(weather?.weather.icon, 29)
                             ) : (
-                                <Cloud
-                                    size={29}
-                                    strokeWidth={1.5}
-                                />
+                                <Cloud size={29} strokeWidth={1.5} />
                             )}
                         </div>
 
                         <div className="min-w-0">
-                            <h2
-                                id="weather-dialog-title"
-                                className="sr-only"
-                            >
+                            <h2 id="weather-dialog-title" className="sr-only">
                                 Informasi cuaca Kabupaten Tasikmalaya
                             </h2>
 
@@ -452,16 +378,13 @@ export default function WeatherWidget() {
                                     {weather?.temperature ?? "--"}
                                 </span>
 
-                                <span className="pb-0.5 text-sm font-medium text-slate-500">
-                                    °C
-                                </span>
+                                <span className="pb-0.5 text-sm font-medium text-slate-500">°C</span>
                             </div>
 
                             <p className="mt-1.5 truncate text-xs font-medium text-slate-600">
                                 {error && !weather
                                     ? "Data cuaca tidak tersedia"
-                                    : weather?.weather.label ||
-                                      "Memuat data cuaca..."}
+                                    : weather?.weather.label || "Memuat data cuaca..."}
                             </p>
                         </div>
                     </div>
@@ -477,7 +400,6 @@ export default function WeatherWidget() {
                             value={weather?.humidity ?? "--"}
                             suffix="%"
                         />
-
                         <DetailStat
                             icon={<Wind size={14} />}
                             iconClass="text-cyan-600"
@@ -485,7 +407,6 @@ export default function WeatherWidget() {
                             value={weather?.wind_speed ?? "--"}
                             suffix="km/j"
                         />
-
                         <DetailStat
                             icon={<Thermometer size={14} />}
                             iconClass="text-amber-600"
@@ -541,9 +462,7 @@ function DetailStat({
 }) {
     return (
         <div className="rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-3 text-center">
-            <div
-                className={`mb-1.5 flex items-center justify-center ${iconClass}`}
-            >
+            <div className={`mb-1.5 flex items-center justify-center ${iconClass}`}>
                 {icon}
             </div>
 
@@ -553,7 +472,6 @@ function DetailStat({
 
             <p className="text-[12px] font-semibold leading-none tabular-nums text-slate-800 sm:text-[13px]">
                 {value}
-
                 {suffix && (
                     <span className="ml-0.5 text-[9px] font-medium text-slate-400">
                         {suffix}

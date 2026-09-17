@@ -25,14 +25,14 @@ export default function Footer() {
                             <div className="flex items-center gap-3 mb-4">
                                 <img
                                     src="/assets/logo/logotasik.png"
-                                    alt="Logo Kab. Tasikmalaya"
+                                    alt="Logo PKK Kab. Tasikmalaya"
                                     className="h-11 w-auto"
                                 />
                                 <div>
                                     <h3 className="text-white font-semibold text-base leading-tight">
                                         TP PKK
                                     </h3>
-                                    <p className="text-teal-400 text-xs font-medium">
+                                    <p className="text-[#0072BC] text-xs font-medium">
                                         Kabupaten Tasikmalaya
                                     </p>
                                 </div>
@@ -44,28 +44,28 @@ export default function Footer() {
                             <div className="flex gap-2">
                                 <a
                                     href="#"
-                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-teal-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#0072BC] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
                                     aria-label="Facebook"
                                 >
                                     <Facebook size={16} />
                                 </a>
                                 <a
                                     href="#"
-                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-teal-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#0072BC] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
                                     aria-label="Instagram"
                                 >
                                     <Instagram size={16} />
                                 </a>
                                 <a
                                     href="#"
-                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-teal-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#0072BC] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
                                     aria-label="Youtube"
                                 >
                                     <Youtube size={16} />
                                 </a>
                                 <a
                                     href="#"
-                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-teal-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+                                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#0072BC] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
                                     aria-label="Twitter"
                                 >
                                     <Twitter size={16} />
@@ -82,7 +82,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/#"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         10 Program Pokok PKK
                                     </Link>
@@ -90,7 +90,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/sekretariat"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Data Umum / Sekretariat
                                     </Link>
@@ -98,7 +98,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/pokja-1"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Pokja I – IV
                                     </Link>
@@ -106,7 +106,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/berita"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Berita Terkini
                                     </Link>
@@ -123,7 +123,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/profil/sejarah"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Sejarah
                                     </Link>
@@ -131,7 +131,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/profil/visi-misi"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Visi &amp; Misi
                                     </Link>
@@ -139,7 +139,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/profil/struktur-organisasi"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Struktur Organisasi
                                     </Link>
@@ -147,7 +147,7 @@ export default function Footer() {
                                 <li>
                                     <Link
                                         href="/profil/tugas-fungsi"
-                                        className="text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                                        className="text-sm text-slate-400 hover:text-[#0072BC] transition-colors"
                                     >
                                         Tugas Pokok &amp; Fungsi
                                     </Link>
@@ -164,7 +164,7 @@ export default function Footer() {
                                 <li className="flex items-start gap-3 text-sm text-slate-400">
                                     <MapPin
                                         size={16}
-                                        className="text-teal-500 shrink-0 mt-0.5"
+                                        className="text-[#0072BC] shrink-0 mt-0.5"
                                     />
                                     <span>
                                         Jl. Raya Singaparna, Kabupaten Tasikmalaya,
@@ -174,11 +174,11 @@ export default function Footer() {
                                 <li className="flex items-center gap-3 text-sm text-slate-400">
                                     <Phone
                                         size={16}
-                                        className="text-teal-500 shrink-0"
+                                        className="text-[#0072BC] shrink-0"
                                     />
                                     <a
                                         href="tel:+62265123456"
-                                        className="hover:text-teal-400 transition-colors"
+                                        className="hover:text-[#FFC72C] transition-colors"
                                     >
                                         (0265) 123456
                                     </a>
@@ -186,11 +186,11 @@ export default function Footer() {
                                 <li className="flex items-center gap-3 text-sm text-slate-400">
                                     <Mail
                                         size={16}
-                                        className="text-teal-500 shrink-0"
+                                        className="text-[#0072BC] shrink-0"
                                     />
                                     <a
                                         href="mailto:pkk@tasikmalayakab.go.id"
-                                        className="hover:text-teal-400 transition-colors"
+                                        className="hover:text-[#FFC72C] transition-colors"
                                     >
                                         pkk@tasikmalayakab.go.id
                                     </a>
@@ -198,13 +198,13 @@ export default function Footer() {
                                 <li className="flex items-center gap-3 text-sm text-slate-400">
                                     <Globe
                                         size={16}
-                                        className="text-teal-500 shrink-0"
+                                        className="text-[#0072BC] shrink-0"
                                     />
                                     <a
                                         href="https://tasikmalayakab.go.id"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:text-teal-400 transition-colors"
+                                        className="hover:text-[#FFC72C] transition-colors"
                                     >
                                         tasikmalayakab.go.id
                                     </a>
@@ -229,7 +229,7 @@ export default function Footer() {
                             </p>
                             <p>
                                 Dikembangkan oleh{" "}
-                                <span className="text-teal-500">
+                                <span className="text-[#FFC72C]">
                                     Dishubkominfo Kab. Tasikmalaya
                                 </span>
                             </p>
