@@ -44,7 +44,7 @@ export default function Navbar() {
     // ✅ FIX: Cek apakah di halaman dengan hero banner (beranda ATAU berita)
     // Navbar transparan di halaman yang punya hero banner besar.
     const isHomePage = currentUrl === "/" || currentUrl === route("fe.beranda");
-    const isBeritaPage = currentUrl.startsWith("/berita");
+    const isBeritaPage = /^\/berita\/.+/.test(currentUrl);
 
     // Navbar transparan HANYA di halaman yang punya hero banner + belum discroll.
     const isTransparent = (isHomePage || isBeritaPage) && !isScrolled;

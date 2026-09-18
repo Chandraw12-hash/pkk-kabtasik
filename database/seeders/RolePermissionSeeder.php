@@ -11,12 +11,12 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // ─── 1. BUAT PERMISSION ──────────────────────────────────────────────────
+        // ─── 1. BUAT PERMISSION ──────────────────────────────────
         $permissions = [
             // Admin
             'access-admin',
 
-            // Dasawisma (Mobile)
+            // Dasawisma / Pokja (Mobile)
             'access-dasawisma',
 
             // Berita - Approve/Reject (khusus Admin)
@@ -32,34 +32,62 @@ class RolePermissionSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // ─── 2. ROLE ADMIN ──────────────────────────────────────────────────────────
+        // ─── 2. ROLE ADMIN ──────────────────────────────────────
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->givePermissionTo(Permission::all());
 
-        // ─── 3. ROLE DASAWISMA (MOBILE) ──────────────────────────────────────────
+        // ─── 3. ROLE POKJA (MOBILE) ─────────────────────────────
+        $pokjaRole = Role::firstOrCreate(['name' => 'pokja']);
+        $pokjaRole->givePermissionTo(['access-dasawisma']);
+
+        // ─── 4. ROLE DASAWISMA (MOBILE) ─────────────────────────
         $dasawismaRole = Role::firstOrCreate(['name' => 'dasawisma']);
         $dasawismaRole->givePermissionTo(['access-dasawisma']);
 
-        // ─── 4. BUAT USER ADMIN ──────────────────────────────────────────────────
+        // ─── 5. BUAT USER ADMIN ──────────────────────────────────
         $admin = User::updateOrCreate(
             ['email' => 'admin@pkk.test'],
             [
                 'name' => 'Admin Kabupaten',
                 'username' => 'adminpkk',
                 'password' => bcrypt('password123'),
+                'status' => 'active',
             ]
         );
-        $admin->assignRole($adminRole);
+        $admin->syncRoles([$adminRole]); // syncRoles — biar ga ada role lain
 
-        // ─── 5. BUAT USER DASAWISMA (MOBILE) ────────────────────────────────────
-        $dasawisma = User::updateOrCreate(
+        // ─── 6. BUAT USER POKJA (MOBILE) ────────────────────────
+        $pokja = User::updateOrCreate(
             ['email' => 'pkk@pkk.test'],
             [
                 'name' => 'Pengurus PKK',
                 'username' => 'pkk_user',
                 'password' => bcrypt('password123'),
+                'status' => 'active',
             ]
-    );
-        $dasawisma->assignRole($dasawismaRole);
+        );
+        $pokja->syncRoles([$pokjaRole]); // ✅ FIX: assign role POKJA, bukan dasawisma
+
+        // ─── 7. BUAT USER DASAWISMA (MOBILE) ────────────────────
+        $dasawisma = User::updateOrCreate(
+            ['email' => 'melati@pkk.test'],
+            [
+                'name' => 'Kader Dasawisma Melati',
+                'username' => 'dasawisma.melati',
+                'password' => bcrypt('password123'),
+                'status' => 'active',
+            ]
+        );
+        $dasawisma->syncRoles([$dasawismaRole]); // ✅ FIX: assign role DASAWISMA
+
+        // ─── 8. INFO LOGIN ───────────────────────────────────────
+        $this->command->info('');
+        $this->command->info('========================================');
+        $this->command->info('📋 INFO LOGIN MOBILE');
+        $this->command->info('========================================');
+        $this->command->info('Admin  : adminpkk / password123');
+        $this->command->info('Pokja  : pkk_user / password123');
+        $this->command->info('Dasawisma: dasawisma.melati / password123');
+        $this->command->info('========================================');
     }
 }

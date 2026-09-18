@@ -24,6 +24,7 @@ import {
     Clock as ClockIcon,
     Calendar,
     ClipboardList,
+    CheckCircle2,
 } from "lucide-react";
 import axios from "axios";
 
@@ -115,11 +116,11 @@ const getStatusBadge = (status: string) => {
             color: "bg-blue-50 text-blue-700 border-blue-100",
             dot: "bg-blue-500",
         },
-        ongoing: {
-            label: "Berlangsung",
-            color: "bg-emerald-50 text-emerald-700 border-emerald-100",
-            dot: "bg-emerald-500",
-        },
+        // ongoing: {
+        //     label: "Berlangsung",
+        //     color: "bg-emerald-50 text-emerald-700 border-emerald-100",
+        //     dot: "bg-emerald-500",
+        // },
         completed: {
             label: "Selesai",
             color: "bg-slate-100 text-slate-600 border-slate-200",
@@ -186,6 +187,9 @@ export default function Index({
     const [isLoading, setIsLoading] = useState(false);
     const isFirstRender = useRef(true);
 
+    // ✅ STATE BARU: Notif auto-complete
+    const [autoCompleteNotif, setAutoCompleteNotif] = useState<string | null>(null);
+
     const { delete: destroy, processing } = useForm({});
 
     const fetchData = (
@@ -222,6 +226,34 @@ export default function Index({
             )
             .finally(() => setIsLoading(false));
     };
+
+    // ✅ FIX: Ganti route 'auto-complete' → 'auto-update-status'
+    useEffect(() => {
+        axios
+            .post(route("be.agenda.auto-update-status"), {}, {
+                headers: { Accept: "application/json" },
+            })
+            .then((res) => {
+                if (res.data?.updated > 0) {
+                    setAutoCompleteNotif(res.data.message);
+
+                    // Refresh data biar status terbaru muncul
+                    setTimeout(() => {
+                        fetchData(route("be.agenda.index"));
+                    }, 500);
+
+                    // Hilangkan notif setelah 6 detik
+                    setTimeout(() => {
+                        setAutoCompleteNotif(null);
+                    }, 6000);
+                }
+            })
+            .catch((err) => {
+                // Silent fail — jangan ganggu user kalau gagal
+                console.warn("Auto-update gagal:", err);
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -335,14 +367,14 @@ export default function Index({
                       "bg-blue-50 text-blue-600",
                   valueClass: "text-blue-700",
               },
-              {
-                  label: "Berlangsung",
-                  value: localStatistik.ongoing,
-                  icon: Calendar,
-                  iconClass:
-                      "bg-emerald-50 text-emerald-600",
-                  valueClass: "text-emerald-700",
-              },
+            //   {
+            //       label: "Berlangsung",
+            //       value: localStatistik.ongoing,
+            //       icon: Calendar,
+            //       iconClass:
+            //           "bg-emerald-50 text-emerald-600",
+            //       valueClass: "text-emerald-700",
+            //   },
               {
                   label: "Selesai",
                   value: localStatistik.completed,
@@ -376,6 +408,34 @@ export default function Index({
             <Head title="Kelola Agenda" />
 
             <div className="space-y-6 pb-8">
+                {/* ✅ NOTIF AUTO-COMPLETE */}
+                {autoCompleteNotif && (
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                            <CheckCircle2
+                                size={18}
+                                className="text-emerald-600"
+                            />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-emerald-800">
+                                Agenda Selesai Otomatis
+                            </p>
+                            <p className="text-xs text-emerald-700 mt-0.5">
+                                {autoCompleteNotif}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setAutoCompleteNotif(null)}
+                            className="shrink-0 text-emerald-600 hover:text-emerald-800 transition-colors"
+                            aria-label="Tutup notifikasi"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+
                 {/* =====================================================
                     PAGE HEADER
                 ====================================================== */}
@@ -442,9 +502,9 @@ export default function Index({
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                                {item.label}
-                                            </p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 leading-tight min-h-[26px] flex items-start">
+    {item.label === "Total Agenda" ? "Total (Semua)" : item.label}
+</p>
 
                                             <p
                                                 className={`mt-1 text-2xl font-bold ${item.valueClass}`}
@@ -523,9 +583,9 @@ export default function Index({
                                     <option value="upcoming">
                                         Akan Datang
                                     </option>
-                                    <option value="ongoing">
+                                    {/* <option value="ongoing">
                                         Berlangsung
-                                    </option>
+                                    </option> */}
                                     <option value="completed">
                                         Selesai
                                     </option>

@@ -218,7 +218,7 @@ function KecamatanTeraktifWidget({
                         <button
                             type="button"
                             onClick={() => onRangeChange("all")}
-                            className="text-xs text-[#0072BC] hover:text-[#0072BC] mt-1 font-medium"
+                            className="text-xs text-[#0072BC] hover:text-[#005A94] mt-1 font-medium"
                         >
                             Lihat semua
                         </button>
@@ -395,7 +395,7 @@ export default function Berita({
         !!searchQuery || !!selectedKecamatan || activeFilter !== "Semua";
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800 pt-14">
+        <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800 pt-14 sm:pt-16">
             <Head title="Berita Terkini - PKK Kabupaten Tasikmalaya">
                 <meta
                     name="description"
@@ -420,7 +420,7 @@ export default function Berita({
             </div>
 
             {/* Filter */}
-            <section className="bg-white border-b border-slate-100 sticky top-14 z-30">
+            <section className="bg-white border-b border-slate-100 sticky top-14 sm:top-16 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-0.5 px-0.5">
                         {filterKategori.map((kat) => (
@@ -478,7 +478,7 @@ export default function Berita({
                             <button
                                 type="button"
                                 onClick={handleReset}
-                                className="inline-flex items-center gap-1 text-xs text-[#0072BC] hover:text-[#0072BC] font-medium self-start sm:self-auto"
+                                className="inline-flex items-center gap-1 text-xs text-[#0072BC] hover:text-[#005A94] font-medium self-start sm:self-auto"
                             >
                                 <X size={13} />
                                 Reset
@@ -491,7 +491,7 @@ export default function Berita({
                             {pagination?.total ?? filteredBerita.length} berita
                             {activeFilter !== "Semua" && ` · ${activeFilter}`}
                             {selectedKecamatan && ` · ${selectedKecamatan}`}
-                            {searchQuery && ` · “${searchQuery}”`}
+                            {searchQuery && ` · "${searchQuery}"`}
                         </p>
                     )}
                 </div>
@@ -575,7 +575,7 @@ export default function Berita({
                                                                 </span>
                                                                 <Link
                                                                     href={href}
-                                                                    className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#0072BC] hover:text-[#0072BC]"
+                                                                    className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#0072BC] hover:text-[#005A94]"
                                                                 >
                                                                     Baca
                                                                     <ArrowRight size={11} />
@@ -738,7 +738,7 @@ export default function Berita({
                             <button
                                 type="submit"
                                 disabled={newsletterStatus === "loading"}
-                                className="sm:w-auto px-4 py-2 text-xs font-semibold text-white bg-[#0072BC] hover:bg-[#0072BC] rounded-md disabled:opacity-60"
+                                className="sm:w-auto px-4 py-2 text-xs font-semibold text-white bg-[#0072BC] hover:bg-[#005A94] rounded-md disabled:opacity-60"
                             >
                                 {newsletterStatus === "loading"
                                     ? "..."

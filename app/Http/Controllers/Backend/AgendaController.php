@@ -83,16 +83,13 @@ class AgendaController extends Controller
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Upload gambar jika ada
         if ($request->hasFile('gambar')) {
             $path = $request->file('gambar')->store('agendas', 'public');
             $validated['gambar'] = $path;
         }
 
-        // Generate slug otomatis
         $validated['slug'] = Str::slug($validated['judul']) . '-' . uniqid();
 
-        // Set status default jika tidak diisi
         if (!isset($validated['status'])) {
             $validated['status'] = 'upcoming';
         }
@@ -109,7 +106,6 @@ class AgendaController extends Controller
      */
     public function show(Agenda $agenda)
     {
-        // Update status otomatis sebelum ditampilkan
         $agenda->updateStatusAutomatically();
         $agenda->refresh();
 
@@ -143,9 +139,7 @@ class AgendaController extends Controller
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Upload gambar baru jika ada
         if ($request->hasFile('gambar')) {
-            // Hapus gambar lama
             if ($agenda->gambar && Storage::disk('public')->exists($agenda->gambar)) {
                 Storage::disk('public')->delete($agenda->gambar);
             }
@@ -153,12 +147,10 @@ class AgendaController extends Controller
             $validated['gambar'] = $path;
         }
 
-        // Update slug jika judul berubah
         if ($agenda->judul !== $validated['judul']) {
             $validated['slug'] = Str::slug($validated['judul']) . '-' . uniqid();
         }
 
-        // Hapus gambar dari validated jika tidak ada perubahan
         if (!$request->hasFile('gambar') && !isset($validated['gambar'])) {
             unset($validated['gambar']);
         }
@@ -175,7 +167,6 @@ class AgendaController extends Controller
      */
     public function destroy(Agenda $agenda)
     {
-        // Hapus gambar jika ada
         if ($agenda->gambar && Storage::disk('public')->exists($agenda->gambar)) {
             Storage::disk('public')->delete($agenda->gambar);
         }
@@ -199,7 +190,6 @@ class AgendaController extends Controller
 
         $agendas = Agenda::whereIn('id', $request->ids)->get();
 
-        // Hapus semua gambar terkait
         foreach ($agendas as $agenda) {
             if ($agenda->gambar && Storage::disk('public')->exists($agenda->gambar)) {
                 Storage::disk('public')->delete($agenda->gambar);
@@ -247,7 +237,6 @@ class AgendaController extends Controller
         $filename = 'agenda_' . Carbon::now()->format('Y-m-d') . '.csv';
         $handle = fopen('php://output', 'w');
 
-        // Header CSV
         fputcsv($handle, [
             'ID',
             'Judul',
@@ -259,7 +248,6 @@ class AgendaController extends Controller
             'Dibuat',
         ]);
 
-        // Data
         foreach ($agendas as $agenda) {
             fputcsv($handle, [
                 $agenda->id,
@@ -311,10 +299,10 @@ class AgendaController extends Controller
                     'location' => $agenda->lokasi,
                     'status' => $agenda->status,
                     'color' => match ($agenda->status) {
-                        'upcoming' => '#0D9488',  // teal
-                        'ongoing' => '#22C55E',   // green
-                        'completed' => '#6B7280', // gray
-                        'cancelled' => '#EF4444', // red
+                        'upcoming' => '#0D9488',
+                        'ongoing' => '#22C55E',
+                        'completed' => '#6B7280',
+                        'cancelled' => '#EF4444',
                         default => '#6B7280',
                     },
                 ];
@@ -324,20 +312,35 @@ class AgendaController extends Controller
     }
 
     /**
-     * Update status otomatis untuk semua agenda (bisa dijalankan via scheduler)
+     * ✅ FIX: Update status otomatis — return JUMLAH yang berubah
+     *
+     * Method ini dipakai frontend untuk:
+     * 1. Cek agenda yang udah lewat tanggal → ubah jadi "completed"
+     * 2. Return count biar frontend bisa munculin notif
      */
     public function autoUpdateStatus()
     {
-        $agendas = Agenda::where('status', '!=', 'cancelled')->get();
-        $updated = 0;
+        // ✅ Ambil agenda yang statusnya upcoming/ongoing DAN tanggalnya udah lewat
+        $expired = Agenda::whereIn('status', ['upcoming', 'ongoing'])
+            ->whereDate('tanggal', '<', Carbon::now()->toDateString())
+            ->get();
 
-        foreach ($agendas as $agenda) {
-            $agenda->updateStatusAutomatically();
+        $updated = 0;
+        $updatedIds = [];
+
+        foreach ($expired as $agenda) {
+            $agenda->update(['status' => 'completed']);
             $updated++;
+            $updatedIds[] = $agenda->id;
         }
 
         return response()->json([
-            'message' => "{$updated} agenda berhasil diupdate statusnya.",
+            'success' => true,
+            'updated' => $updated,
+            'updated_ids' => $updatedIds,
+            'message' => $updated > 0
+                ? "{$updated} agenda otomatis ditandai selesai karena tanggalnya sudah lewat."
+                : 'Tidak ada agenda yang perlu diselesaikan.',
         ]);
     }
 }

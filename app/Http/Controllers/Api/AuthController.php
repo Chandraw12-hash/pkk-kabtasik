@@ -15,14 +15,12 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // Username & email sama-sama opsional, tapi salah satu WAJIB ada.
         $request->validate([
             'username' => 'required_without:email|string',
             'email'    => 'required_without:username|email',
             'password' => 'required|string',
         ]);
 
-        // Cari user by username ATAU email
         $user = User::where(function ($query) use ($request) {
                 if ($request->filled('username')) {
                     $query->where('username', $request->username);
@@ -48,22 +46,22 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Cek role - boleh kader_dasawisma, pkk, admin, atau dasawisma
-        if (!$user->hasAnyRole(['kader_dasawisma', 'pkk', 'admin', 'dasawisma'])) {
+        // ✅ FIX: Tambah 'pokja' & 'user' ke whitelist
+        if (!$user->hasAnyRole(['kader_dasawisma', 'pkk', 'admin', 'dasawisma', 'pokja', 'user'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Akun ini tidak memiliki akses ke aplikasi mobile.',
             ], 403);
         }
 
-        // Hapus token lama supaya tidak menumpuk
+        // Hapus token lama
         $user->tokens()->where('name', 'mobile-app')->delete();
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
-        // 🔥 Tentukan primary role (prioritas)
+        // ✅ FIX: Tambah 'pokja' ke priority
         $primaryRole = 'dasawisma';
-        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'user'];
+        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'pokja', 'user'];
         $userRoles = $user->roles->pluck('name')->toArray();
 
         foreach ($priority as $role) {
@@ -85,14 +83,14 @@ class AuthController extends Controller
                     'email'    => $user->email,
                     'status'   => $user->status,
                     'roles'    => $user->roles->pluck('name'),
-                    'role'     => $primaryRole,   // ← TAMBAH INI
+                    'role'     => $primaryRole,
                 ],
             ],
         ]);
     }
 
     /**
-     * Logout — cabut token yang sedang dipakai request ini saja
+     * Logout
      */
     public function logout(Request $request)
     {
@@ -111,9 +109,9 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // Tentukan primary role
+        // ✅ FIX: Tambah 'pokja' ke priority
         $primaryRole = 'dasawisma';
-        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'user'];
+        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'pokja', 'user'];
         $userRoles = $user->roles->pluck('name')->toArray();
 
         foreach ($priority as $role) {
@@ -132,7 +130,7 @@ class AuthController extends Controller
                 'email'    => $user->email,
                 'status'   => $user->status,
                 'roles'    => $user->roles->pluck('name'),
-                'role'     => $primaryRole,   // ← TAMBAH INI
+                'role'     => $primaryRole,
             ],
         ]);
     }

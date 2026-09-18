@@ -13,24 +13,27 @@ use App\Http\Controllers\Api\AgendaApiController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// ─── LAPORAN KEGIATAN (PUBLIC) ────────────────────────────────────────────
+// ─── LAPORAN KEGIATAN (PUBLIC) ────────────────────────────────
 Route::get('/laporan-kegiatan', [LaporanKegiatanController::class, 'index']);
 Route::get('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'show']);
 
-// ─── BERITA (PUBLIC) ──────────────────────────────────────────────────────
+// ─── BERITA (PUBLIC) ──────────────────────────────────────────
+// ⚠️ Urutan penting: route spesifik dulu, /berita/{slug} paling bawah
 Route::get('/berita/kecamatan-teraktif', [BeritaController::class, 'kecamatanTeraktif']);
 Route::get('/berita/kecamatan/list', [BeritaController::class, 'getKecamatan']);
 Route::get('/berita', [BeritaController::class, 'index']);
 Route::get('/berita/latest', [BeritaController::class, 'latest']);
 Route::get('/berita/kategori/{kategori}', [BeritaController::class, 'byKategori']);
 Route::get('/berita/kecamatan/{kecamatan}', [BeritaController::class, 'byKecamatan']);
+
+// ✅ /berita/{slug} — TARUH PALING BAWAH (biar /my-berita & route spesifik match dulu)
 Route::get('/berita/{slug}', [BeritaController::class, 'show']);
 
-// ─── GALERI (PUBLIC) ──────────────────────────────────────────────────────
+// ─── GALERI (PUBLIC) ──────────────────────────────────────────
 Route::get('/galeri', [GaleriController::class, 'index']);
 Route::get('/galeri/{id}', [GaleriController::class, 'show']);
 
-// ─── AGENDA (PUBLIC) ──────────────────────────────────────────────────────
+// ─── AGENDA (PUBLIC) ──────────────────────────────────────────
 Route::get('/agenda', [AgendaApiController::class, 'index']);
 Route::get('/agenda/{id}', [AgendaApiController::class, 'show']);
 Route::get('/agenda/calendar', [AgendaApiController::class, 'calendar']);
@@ -40,34 +43,28 @@ Route::get('/agenda/calendar', [AgendaApiController::class, 'calendar']);
 // ============================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    // ─── AUTH ──────────────────────────────────────────────────────────────
+    // ─── AUTH ─────────────────────────────────────────────────
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────────────────
+    // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────
     Route::post('/laporan-kegiatan', [LaporanKegiatanController::class, 'store']);
-
-    // 🔥 FIX: TAMBAH APPROVE/REJECT DI ATAS ROUTE PUT GENERIC
     Route::put('/laporan-kegiatan/{id}/approve', [LaporanKegiatanController::class, 'approve']);
     Route::put('/laporan-kegiatan/{id}/reject', [LaporanKegiatanController::class, 'reject']);
-
-    // Route generic (harus SETELAH approve/reject, biar ga ketangkep)
     Route::put('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'update']);
     Route::delete('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'destroy']);
     Route::get('/laporan-kegiatan/saya', [LaporanKegiatanController::class, 'myLaporan']);
-
-    // 🔥🔥🔥 FIX: ADMIN — LAPORAN KEGIATAN (SEMUA STATUS)
-    // Dipakai di mobile admin untuk halaman "Verifikasi Laporan"
     Route::get('/admin/laporan-kegiatan', [LaporanKegiatanController::class, 'adminIndex']);
 
-    // ─── BERITA (MOBILE CRUD) ─────────────────────────────────────────────
+    // ✅ FIX: BERITA (MOBILE) — rename /berita/saya → /my-berita
+    // Biar ga konflik dengan /berita/{slug} di public
     Route::post('/berita', [BeritaController::class, 'store']);
-    Route::get('/berita/saya', [BeritaController::class, 'myBerita']);
-    Route::get('/berita/saya/{id}', [BeritaController::class, 'showMyBerita']);
-    Route::put('/berita/saya/{id}', [BeritaController::class, 'update']);
-    Route::delete('/berita/saya/{id}', [BeritaController::class, 'destroy']);
+    Route::get('/my-berita', [BeritaController::class, 'myBerita']);
+    Route::get('/my-berita/{id}', [BeritaController::class, 'showMyBerita']);
+    Route::put('/my-berita/{id}', [BeritaController::class, 'update']);
+    Route::delete('/my-berita/{id}', [BeritaController::class, 'destroy']);
 
-    // ─── BERITA (ADMIN APPROVE/REJECT) ────────────────────────────────────
+    // ─── BERITA (ADMIN APPROVE/REJECT) ────────────────────────
     Route::get('/admin/berita/pending', [BeritaController::class, 'pending']);
     Route::put('/admin/berita/{id}/approve', [BeritaController::class, 'approve']);
     Route::put('/admin/berita/{id}/reject', [BeritaController::class, 'reject']);
