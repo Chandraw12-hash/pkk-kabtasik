@@ -12,9 +12,12 @@ use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
 use App\Models\Pokja4;
+use App\Models\Pokja4KunjunganPyd;
+use App\Models\Pokja4KegiatanPosyandu;
+use App\Models\Pokja4Rekapitulasi;
 use App\Models\Survey;
 use App\Models\StrukturOrganisasi;
-use App\Models\LaporanKegiatan; // 🔥 TAMBAHKAN
+use App\Models\LaporanKegiatan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -24,7 +27,8 @@ class IndexController extends Controller
     {
         $isSurveyActive = true;
 
-        // ─── SURVEY ──────────────────────────────────────────────────────────────
+        // ... (sama — ga diubah)
+
         $testimoniSurvey = Survey::query()
             ->where('status', 'published')
             ->latest()
@@ -40,7 +44,6 @@ class IndexController extends Controller
                 ];
             });
 
-        // ─── BERITA ──────────────────────────────────────────────────────────────
         $beritaTerbaru = Berita::where('status', 'approved')
             ->latest()
             ->take(6)
@@ -59,7 +62,6 @@ class IndexController extends Controller
                 ];
             });
 
-        // ─── GALERI ──────────────────────────────────────────────────────────────
         $galeriTerbaru = Galeri::latest()
             ->take(8)
             ->get()
@@ -75,7 +77,6 @@ class IndexController extends Controller
                 ];
             });
 
-        // ─── AGENDA ──────────────────────────────────────────────────────────────
         $agendaTerbaru = Agenda::where('status', '!=', 'cancelled')
             ->whereDate('tanggal', '>=', now()->subDays(1))
             ->orderBy('tanggal', 'asc')
@@ -100,7 +101,6 @@ class IndexController extends Controller
                 ];
             });
 
-        // ─── INFOGRAFIS ──────────────────────────────────────────────────────────
         $infografis = Infografis::where('status', 'active')
             ->orderBy('created_at', 'desc')
             ->limit(3)
@@ -115,39 +115,18 @@ class IndexController extends Controller
                 ];
             });
 
-        // ─── 🔥 POKJA UNTUK BERANDA (6 TERBARU) ──────────────────────────────────
         $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
         $pokja3 = Pokja3::latest()->take(6)->get();
         $pokja4 = Pokja4::latest()->take(6)->get();
 
-        // ─── KEBIJAKAN ──────────────────────────────────────────────────────────
         $kebijakan = collect([
-            [
-                'id' => 1,
-                'judul' => 'Peraturan Presiden No. 95 Tahun 2018',
-                'deskripsi' => 'Tentang Sistem Pemerintahan Berbasis Elektronik',
-                'file_path' => '#',
-                'urutan' => 1,
-            ],
-            [
-                'id' => 2,
-                'judul' => 'Peraturan Bupati Tasikmalaya',
-                'deskripsi' => 'Penyelenggaraan SPBE di Lingkungan Pemerintah Kabupaten Tasikmalaya',
-                'file_path' => '#',
-                'urutan' => 2,
-            ],
-            [
-                'id' => 3,
-                'judul' => 'Arsitektur SPBE',
-                'deskripsi' => 'Dokumen Arsitektur SPBE Kabupaten Tasikmalaya',
-                'file_path' => '#',
-                'urutan' => 3,
-            ],
+            ['id' => 1, 'judul' => 'Peraturan Presiden No. 95 Tahun 2018', 'deskripsi' => 'Tentang Sistem Pemerintahan Berbasis Elektronik', 'file_path' => '#', 'urutan' => 1],
+            ['id' => 2, 'judul' => 'Peraturan Bupati Tasikmalaya', 'deskripsi' => 'Penyelenggaraan SPBE di Lingkungan Pemerintah Kabupaten Tasikmalaya', 'file_path' => '#', 'urutan' => 2],
+            ['id' => 3, 'judul' => 'Arsitektur SPBE', 'deskripsi' => 'Dokumen Arsitektur SPBE Kabupaten Tasikmalaya', 'file_path' => '#', 'urutan' => 3],
         ])->map(fn($item) => (object) $item);
 
-        // ─── CHART ──────────────────────────────────────────────────────────────
         $chartData = collect([
             ['year' => '2019', 'value' => 1.8],
             ['year' => '2020', 'value' => 2.1],
@@ -184,7 +163,6 @@ class IndexController extends Controller
         ]);
     }
 
-    // ─── 🔥 LAPORAN KEGIATAN PUBLIC ───────────────────────────────────────────
     public function laporanKegiatanPublic(Request $request)
     {
         $search = $request->input('search');
@@ -213,12 +191,9 @@ class IndexController extends Controller
         ]);
     }
 
-    // ─── SURVEY ──────────────────────────────────────────────────────────────
     public function surveyKepuasan()
     {
-        return Inertia::render('Frontend/Survey/Index', [
-            'isActive' => true,
-        ]);
+        return Inertia::render('Frontend/Survey/Index', ['isActive' => true]);
     }
 
     public function surveyStore(Request $request)
@@ -239,48 +214,22 @@ class IndexController extends Controller
             'status' => 'pending',
         ]);
 
-        return redirect()
-            ->back()
-            ->with('success', 'Terima kasih atas partisipasi Anda! 🙏');
+        return redirect()->back()->with('success', 'Terima kasih atas partisipasi Anda! 🙏');
     }
 
-    // ─── PROFIL ──────────────────────────────────────────────────────────────
-    public function sejarah()
-    {
-        return Inertia::render('Frontend/Profil/Sejarah');
-    }
+    public function sejarah() { return Inertia::render('Frontend/Profil/Sejarah'); }
+    public function tugasFungsi() { return Inertia::render('Frontend/Profil/TugasFungsi'); }
+    public function visiMisi() { return Inertia::render('Frontend/Profil/VisiMisi'); }
 
-    public function tugasFungsi()
-    {
-        return Inertia::render('Frontend/Profil/TugasFungsi');
-    }
-
-    public function visiMisi()
-    {
-        return Inertia::render('Frontend/Profil/VisiMisi');
-    }
-
-    // ─── STRUKTUR ORGANISASI ──────────────────────────────────────────────
     public function strukturOrganisasi()
     {
-        $ketua = StrukturOrganisasi::where('kategori', 'ketua')
-            ->where('is_active', true)
-            ->first();
-
-        $pimpinanInti = StrukturOrganisasi::where('kategori', 'pimpinan_inti')
-            ->where('is_active', true)
-            ->orderBy('urutan', 'asc')
-            ->get();
-
+        $ketua = StrukturOrganisasi::where('kategori', 'ketua')->where('is_active', true)->first();
+        $pimpinanInti = StrukturOrganisasi::where('kategori', 'pimpinan_inti')->where('is_active', true)->orderBy('urutan', 'asc')->get();
         $pokja = [];
         $pokjaLabels = ['I', 'II', 'III', 'IV'];
         foreach ($pokjaLabels as $num) {
-            $pokja[$num] = StrukturOrganisasi::where('kategori', 'pokja_' . strtolower($num))
-                ->where('is_active', true)
-                ->orderBy('urutan', 'asc')
-                ->get();
+            $pokja[$num] = StrukturOrganisasi::where('kategori', 'pokja_' . strtolower($num))->where('is_active', true)->orderBy('urutan', 'asc')->get();
         }
-
         return Inertia::render('Frontend/Profil/StrukturOrganisasi', [
             'ketua' => $ketua,
             'pimpinanInti' => $pimpinanInti,
@@ -288,25 +237,14 @@ class IndexController extends Controller
         ]);
     }
 
-    // ─── PROGRAM ──────────────────────────────────────────────────────────────
-    public function programKerja()
-    {
-        return Inertia::render('Frontend/Program/ProgramKerja');
-    }
-
-    public function ketentuanSeragam()
-    {
-        return Inertia::render('Frontend/Profil/KetentuanSeragam');
-    }
+    public function programKerja() { return Inertia::render('Frontend/Program/ProgramKerja'); }
+    public function ketentuanSeragam() { return Inertia::render('Frontend/Profil/KetentuanSeragam'); }
 
     public function galeriKegiatan(Request $request)
     {
         $galeri = Galeri::when($request->search, function ($query) use ($request) {
             return $query->where('judul', 'like', '%' . $request->search . '%');
-        })
-            ->orderBy('created_at', 'desc')
-            ->paginate(12)
-            ->withQueryString();
+        })->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
 
         return Inertia::render('Frontend/Program/GaleriKegiatan', [
             'galeri' => $galeri,
@@ -314,17 +252,9 @@ class IndexController extends Controller
         ]);
     }
 
-    public function marsPkk()
-    {
-        return Inertia::render('Frontend/Program/MarsPkk');
-    }
+    public function marsPkk() { return Inertia::render('Frontend/Program/MarsPkk'); }
+    public function dokumen() { return Inertia::render('Frontend/Program/Dokumen'); }
 
-    public function dokumen()
-    {
-        return Inertia::render('Frontend/Program/Dokumen');
-    }
-
-    // ─── BERITA ──────────────────────────────────────────────────────────────
     public function berita(Request $request)
     {
         $search = $request->get('search');
@@ -339,14 +269,8 @@ class IndexController extends Controller
                     ->orWhere('konten', 'like', '%' . $search . '%');
             });
         }
-
-        if ($kategori) {
-            $query->where('kategori', $kategori);
-        }
-
-        if ($kecamatan) {
-            $query->where('kecamatan', $kecamatan);
-        }
+        if ($kategori) { $query->where('kategori', $kategori); }
+        if ($kecamatan) { $query->where('kecamatan', $kecamatan); }
 
         $beritas = $query->get()->map(function ($item) {
             return [
@@ -365,11 +289,7 @@ class IndexController extends Controller
 
         return Inertia::render('Frontend/Berita/Index', [
             'berita' => $beritas,
-            'filters' => [
-                'search' => $search,
-                'kategori' => $kategori,
-                'kecamatan' => $kecamatan,
-            ],
+            'filters' => ['search' => $search, 'kategori' => $kategori, 'kecamatan' => $kecamatan],
         ]);
     }
 
@@ -377,9 +297,7 @@ class IndexController extends Controller
     {
         $berita = Berita::query()
             ->where('slug', $slug)
-            ->when(is_numeric($slug), function ($q) use ($slug) {
-                $q->orWhere('id', $slug);
-            })
+            ->when(is_numeric($slug), function ($q) use ($slug) { $q->orWhere('id', $slug); })
             ->where('status', 'approved')
             ->firstOrFail();
 
@@ -395,7 +313,6 @@ class IndexController extends Controller
         ]);
     }
 
-    // ─── 🔥 DATA POKJA PUBLIC ──────────────────────────────────────────────────
     public function sekretariatPublic(Request $request)
     {
         $search = $request->input('search');
@@ -484,11 +401,15 @@ class IndexController extends Controller
         ]);
     }
 
+    // ✅ FIX: Pokja4 — kirim 4 props + activeTab
     public function pokja4Public(Request $request)
     {
         $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));  // ✅ default tahun sekarang
+        $activeTab = $request->input('activeTab', 'pokja4');  // ✅ tab default
         $perPage = (int) $request->input('per_page', 15);
 
+        // Data Pokja 4 utama
         $data = Pokja4::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -496,22 +417,40 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->where('tahun', $tahun);
+            })
             ->orderBy('kecamatan', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
-        return Inertia::render('Frontend/data-data/Pokja4', [
+        // ✅ Data 3 sheet — filter tahun
+        $kunjunganPyd = Pokja4KunjunganPyd::where('tahun', $tahun)
+            ->orderBy('bulan')
+            ->get();
+
+        $kegiatanPosyandu = Pokja4KegiatanPosyandu::where('tahun', $tahun)
+            ->orderBy('bulan')
+            ->get();
+
+        $rekapitulasi = Pokja4Rekapitulasi::where('tahun', $tahun)
+            ->orderBy('kecamatan')
+            ->get();
+
+        return Inertia::render('Frontend/data-data/Pokja4/Index', [
             'data' => $data,
-            'filters' => $request->only(['search', 'per_page']),
+            'kunjungan_pyd' => $kunjunganPyd,
+            'kegiatan_posyandu' => $kegiatanPosyandu,
+            'rekapitulasi' => $rekapitulasi,
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'activeTab']),  // ✅ tambah activeTab
         ]);
     }
 
-    // ─── 🔥 JSON API ──────────────────────────────────────────────────────────
+    // JSON — sama
     public function sekretariatJson(Request $request)
     {
         $search = $request->input('search');
         $perPage = (int) $request->input('per_page', 15);
-
         $data = DataUmumSekretariat::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -519,10 +458,7 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('kecamatan', 'asc')
-            ->paginate($perPage)
-            ->withQueryString();
-
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }
 
@@ -530,7 +466,6 @@ class IndexController extends Controller
     {
         $search = $request->input('search');
         $perPage = (int) $request->input('per_page', 15);
-
         $data = Pokja1::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -538,10 +473,7 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('kecamatan', 'asc')
-            ->paginate($perPage)
-            ->withQueryString();
-
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }
 
@@ -549,7 +481,6 @@ class IndexController extends Controller
     {
         $search = $request->input('search');
         $perPage = (int) $request->input('per_page', 15);
-
         $data = Pokja2::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -557,10 +488,7 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('kecamatan', 'asc')
-            ->paginate($perPage)
-            ->withQueryString();
-
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }
 
@@ -568,7 +496,6 @@ class IndexController extends Controller
     {
         $search = $request->input('search');
         $perPage = (int) $request->input('per_page', 15);
-
         $data = Pokja3::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -576,10 +503,7 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('kecamatan', 'asc')
-            ->paginate($perPage)
-            ->withQueryString();
-
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }
 
@@ -587,7 +511,6 @@ class IndexController extends Controller
     {
         $search = $request->input('search');
         $perPage = (int) $request->input('per_page', 15);
-
         $data = Pokja4::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -595,10 +518,7 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('kecamatan', 'asc')
-            ->paginate($perPage)
-            ->withQueryString();
-
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }
 }

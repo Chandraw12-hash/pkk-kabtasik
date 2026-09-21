@@ -12,9 +12,11 @@ class Pokja4 extends Model
     protected $table = 'pokja_fours';
 
     protected $fillable = [
+        // Lama
         'kategori',
         'kecamatan',
         'nama_kecamatan',
+        'tahun',
         'judul_kegiatan',
         'deskripsi',
         'foto',
@@ -22,16 +24,66 @@ class Pokja4 extends Model
         'akseptor_kb',
         'phbs',
         'jamban_keluarga',
+
+        // ✅ Baru — dari Excel (23 kolom)
+        'kader_kesehatan',
+        'kader_gizi',
+        'kader_kesling',
+        'kader_phbs',
+        'kader_kb',
+        'imunisasi',
+        'pkg',
+        'tbc',
+        'spal',
+        'tps',
+        'mck',
+        'air_pdam',
+        'air_sumur',
+        'air_lainnya',
+        'jumlah_pus',
+        'jumlah_wus',
+        'akseptor_kb_l',
+        'akseptor_kb_p',
+        'tabungan_keluarga',
+        'asuransi_kesehatan',
+        'program_kesehatan',
+        'program_lingkungan',
+        'program_perencanaan',
     ];
 
     protected $casts = [
+        // Lama
+        'tahun'=> 'integer',
         'posyandu' => 'integer',
         'akseptor_kb' => 'integer',
         'phbs' => 'integer',
         'jamban_keluarga' => 'integer',
+
+        // ✅ Baru
+        'kader_kesehatan' => 'integer',
+        'kader_gizi' => 'integer',
+        'kader_kesling' => 'integer',
+        'kader_phbs' => 'integer',
+        'kader_kb' => 'integer',
+        'imunisasi' => 'integer',
+        'pkg' => 'integer',
+        'tbc' => 'integer',
+        'spal' => 'integer',
+        'tps' => 'integer',
+        'mck' => 'integer',
+        'air_pdam' => 'integer',
+        'air_sumur' => 'integer',
+        'air_lainnya' => 'integer',
+        'jumlah_pus' => 'integer',
+        'jumlah_wus' => 'integer',
+        'akseptor_kb_l' => 'integer',
+        'akseptor_kb_p' => 'integer',
+        'tabungan_keluarga' => 'integer',
+        'asuransi_kesehatan' => 'integer',
     ];
 
     protected $appends = [
+        // Lama
         'total_posyandu',
         'total_akseptor_kb',
         'total_phbs',
@@ -39,43 +91,36 @@ class Pokja4 extends Model
         'total_keseluruhan',
         'rata_rata_per_kecamatan',
         'data_per_kategori',
+        // ✅ Baru
+        'total_kader',
+        'total_lingkungan',
+        'total_perencanaan',
     ];
 
-    /**
-     * Get total Posyandu
-     */
+    // ============================================
+    // ACCESSORS — Lama
+    // ============================================
+
     public function getTotalPosyanduAttribute(): int
     {
         return $this->posyandu ?? 0;
     }
 
-    /**
-     * Get total Akseptor KB
-     */
     public function getTotalAkseptorKbAttribute(): int
     {
         return $this->akseptor_kb ?? 0;
     }
 
-    /**
-     * Get total PHBS
-     */
     public function getTotalPhbsAttribute(): int
     {
         return $this->phbs ?? 0;
     }
 
-    /**
-     * Get total Jamban Keluarga
-     */
     public function getTotalJambanKeluargaAttribute(): int
     {
         return $this->jamban_keluarga ?? 0;
     }
 
-    /**
-     * Get total keseluruhan semua kategori
-     */
     public function getTotalKeseluruhanAttribute(): int
     {
         return $this->total_posyandu +
@@ -84,9 +129,40 @@ class Pokja4 extends Model
                $this->total_jamban_keluarga;
     }
 
-    /**
-     * Get rata-rata per kecamatan (per kategori)
-     */
+    // ============================================
+    // ACCESSORS — Baru
+    // ============================================
+
+    public function getTotalKaderAttribute(): int
+    {
+        return ($this->kader_kesehatan ?? 0) +
+               ($this->kader_gizi ?? 0) +
+               ($this->kader_kesling ?? 0) +
+               ($this->kader_phbs ?? 0) +
+               ($this->kader_kb ?? 0);
+    }
+
+    public function getTotalLingkunganAttribute(): int
+    {
+        return ($this->jamban_keluarga ?? 0) +
+               ($this->spal ?? 0) +
+               ($this->tps ?? 0) +
+               ($this->mck ?? 0) +
+               ($this->air_pdam ?? 0) +
+               ($this->air_sumur ?? 0) +
+               ($this->air_lainnya ?? 0);
+    }
+
+    public function getTotalPerencanaanAttribute(): int
+    {
+        return ($this->jumlah_pus ?? 0) +
+               ($this->jumlah_wus ?? 0) +
+               ($this->akseptor_kb_l ?? 0) +
+               ($this->akseptor_kb_p ?? 0) +
+               ($this->tabungan_keluarga ?? 0) +
+               ($this->asuransi_kesehatan ?? 0);
+    }
+
     public function getRataRataPerKecamatanAttribute(): array
     {
         $totalKecamatan = self::count();
@@ -114,30 +190,16 @@ class Pokja4 extends Model
         ];
     }
 
-    /**
-     * Get data per kategori
-     */
     public function getDataPerKategoriAttribute(): array
     {
         return [
-            'posyandu' => [
-                'total' => $this->posyandu ?? 0,
-            ],
-            'akseptor_kb' => [
-                'total' => $this->akseptor_kb ?? 0,
-            ],
-            'phbs' => [
-                'total' => $this->phbs ?? 0,
-            ],
-            'jamban_keluarga' => [
-                'total' => $this->jamban_keluarga ?? 0,
-            ],
+            'posyandu' => ['total' => $this->posyandu ?? 0],
+            'akseptor_kb' => ['total' => $this->akseptor_kb ?? 0],
+            'phbs' => ['total' => $this->phbs ?? 0],
+            'jamban_keluarga' => ['total' => $this->jamban_keluarga ?? 0],
         ];
     }
 
-    /**
-     * Get persentase kontribusi per kategori terhadap total
-     */
     public function getPersentaseKontribusiAttribute(): array
     {
         $total = $this->total_keseluruhan;
@@ -162,9 +224,6 @@ class Pokja4 extends Model
     // STATIC METHODS
     // ============================================
 
-    /**
-     * Get total semua kecamatan
-     */
     public static function getTotalSemuaKecamatan(): array
     {
         $data = self::selectRaw('
@@ -188,9 +247,6 @@ class Pokja4 extends Model
         ];
     }
 
-    /**
-     * Get data by kecamatan
-     */
     public static function getByKecamatan($kecamatan): ?self
     {
         return self::where('kecamatan', $kecamatan)
@@ -198,9 +254,6 @@ class Pokja4 extends Model
             ->first();
     }
 
-    /**
-     * Get top kecamatan by posyandu
-     */
     public static function getTopKecamatan($limit = 5, $field = 'posyandu')
     {
         return self::orderBy($field, 'desc')
@@ -212,18 +265,12 @@ class Pokja4 extends Model
     // SCOPES
     // ============================================
 
-    /**
-     * Scope: Filter by kecamatan
-     */
     public function scopeByKecamatan($query, $kecamatan)
     {
         return $query->where('kecamatan', $kecamatan)
             ->orWhere('nama_kecamatan', $kecamatan);
     }
 
-    /**
-     * Scope: Search by kecamatan or nama_kecamatan
-     */
     public function scopeSearch($query, $keyword)
     {
         return $query->where('kecamatan', 'like', "%{$keyword}%")
@@ -231,17 +278,11 @@ class Pokja4 extends Model
             ->orWhere('judul_kegiatan', 'like', "%{$keyword}%");
     }
 
-    /**
-     * Scope: Order by kecamatan
-     */
     public function scopeOrderByKecamatan($query, $direction = 'asc')
     {
         return $query->orderBy('kecamatan', $direction);
     }
 
-    /**
-     * Scope: Get only with data
-     */
     public function scopeHasData($query)
     {
         return $query->where(function ($q) {
@@ -252,17 +293,11 @@ class Pokja4 extends Model
         });
     }
 
-    /**
-     * Scope: Filter by minimum posyandu
-     */
     public function scopeMinPosyandu($query, $min)
     {
         return $query->where('posyandu', '>=', $min);
     }
 
-    /**
-     * Scope: Filter by minimum PHBS
-     */
     public function scopeMinPhbs($query, $min)
     {
         return $query->where('phbs', '>=', $min);
@@ -272,17 +307,11 @@ class Pokja4 extends Model
     // RELATIONS
     // ============================================
 
-    /**
-     * Get Sekretariat data for same kecamatan
-     */
     public function sekretariat()
     {
         return $this->hasOne(DataUmumSekretariat::class, 'kecamatan', 'kecamatan');
     }
 
-    /**
-     * Increment statistik
-     */
     public function incrementStatistik(array $data): void
     {
         foreach ($data as $field => $value) {

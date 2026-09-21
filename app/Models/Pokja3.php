@@ -12,6 +12,7 @@ class Pokja3 extends Model
     protected $table = 'pokja_threes';
 
     protected $fillable = [
+        // Lama
         'kategori',
         'kecamatan',
         'nama_kecamatan',
@@ -22,13 +23,28 @@ class Pokja3 extends Model
         'rumah_tidak_sehat',
         'pemanfaatan_pekarangan',
         'industri_rumah_tangga',
+
+        // ✅ Baru — dari Excel (5 kolom — sesuai migration)
+        'jumlah_kader',
+        'jumlah_kader_p',
+        'makanan_pokok',
+        'hatinya_pkk',
+        'jumlah_rumah',
     ];
 
     protected $casts = [
+        // Lama
         'rumah_sehat' => 'integer',
         'rumah_tidak_sehat' => 'integer',
         'pemanfaatan_pekarangan' => 'integer',
         'industri_rumah_tangga' => 'integer',
+
+        // ✅ Baru
+        'jumlah_kader' => 'integer',
+        'jumlah_kader_p' => 'integer',
+        'makanan_pokok' => 'integer',
+        'hatinya_pkk' => 'integer',
+        'jumlah_rumah' => 'integer',
     ];
 
     protected $appends = [
@@ -39,33 +55,21 @@ class Pokja3 extends Model
         'persentase_rumah_sehat',
     ];
 
-    /**
-     * Get total rumah (sehat + tidak sehat)
-     */
     public function getTotalRumahAttribute(): int
     {
         return ($this->rumah_sehat ?? 0) + ($this->rumah_tidak_sehat ?? 0);
     }
 
-    /**
-     * Get total pemanfaatan pekarangan
-     */
     public function getTotalPemanfaatanPekaranganAttribute(): int
     {
         return $this->pemanfaatan_pekarangan ?? 0;
     }
 
-    /**
-     * Get total industri rumah tangga
-     */
     public function getTotalIndustriRumahTanggaAttribute(): int
     {
         return $this->industri_rumah_tangga ?? 0;
     }
 
-    /**
-     * Get total keseluruhan semua kategori
-     */
     public function getTotalKeseluruhanAttribute(): int
     {
         return $this->total_rumah +
@@ -73,9 +77,6 @@ class Pokja3 extends Model
                $this->total_industri_rumah_tangga;
     }
 
-    /**
-     * Get persentase rumah sehat
-     */
     public function getPersentaseRumahSehatAttribute(): float
     {
         $total = $this->total_rumah;
@@ -85,9 +86,6 @@ class Pokja3 extends Model
         return round(($this->rumah_sehat / $total) * 100, 1);
     }
 
-    /**
-     * Get data per kategori
-     */
     public function getDataPerKategoriAttribute(): array
     {
         return [
@@ -106,13 +104,6 @@ class Pokja3 extends Model
         ];
     }
 
-    // ============================================
-    // STATIC METHODS
-    // ============================================
-
-    /**
-     * Get total semua kecamatan
-     */
     public static function getTotalSemuaKecamatan(): array
     {
         $data = self::selectRaw('
@@ -136,9 +127,6 @@ class Pokja3 extends Model
         ];
     }
 
-    /**
-     * Get data by kecamatan
-     */
     public static function getByKecamatan($kecamatan): ?self
     {
         return self::where('kecamatan', $kecamatan)
@@ -146,22 +134,12 @@ class Pokja3 extends Model
             ->first();
     }
 
-    // ============================================
-    // SCOPES
-    // ============================================
-
-    /**
-     * Scope: Filter by kecamatan
-     */
     public function scopeByKecamatan($query, $kecamatan)
     {
         return $query->where('kecamatan', $kecamatan)
             ->orWhere('nama_kecamatan', $kecamatan);
     }
 
-    /**
-     * Scope: Search by kecamatan or nama_kecamatan
-     */
     public function scopeSearch($query, $keyword)
     {
         return $query->where('kecamatan', 'like', "%{$keyword}%")
@@ -169,17 +147,11 @@ class Pokja3 extends Model
             ->orWhere('judul_kegiatan', 'like', "%{$keyword}%");
     }
 
-    /**
-     * Scope: Order by kecamatan
-     */
     public function scopeOrderByKecamatan($query, $direction = 'asc')
     {
         return $query->orderBy('kecamatan', $direction);
     }
 
-    /**
-     * Scope: Get only with data
-     */
     public function scopeHasData($query)
     {
         return $query->where(function ($q) {
@@ -190,29 +162,16 @@ class Pokja3 extends Model
         });
     }
 
-    /**
-     * Scope: Filter by rumah sehat percentage
-     */
     public function scopeRumahSehatMinimum($query, $percentage)
     {
         return $query->whereRaw('(rumah_sehat / (rumah_sehat + rumah_tidak_sehat) * 100) >= ?', [$percentage]);
     }
 
-    // ============================================
-    // RELATIONS
-    // ============================================
-
-    /**
-     * Get Sekretariat data for same kecamatan
-     */
     public function sekretariat()
     {
         return $this->hasOne(DataUmumSekretariat::class, 'kecamatan', 'kecamatan');
     }
 
-    /**
-     * Increment statistik
-     */
     public function incrementStatistik(array $data): void
     {
         foreach ($data as $field => $value) {

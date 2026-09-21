@@ -8,6 +8,9 @@ use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
 use App\Models\Pokja4;
+use App\Models\Pokja4KunjunganPyd;        // ✅ TAMBAH
+use App\Models\Pokja4KegiatanPosyandu;    // ✅ TAMBAH
+use App\Models\Pokja4Rekapitulasi;        // ✅ TAMBAH
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -44,15 +47,11 @@ class LaporanKegiatanController extends Controller
     // ============================================================
     // 🔥🔥🔥 ADMIN: INDEX SEMUA LAPORAN (PENDING, APPROVED, REJECTED)
     // ============================================================
-    // Endpoint: GET /api/admin/laporan-kegiatan
-    // Dipakai di mobile admin untuk halaman "Verifikasi Laporan"
-    // ============================================================
     public function adminIndex(Request $request)
     {
         $query = LaporanKegiatan::with('user')
             ->orderBy('created_at', 'desc');
 
-        // Filter optional (bisa dipakai di frontend untuk filter)
         if ($request->status) {
             $query->where('status', $request->status);
         }
@@ -66,7 +65,6 @@ class LaporanKegiatanController extends Controller
             $query->where('desa_kelurahan', 'like', '%' . $request->desa . '%');
         }
 
-        // 🔥 Admin: return SEMUA data (no pagination)
         $laporans = $query->get();
 
         return response()->json([
@@ -130,7 +128,8 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'kategori_pokja' => 'required|in:I,II,III,IV',
+            // ✅ UPDATE: tambah IV-PYD, IV-POSYANDU, IV-REKAP
+            'kategori_pokja' => 'required|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP',
             'data_angka' => 'nullable|array',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'kecamatan' => 'nullable|string|max:255',
@@ -155,11 +154,70 @@ class LaporanKegiatanController extends Controller
 
         $dataAngka = $validated['data_angka'] ?? [];
 
+        // ✅ FIX: Pokja I, II, III, IV + 3 sheet baru
         $pokjaFields = [
-            'I' => ['pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p', 'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p', 'kader_pokja1_l', 'kader_pokja1_p'],
-            'II' => ['warga_buta_l', 'warga_buta_p', 'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c', 'kf', 'paud', 'koperasi_berbadan_hukum'],
-            'III' => ['rumah_sehat', 'rumah_tidak_sehat', 'pemanfaatan_pekarangan', 'industri_rumah_tangga'],
-            'IV' => ['posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga'],
+            'I' => [
+                'pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p',
+                'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p',
+                'kader_pokja1_l', 'kader_pokja1_p',
+            ],
+            'II' => [
+                'warga_buta_l', 'warga_buta_p',
+                'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c',
+                'kf', 'paud', 'koperasi_berbadan_hukum',
+                'warga_belajar_paket_a', 'warga_belajar_paket_b', 'warga_belajar_paket_c', 'warga_belajar_kf',
+                'taman_bacaan',
+                'kelompok_bkb', 'peserta_bkb', 'ape_bkb', 'kelompok_simulasi_bkb',
+                'tutor_kf', 'tutor_paud', 'kader_bkb', 'kelompok_kader_koperasi',
+                'kader_keterampilan', 'kader_dilatih_pengelolaan', 'kader_dilatih_tp_pkk', 'kader_dilatih_damas',
+                'up2k_pemula_kelompok', 'up2k_pemula_peserta', 'up2k_madya_kelompok', 'up2k_madya_peserta',
+                'up2k_utama_kelompok', 'up2k_utama_peserta', 'up2k_mandiri_kelompok', 'up2k_mandiri_peserta',
+                'anggota_koperasi',
+            ],
+            'III' => [
+                'rumah_sehat', 'rumah_tidak_sehat', 'pemanfaatan_pekarangan', 'industri_rumah_tangga',
+                'jumlah_kader', 'jumlah_kader_p', 'makanan_pokok', 'hatinya_pkk', 'jumlah_rumah',
+            ],
+            'IV' => [
+                'posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga',
+                'kader_kesehatan', 'kader_gizi', 'kader_kesling', 'kader_phbs', 'kader_kb',
+                'imunisasi', 'pkg', 'tbc',
+                'spal', 'tps', 'mck',
+                'air_pdam', 'air_sumur', 'air_lainnya',
+                'jumlah_pus', 'jumlah_wus',
+                'akseptor_kb_l', 'akseptor_kb_p',
+                'tabungan_keluarga', 'asuransi_kesehatan',
+                'program_kesehatan', 'program_lingkungan', 'program_perencanaan',
+            ],
+            // ✅ 3 SHEET BARU — POKJA IV
+            'IV-PYD' => [
+                'bulan', 'tahun',
+                'bayi_0_12_l', 'bayi_0_12_p', 'bayi_0_12_laki_l', 'bayi_0_12_laki_p',
+                'balita_1_5_l', 'balita_1_5_p', 'balita_1_5_laki_l', 'balita_1_5_laki_p',
+                'wus', 'pus', 'ibu_hamil', 'ibu_menyusui',
+                'bayi_lahir', 'bayi_meninggal', 'kematian_ibu',
+                'petugas_kader', 'petugas_plkb', 'petugas_medis', 'keterangan',
+            ],
+            'IV-POSYANDU' => [
+                'bulan', 'tahun',
+                'ibu_hamil', 'ibu_hamil_diperiksa', 'ibu_hamil_dapat_fe', 'menyusui',
+                'kb_iud', 'kb_mow', 'kb_mop', 'kb_implan', 'kb_pil', 'kb_suntik', 'kb_kondom',
+                'balita_l', 'balita_p', 'balita_kia_l', 'balita_kia_p',
+                'balita_ditimbang_l', 'balita_ditimbang_p', 'balita_naik_l', 'balita_naik_p',
+                'vit_a_1', 'vit_a_2',
+                'imunisasi_tt_1', 'imunisasi_tt_2', 'imunisasi_bcg',
+                'imunisasi_dpt_1', 'imunisasi_dpt_2', 'imunisasi_dpt_3',
+                'imunisasi_polio_1', 'imunisasi_polio_2', 'imunisasi_polio_3', 'imunisasi_polio_4',
+                'imunisasi_campak', 'imunisasi_hepatitis_1', 'imunisasi_hepatitis_2', 'imunisasi_hepatitis_3',
+                'balita_diare', 'balita_oralit', 'keterangan',
+            ],
+            'IV-REKAP' => [
+                'tahun', 'dusun', 'rw', 'rt', 'dasa_wisma',
+                'ibu_hamil', 'ibu_melahirkan', 'ibu_nifas', 'ibu_meninggal',
+                'bayi_lahir_l', 'bayi_lahir_p', 'akte_ada', 'akte_tidak',
+                'bayi_meninggal_l', 'bayi_meninggal_p',
+                'balita_meninggal_l', 'balita_meninggal_p', 'keterangan',
+            ],
         ];
 
         $expectedFields = $pokjaFields[$validated['kategori_pokja']] ?? [];
@@ -214,7 +272,8 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'sometimes|string|max:255',
             'deskripsi' => 'nullable|string',
-            'kategori_pokja' => 'sometimes|in:I,II,III,IV',
+            // ✅ UPDATE
+            'kategori_pokja' => 'sometimes|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP',
             'data_angka' => 'nullable|array',
             'kecamatan' => 'nullable|string|max:255',
             'desa_kelurahan' => 'nullable|string|max:255',
@@ -370,6 +429,7 @@ class LaporanKegiatanController extends Controller
 
         Log::info('Sinkronisasi Pokja ' . $laporan->kategori_pokja . ' untuk kecamatan: ' . $kecamatan);
 
+        // ✅ UPDATE: tambah 3 case baru
         switch ($laporan->kategori_pokja) {
             case 'I':
                 $this->sinkronkanPokja1($kecamatan, $dataAngka);
@@ -382,6 +442,15 @@ class LaporanKegiatanController extends Controller
                 break;
             case 'IV':
                 $this->sinkronkanPokja4($kecamatan, $dataAngka);
+                break;
+            case 'IV-PYD':
+                $this->sinkronkanKunjunganPyd($kecamatan, $dataAngka);
+                break;
+            case 'IV-POSYANDU':
+                $this->sinkronkanKegiatanPosyandu($kecamatan, $dataAngka);
+                break;
+            case 'IV-REKAP':
+                $this->sinkronkanRekapitulasi($kecamatan, $dataAngka);
                 break;
             default:
                 Log::warning('Kategori Pokja tidak dikenal: ' . $laporan->kategori_pokja);
@@ -427,6 +496,33 @@ class LaporanKegiatanController extends Controller
         $pokja->paud = ($pokja->paud ?? 0) + ($data['paud'] ?? 0);
         $pokja->koperasi_berbadan_hukum = ($pokja->koperasi_berbadan_hukum ?? 0) + ($data['koperasi_berbadan_hukum'] ?? 0);
 
+        $pokja->warga_belajar_paket_a = ($pokja->warga_belajar_paket_a ?? 0) + ($data['warga_belajar_paket_a'] ?? 0);
+        $pokja->warga_belajar_paket_b = ($pokja->warga_belajar_paket_b ?? 0) + ($data['warga_belajar_paket_b'] ?? 0);
+        $pokja->warga_belajar_paket_c = ($pokja->warga_belajar_paket_c ?? 0) + ($data['warga_belajar_paket_c'] ?? 0);
+        $pokja->warga_belajar_kf = ($pokja->warga_belajar_kf ?? 0) + ($data['warga_belajar_kf'] ?? 0);
+        $pokja->taman_bacaan = ($pokja->taman_bacaan ?? 0) + ($data['taman_bacaan'] ?? 0);
+        $pokja->kelompok_bkb = ($pokja->kelompok_bkb ?? 0) + ($data['kelompok_bkb'] ?? 0);
+        $pokja->peserta_bkb = ($pokja->peserta_bkb ?? 0) + ($data['peserta_bkb'] ?? 0);
+        $pokja->ape_bkb = ($pokja->ape_bkb ?? 0) + ($data['ape_bkb'] ?? 0);
+        $pokja->kelompok_simulasi_bkb = ($pokja->kelompok_simulasi_bkb ?? 0) + ($data['kelompok_simulasi_bkb'] ?? 0);
+        $pokja->tutor_kf = ($pokja->tutor_kf ?? 0) + ($data['tutor_kf'] ?? 0);
+        $pokja->tutor_paud = ($pokja->tutor_paud ?? 0) + ($data['tutor_paud'] ?? 0);
+        $pokja->kader_bkb = ($pokja->kader_bkb ?? 0) + ($data['kader_bkb'] ?? 0);
+        $pokja->kelompok_kader_koperasi = ($pokja->kelompok_kader_koperasi ?? 0) + ($data['kelompok_kader_koperasi'] ?? 0);
+        $pokja->kader_keterampilan = ($pokja->kader_keterampilan ?? 0) + ($data['kader_keterampilan'] ?? 0);
+        $pokja->kader_dilatih_pengelolaan = ($pokja->kader_dilatih_pengelolaan ?? 0) + ($data['kader_dilatih_pengelolaan'] ?? 0);
+        $pokja->kader_dilatih_tp_pkk = ($pokja->kader_dilatih_tp_pkk ?? 0) + ($data['kader_dilatih_tp_pkk'] ?? 0);
+        $pokja->kader_dilatih_damas = ($pokja->kader_dilatih_damas ?? 0) + ($data['kader_dilatih_damas'] ?? 0);
+        $pokja->up2k_pemula_kelompok = ($pokja->up2k_pemula_kelompok ?? 0) + ($data['up2k_pemula_kelompok'] ?? 0);
+        $pokja->up2k_pemula_peserta = ($pokja->up2k_pemula_peserta ?? 0) + ($data['up2k_pemula_peserta'] ?? 0);
+        $pokja->up2k_madya_kelompok = ($pokja->up2k_madya_kelompok ?? 0) + ($data['up2k_madya_kelompok'] ?? 0);
+        $pokja->up2k_madya_peserta = ($pokja->up2k_madya_peserta ?? 0) + ($data['up2k_madya_peserta'] ?? 0);
+        $pokja->up2k_utama_kelompok = ($pokja->up2k_utama_kelompok ?? 0) + ($data['up2k_utama_kelompok'] ?? 0);
+        $pokja->up2k_utama_peserta = ($pokja->up2k_utama_peserta ?? 0) + ($data['up2k_utama_peserta'] ?? 0);
+        $pokja->up2k_mandiri_kelompok = ($pokja->up2k_mandiri_kelompok ?? 0) + ($data['up2k_mandiri_kelompok'] ?? 0);
+        $pokja->up2k_mandiri_peserta = ($pokja->up2k_mandiri_peserta ?? 0) + ($data['up2k_mandiri_peserta'] ?? 0);
+        $pokja->anggota_koperasi = ($pokja->anggota_koperasi ?? 0) + ($data['anggota_koperasi'] ?? 0);
+
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja II';
         $pokja->judul_kegiatan = "Rekapitulasi Pokja II - $kecamatan";
@@ -445,6 +541,12 @@ class LaporanKegiatanController extends Controller
         $pokja->rumah_tidak_sehat = ($pokja->rumah_tidak_sehat ?? 0) + ($data['rumah_tidak_sehat'] ?? 0);
         $pokja->pemanfaatan_pekarangan = ($pokja->pemanfaatan_pekarangan ?? 0) + ($data['pemanfaatan_pekarangan'] ?? 0);
         $pokja->industri_rumah_tangga = ($pokja->industri_rumah_tangga ?? 0) + ($data['industri_rumah_tangga'] ?? 0);
+
+        $pokja->jumlah_kader = ($pokja->jumlah_kader ?? 0) + ($data['jumlah_kader'] ?? 0);
+        $pokja->jumlah_kader_p = ($pokja->jumlah_kader_p ?? 0) + ($data['jumlah_kader_p'] ?? 0);
+        $pokja->makanan_pokok = ($pokja->makanan_pokok ?? 0) + ($data['makanan_pokok'] ?? 0);
+        $pokja->hatinya_pkk = ($pokja->hatinya_pkk ?? 0) + ($data['hatinya_pkk'] ?? 0);
+        $pokja->jumlah_rumah = ($pokja->jumlah_rumah ?? 0) + ($data['jumlah_rumah'] ?? 0);
 
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja III';
@@ -465,6 +567,30 @@ class LaporanKegiatanController extends Controller
         $pokja->phbs = ($pokja->phbs ?? 0) + ($data['phbs'] ?? 0);
         $pokja->jamban_keluarga = ($pokja->jamban_keluarga ?? 0) + ($data['jamban_keluarga'] ?? 0);
 
+        $pokja->kader_kesehatan = ($pokja->kader_kesehatan ?? 0) + ($data['kader_kesehatan'] ?? 0);
+        $pokja->kader_gizi = ($pokja->kader_gizi ?? 0) + ($data['kader_gizi'] ?? 0);
+        $pokja->kader_kesling = ($pokja->kader_kesling ?? 0) + ($data['kader_kesling'] ?? 0);
+        $pokja->kader_phbs = ($pokja->kader_phbs ?? 0) + ($data['kader_phbs'] ?? 0);
+        $pokja->kader_kb = ($pokja->kader_kb ?? 0) + ($data['kader_kb'] ?? 0);
+        $pokja->imunisasi = ($pokja->imunisasi ?? 0) + ($data['imunisasi'] ?? 0);
+        $pokja->pkg = ($pokja->pkg ?? 0) + ($data['pkg'] ?? 0);
+        $pokja->tbc = ($pokja->tbc ?? 0) + ($data['tbc'] ?? 0);
+        $pokja->spal = ($pokja->spal ?? 0) + ($data['spal'] ?? 0);
+        $pokja->tps = ($pokja->tps ?? 0) + ($data['tps'] ?? 0);
+        $pokja->mck = ($pokja->mck ?? 0) + ($data['mck'] ?? 0);
+        $pokja->air_pdam = ($pokja->air_pdam ?? 0) + ($data['air_pdam'] ?? 0);
+        $pokja->air_sumur = ($pokja->air_sumur ?? 0) + ($data['air_sumur'] ?? 0);
+        $pokja->air_lainnya = ($pokja->air_lainnya ?? 0) + ($data['air_lainnya'] ?? 0);
+        $pokja->jumlah_pus = ($pokja->jumlah_pus ?? 0) + ($data['jumlah_pus'] ?? 0);
+        $pokja->jumlah_wus = ($pokja->jumlah_wus ?? 0) + ($data['jumlah_wus'] ?? 0);
+        $pokja->akseptor_kb_l = ($pokja->akseptor_kb_l ?? 0) + ($data['akseptor_kb_l'] ?? 0);
+        $pokja->akseptor_kb_p = ($pokja->akseptor_kb_p ?? 0) + ($data['akseptor_kb_p'] ?? 0);
+        $pokja->tabungan_keluarga = ($pokja->tabungan_keluarga ?? 0) + ($data['tabungan_keluarga'] ?? 0);
+        $pokja->asuransi_kesehatan = ($pokja->asuransi_kesehatan ?? 0) + ($data['asuransi_kesehatan'] ?? 0);
+        $pokja->program_kesehatan = $data['program_kesehatan'] ?? $pokja->program_kesehatan;
+        $pokja->program_lingkungan = $data['program_lingkungan'] ?? $pokja->program_lingkungan;
+        $pokja->program_perencanaan = $data['program_perencanaan'] ?? $pokja->program_perencanaan;
+
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja IV';
         $pokja->judul_kegiatan = "Rekapitulasi Pokja IV - $kecamatan";
@@ -472,5 +598,155 @@ class LaporanKegiatanController extends Controller
         $pokja->save();
 
         Log::info('Pokja 4 berhasil disinkronkan untuk: ' . $kecamatan);
+    }
+
+    // ✅ ─── SINKRON 3 SHEET BARU — POKJA IV ─────────────────────────────────
+
+    // ─── SINKRON KUNJUNGAN PYD ────────────────────────────────────────────────
+    private function sinkronkanKunjunganPyd($kecamatan, $data)
+    {
+        $bulan = $data['bulan'] ?? null;
+        $tahun = $data['tahun'] ?? date('Y');
+
+        if (!$bulan) {
+            Log::warning('Kunjungan PYD: bulan kosong');
+            return;
+        }
+
+        $record = Pokja4KunjunganPyd::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+        ]);
+
+        $record->bayi_0_12_l = $data['bayi_0_12_l'] ?? 0;
+        $record->bayi_0_12_p = $data['bayi_0_12_p'] ?? 0;
+        $record->bayi_0_12_laki_l = $data['bayi_0_12_laki_l'] ?? 0;
+        $record->bayi_0_12_laki_p = $data['bayi_0_12_laki_p'] ?? 0;
+        $record->balita_1_5_l = $data['balita_1_5_l'] ?? 0;
+        $record->balita_1_5_p = $data['balita_1_5_p'] ?? 0;
+        $record->balita_1_5_laki_l = $data['balita_1_5_laki_l'] ?? 0;
+        $record->balita_1_5_laki_p = $data['balita_1_5_laki_p'] ?? 0;
+        $record->wus = $data['wus'] ?? 0;
+        $record->pus = $data['pus'] ?? 0;
+        $record->ibu_hamil = $data['ibu_hamil'] ?? 0;
+        $record->ibu_menyusui = $data['ibu_menyusui'] ?? 0;
+        $record->bayi_lahir = $data['bayi_lahir'] ?? 0;
+        $record->bayi_meninggal = $data['bayi_meninggal'] ?? 0;
+        $record->kematian_ibu = $data['kematian_ibu'] ?? 0;
+        $record->petugas_kader = $data['petugas_kader'] ?? 0;
+        $record->petugas_plkb = $data['petugas_plkb'] ?? 0;
+        $record->petugas_medis = $data['petugas_medis'] ?? 0;
+        $record->keterangan = $data['keterangan'] ?? null;
+
+        $record->save();
+
+        Log::info('Kunjungan PYD berhasil disinkronkan untuk: ' . $kecamatan . ' bulan ' . $bulan);
+    }
+
+    // ─── SINKRON KEGIATAN POSYANDU ────────────────────────────────────────────
+    private function sinkronkanKegiatanPosyandu($kecamatan, $data)
+    {
+        $bulan = $data['bulan'] ?? null;
+        $tahun = $data['tahun'] ?? date('Y');
+
+        if (!$bulan) {
+            Log::warning('Kegiatan Posyandu: bulan kosong');
+            return;
+        }
+
+        $record = Pokja4KegiatanPosyandu::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+        ]);
+
+        // IBU HAMIL & MENYUSUI
+        $record->ibu_hamil = $data['ibu_hamil'] ?? 0;
+        $record->ibu_hamil_diperiksa = $data['ibu_hamil_diperiksa'] ?? 0;
+        $record->ibu_hamil_dapat_fe = $data['ibu_hamil_dapat_fe'] ?? 0;
+        $record->menyusui = $data['menyusui'] ?? 0;
+
+        // KB
+        $record->kb_iud = $data['kb_iud'] ?? 0;
+        $record->kb_mow = $data['kb_mow'] ?? 0;
+        $record->kb_mop = $data['kb_mop'] ?? 0;
+        $record->kb_implan = $data['kb_implan'] ?? 0;
+        $record->kb_pil = $data['kb_pil'] ?? 0;
+        $record->kb_suntik = $data['kb_suntik'] ?? 0;
+        $record->kb_kondom = $data['kb_kondom'] ?? 0;
+
+        // BALITA
+        $record->balita_l = $data['balita_l'] ?? 0;
+        $record->balita_p = $data['balita_p'] ?? 0;
+        $record->balita_kia_l = $data['balita_kia_l'] ?? 0;
+        $record->balita_kia_p = $data['balita_kia_p'] ?? 0;
+        $record->balita_ditimbang_l = $data['balita_ditimbang_l'] ?? 0;
+        $record->balita_ditimbang_p = $data['balita_ditimbang_p'] ?? 0;
+        $record->balita_naik_l = $data['balita_naik_l'] ?? 0;
+        $record->balita_naik_p = $data['balita_naik_p'] ?? 0;
+
+        // VITAMIN
+        $record->vit_a_1 = $data['vit_a_1'] ?? 0;
+        $record->vit_a_2 = $data['vit_a_2'] ?? 0;
+
+        // IMUNISASI
+        $record->imunisasi_tt_1 = $data['imunisasi_tt_1'] ?? 0;
+        $record->imunisasi_tt_2 = $data['imunisasi_tt_2'] ?? 0;
+        $record->imunisasi_bcg = $data['imunisasi_bcg'] ?? 0;
+        $record->imunisasi_dpt_1 = $data['imunisasi_dpt_1'] ?? 0;
+        $record->imunisasi_dpt_2 = $data['imunisasi_dpt_2'] ?? 0;
+        $record->imunisasi_dpt_3 = $data['imunisasi_dpt_3'] ?? 0;
+        $record->imunisasi_polio_1 = $data['imunisasi_polio_1'] ?? 0;
+        $record->imunisasi_polio_2 = $data['imunisasi_polio_2'] ?? 0;
+        $record->imunisasi_polio_3 = $data['imunisasi_polio_3'] ?? 0;
+        $record->imunisasi_polio_4 = $data['imunisasi_polio_4'] ?? 0;
+        $record->imunisasi_campak = $data['imunisasi_campak'] ?? 0;
+        $record->imunisasi_hepatitis_1 = $data['imunisasi_hepatitis_1'] ?? 0;
+        $record->imunisasi_hepatitis_2 = $data['imunisasi_hepatitis_2'] ?? 0;
+        $record->imunisasi_hepatitis_3 = $data['imunisasi_hepatitis_3'] ?? 0;
+
+        // DIARE
+        $record->balita_diare = $data['balita_diare'] ?? 0;
+        $record->balita_oralit = $data['balita_oralit'] ?? 0;
+
+        $record->keterangan = $data['keterangan'] ?? null;
+
+        $record->save();
+
+        Log::info('Kegiatan Posyandu berhasil disinkronkan untuk: ' . $kecamatan . ' bulan ' . $bulan);
+    }
+
+    // ─── SINKRON REKAPITULASI ────────────────────────────────────────────────
+    private function sinkronkanRekapitulasi($kecamatan, $data)
+    {
+        $tahun = $data['tahun'] ?? date('Y');
+
+        $record = Pokja4Rekapitulasi::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'tahun' => $tahun,
+        ]);
+
+        $record->dusun = $data['dusun'] ?? null;
+        $record->rw = $data['rw'] ?? null;
+        $record->rt = $data['rt'] ?? null;
+        $record->dasa_wisma = $data['dasa_wisma'] ?? null;
+        $record->ibu_hamil = $data['ibu_hamil'] ?? 0;
+        $record->ibu_melahirkan = $data['ibu_melahirkan'] ?? 0;
+        $record->ibu_nifas = $data['ibu_nifas'] ?? 0;
+        $record->ibu_meninggal = $data['ibu_meninggal'] ?? 0;
+        $record->bayi_lahir_l = $data['bayi_lahir_l'] ?? 0;
+        $record->bayi_lahir_p = $data['bayi_lahir_p'] ?? 0;
+        $record->akte_ada = $data['akte_ada'] ?? 0;
+        $record->akte_tidak = $data['akte_tidak'] ?? 0;
+        $record->bayi_meninggal_l = $data['bayi_meninggal_l'] ?? 0;
+        $record->bayi_meninggal_p = $data['bayi_meninggal_p'] ?? 0;
+        $record->balita_meninggal_l = $data['balita_meninggal_l'] ?? 0;
+        $record->balita_meninggal_p = $data['balita_meninggal_p'] ?? 0;
+        $record->keterangan = $data['keterangan'] ?? null;
+
+        $record->save();
+
+        Log::info('Rekapitulasi berhasil disinkronkan untuk: ' . $kecamatan);
     }
 }

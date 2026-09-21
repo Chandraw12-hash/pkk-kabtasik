@@ -42,10 +42,37 @@ class Pokja4Controller extends Controller
             'kategori'         => 'nullable|string|max:50',
             'kecamatan'        => 'required|string|max:100',
             'nama_kecamatan'   => 'required|string|max:100',
+
+            // Lama
             'posyandu'         => 'nullable|numeric|min:0',
             'akseptor_kb'      => 'nullable|numeric|min:0',
             'phbs'             => 'nullable|numeric|min:0',
             'jamban_keluarga'  => 'nullable|numeric|min:0',
+
+            // ✅ Baru — dari Excel (23 kolom)
+            'kader_kesehatan'     => 'nullable|numeric|min:0',
+            'kader_gizi'          => 'nullable|numeric|min:0',
+            'kader_kesling'       => 'nullable|numeric|min:0',
+            'kader_phbs'          => 'nullable|numeric|min:0',
+            'kader_kb'            => 'nullable|numeric|min:0',
+            'imunisasi'           => 'nullable|numeric|min:0',
+            'pkg'                 => 'nullable|numeric|min:0',
+            'tbc'                 => 'nullable|numeric|min:0',
+            'spal'                => 'nullable|numeric|min:0',
+            'tps'                 => 'nullable|numeric|min:0',
+            'mck'                 => 'nullable|numeric|min:0',
+            'air_pdam'            => 'nullable|numeric|min:0',
+            'air_sumur'           => 'nullable|numeric|min:0',
+            'air_lainnya'         => 'nullable|numeric|min:0',
+            'jumlah_pus'          => 'nullable|numeric|min:0',
+            'jumlah_wus'          => 'nullable|numeric|min:0',
+            'akseptor_kb_l'       => 'nullable|numeric|min:0',
+            'akseptor_kb_p'       => 'nullable|numeric|min:0',
+            'tabungan_keluarga'   => 'nullable|numeric|min:0',
+            'asuransi_kesehatan'  => 'nullable|numeric|min:0',
+            'program_kesehatan'   => 'nullable|string|max:255',
+            'program_lingkungan'  => 'nullable|string|max:255',
+            'program_perencanaan' => 'nullable|string|max:255',
         ]);
 
         $validated['kategori'] = $validated['kategori'] ?? 'Umum';
@@ -66,10 +93,37 @@ class Pokja4Controller extends Controller
             'kategori'         => 'nullable|string|max:50',
             'kecamatan'        => 'required|string|max:100',
             'nama_kecamatan'   => 'required|string|max:100',
+
+            // Lama
             'posyandu'         => 'nullable|numeric|min:0',
             'akseptor_kb'      => 'nullable|numeric|min:0',
             'phbs'             => 'nullable|numeric|min:0',
             'jamban_keluarga'  => 'nullable|numeric|min:0',
+
+            // ✅ Baru — dari Excel (23 kolom)
+            'kader_kesehatan'     => 'nullable|numeric|min:0',
+            'kader_gizi'          => 'nullable|numeric|min:0',
+            'kader_kesling'       => 'nullable|numeric|min:0',
+            'kader_phbs'          => 'nullable|numeric|min:0',
+            'kader_kb'            => 'nullable|numeric|min:0',
+            'imunisasi'           => 'nullable|numeric|min:0',
+            'pkg'                 => 'nullable|numeric|min:0',
+            'tbc'                 => 'nullable|numeric|min:0',
+            'spal'                => 'nullable|numeric|min:0',
+            'tps'                 => 'nullable|numeric|min:0',
+            'mck'                 => 'nullable|numeric|min:0',
+            'air_pdam'            => 'nullable|numeric|min:0',
+            'air_sumur'           => 'nullable|numeric|min:0',
+            'air_lainnya'         => 'nullable|numeric|min:0',
+            'jumlah_pus'          => 'nullable|numeric|min:0',
+            'jumlah_wus'          => 'nullable|numeric|min:0',
+            'akseptor_kb_l'       => 'nullable|numeric|min:0',
+            'akseptor_kb_p'       => 'nullable|numeric|min:0',
+            'tabungan_keluarga'   => 'nullable|numeric|min:0',
+            'asuransi_kesehatan'  => 'nullable|numeric|min:0',
+            'program_kesehatan'   => 'nullable|string|max:255',
+            'program_lingkungan'  => 'nullable|string|max:255',
+            'program_perencanaan' => 'nullable|string|max:255',
         ]);
 
         $validated['kategori'] = $validated['kategori'] ?? 'Umum';
@@ -107,6 +161,7 @@ class Pokja4Controller extends Controller
         }
 
         $failures = $import->failures();
+        $importedCount = $import->getImportedCount();
 
         $failuresFormatted = $failures->map(function ($failure) {
             return [
@@ -115,7 +170,7 @@ class Pokja4Controller extends Controller
             ];
         })->values();
 
-        if ($import->importedCount === 0 && $failuresFormatted->count() > 0) {
+        if ($importedCount === 0 && $failuresFormatted->count() > 0) {
             return response()->json([
                 'message'  => 'Import gagal. Tidak ada baris yang berhasil disimpan. Periksa format header file Anda.',
                 'failures' => $failuresFormatted,
@@ -123,8 +178,8 @@ class Pokja4Controller extends Controller
         }
 
         return response()->json([
-            'message'  => "Import selesai. {$import->importedCount} baris berhasil disimpan.",
-            'imported' => $import->importedCount,
+            'message'  => "Import selesai. {$importedCount} baris berhasil disimpan.",
+            'imported' => $importedCount,
             'failures' => $failuresFormatted,
         ]);
     }

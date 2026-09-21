@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
-import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Badge from "@/Components/UI/Badge";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
@@ -17,8 +16,6 @@ import {
     Eye,
     ThumbsUp,
     ThumbsDown,
-    CheckCircle2,
-    AlertTriangle,
 } from "lucide-react";
 import axios from "axios";
 
@@ -87,6 +84,29 @@ const getStatusBadge = (status: string) => {
     return statusMap[status] || { label: status, type: "default" };
 };
 
+// ✅ BARU: mapping kategori_pokja → label rapi
+const getPokjaLabel = (kategori: string): string => {
+    const map: Record<string, string> = {
+        'I': 'Pokja I',
+        'II': 'Pokja II',
+        'III': 'Pokja III',
+        'IV': 'Pokja IV',
+        'IV-PYD': 'Kunjungan PYD',
+        'IV-POSYANDU': 'Kegiatan Posyandu',
+        'IV-REKAP': 'Rekapitulasi',
+        'SEKRETARIAT': 'Sekretariat',
+    };
+    return map[kategori] || `Pokja ${kategori}`;
+};
+
+// ✅ BARU: warna badge per kategori
+const getPokjaBadgeType = (kategori: string): "default" | "success" | "warning" | "danger" | "info" => {
+    if (kategori === 'IV-PYD') return 'info';
+    if (kategori === 'IV-POSYANDU') return 'success';
+    if (kategori === 'IV-REKAP') return 'warning';
+    return 'info';
+};
+
 export default function Index({
     laporans,
     filters = {},
@@ -102,11 +122,7 @@ export default function Index({
     const [perPage, setPerPage] = useState(Number(filters.per_page) || 10);
     const [local, setLocal] = useState(laporans);
     const [isLoading, setIsLoading] = useState(false);
-    const [showDelete, setShowDelete] = useState(false);
     const [selected, setSelected] = useState<Laporan | null>(null);
-    const [showApproveModal, setShowApproveModal] = useState(false);
-    const [showRejectModal, setShowRejectModal] = useState(false);
-    const [actionTarget, setActionTarget] = useState<Laporan | null>(null);
     const first = useRef(true);
 
     const { delete: destroy, processing } = useForm({});
@@ -170,7 +186,6 @@ export default function Index({
                 destroy(route("be.laporan-kegiatan.destroy", selected.id), {
                     preserveScroll: true,
                     onSuccess: () => {
-                        setShowDelete(false);
                         setSelected(null);
                         refreshData();
                         Swal.fire({
@@ -193,7 +208,7 @@ export default function Index({
             html: `
                 <p>Anda yakin ingin menyetujui laporan:</p>
                 <p class="font-bold text-teal-600">"${item.judul}"</p>
-                <p class="text-sm text-slate-500">Data akan masuk ke statistik Pokja ${item.kategori_pokja}</p>
+                <p class="text-sm text-slate-500">Data akan masuk ke statistik ${getPokjaLabel(item.kategori_pokja)}</p>
             `,
             icon: "question",
             showCancelButton: true,
@@ -341,16 +356,24 @@ export default function Index({
                             </option>
                         ))}
                     </select>
+                    {/* ✅ UPDATE: filter Pokja — tambah 3 sheet baru */}
                     <select
                         value={pokja}
                         onChange={(e) => setPokja(e.target.value)}
                         className="rounded-xl border border-slate-200 bg-white text-sm px-3 py-2.5"
                     >
                         <option value="">Semua Pokja</option>
-                        <option value="I">Pokja I</option>
-                        <option value="II">Pokja II</option>
-                        <option value="III">Pokja III</option>
-                        <option value="IV">Pokja IV</option>
+                        <optgroup label="Pokja Utama">
+                            <option value="I">Pokja I</option>
+                            <option value="II">Pokja II</option>
+                            <option value="III">Pokja III</option>
+                            <option value="IV">Pokja IV</option>
+                        </optgroup>
+                        <optgroup label="Pokja IV — Sheet">
+                            <option value="IV-PYD">Kunjungan PYD</option>
+                            <option value="IV-POSYANDU">Kegiatan Posyandu</option>
+                            <option value="IV-REKAP">Rekapitulasi</option>
+                        </optgroup>
                     </select>
                     {(search || status || pokja) && (
                         <Button
@@ -399,11 +422,11 @@ export default function Index({
                         },
                         {
                             header: "Pokja",
-                            className: "text-center w-24",
+                            className: "text-center w-40",
                             headerClassName: "text-center",
                             render: (item: Laporan) => (
-                                <Badge type="info">
-                                    Pokja {item.kategori_pokja}
+                                <Badge type={getPokjaBadgeType(item.kategori_pokja)}>
+                                    {getPokjaLabel(item.kategori_pokja)}
                                 </Badge>
                             ),
                         },
@@ -475,7 +498,8 @@ export default function Index({
                                         type="button"
                                         onClick={() => {
                                             setSelected(item);
-                                            handleDelete();
+                                            // Langsung panggil handleDelete, tapi tunggu state setSelected
+                                            setTimeout(() => handleDelete(), 100);
                                         }}
                                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
                                         title="Hapus"

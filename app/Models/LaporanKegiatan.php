@@ -36,15 +36,6 @@ class LaporanKegiatan extends Model
     // ============================================================
     // 🔥 TAMBAH: GLOBAL SCOPE — Auto Filter Kecamatan
     // ============================================================
-    /**
-     * Global Scope untuk filter otomatis berdasarkan kecamatan user.
-     *
-     * Kalau user login role 'kecamatan' → auto filter WHERE kecamatan = user.kecamatan
-     * Kalau user login role 'admin' → ga ada filter (lihat semua)
-     *
-     * Kalau perlu bypass (misal export semua):
-     * LaporanKegiatan::withoutGlobalScope(KecamatanScope::class)->get();
-     */
     protected static function booted(): void
     {
         static::addGlobalScope(new KecamatanScope);
@@ -85,14 +76,19 @@ class LaporanKegiatan extends Model
         };
     }
 
+    // ✅ UPDATE: tambah 3 case untuk sheet baru
     public function getPokjaDisplayAttribute(): string
     {
         return match ($this->kategori_pokja) {
-            'I'     => 'Pokja I - Penghayatan & Pengamalan Pancasila',
-            'II'    => 'Pokja II - Pendidikan & Keterampilan',
-            'III'   => 'Pokja III - Pangan, Sandang, Perumahan',
-            'IV'    => 'Pokja IV - Kesehatan & Lingkungan',
-            default => $this->kategori_pokja ?? 'Unknown',
+            'I'            => 'Pokja I - Penghayatan & Pengamalan Pancasila',
+            'II'           => 'Pokja II - Pendidikan & Keterampilan',
+            'III'          => 'Pokja III - Pangan, Sandang, Perumahan',
+            'IV'           => 'Pokja IV - Kesehatan & Lingkungan',
+            'IV-PYD'       => 'Pokja IV - Kunjungan PYD',
+            'IV-POSYANDU'  => 'Pokja IV - Kegiatan Posyandu',
+            'IV-REKAP'     => 'Pokja IV - Rekapitulasi',
+            'SEKRETARIAT'  => 'Sekretariat',
+            default        => $this->kategori_pokja ?? 'Unknown',
         };
     }
 

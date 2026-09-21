@@ -8,11 +8,15 @@ use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
 use App\Models\Pokja4;
+use App\Models\Pokja4KunjunganPyd;
+use App\Models\Pokja4KegiatanPosyandu;
+use App\Models\Pokja4Rekapitulasi;
 use App\Models\DataUmumSekretariat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class LaporanKegiatanController extends Controller
 {
@@ -87,7 +91,6 @@ class LaporanKegiatanController extends Controller
 
         $statistikTerupdate = false;
 
-        // 🔥 DECODE DATA_ANGKA SAMPAI BENER-BENER ARRAY
         $dataAngka = $laporan_kegiatan->data_angka;
         if (is_string($dataAngka)) {
             $dataAngka = json_decode($dataAngka, true);
@@ -96,7 +99,6 @@ class LaporanKegiatanController extends Controller
             }
         }
 
-        // 🔥 CEK VALID DATA
         $isValidData = !empty($laporan_kegiatan->kecamatan)
             && is_array($dataAngka)
             && !empty($dataAngka)
@@ -158,7 +160,6 @@ class LaporanKegiatanController extends Controller
 
         $count = 0;
         foreach ($laporans as $laporan) {
-            // 🔥 DECODE DATA_ANGKA
             $dataAngka = $laporan->data_angka;
             if (is_string($dataAngka)) {
                 $dataAngka = json_decode($dataAngka, true);
@@ -232,6 +233,9 @@ class LaporanKegiatanController extends Controller
             case 'II': $this->updatePokja2($kecamatan, $dataAngka); break;
             case 'III': $this->updatePokja3($kecamatan, $dataAngka); break;
             case 'IV': $this->updatePokja4($kecamatan, $dataAngka); break;
+            case 'IV-PYD': $this->updateKunjunganPyd($kecamatan, $dataAngka); break;
+            case 'IV-POSYANDU': $this->updateKegiatanPosyandu($kecamatan, $dataAngka); break;
+            case 'IV-REKAP': $this->updateRekapitulasi($kecamatan, $dataAngka); break;
             case 'SEKRETARIAT': $this->updateSekretariat($kecamatan, $dataAngka); break;
             default:
                 Log::warning('⚠️ Kategori Pokja tidak dikenal: ' . $pokja);
@@ -322,13 +326,27 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        $fields = ['posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga'];
+        $fields = [
+            'posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga',
+            'kader_kesehatan', 'kader_gizi', 'kader_kesling', 'kader_phbs', 'kader_kb',
+            'imunisasi', 'pkg', 'tbc',
+            'spal', 'tps', 'mck',
+            'air_pdam', 'air_sumur', 'air_lainnya',
+            'jumlah_pus', 'jumlah_wus',
+            'akseptor_kb_l', 'akseptor_kb_p',
+            'tabungan_keluarga', 'asuransi_kesehatan',
+        ];
         foreach ($fields as $field) {
             $value = $dataAngka[$field] ?? 0;
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
         }
+
+        $pokja->program_kesehatan = $dataAngka['program_kesehatan'] ?? $pokja->program_kesehatan;
+        $pokja->program_lingkungan = $dataAngka['program_lingkungan'] ?? $pokja->program_lingkungan;
+        $pokja->program_perencanaan = $dataAngka['program_perencanaan'] ?? $pokja->program_perencanaan;
+
         $pokja->save();
 
         Log::info('✅ Pokja IV updated untuk: ' . $kecamatan);
@@ -356,5 +374,176 @@ class LaporanKegiatanController extends Controller
         $sekretariat->save();
 
         Log::info('✅ Sekretariat updated untuk: ' . $kecamatan);
+    }
+
+    // ✅ ─── UPDATE 3 SHEET BARU — POKJA IV ───────────────────────────────────
+
+    // ─── UPDATE KUNJUNGAN PYD ────────────────────────────────────────────────
+    private function updateKunjunganPyd($kecamatan, $dataAngka)
+    {
+        $bulan = $dataAngka['bulan'] ?? null;
+        $tahun = $dataAngka['tahun'] ?? date('Y');
+
+        if (!$bulan) {
+            Log::warning('Kunjungan PYD: bulan kosong');
+            return;
+        }
+
+        // ✅ FIX: Auto-generate nama_bulan dari bulan
+        $bulanInt = (int) $bulan;
+        $namaBulan = Carbon::create()
+            ->month($bulanInt)
+            ->locale('id')
+            ->translatedFormat('F');
+
+        $record = Pokja4KunjunganPyd::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'bulan' => $bulanInt,
+            'tahun' => $tahun,
+        ]);
+
+        // ✅ FIX: Set nama_bulan — biar ga null
+        $record->nama_bulan = $namaBulan;
+
+        // Assign — replace, bukan increment
+        $record->bayi_0_12_l = $dataAngka['bayi_0_12_l'] ?? 0;
+        $record->bayi_0_12_p = $dataAngka['bayi_0_12_p'] ?? 0;
+        $record->bayi_0_12_laki_l = $dataAngka['bayi_0_12_laki_l'] ?? 0;
+        $record->bayi_0_12_laki_p = $dataAngka['bayi_0_12_laki_p'] ?? 0;
+        $record->balita_1_5_l = $dataAngka['balita_1_5_l'] ?? 0;
+        $record->balita_1_5_p = $dataAngka['balita_1_5_p'] ?? 0;
+        $record->balita_1_5_laki_l = $dataAngka['balita_1_5_laki_l'] ?? 0;
+        $record->balita_1_5_laki_p = $dataAngka['balita_1_5_laki_p'] ?? 0;
+        $record->wus = $dataAngka['wus'] ?? 0;
+        $record->pus = $dataAngka['pus'] ?? 0;
+        $record->ibu_hamil = $dataAngka['ibu_hamil'] ?? 0;
+        $record->ibu_menyusui = $dataAngka['ibu_menyusui'] ?? 0;
+        $record->bayi_lahir = $dataAngka['bayi_lahir'] ?? 0;
+        $record->bayi_meninggal = $dataAngka['bayi_meninggal'] ?? 0;
+        $record->kematian_ibu = $dataAngka['kematian_ibu'] ?? 0;
+        $record->petugas_kader = $dataAngka['petugas_kader'] ?? 0;
+        $record->petugas_plkb = $dataAngka['petugas_plkb'] ?? 0;
+        $record->petugas_medis = $dataAngka['petugas_medis'] ?? 0;
+        $record->keterangan = $dataAngka['keterangan'] ?? null;
+
+        $record->save();
+
+        Log::info('✅ Kunjungan PYD updated untuk: ' . $kecamatan . ' bulan ' . $bulanInt . ' (' . $namaBulan . ')');
+    }
+
+    // ─── UPDATE KEGIATAN POSYANDU ────────────────────────────────────────────
+    private function updateKegiatanPosyandu($kecamatan, $dataAngka)
+    {
+        $bulan = $dataAngka['bulan'] ?? null;
+        $tahun = $dataAngka['tahun'] ?? date('Y');
+
+        if (!$bulan) {
+            Log::warning('Kegiatan Posyandu: bulan kosong');
+            return;
+        }
+
+        // ✅ FIX: Auto-generate nama_bulan dari bulan
+        $bulanInt = (int) $bulan;
+        $namaBulan = Carbon::create()
+            ->month($bulanInt)
+            ->locale('id')
+            ->translatedFormat('F');
+
+        $record = Pokja4KegiatanPosyandu::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'bulan' => $bulanInt,
+            'tahun' => $tahun,
+        ]);
+
+        // ✅ FIX: Set nama_bulan — biar ga null
+        $record->nama_bulan = $namaBulan;
+
+        // IBU HAMIL & MENYUSUI
+        $record->ibu_hamil = $dataAngka['ibu_hamil'] ?? 0;
+        $record->ibu_hamil_diperiksa = $dataAngka['ibu_hamil_diperiksa'] ?? 0;
+        $record->ibu_hamil_dapat_fe = $dataAngka['ibu_hamil_dapat_fe'] ?? 0;
+        $record->menyusui = $dataAngka['menyusui'] ?? 0;
+
+        // KB
+        $record->kb_iud = $dataAngka['kb_iud'] ?? 0;
+        $record->kb_mow = $dataAngka['kb_mow'] ?? 0;
+        $record->kb_mop = $dataAngka['kb_mop'] ?? 0;
+        $record->kb_implan = $dataAngka['kb_implan'] ?? 0;
+        $record->kb_pil = $dataAngka['kb_pil'] ?? 0;
+        $record->kb_suntik = $dataAngka['kb_suntik'] ?? 0;
+        $record->kb_kondom = $dataAngka['kb_kondom'] ?? 0;
+
+        // BALITA
+        $record->balita_l = $dataAngka['balita_l'] ?? 0;
+        $record->balita_p = $dataAngka['balita_p'] ?? 0;
+        $record->balita_kia_l = $dataAngka['balita_kia_l'] ?? 0;
+        $record->balita_kia_p = $dataAngka['balita_kia_p'] ?? 0;
+        $record->balita_ditimbang_l = $dataAngka['balita_ditimbang_l'] ?? 0;
+        $record->balita_ditimbang_p = $dataAngka['balita_ditimbang_p'] ?? 0;
+        $record->balita_naik_l = $dataAngka['balita_naik_l'] ?? 0;
+        $record->balita_naik_p = $dataAngka['balita_naik_p'] ?? 0;
+
+        // VITAMIN
+        $record->vit_a_1 = $dataAngka['vit_a_1'] ?? 0;
+        $record->vit_a_2 = $dataAngka['vit_a_2'] ?? 0;
+
+        // IMUNISASI
+        $record->imunisasi_tt_1 = $dataAngka['imunisasi_tt_1'] ?? 0;
+        $record->imunisasi_tt_2 = $dataAngka['imunisasi_tt_2'] ?? 0;
+        $record->imunisasi_bcg = $dataAngka['imunisasi_bcg'] ?? 0;
+        $record->imunisasi_dpt_1 = $dataAngka['imunisasi_dpt_1'] ?? 0;
+        $record->imunisasi_dpt_2 = $dataAngka['imunisasi_dpt_2'] ?? 0;
+        $record->imunisasi_dpt_3 = $dataAngka['imunisasi_dpt_3'] ?? 0;
+        $record->imunisasi_polio_1 = $dataAngka['imunisasi_polio_1'] ?? 0;
+        $record->imunisasi_polio_2 = $dataAngka['imunisasi_polio_2'] ?? 0;
+        $record->imunisasi_polio_3 = $dataAngka['imunisasi_polio_3'] ?? 0;
+        $record->imunisasi_polio_4 = $dataAngka['imunisasi_polio_4'] ?? 0;
+        $record->imunisasi_campak = $dataAngka['imunisasi_campak'] ?? 0;
+        $record->imunisasi_hepatitis_1 = $dataAngka['imunisasi_hepatitis_1'] ?? 0;
+        $record->imunisasi_hepatitis_2 = $dataAngka['imunisasi_hepatitis_2'] ?? 0;
+        $record->imunisasi_hepatitis_3 = $dataAngka['imunisasi_hepatitis_3'] ?? 0;
+
+        // DIARE
+        $record->balita_diare = $dataAngka['balita_diare'] ?? 0;
+        $record->balita_oralit = $dataAngka['balita_oralit'] ?? 0;
+
+        $record->keterangan = $dataAngka['keterangan'] ?? null;
+
+        $record->save();
+
+        Log::info('✅ Kegiatan Posyandu updated untuk: ' . $kecamatan . ' bulan ' . $bulanInt . ' (' . $namaBulan . ')');
+    }
+
+    // ─── UPDATE REKAPITULASI ─────────────────────────────────────────────────
+    private function updateRekapitulasi($kecamatan, $dataAngka)
+    {
+        $tahun = $dataAngka['tahun'] ?? date('Y');
+
+        $record = Pokja4Rekapitulasi::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'tahun' => $tahun,
+        ]);
+
+        $record->dusun = $dataAngka['dusun'] ?? null;
+        $record->rw = $dataAngka['rw'] ?? null;
+        $record->rt = $dataAngka['rt'] ?? null;
+        $record->dasa_wisma = $dataAngka['dasa_wisma'] ?? null;
+        $record->ibu_hamil = $dataAngka['ibu_hamil'] ?? 0;
+        $record->ibu_melahirkan = $dataAngka['ibu_melahirkan'] ?? 0;
+        $record->ibu_nifas = $dataAngka['ibu_nifas'] ?? 0;
+        $record->ibu_meninggal = $dataAngka['ibu_meninggal'] ?? 0;
+        $record->bayi_lahir_l = $dataAngka['bayi_lahir_l'] ?? 0;
+        $record->bayi_lahir_p = $dataAngka['bayi_lahir_p'] ?? 0;
+        $record->akte_ada = $dataAngka['akte_ada'] ?? 0;
+        $record->akte_tidak = $dataAngka['akte_tidak'] ?? 0;
+        $record->bayi_meninggal_l = $dataAngka['bayi_meninggal_l'] ?? 0;
+        $record->bayi_meninggal_p = $dataAngka['bayi_meninggal_p'] ?? 0;
+        $record->balita_meninggal_l = $dataAngka['balita_meninggal_l'] ?? 0;
+        $record->balita_meninggal_p = $dataAngka['balita_meninggal_p'] ?? 0;
+        $record->keterangan = $dataAngka['keterangan'] ?? null;
+
+        $record->save();
+
+        Log::info('✅ Rekapitulasi updated untuk: ' . $kecamatan);
     }
 }

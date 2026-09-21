@@ -36,6 +36,13 @@ use App\Http\Controllers\Backend\StrukturOrganisasiController;
 // Weather
 use App\Http\Controllers\Api\WeatherController;
 
+// ✅ Export Pokja IV
+use App\Exports\Pokja4Export;
+use App\Exports\Pokja4KunjunganPydExport;      // ✅ TAMBAH
+use App\Exports\Pokja4KegiatanPosyanduExport;  // ✅ TAMBAH
+use App\Exports\Pokja4RekapitulasiExport;      // ✅ TAMBAH
+use Maatwebsite\Excel\Facades\Excel;
+
 // ============================================
 // KECAMATAN CONTROLLERS
 // ============================================
@@ -44,7 +51,7 @@ use App\Http\Controllers\Backend\Kecamatan\LaporanKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\RekapKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\ExportKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\PrintKecamatanController;
-use App\Http\Controllers\Backend\Kecamatan\BeritaKecamatanController; // ✅ TAMBAH INI
+use App\Http\Controllers\Backend\Kecamatan\BeritaKecamatanController;
 
 // ============================================
 // FRONTEND ROUTES (Public)
@@ -69,7 +76,7 @@ Route::as('fe.')->group(function () {
     Route::get('/berita', [IndexController::class, 'berita'])->name('berita');
     Route::get('/berita/{slug}', [IndexController::class, 'showBerita'])->name('berita.show');
 
-    // AGENDA — Redirect ke section agenda di beranda
+    // AGENDA
     Route::get('/agenda', function () {
         return redirect('/#data');
     })->name('agenda');
@@ -89,6 +96,35 @@ Route::as('fe.')->group(function () {
     Route::get('/pokja-2', [IndexController::class, 'pokja2Public'])->name('pokja2');
     Route::get('/pokja-3', [IndexController::class, 'pokja3Public'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Public'])->name('pokja4');
+
+    // ✅ EXPORT POKJA IV — 4 route
+    // 1. Pokja IV Utama
+    Route::get('/pokja-4/export', function () {
+        $tahun = request('tahun', date('Y'));
+        $filename = 'data-pokja-4-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new Pokja4Export($tahun), $filename);
+    })->name('pokja4.export');
+
+    // 2. Kunjungan PYD
+    Route::get('/pokja-4/export-pyd', function () {
+        $tahun = request('tahun', date('Y'));
+        $filename = 'data-kunjungan-pyd-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new Pokja4KunjunganPydExport($tahun), $filename);
+    })->name('pokja4.export-pyd');
+
+    // 3. Kegiatan Posyandu
+    Route::get('/pokja-4/export-posyandu', function () {
+        $tahun = request('tahun', date('Y'));
+        $filename = 'data-kegiatan-posyandu-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new Pokja4KegiatanPosyanduExport($tahun), $filename);
+    })->name('pokja4.export-posyandu');
+
+    // 4. Rekapitulasi
+    Route::get('/pokja-4/export-rekap', function () {
+        $tahun = request('tahun', date('Y'));
+        $filename = 'data-rekapitulasi-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new Pokja4RekapitulasiExport($tahun), $filename);
+    })->name('pokja4.export-rekap');
 });
 
 // ============================================
@@ -287,30 +323,26 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
 }); // ← TUTUP GRUP DASHBOARD
 
 // ============================================================
-// ROUTES: ADMIN SEKRETARIAT KECAMATAN (DI LUAR GRUP DASHBOARD)
+// ROUTES: ADMIN SEKRETARIAT KECAMATAN
 // ============================================================
 Route::prefix('kecamatan')
     ->name('kecamatan.')
     ->middleware(['auth', 'kecamatan'])
     ->group(function () {
 
-    // ─── DASHBOARD ────────────────────────────────────────────────
     Route::get('/', [DashboardKecamatanController::class, 'index'])
         ->name('dashboard');
 
-    // ─── LAPORAN (VIEW ONLY) ──────────────────────────────────────
     Route::get('laporan', [LaporanKecamatanController::class, 'index'])
         ->name('laporan.index');
     Route::get('laporan/{id}', [LaporanKecamatanController::class, 'show'])
         ->name('laporan.show');
 
-    // ✅ ─── BERITA KECAMATAN (VIEW ONLY) ──────────────────────────
     Route::get('berita', [BeritaKecamatanController::class, 'index'])
         ->name('berita.index');
     Route::get('berita/{id}', [BeritaKecamatanController::class, 'show'])
         ->name('berita.show');
 
-    // ─── REKAP ────────────────────────────────────────────────────
     Route::get('rekap/kecamatan', [RekapKecamatanController::class, 'kecamatan'])
         ->name('rekap.kecamatan');
     Route::get('rekap/desa', [RekapKecamatanController::class, 'desa'])
@@ -318,13 +350,11 @@ Route::prefix('kecamatan')
     Route::get('rekap/dasa-wisma', [RekapKecamatanController::class, 'dasaWisma'])
         ->name('rekap.dasa-wisma');
 
-    // ─── EXPORT ───────────────────────────────────────────────────
     Route::get('export/excel', [ExportKecamatanController::class, 'excel'])
         ->name('export.excel');
     Route::get('export/pdf', [ExportKecamatanController::class, 'pdf'])
         ->name('export.pdf');
 
-    // ─── PRINT ────────────────────────────────────────────────────
     Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])
         ->name('print');
 

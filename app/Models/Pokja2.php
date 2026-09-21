@@ -12,6 +12,7 @@ class Pokja2 extends Model
     protected $table = 'pokja_twos';
 
     protected $fillable = [
+        // Lama
         'kategori',
         'kecamatan',
         'nama_kecamatan',
@@ -26,9 +27,38 @@ class Pokja2 extends Model
         'kf',
         'paud',
         'koperasi_berbadan_hukum',
+
+        // ✅ Baru — dari PDF (28 kolom)
+        'warga_belajar_paket_a',
+        'warga_belajar_paket_b',
+        'warga_belajar_paket_c',
+        'warga_belajar_kf',
+        'taman_bacaan',
+        'kelompok_bkb',
+        'peserta_bkb',
+        'ape_bkb',
+        'kelompok_simulasi_bkb',
+        'tutor_kf',
+        'tutor_paud',
+        'kader_bkb',
+        'kelompok_kader_koperasi',
+        'kader_keterampilan',
+        'kader_dilatih_pengelolaan',
+        'kader_dilatih_tp_pkk',
+        'kader_dilatih_damas',
+        'up2k_pemula_kelompok',
+        'up2k_pemula_peserta',
+        'up2k_madya_kelompok',
+        'up2k_madya_peserta',
+        'up2k_utama_kelompok',
+        'up2k_utama_peserta',
+        'up2k_mandiri_kelompok',
+        'up2k_mandiri_peserta',
+        'anggota_koperasi',
     ];
 
     protected $casts = [
+        // Lama
         'warga_buta_l' => 'integer',
         'warga_buta_p' => 'integer',
         'kelompok_belajar_paket_a' => 'integer',
@@ -37,27 +67,57 @@ class Pokja2 extends Model
         'kf' => 'integer',
         'paud' => 'integer',
         'koperasi_berbadan_hukum' => 'integer',
+
+        // ✅ Baru
+        'warga_belajar_paket_a' => 'integer',
+        'warga_belajar_paket_b' => 'integer',
+        'warga_belajar_paket_c' => 'integer',
+        'warga_belajar_kf' => 'integer',
+        'taman_bacaan' => 'integer',
+        'kelompok_bkb' => 'integer',
+        'peserta_bkb' => 'integer',
+        'ape_bkb' => 'integer',
+        'kelompok_simulasi_bkb' => 'integer',
+        'tutor_kf' => 'integer',
+        'tutor_paud' => 'integer',
+        'kader_bkb' => 'integer',
+        'kelompok_kader_koperasi' => 'integer',
+        'kader_keterampilan' => 'integer',
+        'kader_dilatih_pengelolaan' => 'integer',
+        'kader_dilatih_tp_pkk' => 'integer',
+        'kader_dilatih_damas' => 'integer',
+        'up2k_pemula_kelompok' => 'integer',
+        'up2k_pemula_peserta' => 'integer',
+        'up2k_madya_kelompok' => 'integer',
+        'up2k_madya_peserta' => 'integer',
+        'up2k_utama_kelompok' => 'integer',
+        'up2k_utama_peserta' => 'integer',
+        'up2k_mandiri_kelompok' => 'integer',
+        'up2k_mandiri_peserta' => 'integer',
+        'anggota_koperasi' => 'integer',
     ];
 
     protected $appends = [
         'total_warga_buta',
         'total_kelompok_belajar',
+        'total_warga_belajar',
+        'total_bkb',
+        'total_kader',
+        'total_up2k',
         'total_paud',
         'total_koperasi',
         'total_keseluruhan',
     ];
 
-    /**
-     * Get total Warga Buta (L + P)
-     */
+    // ============================================
+    // ACCESSORS — Lama
+    // ============================================
+
     public function getTotalWargaButaAttribute(): int
     {
         return ($this->warga_buta_l ?? 0) + ($this->warga_buta_p ?? 0);
     }
 
-    /**
-     * Get total Kelompok Belajar (Paket A + B + C)
-     */
     public function getTotalKelompokBelajarAttribute(): int
     {
         return ($this->kelompok_belajar_paket_a ?? 0) +
@@ -65,25 +125,16 @@ class Pokja2 extends Model
                ($this->kelompok_belajar_paket_c ?? 0);
     }
 
-    /**
-     * Get total PAUD
-     */
     public function getTotalPaudAttribute(): int
     {
         return $this->paud ?? 0;
     }
 
-    /**
-     * Get total Koperasi Berbadan Hukum
-     */
     public function getTotalKoperasiAttribute(): int
     {
         return $this->koperasi_berbadan_hukum ?? 0;
     }
 
-    /**
-     * Get total keseluruhan semua kategori
-     */
     public function getTotalKeseluruhanAttribute(): int
     {
         return $this->total_warga_buta +
@@ -92,9 +143,50 @@ class Pokja2 extends Model
                $this->total_koperasi;
     }
 
-    /**
-     * Get rasio gender (L vs P) dalam persen untuk Warga Buta
-     */
+    // ============================================
+    // ACCESSORS — Baru (dari PDF)
+    // ============================================
+
+    public function getTotalWargaBelajarAttribute(): int
+    {
+        return ($this->warga_belajar_paket_a ?? 0) +
+               ($this->warga_belajar_paket_b ?? 0) +
+               ($this->warga_belajar_paket_c ?? 0) +
+               ($this->warga_belajar_kf ?? 0);
+    }
+
+    public function getTotalBkbAttribute(): int
+    {
+        return ($this->kelompok_bkb ?? 0) +
+               ($this->peserta_bkb ?? 0) +
+               ($this->ape_bkb ?? 0) +
+               ($this->kelompok_simulasi_bkb ?? 0);
+    }
+
+    public function getTotalKaderAttribute(): int
+    {
+        return ($this->tutor_kf ?? 0) +
+               ($this->tutor_paud ?? 0) +
+               ($this->kader_bkb ?? 0) +
+               ($this->kelompok_kader_koperasi ?? 0) +
+               ($this->kader_keterampilan ?? 0) +
+               ($this->kader_dilatih_pengelolaan ?? 0) +
+               ($this->kader_dilatih_tp_pkk ?? 0) +
+               ($this->kader_dilatih_damas ?? 0);
+    }
+
+    public function getTotalUp2kAttribute(): int
+    {
+        return ($this->up2k_pemula_kelompok ?? 0) +
+               ($this->up2k_pemula_peserta ?? 0) +
+               ($this->up2k_madya_kelompok ?? 0) +
+               ($this->up2k_madya_peserta ?? 0) +
+               ($this->up2k_utama_kelompok ?? 0) +
+               ($this->up2k_utama_peserta ?? 0) +
+               ($this->up2k_mandiri_kelompok ?? 0) +
+               ($this->up2k_mandiri_peserta ?? 0);
+    }
+
     public function getRasioWargaButaAttribute(): array
     {
         $total = $this->total_warga_buta;
@@ -107,9 +199,6 @@ class Pokja2 extends Model
         ];
     }
 
-    /**
-     * Get data per kategori
-     */
     public function getDataPerKategoriAttribute(): array
     {
         return [
@@ -124,15 +213,9 @@ class Pokja2 extends Model
                 'paket_c' => $this->kelompok_belajar_paket_c ?? 0,
                 'total' => $this->total_kelompok_belajar,
             ],
-            'kf' => [
-                'total' => $this->kf ?? 0,
-            ],
-            'paud' => [
-                'total' => $this->paud ?? 0,
-            ],
-            'koperasi' => [
-                'total' => $this->koperasi_berbadan_hukum ?? 0,
-            ],
+            'kf' => ['total' => $this->kf ?? 0],
+            'paud' => ['total' => $this->paud ?? 0],
+            'koperasi' => ['total' => $this->koperasi_berbadan_hukum ?? 0],
         ];
     }
 
@@ -140,9 +223,6 @@ class Pokja2 extends Model
     // STATIC METHODS
     // ============================================
 
-    /**
-     * Get total semua kecamatan
-     */
     public static function getTotalSemuaKecamatan(): array
     {
         $data = self::selectRaw('
@@ -174,9 +254,6 @@ class Pokja2 extends Model
         ];
     }
 
-    /**
-     * Get data by kecamatan
-     */
     public static function getByKecamatan($kecamatan): ?self
     {
         return self::where('kecamatan', $kecamatan)
@@ -188,18 +265,12 @@ class Pokja2 extends Model
     // SCOPES
     // ============================================
 
-    /**
-     * Scope: Filter by kecamatan
-     */
     public function scopeByKecamatan($query, $kecamatan)
     {
         return $query->where('kecamatan', $kecamatan)
             ->orWhere('nama_kecamatan', $kecamatan);
     }
 
-    /**
-     * Scope: Search by kecamatan or nama_kecamatan
-     */
     public function scopeSearch($query, $keyword)
     {
         return $query->where('kecamatan', 'like', "%{$keyword}%")
@@ -207,17 +278,11 @@ class Pokja2 extends Model
             ->orWhere('judul_kegiatan', 'like', "%{$keyword}%");
     }
 
-    /**
-     * Scope: Order by kecamatan
-     */
     public function scopeOrderByKecamatan($query, $direction = 'asc')
     {
         return $query->orderBy('kecamatan', $direction);
     }
 
-    /**
-     * Scope: Get only with data
-     */
     public function scopeHasData($query)
     {
         return $query->where(function ($q) {
@@ -236,17 +301,11 @@ class Pokja2 extends Model
     // RELATIONS
     // ============================================
 
-    /**
-     * Get Sekretariat data for same kecamatan
-     */
     public function sekretariat()
     {
         return $this->hasOne(DataUmumSekretariat::class, 'kecamatan', 'kecamatan');
     }
 
-    /**
-     * Increment statistik
-     */
     public function incrementStatistik(array $data): void
     {
         foreach ($data as $field => $value) {
