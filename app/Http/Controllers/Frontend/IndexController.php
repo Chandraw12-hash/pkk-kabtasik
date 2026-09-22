@@ -18,6 +18,12 @@ use App\Models\Pokja4Rekapitulasi;
 use App\Models\Survey;
 use App\Models\StrukturOrganisasi;
 use App\Models\LaporanKegiatan;
+
+// ✅ TAMBAH — 3 Model Baru
+use App\Models\DataUmumPkk;
+use App\Models\RekapKegiatanWarga;
+use App\Models\RekapBumil;
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,8 +32,6 @@ class IndexController extends Controller
     public function index()
     {
         $isSurveyActive = true;
-
-        // ... (sama — ga diubah)
 
         $testimoniSurvey = Survey::query()
             ->where('status', 'published')
@@ -313,11 +317,14 @@ class IndexController extends Controller
         ]);
     }
 
+    // ✅ FIX: Sekretariat — kirim 4 props
     public function sekretariatPublic(Request $request)
     {
         $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
 
+        // Data Umum Sekretariat (existing)
         $data = DataUmumSekretariat::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -329,9 +336,49 @@ class IndexController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return Inertia::render('Frontend/data-data/Sekretariat', [
+        // ✅ Data Umum PKK
+        $dataUmumPkk = DataUmumPkk::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->orderBy('kecamatan', 'asc')
+            ->get();
+
+        // ✅ Rekap Kegiatan Warga
+        $rekapKegiatanWarga = RekapKegiatanWarga::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->orderBy('kecamatan', 'asc')
+            ->get();
+
+        // ✅ Rekap Bumil
+        $rekapBumil = RekapBumil::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->orderBy('bulan', 'asc')
+            ->orderBy('kecamatan', 'asc')
+            ->get();
+
+        return Inertia::render('Frontend/data-data/Sekretariat/Index', [
             'data' => $data,
-            'filters' => $request->only(['search', 'per_page']),
+            'data_umum_pkk' => $dataUmumPkk,
+            'rekap_kegiatan_warga' => $rekapKegiatanWarga,
+            'rekap_bumil' => $rekapBumil,
+            'filters' => $request->only(['search', 'per_page', 'tahun']),
         ]);
     }
 
@@ -405,11 +452,10 @@ class IndexController extends Controller
     public function pokja4Public(Request $request)
     {
         $search = $request->input('search');
-        $tahun = $request->input('tahun', date('Y'));  // ✅ default tahun sekarang
-        $activeTab = $request->input('activeTab', 'pokja4');  // ✅ tab default
+        $tahun = $request->input('tahun', date('Y'));
+        $activeTab = $request->input('activeTab', 'pokja4');
         $perPage = (int) $request->input('per_page', 15);
 
-        // Data Pokja 4 utama
         $data = Pokja4::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -424,7 +470,6 @@ class IndexController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        // ✅ Data 3 sheet — filter tahun
         $kunjunganPyd = Pokja4KunjunganPyd::where('tahun', $tahun)
             ->orderBy('bulan')
             ->get();
@@ -442,7 +487,125 @@ class IndexController extends Controller
             'kunjungan_pyd' => $kunjunganPyd,
             'kegiatan_posyandu' => $kegiatanPosyandu,
             'rekapitulasi' => $rekapitulasi,
-            'filters' => $request->only(['search', 'per_page', 'tahun', 'activeTab']),  // ✅ tambah activeTab
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'activeTab']),
+        ]);
+    }
+
+    // ============================================================
+    // ✅ TAMBAH — 3 METHOD BARU — DATA UMUM PKK, REKAP KEGIATAN, REKAP BUMIL
+    // ============================================================
+
+    /**
+     * Halaman Data Umum PKK
+     */
+    public function dataUmumPkkPublic(Request $request)
+    {
+        $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
+        $level = $request->input('level');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = DataUmumPkk::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%")
+                        ->orWhere('desa', 'like', "%{$search}%")
+                        ->orWhere('nama_desa', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->where('tahun', $tahun);
+            })
+            ->when($level, function ($query) use ($level) {
+                $query->where('level', $level);
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->orderBy('desa', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('Frontend/data-data/DataUmumPkk/Index', [
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'level']),
+        ]);
+    }
+
+    /**
+     * Halaman Rekap Kegiatan Warga
+     */
+    public function rekapKegiatanWargaPublic(Request $request)
+    {
+        $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
+        $level = $request->input('level');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = RekapKegiatanWarga::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%")
+                        ->orWhere('desa', 'like', "%{$search}%")
+                        ->orWhere('nama_desa', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->where('tahun', $tahun);
+            })
+            ->when($level, function ($query) use ($level) {
+                $query->where('level', $level);
+            })
+            ->orderBy('kecamatan', 'asc')
+            ->orderBy('desa', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('Frontend/data-data/RekapKegiatanWarga/Index', [
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'level']),
+        ]);
+    }
+
+    /**
+     * Halaman Rekap Bumil
+     */
+    public function rekapBumilPublic(Request $request)
+    {
+        $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
+        $bulan = $request->input('bulan');
+        $level = $request->input('level');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $data = RekapBumil::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%")
+                        ->orWhere('desa', 'like', "%{$search}%")
+                        ->orWhere('nama_desa', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->where('tahun', $tahun);
+            })
+            ->when($bulan, function ($query) use ($bulan) {
+                $query->where('bulan', $bulan);
+            })
+            ->when($level, function ($query) use ($level) {
+                $query->where('level', $level);
+            })
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'asc')
+            ->orderBy('kecamatan', 'asc')
+            ->orderBy('desa', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('Frontend/data-data/RekapBumil/Index', [
+            'data' => $data,
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'bulan', 'level']),
         ]);
     }
 
@@ -518,6 +681,63 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
+        return response()->json($data);
+    }
+
+    // ============================================================
+    // ✅ TAMBAH — 3 METHOD JSON BARU
+    // ============================================================
+
+    public function dataUmumPkkJson(Request $request)
+    {
+        $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
+        $perPage = (int) $request->input('per_page', 15);
+        $data = DataUmumPkk::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
+        return response()->json($data);
+    }
+
+    public function rekapKegiatanWargaJson(Request $request)
+    {
+        $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
+        $perPage = (int) $request->input('per_page', 15);
+        $data = RekapKegiatanWarga::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
+        return response()->json($data);
+    }
+
+    public function rekapBumilJson(Request $request)
+    {
+        $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
+        $bulan = $request->input('bulan');
+        $perPage = (int) $request->input('per_page', 15);
+        $data = RekapBumil::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                });
+            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->when($bulan, fn($q) => $q->where('bulan', $bulan))
             ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }

@@ -89,7 +89,7 @@ interface WelcomeProps {
 
 const DATA_MENU = [
     {
-        title: "Data Umum",
+        title: "Data Sekretariat",
         desc: "Administrasi Tim Penggerak PKK & rekapitulasi profil kependudukan.",
         icon: Users,
         accent: "#0D9488",

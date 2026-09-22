@@ -38,9 +38,9 @@ use App\Http\Controllers\Api\WeatherController;
 
 // ✅ Export Pokja IV
 use App\Exports\Pokja4Export;
-use App\Exports\Pokja4KunjunganPydExport;      // ✅ TAMBAH
-use App\Exports\Pokja4KegiatanPosyanduExport;  // ✅ TAMBAH
-use App\Exports\Pokja4RekapitulasiExport;      // ✅ TAMBAH
+use App\Exports\Pokja4KunjunganPydExport;
+use App\Exports\Pokja4KegiatanPosyanduExport;
+use App\Exports\Pokja4RekapitulasiExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 // ============================================
@@ -97,29 +97,30 @@ Route::as('fe.')->group(function () {
     Route::get('/pokja-3', [IndexController::class, 'pokja3Public'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Public'])->name('pokja4');
 
+    // ✅ TAMBAH — 3 Route Baru Frontend
+    Route::get('/data-umum-pkk', [IndexController::class, 'dataUmumPkkPublic'])->name('data-umum-pkk');
+    Route::get('/rekap-kegiatan-warga', [IndexController::class, 'rekapKegiatanWargaPublic'])->name('rekap-kegiatan-warga');
+    Route::get('/rekap-bumil', [IndexController::class, 'rekapBumilPublic'])->name('rekap-bumil');
+
     // ✅ EXPORT POKJA IV — 4 route
-    // 1. Pokja IV Utama
     Route::get('/pokja-4/export', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-pokja-4-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4Export($tahun), $filename);
     })->name('pokja4.export');
 
-    // 2. Kunjungan PYD
     Route::get('/pokja-4/export-pyd', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-kunjungan-pyd-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4KunjunganPydExport($tahun), $filename);
     })->name('pokja4.export-pyd');
 
-    // 3. Kegiatan Posyandu
     Route::get('/pokja-4/export-posyandu', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-kegiatan-posyandu-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4KegiatanPosyanduExport($tahun), $filename);
     })->name('pokja4.export-posyandu');
 
-    // 4. Rekapitulasi
     Route::get('/pokja-4/export-rekap', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-rekapitulasi-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
@@ -136,6 +137,11 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/pokja-2', [IndexController::class, 'pokja2Json'])->name('pokja2');
     Route::get('/pokja-3', [IndexController::class, 'pokja3Json'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Json'])->name('pokja4');
+
+    // ✅ TAMBAH — 3 Route Baru API
+    Route::get('/data-umum-pkk', [IndexController::class, 'dataUmumPkkJson'])->name('data-umum-pkk');
+    Route::get('/rekap-kegiatan-warga', [IndexController::class, 'rekapKegiatanWargaJson'])->name('rekap-kegiatan-warga');
+    Route::get('/rekap-bumil', [IndexController::class, 'rekapBumilJson'])->name('rekap-bumil');
 
     // API Berita (mobile)
     Route::get('/berita/latest', [BeritaController::class, 'apiLatestBerita'])->name('berita.latest');
@@ -163,17 +169,13 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 // ============================================
 Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function () {
 
-    // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Master Data - Kader
     Route::resource('kader', KaderController::class)
         ->names('kader')
         ->except(['show']);
 
-    // ============================================
     // SEKRETARIAT & POKJA + IMPORT EXCEL
-    // ============================================
     Route::resource('sekretariat', DataUmumSekretariatController::class)
         ->names('sekretariat')
         ->except(['show']);
@@ -204,14 +206,11 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::post('pokja4/import', [Pokja4Controller::class, 'import'])
         ->name('pokja4.import');
 
-    // Galeri
     Route::resource('galeri', GaleriController::class)
         ->names('galeri')
         ->except(['show']);
 
-    // ============================================
-    // BERITA — Route khusus HARUS DI ATAS resource
-    // ============================================
+    // BERITA
     Route::get('berita/pending', [BeritaController::class, 'pending'])
         ->name('berita.pending');
     Route::get('berita/pending-count', [BeritaController::class, 'pendingCount'])
@@ -225,21 +224,16 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::post('berita/{berita}/toggle-status', [BeritaController::class, 'toggleStatus'])
         ->name('berita.toggle-status');
 
-    // Resource Berita
     Route::resource('berita', BeritaController::class)
         ->names('berita')
         ->parameters(['berita' => 'berita']);
 
-    // ============================================
     // INFOGRAFIS
-    // ============================================
     Route::resource('infografis', InfografisController::class)->except(['show']);
     Route::patch('infografis/{infografis}/toggle-status', [InfografisController::class, 'toggleStatus'])
         ->name('infografis.toggle-status');
 
-    // ============================================
-    // AGENDA (Backend)
-    // ============================================
+    // AGENDA
     Route::resource('agenda', AgendaController::class)
         ->names('agenda')
         ->except(['show']);
@@ -258,9 +252,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::post('agenda/auto-update-status', [AgendaController::class, 'autoUpdateStatus'])
         ->name('agenda.auto-update-status');
 
-    // ============================================
-    // LAPORAN KEGIATAN (BACKEND)
-    // ============================================
+    // LAPORAN KEGIATAN
     Route::resource('laporan-kegiatan', LaporanKegiatanController::class)
         ->names('laporan-kegiatan')
         ->only(['index', 'show', 'destroy']);
@@ -277,16 +269,13 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])
         ->name('laporan-kegiatan.reject');
 
-    // ============================================
-    // SURVEY KEPUASAN (Backend Admin)
-    // ============================================
+    // SURVEY
     Route::get('/survey', [SurveyController::class, 'index'])->name('survey.index');
     Route::get('/survey/export', [SurveyController::class, 'export'])->name('survey.export');
     Route::get('/survey/{survey}', [SurveyController::class, 'show'])->name('survey.show');
     Route::patch('/survey/{survey}/toggle-status', [SurveyController::class, 'toggleStatus'])->name('survey.toggle-status');
     Route::delete('/survey/{survey}', [SurveyController::class, 'destroy'])->name('survey.destroy');
 
-    // User Management
     Route::resource('users', UserController::class)
         ->names('users')
         ->except(['show']);
@@ -295,7 +284,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->names('roles')
         ->except(['show']);
 
-    // Settings
+    // SETTINGS
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/profile', [ConfigController::class, 'profile'])->name('profile');
@@ -307,9 +296,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         });
     });
 
-    // ============================================
-    // STRUKTUR ORGANISASI (CRUD + IMPORT)
-    // ============================================
+    // STRUKTUR ORGANISASI
     Route::resource('struktur-organisasi', StrukturOrganisasiController::class)
         ->names('struktur-organisasi')
         ->except(['show']);
@@ -320,7 +307,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::patch('struktur-organisasi/{id}/toggle-status', [StrukturOrganisasiController::class, 'toggleStatus'])
         ->name('struktur-organisasi.toggle-status');
 
-}); // ← TUTUP GRUP DASHBOARD
+});
 
 // ============================================================
 // ROUTES: ADMIN SEKRETARIAT KECAMATAN
