@@ -321,7 +321,7 @@ class IndexController extends Controller
     public function sekretariatPublic(Request $request)
     {
         $search = $request->input('search');
-        $tahun = $request->input('tahun', date('Y'));
+        $tahun = $request->input('year', $request->input('tahun', date('Y')));
         $perPage = (int) $request->input('per_page', 15);
 
         // Data Umum Sekretariat (existing)
@@ -359,6 +359,9 @@ class IndexController extends Controller
             ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->orderBy('kecamatan', 'asc')
             ->get();
+        $rekapKegiatanWarga = $this->gabungkanRekapKegiatanPerKecamatan(
+            $rekapKegiatanWarga
+        );
 
         // ✅ Rekap Bumil
         $rekapBumil = RekapBumil::query()
@@ -374,12 +377,58 @@ class IndexController extends Controller
             ->get();
 
         return Inertia::render('Frontend/data-data/Sekretariat/Index', [
-            'data' => $data,
-            'data_umum_pkk' => $dataUmumPkk,
-            'rekap_kegiatan_warga' => $rekapKegiatanWarga,
-            'rekap_bumil' => $rekapBumil,
-            'filters' => $request->only(['search', 'per_page', 'tahun']),
+            'data' => $dataUmumPkk,
+            'dataKegiatan' => $rekapKegiatanWarga,
+            'rekapBumil' => $rekapBumil,
+            'filters' => $request->only(['search', 'per_page', 'year', 'tahun', 'kecamatan', 'activeTab']),
         ]);
+    }
+
+    /**
+     * The public table is one row per kecamatan. Older imports can contain
+     * multiple rows for the same kecamatan, so merge their counters before
+     * sending the data to Inertia.
+     */
+    private function gabungkanRekapKegiatanPerKecamatan($items)
+    {
+        $numericFields = [
+            'jumlah_dusun', 'jumlah_rw', 'jumlah_rt', 'jumlah_dasa_wisma',
+            'jumlah_krt', 'jumlah_kk', 'total_l', 'total_p',
+            'balita_l', 'balita_p', 'pus', 'wus', 'ibu_hamil',
+            'ibu_menyusui', 'lansia', 'buta_l', 'buta_p', 'rumah_sehat',
+            'rumah_kurang_sehat', 'memiliki_tempat_sampah', 'memiliki_spal',
+            'memiliki_stiker_p4k', 'air_pdam', 'air_sumur', 'air_sungai',
+            'air_dll', 'jumlah_jamban_keluarga', 'makanan_pokok_beras',
+            'makanan_pokok_non_beras', 'kegiatan_up2k',
+            'kegiatan_tanah_pekarangan', 'kegiatan_industri_rumah_tangga',
+            'kegiatan_kesehatan_lingkungan',
+        ];
+
+        return $items
+            ->groupBy(function ($item) {
+                return mb_strtolower(trim(
+                    $item->nama_kecamatan ?: $item->kecamatan ?: 'Tidak diketahui'
+                ));
+            })
+            ->map(function ($group) use ($numericFields) {
+                $merged = $group->first()->toArray();
+
+                foreach ($numericFields as $field) {
+                    $merged[$field] = $group->sum(
+                        fn ($item) => (int) ($item->{$field} ?? 0)
+                    );
+                }
+
+                $merged['nama_kecamatan'] =
+                    $group->first()->nama_kecamatan
+                    ?: $group->first()->kecamatan;
+                $merged['kecamatan'] = $group->first()->kecamatan
+                    ?: $group->first()->nama_kecamatan;
+
+                return $merged;
+            })
+            ->sortBy('kecamatan')
+            ->values();
     }
 
     public function pokja1Public(Request $request)

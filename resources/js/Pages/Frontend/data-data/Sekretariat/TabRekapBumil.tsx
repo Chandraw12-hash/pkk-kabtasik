@@ -44,11 +44,60 @@ export default function TabRekapBumil({
 
     const items = Array.isArray(data) ? data : (data?.data || []);
 
-    const uniqueKecamatan = Array.from(
-        new Set(items.map((item) => item.nama_kecamatan || item.kecamatan).filter(Boolean))
+    const numericFields: (keyof RekapBumilItem)[] = [
+        "jumlah_dusun",
+        "jumlah_rw",
+        "jumlah_rt",
+        "jumlah_dasa_wisma",
+        "ibu_hamil",
+        "ibu_melahirkan",
+        "ibu_nifas",
+        "ibu_meninggal",
+        "bayi_lahir_l",
+        "bayi_lahir_p",
+        "akte_ada",
+        "akte_tidak_ada",
+        "bayi_meninggal_l",
+        "bayi_meninggal_p",
+        "balita_meninggal_l",
+        "balita_meninggal_p",
+    ];
+
+    // Satu kecamatan boleh memiliki beberapa bulan. Gabungkan hanya record
+    // dengan kecamatan dan bulan yang sama agar data antarbulan tidak tercampur.
+    const mergedItems = Array.from(
+        items.reduce((groups, item) => {
+            const name = (
+                item.nama_kecamatan ||
+                item.kecamatan ||
+                "Tidak diketahui"
+            ).trim();
+            const key = `${name.toLocaleLowerCase()}-${item.bulan ?? 0}`;
+            const current = groups.get(key);
+
+            if (!current) {
+                groups.set(key, { ...item, nama_kecamatan: name });
+                return groups;
+            }
+
+            numericFields.forEach((field) => {
+                current[field] =
+                    (Number(current[field]) || 0) + (Number(item[field]) || 0);
+            });
+            groups.set(key, current);
+            return groups;
+        }, new Map<string, RekapBumilItem>()).values()
     );
 
-    const filteredData = items.filter((item) => {
+    const uniqueKecamatan = Array.from(
+        new Set(
+            mergedItems
+                .map((item) => item.nama_kecamatan || item.kecamatan)
+                .filter(Boolean)
+        )
+    );
+
+    const filteredData = mergedItems.filter((item) => {
         const nama = (item.nama_kecamatan || item.kecamatan || "").toLowerCase();
         const matchesSearch = nama.includes(search.toLowerCase());
         const matchesKecamatan = selectedKecamatan
