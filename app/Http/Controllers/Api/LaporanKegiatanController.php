@@ -157,66 +157,203 @@ class LaporanKegiatanController extends Controller
         // ✅ FIX: Pokja I, II, III, IV + 3 sheet baru
         $pokjaFields = [
             'I' => [
-                'pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p',
-                'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p',
-                'kader_pokja1_l', 'kader_pokja1_p',
+                // Kader
+                'kader_umum',
+                'kader_khusus',
+                // KISAH
+                'kisah_kegiatan',
+                'kisah_volume',
+                'kisah_metode',
+                'kisah_sasaran',
+                // KILAS
+                'kilas_kegiatan',
+                'kilas_volume',
+                'kilas_metode',
+                'kilas_sasaran',
+                // KRISAN
+                'krisan_kegiatan',
+                'krisan_volume',
+                'krisan_metode',
+                'krisan_sasaran',
+                // KIAT
+                'kiat_kegiatan',
+                'kiat_volume',
+                'kiat_metode',
+                'kiat_sasaran',
+                // KISAK
+                'kisak_kegiatan',
+                'kisak_volume',
+                'kisak_metode',
+                'kisak_sasaran',
+                // PKBN
+                'pkbn_kegiatan',
+                'pkbn_volume',
+                'pkbn_metode',
+                'pkbn_sasaran',
+                // Keterangan
+                'keterangan',
             ],
             'II' => [
-                'warga_buta_l', 'warga_buta_p',
-                'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c',
-                'kf', 'paud', 'koperasi_berbadan_hukum',
-                'warga_belajar_paket_a', 'warga_belajar_paket_b', 'warga_belajar_paket_c', 'warga_belajar_kf',
+                'warga_buta_l',
+                'warga_buta_p',
+                'kelompok_belajar_paket_a',
+                'kelompok_belajar_paket_b',
+                'kelompok_belajar_paket_c',
+                'kf',
+                'paud',
+                'koperasi_berbadan_hukum',
+                'warga_belajar_paket_a',
+                'warga_belajar_paket_b',
+                'warga_belajar_paket_c',
+                'warga_belajar_kf',
                 'taman_bacaan',
-                'kelompok_bkb', 'peserta_bkb', 'ape_bkb', 'kelompok_simulasi_bkb',
-                'tutor_kf', 'tutor_paud', 'kader_bkb', 'kelompok_kader_koperasi',
-                'kader_keterampilan', 'kader_dilatih_pengelolaan', 'kader_dilatih_tp_pkk', 'kader_dilatih_damas',
-                'up2k_pemula_kelompok', 'up2k_pemula_peserta', 'up2k_madya_kelompok', 'up2k_madya_peserta',
-                'up2k_utama_kelompok', 'up2k_utama_peserta', 'up2k_mandiri_kelompok', 'up2k_mandiri_peserta',
+                'kelompok_bkb',
+                'peserta_bkb',
+                'ape_bkb',
+                'kelompok_simulasi_bkb',
+                'tutor_kf',
+                'tutor_paud',
+                'kader_bkb',
+                'kelompok_kader_koperasi',
+                'kader_keterampilan',
+                'kader_dilatih_pengelolaan',
+                'kader_dilatih_tp_pkk',
+                'kader_dilatih_damas',
+                'up2k_pemula_kelompok',
+                'up2k_pemula_peserta',
+                'up2k_madya_kelompok',
+                'up2k_madya_peserta',
+                'up2k_utama_kelompok',
+                'up2k_utama_peserta',
+                'up2k_mandiri_kelompok',
+                'up2k_mandiri_peserta',
                 'anggota_koperasi',
             ],
             'III' => [
-                'rumah_sehat', 'rumah_tidak_sehat', 'pemanfaatan_pekarangan', 'industri_rumah_tangga',
-                'jumlah_kader', 'jumlah_kader_p', 'makanan_pokok', 'hatinya_pkk', 'jumlah_rumah',
+                'rumah_sehat',
+                'rumah_tidak_sehat',
+                'pemanfaatan_pekarangan',
+                'industri_rumah_tangga',
+                'jumlah_kader',
+                'jumlah_kader_p',
+                'makanan_pokok',
+                'hatinya_pkk',
+                'jumlah_rumah',
             ],
             'IV' => [
-                'posyandu', 'akseptor_kb', 'phbs', 'jamban_keluarga',
-                'kader_kesehatan', 'kader_gizi', 'kader_kesling', 'kader_phbs', 'kader_kb',
-                'imunisasi', 'pkg', 'tbc',
-                'spal', 'tps', 'mck',
-                'air_pdam', 'air_sumur', 'air_lainnya',
-                'jumlah_pus', 'jumlah_wus',
-                'akseptor_kb_l', 'akseptor_kb_p',
-                'tabungan_keluarga', 'asuransi_kesehatan',
-                'program_kesehatan', 'program_lingkungan', 'program_perencanaan',
+                'posyandu',
+                'akseptor_kb',
+                'phbs',
+                'jamban_keluarga',
+                'kader_kesehatan',
+                'kader_gizi',
+                'kader_kesling',
+                'kader_phbs',
+                'kader_kb',
+                'imunisasi',
+                'pkg',
+                'tbc',
+                'spal',
+                'tps',
+                'mck',
+                'air_pdam',
+                'air_sumur',
+                'air_lainnya',
+                'jumlah_pus',
+                'jumlah_wus',
+                'akseptor_kb_l',
+                'akseptor_kb_p',
+                'tabungan_keluarga',
+                'asuransi_kesehatan',
+                'program_kesehatan',
+                'program_lingkungan',
+                'program_perencanaan',
             ],
             // ✅ 3 SHEET BARU — POKJA IV
             'IV-PYD' => [
-                'bulan', 'tahun',
-                'bayi_0_12_l', 'bayi_0_12_p', 'bayi_0_12_laki_l', 'bayi_0_12_laki_p',
-                'balita_1_5_l', 'balita_1_5_p', 'balita_1_5_laki_l', 'balita_1_5_laki_p',
-                'wus', 'pus', 'ibu_hamil', 'ibu_menyusui',
-                'bayi_lahir', 'bayi_meninggal', 'kematian_ibu',
-                'petugas_kader', 'petugas_plkb', 'petugas_medis', 'keterangan',
+                'bulan',
+                'tahun',
+                'bayi_0_12_l',
+                'bayi_0_12_p',
+                'bayi_0_12_laki_l',
+                'bayi_0_12_laki_p',
+                'balita_1_5_l',
+                'balita_1_5_p',
+                'balita_1_5_laki_l',
+                'balita_1_5_laki_p',
+                'wus',
+                'pus',
+                'ibu_hamil',
+                'ibu_menyusui',
+                'bayi_lahir',
+                'bayi_meninggal',
+                'kematian_ibu',
+                'petugas_kader',
+                'petugas_plkb',
+                'petugas_medis',
+                'keterangan',
             ],
             'IV-POSYANDU' => [
-                'bulan', 'tahun',
-                'ibu_hamil', 'ibu_hamil_diperiksa', 'ibu_hamil_dapat_fe', 'menyusui',
-                'kb_iud', 'kb_mow', 'kb_mop', 'kb_implan', 'kb_pil', 'kb_suntik', 'kb_kondom',
-                'balita_l', 'balita_p', 'balita_kia_l', 'balita_kia_p',
-                'balita_ditimbang_l', 'balita_ditimbang_p', 'balita_naik_l', 'balita_naik_p',
-                'vit_a_1', 'vit_a_2',
-                'imunisasi_tt_1', 'imunisasi_tt_2', 'imunisasi_bcg',
-                'imunisasi_dpt_1', 'imunisasi_dpt_2', 'imunisasi_dpt_3',
-                'imunisasi_polio_1', 'imunisasi_polio_2', 'imunisasi_polio_3', 'imunisasi_polio_4',
-                'imunisasi_campak', 'imunisasi_hepatitis_1', 'imunisasi_hepatitis_2', 'imunisasi_hepatitis_3',
-                'balita_diare', 'balita_oralit', 'keterangan',
+                'bulan',
+                'tahun',
+                'ibu_hamil',
+                'ibu_hamil_diperiksa',
+                'ibu_hamil_dapat_fe',
+                'menyusui',
+                'kb_iud',
+                'kb_mow',
+                'kb_mop',
+                'kb_implan',
+                'kb_pil',
+                'kb_suntik',
+                'kb_kondom',
+                'balita_l',
+                'balita_p',
+                'balita_kia_l',
+                'balita_kia_p',
+                'balita_ditimbang_l',
+                'balita_ditimbang_p',
+                'balita_naik_l',
+                'balita_naik_p',
+                'vit_a_1',
+                'vit_a_2',
+                'imunisasi_tt_1',
+                'imunisasi_tt_2',
+                'imunisasi_bcg',
+                'imunisasi_dpt_1',
+                'imunisasi_dpt_2',
+                'imunisasi_dpt_3',
+                'imunisasi_polio_1',
+                'imunisasi_polio_2',
+                'imunisasi_polio_3',
+                'imunisasi_polio_4',
+                'imunisasi_campak',
+                'imunisasi_hepatitis_1',
+                'imunisasi_hepatitis_2',
+                'imunisasi_hepatitis_3',
+                'balita_diare',
+                'balita_oralit',
+                'keterangan',
             ],
             'IV-REKAP' => [
-                'tahun', 'dusun', 'rw', 'rt', 'dasa_wisma',
-                'ibu_hamil', 'ibu_melahirkan', 'ibu_nifas', 'ibu_meninggal',
-                'bayi_lahir_l', 'bayi_lahir_p', 'akte_ada', 'akte_tidak',
-                'bayi_meninggal_l', 'bayi_meninggal_p',
-                'balita_meninggal_l', 'balita_meninggal_p', 'keterangan',
+                'tahun',
+                'dusun',
+                'rw',
+                'rt',
+                'dasa_wisma',
+                'ibu_hamil',
+                'ibu_melahirkan',
+                'ibu_nifas',
+                'ibu_meninggal',
+                'bayi_lahir_l',
+                'bayi_lahir_p',
+                'akte_ada',
+                'akte_tidak',
+                'bayi_meninggal_l',
+                'bayi_meninggal_p',
+                'balita_meninggal_l',
+                'balita_meninggal_p',
+                'keterangan',
             ],
         ];
 
@@ -462,16 +599,37 @@ class LaporanKegiatanController extends Controller
     {
         $pokja = Pokja1::firstOrNew(['kecamatan' => $kecamatan]);
 
-        $pokja->pkbn_l = ($pokja->pkbn_l ?? 0) + ($data['pkbn_l'] ?? 0);
-        $pokja->pkbn_p = ($pokja->pkbn_p ?? 0) + ($data['pkbn_p'] ?? 0);
-        $pokja->pkdrt_l = ($pokja->pkdrt_l ?? 0) + ($data['pkdrt_l'] ?? 0);
-        $pokja->pkdrt_p = ($pokja->pkdrt_p ?? 0) + ($data['pkdrt_p'] ?? 0);
-        $pokja->pola_asuh_l = ($pokja->pola_asuh_l ?? 0) + ($data['pola_asuh_l'] ?? 0);
-        $pokja->pola_asuh_p = ($pokja->pola_asuh_p ?? 0) + ($data['pola_asuh_p'] ?? 0);
-        $pokja->lansia_l = ($pokja->lansia_l ?? 0) + ($data['lansia_l'] ?? 0);
-        $pokja->lansia_p = ($pokja->lansia_p ?? 0) + ($data['lansia_p'] ?? 0);
-        $pokja->kader_pokja1_l = ($pokja->kader_pokja1_l ?? 0) + ($data['kader_pokja1_l'] ?? 0);
-        $pokja->kader_pokja1_p = ($pokja->kader_pokja1_p ?? 0) + ($data['kader_pokja1_p'] ?? 0);
+        // Kader — angka
+        $pokja->kader_umum = ($pokja->kader_umum ?? 0) + ($data['kader_umum'] ?? 0);
+        $pokja->kader_khusus = ($pokja->kader_khusus ?? 0) + ($data['kader_khusus'] ?? 0);
+
+        // 6 program — kegiatan (text), volume (int), metode (text), sasaran (int)
+        $programs = ['kisah', 'kilas', 'krisan', 'kiat', 'kisak', 'pkbn'];
+
+        foreach ($programs as $prog) {
+            // Kegiatan — text — replace, bukan sum
+            if (isset($data["{$prog}_kegiatan"]) && !empty($data["{$prog}_kegiatan"])) {
+                $pokja->{"{$prog}_kegiatan"} = $data["{$prog}_kegiatan"];
+            }
+
+            // Volume — angka — sum
+            $pokja->{"{$prog}_volume"} = ($pokja->{"{$prog}_volume"} ?? 0)
+                + (int)($data["{$prog}_volume"] ?? 0);
+
+            // Metode — text — replace
+            if (isset($data["{$prog}_metode"]) && !empty($data["{$prog}_metode"])) {
+                $pokja->{"{$prog}_metode"} = $data["{$prog}_metode"];
+            }
+
+            // Sasaran — angka — sum
+            $pokja->{"{$prog}_sasaran"} = ($pokja->{"{$prog}_sasaran"} ?? 0)
+                + (int)($data["{$prog}_sasaran"] ?? 0);
+        }
+
+        // Keterangan — text
+        if (isset($data['keterangan']) && !empty($data['keterangan'])) {
+            $pokja->keterangan = $data['keterangan'];
+        }
 
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja I';

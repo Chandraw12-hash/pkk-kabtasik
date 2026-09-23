@@ -431,25 +431,29 @@ class IndexController extends Controller
             ->values();
     }
 
+    // ✅ FIX: Pokja1 — filter tahun + search nama_wilayah
     public function pokja1Public(Request $request)
     {
         $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
 
         $data = Pokja1::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
-                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_wilayah', 'like', "%{$search}%");
                 });
             })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->orderBy('kecamatan', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Frontend/data-data/Pokja1', [
             'data' => $data,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'tahun']),
         ]);
     }
 
@@ -677,14 +681,17 @@ class IndexController extends Controller
     public function pokja1Json(Request $request)
     {
         $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
         $data = Pokja1::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
-                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                        ->orWhere('nama_kecamatan', 'like', "%{$search}%")
+                        ->orWhere('nama_wilayah', 'like', "%{$search}%");
                 });
             })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }

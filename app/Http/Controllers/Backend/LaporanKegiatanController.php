@@ -73,9 +73,6 @@ class LaporanKegiatanController extends Controller
         ]);
     }
 
-    /**
-     * 🔥 APPROVE LAPORAN + UPDATE STATISTIK
-     */
     public function approve(Request $request, LaporanKegiatan $laporan_kegiatan)
     {
         if ($laporan_kegiatan->status === 'approved') {
@@ -129,9 +126,6 @@ class LaporanKegiatanController extends Controller
         return redirect()->back()->with('warning', '⚠️ Laporan disetujui, tetapi TIDAK masuk ke statistik Pokja karena data tidak valid.');
     }
 
-    /**
-     * 🔥 REJECT LAPORAN
-     */
     public function reject(Request $request, LaporanKegiatan $laporan_kegiatan)
     {
         $laporan_kegiatan->update([
@@ -143,9 +137,6 @@ class LaporanKegiatanController extends Controller
         return redirect()->back()->with('error', '❌ Laporan ditolak.');
     }
 
-    /**
-     * 🔥 APPROVE BATCH
-     */
     public function approveBatch(Request $request)
     {
         $ids = $request->input('ids', []);
@@ -212,7 +203,6 @@ class LaporanKegiatanController extends Controller
             ->with('success', '🗑️ Laporan berhasil dihapus.');
     }
 
-    // ─── 🔥 UPDATE STATISTIK POKJA ────────────────────────────────────────────
     private function updateStatistikPokja(LaporanKegiatan $laporan, array $dataAngka)
     {
         $kecamatan = $laporan->kecamatan;
@@ -254,13 +244,49 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        $fields = ['pkbn_l', 'pkbn_p', 'pkdrt_l', 'pkdrt_p', 'pola_asuh_l', 'pola_asuh_p', 'lansia_l', 'lansia_p', 'kader_pokja1_l', 'kader_pokja1_p'];
-        foreach ($fields as $field) {
-            $value = $dataAngka[$field] ?? 0;
+        // Kader — angka — increment
+        foreach (['kader_umum', 'kader_khusus'] as $field) {
+            $value = (int) ($dataAngka[$field] ?? 0);
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
         }
+
+        // 6 program — kegiatan (text), volume (int), metode (text), sasaran (int)
+        $programs = ['kisah', 'kilas', 'krisan', 'kiat', 'kisak', 'pkbn'];
+
+        foreach ($programs as $prog) {
+            // Kegiatan — text — replace
+            $kegiatan = $dataAngka["{$prog}_kegiatan"] ?? null;
+            if (!empty($kegiatan)) {
+                $pokja->{"{$prog}_kegiatan"} = $kegiatan;
+            }
+
+            // Volume — int — increment
+            $volume = (int) ($dataAngka["{$prog}_volume"] ?? 0);
+            if ($volume > 0) {
+                $pokja->increment("{$prog}_volume", $volume);
+            }
+
+            // Metode — text — replace
+            $metode = $dataAngka["{$prog}_metode"] ?? null;
+            if (!empty($metode)) {
+                $pokja->{"{$prog}_metode"} = $metode;
+            }
+
+            // Sasaran — int — increment
+            $sasaran = (int) ($dataAngka["{$prog}_sasaran"] ?? 0);
+            if ($sasaran > 0) {
+                $pokja->increment("{$prog}_sasaran", $sasaran);
+            }
+        }
+
+        // Keterangan — text — replace
+        $keterangan = $dataAngka['keterangan'] ?? null;
+        if (!empty($keterangan)) {
+            $pokja->keterangan = $keterangan;
+        }
+
         $pokja->save();
 
         Log::info('✅ Pokja I updated untuk: ' . $kecamatan);
@@ -376,9 +402,6 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Sekretariat updated untuk: ' . $kecamatan);
     }
 
-    // ✅ ─── UPDATE 3 SHEET BARU — POKJA IV ───────────────────────────────────
-
-    // ─── UPDATE KUNJUNGAN PYD ────────────────────────────────────────────────
     private function updateKunjunganPyd($kecamatan, $dataAngka)
     {
         $bulan = $dataAngka['bulan'] ?? null;
@@ -389,7 +412,6 @@ class LaporanKegiatanController extends Controller
             return;
         }
 
-        // ✅ FIX: Auto-generate nama_bulan dari bulan
         $bulanInt = (int) $bulan;
         $namaBulan = Carbon::create()
             ->month($bulanInt)
@@ -402,10 +424,8 @@ class LaporanKegiatanController extends Controller
             'tahun' => $tahun,
         ]);
 
-        // ✅ FIX: Set nama_bulan — biar ga null
         $record->nama_bulan = $namaBulan;
 
-        // Assign — replace, bukan increment
         $record->bayi_0_12_l = $dataAngka['bayi_0_12_l'] ?? 0;
         $record->bayi_0_12_p = $dataAngka['bayi_0_12_p'] ?? 0;
         $record->bayi_0_12_laki_l = $dataAngka['bayi_0_12_laki_l'] ?? 0;
@@ -431,7 +451,6 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Kunjungan PYD updated untuk: ' . $kecamatan . ' bulan ' . $bulanInt . ' (' . $namaBulan . ')');
     }
 
-    // ─── UPDATE KEGIATAN POSYANDU ────────────────────────────────────────────
     private function updateKegiatanPosyandu($kecamatan, $dataAngka)
     {
         $bulan = $dataAngka['bulan'] ?? null;
@@ -442,7 +461,6 @@ class LaporanKegiatanController extends Controller
             return;
         }
 
-        // ✅ FIX: Auto-generate nama_bulan dari bulan
         $bulanInt = (int) $bulan;
         $namaBulan = Carbon::create()
             ->month($bulanInt)
@@ -455,16 +473,13 @@ class LaporanKegiatanController extends Controller
             'tahun' => $tahun,
         ]);
 
-        // ✅ FIX: Set nama_bulan — biar ga null
         $record->nama_bulan = $namaBulan;
 
-        // IBU HAMIL & MENYUSUI
         $record->ibu_hamil = $dataAngka['ibu_hamil'] ?? 0;
         $record->ibu_hamil_diperiksa = $dataAngka['ibu_hamil_diperiksa'] ?? 0;
         $record->ibu_hamil_dapat_fe = $dataAngka['ibu_hamil_dapat_fe'] ?? 0;
         $record->menyusui = $dataAngka['menyusui'] ?? 0;
 
-        // KB
         $record->kb_iud = $dataAngka['kb_iud'] ?? 0;
         $record->kb_mow = $dataAngka['kb_mow'] ?? 0;
         $record->kb_mop = $dataAngka['kb_mop'] ?? 0;
@@ -473,7 +488,6 @@ class LaporanKegiatanController extends Controller
         $record->kb_suntik = $dataAngka['kb_suntik'] ?? 0;
         $record->kb_kondom = $dataAngka['kb_kondom'] ?? 0;
 
-        // BALITA
         $record->balita_l = $dataAngka['balita_l'] ?? 0;
         $record->balita_p = $dataAngka['balita_p'] ?? 0;
         $record->balita_kia_l = $dataAngka['balita_kia_l'] ?? 0;
@@ -483,11 +497,9 @@ class LaporanKegiatanController extends Controller
         $record->balita_naik_l = $dataAngka['balita_naik_l'] ?? 0;
         $record->balita_naik_p = $dataAngka['balita_naik_p'] ?? 0;
 
-        // VITAMIN
         $record->vit_a_1 = $dataAngka['vit_a_1'] ?? 0;
         $record->vit_a_2 = $dataAngka['vit_a_2'] ?? 0;
 
-        // IMUNISASI
         $record->imunisasi_tt_1 = $dataAngka['imunisasi_tt_1'] ?? 0;
         $record->imunisasi_tt_2 = $dataAngka['imunisasi_tt_2'] ?? 0;
         $record->imunisasi_bcg = $dataAngka['imunisasi_bcg'] ?? 0;
@@ -503,7 +515,6 @@ class LaporanKegiatanController extends Controller
         $record->imunisasi_hepatitis_2 = $dataAngka['imunisasi_hepatitis_2'] ?? 0;
         $record->imunisasi_hepatitis_3 = $dataAngka['imunisasi_hepatitis_3'] ?? 0;
 
-        // DIARE
         $record->balita_diare = $dataAngka['balita_diare'] ?? 0;
         $record->balita_oralit = $dataAngka['balita_oralit'] ?? 0;
 
@@ -514,7 +525,6 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Kegiatan Posyandu updated untuk: ' . $kecamatan . ' bulan ' . $bulanInt . ' (' . $namaBulan . ')');
     }
 
-    // ─── UPDATE REKAPITULASI ─────────────────────────────────────────────────
     private function updateRekapitulasi($kecamatan, $dataAngka)
     {
         $tahun = $dataAngka['tahun'] ?? date('Y');
