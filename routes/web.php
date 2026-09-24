@@ -54,6 +54,15 @@ use App\Http\Controllers\Backend\Kecamatan\PrintKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\BeritaKecamatanController;
 
 // ============================================
+// DESA CONTROLLERS
+// ============================================
+use App\Http\Controllers\Backend\Desa\DashboardDesaController;
+use App\Http\Controllers\Backend\Desa\DataUmumDesaController;
+use App\Http\Controllers\Backend\Desa\KegiatanDesaController;
+use App\Http\Controllers\Backend\Desa\BumilDesaController;
+use App\Http\Controllers\Backend\Desa\ExportDesaController;
+
+// ============================================
 // FRONTEND ROUTES (Public)
 // ============================================
 Route::as('fe.')->group(function () {
@@ -97,7 +106,7 @@ Route::as('fe.')->group(function () {
     Route::get('/pokja-3', [IndexController::class, 'pokja3Public'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Public'])->name('pokja4');
 
-    // ✅ TAMBAH — 3 Route Baru Frontend
+    // ✅ 3 Route Baru Frontend
     Route::get('/data-umum-pkk', [IndexController::class, 'dataUmumPkkPublic'])->name('data-umum-pkk');
     Route::get('/rekap-kegiatan-warga', [IndexController::class, 'rekapKegiatanWargaPublic'])->name('rekap-kegiatan-warga');
     Route::get('/rekap-bumil', [IndexController::class, 'rekapBumilPublic'])->name('rekap-bumil');
@@ -138,7 +147,7 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/pokja-3', [IndexController::class, 'pokja3Json'])->name('pokja3');
     Route::get('/pokja-4', [IndexController::class, 'pokja4Json'])->name('pokja4');
 
-    // ✅ TAMBAH — 3 Route Baru API
+    // ✅ 3 Route Baru API
     Route::get('/data-umum-pkk', [IndexController::class, 'dataUmumPkkJson'])->name('data-umum-pkk');
     Route::get('/rekap-kegiatan-warga', [IndexController::class, 'rekapKegiatanWargaJson'])->name('rekap-kegiatan-warga');
     Route::get('/rekap-bumil', [IndexController::class, 'rekapBumilJson'])->name('rekap-bumil');
@@ -344,5 +353,57 @@ Route::prefix('kecamatan')
 
     Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])
         ->name('print');
+});
 
+// ============================================================
+// ROUTES: ADMIN DESA
+// ============================================================
+Route::prefix('desa')
+    ->name('desa.')
+    ->middleware(['auth', 'role:admin desa', 'scope.desa'])
+    ->group(function () {
+
+    // Dashboard
+    Route::get('/', [DashboardDesaController::class, 'index'])
+        ->name('dashboard');
+
+    // Data Umum PKK
+    Route::get('/data-umum', [DataUmumDesaController::class, 'index'])
+        ->name('data-umum.index');
+    Route::get('/data-umum/import', [DataUmumDesaController::class, 'import'])
+        ->name('data-umum.import');
+    Route::post('/data-umum/import', [DataUmumDesaController::class, 'store'])
+        ->name('data-umum.store');
+    Route::get('/data-umum/template', [DataUmumDesaController::class, 'downloadTemplate'])
+        ->name('data-umum.template');
+
+    // Rekap Kegiatan Warga
+    Route::get('/kegiatan', [KegiatanDesaController::class, 'index'])
+        ->name('kegiatan.index');
+    Route::get('/kegiatan/import', [KegiatanDesaController::class, 'import'])
+        ->name('kegiatan.import');
+    Route::post('/kegiatan/import', [KegiatanDesaController::class, 'store'])
+        ->name('kegiatan.store');
+    Route::get('/kegiatan/template', [KegiatanDesaController::class, 'downloadTemplate'])
+        ->name('kegiatan.template');
+
+    // Rekap Bumil
+    Route::get('/bumil', [BumilDesaController::class, 'index'])
+        ->name('bumil.index');
+    Route::get('/bumil/import', [BumilDesaController::class, 'import'])
+        ->name('bumil.import');
+    Route::post('/bumil/import', [BumilDesaController::class, 'store'])
+        ->name('bumil.store');
+    Route::get('/bumil/template', [BumilDesaController::class, 'downloadTemplate'])
+        ->name('bumil.template');
+
+    // Export
+    Route::get('/export', [ExportDesaController::class, 'index'])
+        ->name('export.index');
+    Route::get('/export/data-umum', [ExportDesaController::class, 'exportDataUmum'])
+        ->name('export.data-umum');
+    Route::get('/export/kegiatan', [ExportDesaController::class, 'exportKegiatan'])
+        ->name('export.kegiatan');
+    Route::get('/export/bumil', [ExportDesaController::class, 'exportBumil'])
+        ->name('export.bumil');
 });

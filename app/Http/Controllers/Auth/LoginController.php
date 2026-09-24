@@ -64,6 +64,11 @@ class LoginController extends Controller
             // ============================================================
             $user = Auth::user();
 
+            // Kalau role admin desa → redirect ke /desa
+            if ($user->hasRole('admin desa')) {
+                return redirect()->intended('/desa');
+            }
+
             // Kalau role kecamatan → redirect ke /kecamatan
             if ($user->hasRole('kecamatan')) {
                 return redirect()->intended('/kecamatan');

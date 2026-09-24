@@ -25,15 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
 
-            // 🔥 TAMBAH INI — Middleware Admin Kecamatan
+            // 🔥 Middleware Admin Kecamatan
             'kecamatan' => \App\Http\Middleware\KecamatanMiddleware::class,
+
+            // 🔥 Middleware Admin Desa
+            'scope.desa' => \App\Http\Middleware\ScopeDesaMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // FIX: paksa SEMUA exception (bukan cuma 404) untuk route /api/*
-        // selalu dibalas sebagai JSON, bukan redirect/halaman HTML.
-        // Ini yang mencegah ValidationException dkk berujung redirect 302
-        // ke route 'login' saat request tidak kirim header Accept: application/json.
         $exceptions->shouldRenderJsonWhen(function (Request $request, \Throwable $e) {
             if ($request->is('api/*')) {
                 return true;
@@ -43,10 +42,6 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            // Selain cek header Accept, cek juga apakah request-nya lewat
-            // prefix /api/ — supaya client (Postman, app mobile) yang lupa
-            // set header "Accept: application/json" tetap dapat response
-            // JSON, bukan halaman HTML penuh yang sulit di-parse.
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['message' => 'Not Found'], 404);
             }

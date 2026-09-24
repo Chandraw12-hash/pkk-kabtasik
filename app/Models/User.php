@@ -25,14 +25,12 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_photo_path',
-        // FIX: kolom ini sudah ada di tabel users (no_hp, status, kecamatan),
-        // tapi belum masuk $fillable — jadi update(['kecamatan' => ...])
-        // selalu diam-diam gagal (Eloquent skip atribut yang tidak fillable,
-        // TANPA error). Ditambahkan supaya bisa diisi lewat mass assignment
-        // (mis. saat kader melengkapi profil, atau di-set admin).
         'no_hp',
         'status',
         'kecamatan',
+        'desa',
+        'nama_desa',
+        'last_login',
     ];
 
     /**
