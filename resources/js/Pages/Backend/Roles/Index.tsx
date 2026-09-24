@@ -54,6 +54,17 @@ const getRoleColor = (roleName: string) => {
     return colorMap[roleName] || "bg-slate-50 text-slate-600 border-slate-100";
 };
 
+const getRoleLabel = (roleName: string) => {
+    const labels: Record<string, string> = {
+        pokja1: "Pokja I",
+        pokja2: "Pokja II",
+        pokja3: "Pokja III",
+        pokja4: "Pokja IV",
+    };
+
+    return labels[roleName] || roleName?.replace(/-/g, " ");
+};
+
 export default function Index({ roles, filters = {} }: IndexProps) {
     const { permissions } = usePage<any>().props.auth || { permissions: [] };
     const [search, setSearch] = useState(filters.search || "");
@@ -207,7 +218,7 @@ export default function Index({ roles, filters = {} }: IndexProps) {
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 capitalize">
-                                                {role.name?.replace(/-/g, ' ')}
+                                                {getRoleLabel(role.name)}
                                             </p>
                                             <p className="text-xs text-slate-400">
                                                 {role.guard_name || 'web'}

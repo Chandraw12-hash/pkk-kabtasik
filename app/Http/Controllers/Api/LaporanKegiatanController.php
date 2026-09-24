@@ -144,6 +144,14 @@ class LaporanKegiatanController extends Controller
 
         $user = $request->user();
 
+        if (!$user->canSubmitPokjaKategori($validated['kategori_pokja'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun ini hanya boleh mengirim data ' . implode(', ', $user->allowedPokjaKategori() ?? []) . '.',
+                'allowed_kategori' => $user->allowedPokjaKategori() ?? [],
+            ], 403);
+        }
+
         $kecamatan = $validated['kecamatan'] ?? $user->kecamatan ?? null;
         $desaKelurahan = $validated['desa_kelurahan'] ?? $user->desa_kelurahan ?? null;
         $namaDasawisma = $validated['nama_dasawisma'] ?? $user->nama_dasawisma ?? null;

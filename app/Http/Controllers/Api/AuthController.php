@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class AuthController extends Controller
 {
     /**
-     * Login khusus untuk aplikasi mobile (kader & admin).
+     * Login khusus untuk aplikasi mobile.
      * Support login pakai USERNAME atau EMAIL.
      */
     public function login(Request $request)
@@ -38,7 +38,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Cek status user
         if ($user->status !== 'active') {
             return response()->json([
                 'success' => false,
@@ -46,52 +45,27 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // ✅ FIX: Tambah 'pokja' & 'user' ke whitelist
-        if (!$user->hasAnyRole(['kader_dasawisma', 'pkk', 'admin', 'dasawisma', 'pokja', 'user'])) {
+        if (!$user->canAccessMobile()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Akun ini tidak memiliki akses ke aplikasi mobile.',
             ], 403);
         }
 
-        // Hapus token lama
         $user->tokens()->where('name', 'mobile-app')->delete();
 
         $token = $user->createToken('mobile-app')->plainTextToken;
-
-        // ✅ FIX: Tambah 'pokja' ke priority
-        $primaryRole = 'dasawisma';
-        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'pokja', 'user'];
-        $userRoles = $user->roles->pluck('name')->toArray();
-
-        foreach ($priority as $role) {
-            if (in_array($role, $userRoles)) {
-                $primaryRole = $role;
-                break;
-            }
-        }
 
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil.',
             'data' => [
                 'token' => $token,
-                'user' => [
-                    'id'       => $user->id,
-                    'name'     => $user->name,
-                    'username' => $user->username,
-                    'email'    => $user->email,
-                    'status'   => $user->status,
-                    'roles'    => $user->roles->pluck('name'),
-                    'role'     => $primaryRole,
-                ],
+                'user' => $user->toMobileAuthArray(),
             ],
         ]);
     }
 
-    /**
-     * Logout
-     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -102,36 +76,11 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Profil user yang sedang login
-     */
     public function me(Request $request)
     {
-        $user = $request->user();
-
-        // ✅ FIX: Tambah 'pokja' ke priority
-        $primaryRole = 'dasawisma';
-        $priority = ['admin', 'pkk', 'kader_dasawisma', 'dasawisma', 'pokja', 'user'];
-        $userRoles = $user->roles->pluck('name')->toArray();
-
-        foreach ($priority as $role) {
-            if (in_array($role, $userRoles)) {
-                $primaryRole = $role;
-                break;
-            }
-        }
-
         return response()->json([
             'success' => true,
-            'data' => [
-                'id'       => $user->id,
-                'name'     => $user->name,
-                'username' => $user->username,
-                'email'    => $user->email,
-                'status'   => $user->status,
-                'roles'    => $user->roles->pluck('name'),
-                'role'     => $primaryRole,
-            ],
+            'data' => $request->user()->toMobileAuthArray(),
         ]);
     }
 }
