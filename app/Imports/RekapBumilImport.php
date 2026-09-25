@@ -9,11 +9,11 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Validators\Failure;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RekapBumilImport implements
     ToModel,
@@ -22,7 +22,6 @@ class RekapBumilImport implements
     SkipsEmptyRows,
     SkipsOnError,
     SkipsOnFailure,
-    WithBatchInserts,
     WithChunkReading,
     WithCalculatedFormulas
 {
@@ -43,8 +42,8 @@ class RekapBumilImport implements
         string $level = 'rt',
         ?int $bulan = null
     ) {
-        $this->kecamatan = $kecamatan;
-        $this->desa = $desa;
+        $this->kecamatan = trim($kecamatan);
+        $this->desa = trim($desa);
         $this->tahun = $tahun;
         $this->level = $level;
         $this->bulan = $bulan ?? (int) date('n');
@@ -52,13 +51,13 @@ class RekapBumilImport implements
 
     public function model(array $row)
     {
-        // Skip kalau baris benar-benar kosong
+        // Skip baris kosong
         if ($this->isEmptyRow($row)) {
             $this->skipCount++;
             return null;
         }
 
-        // Skip kalau tidak ada identitas sama sekali
+        // Skip baris tanpa identitas
         if (
             empty($row['dusun']) &&
             empty($row['nama_dusun']) &&
@@ -69,29 +68,29 @@ class RekapBumilImport implements
             return null;
         }
 
-        $this->successCount++;
-
-        return new RekapBumil([
-            // === IDENTITAS WILAYAH ===
+        // === KUNCI UNIK ===
+        $uniqueKey = [
             'kecamatan' => $this->kecamatan,
-            'nama_kecamatan' => $this->kecamatan,
             'desa' => $this->desa,
-            'nama_desa' => $this->desa,
             'tahun' => $this->tahun,
             'bulan' => $this->bulan,
-            'nama_bulan' => $this->namaBulan($this->bulan),
             'level' => $this->level,
-
-            // === WILAYAH ===
             'dusun' => $this->clean($row['dusun'] ?? null),
-            'nama_dusun' => $this->clean($row['nama_dusun'] ?? $row['dusun'] ?? null),
             'rw' => $this->clean($row['rw'] ?? null),
             'rt' => $this->clean($row['rt'] ?? null),
+        ];
+
+        // === DATA LENGKAP ===
+        $data = array_merge($uniqueKey, [
+            'nama_kecamatan' => $this->kecamatan,
+            'nama_desa' => $this->desa,
+            'nama_bulan' => $this->namaBulan($this->bulan),
+            'nama_dusun' => $this->clean($row['nama_dusun'] ?? $row['dusun'] ?? null),
             'nama_dasawisma' => $this->clean(
                 $row['nama_dasawisma'] ?? $row['dasawisma'] ?? null
             ),
 
-            // === JUMLAH KELOMPOK ===
+            // JUMLAH KELOMPOK
             'jumlah_dusun' => $this->toInt($row['jumlah_dusun'] ?? null),
             'jumlah_rw' => $this->toInt($row['jumlah_rw'] ?? null),
             'jumlah_rt' => $this->toInt($row['jumlah_rt'] ?? null),
@@ -99,7 +98,7 @@ class RekapBumilImport implements
                 $row['dasa_wisma'] ?? $row['jumlah_dasa_wisma'] ?? null
             ),
 
-            // === IBU ===
+            // IBU
             'ibu_hamil' => $this->toInt($row['hamil'] ?? $row['ibu_hamil'] ?? null),
             'ibu_melahirkan' => $this->toInt(
                 $row['melahirkan'] ?? $row['ibu_melahirkan'] ?? null
@@ -107,7 +106,7 @@ class RekapBumilImport implements
             'ibu_nifas' => $this->toInt($row['nifas'] ?? $row['ibu_nifas'] ?? null),
             'ibu_meninggal' => $this->toInt($row['ibu_meninggal'] ?? null),
 
-            // === BAYI LAHIR ===
+            // BAYI LAHIR
             'bayi_lahir_l' => $this->toInt(
                 $row['bayi_lahir_l'] ?? $row['lahir_l'] ?? null
             ),
@@ -115,19 +114,29 @@ class RekapBumilImport implements
                 $row['bayi_lahir_p'] ?? $row['lahir_p'] ?? null
             ),
 
-            // === AKTE ===
+            // AKTE
             'akte_ada' => $this->toInt($row['akte_ada'] ?? null),
             'akte_tidak_ada' => $this->toInt($row['akte_tidak_ada'] ?? null),
 
-            // === MENINGGAL ===
+            // MENINGGAL
             'bayi_meninggal_l' => $this->toInt($row['bayi_meninggal_l'] ?? null),
             'bayi_meninggal_p' => $this->toInt($row['bayi_meninggal_p'] ?? null),
             'balita_meninggal_l' => $this->toInt($row['balita_meninggal_l'] ?? null),
             'balita_meninggal_p' => $this->toInt($row['balita_meninggal_p'] ?? null),
 
-            // === META ===
+            // META
             'created_by' => auth()->id(),
         ]);
+
+        // === UPSERT ===
+        $result = RekapBumil::updateOrCreate($uniqueKey, $data);
+
+        // Counter nambah kalau DB berhasil
+        if ($result) {
+            $this->successCount++;
+        }
+
+        return $result;
     }
 
     public function rules(): array
@@ -153,32 +162,41 @@ class RekapBumilImport implements
         ];
     }
 
-    public function batchSize(): int
-    {
-        return 100;
-    }
-
     public function chunkSize(): int
     {
         return 100;
     }
 
-    public function onError(\Throwable $e): void
+    public function onError(Throwable $e): void
     {
-        $this->errors[] = $e->getMessage();
-        Log::warning('RekapBumilImport error: ' . $e->getMessage());
+        $this->errors[] = [
+            'type' => 'exception',
+            'message' => $e->getMessage(),
+        ];
+
+        Log::warning('RekapBumilImport error', [
+            'level' => $this->level,
+            'kecamatan' => $this->kecamatan,
+            'desa' => $this->desa,
+            'tahun' => $this->tahun,
+            'bulan' => $this->bulan,
+            'message' => $e->getMessage(),
+        ]);
     }
 
     public function onFailure(Failure ...$failures): void
     {
         foreach ($failures as $failure) {
             $this->errors[] = [
+                'type' => 'validation',
                 'row' => $failure->row(),
                 'attribute' => $failure->attribute(),
                 'errors' => $failure->errors(),
                 'values' => $failure->values(),
             ];
+
             Log::warning('RekapBumilImport validation failed', [
+                'level' => $this->level,
                 'row' => $failure->row(),
                 'attribute' => $failure->attribute(),
                 'errors' => $failure->errors(),
@@ -186,28 +204,14 @@ class RekapBumilImport implements
         }
     }
 
-    public function getSuccessCount(): int
-    {
-        return $this->successCount;
-    }
-
-    public function getSkipCount(): int
-    {
-        return $this->skipCount;
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
-    }
+    public function getSuccessCount(): int { return $this->successCount; }
+    public function getSkipCount(): int { return $this->skipCount; }
+    public function getErrors(): array { return $this->errors; }
 
     // ============================================================
     // HELPER METHODS
     // ============================================================
 
-    /**
-     * Cek apakah baris benar-benar kosong
-     */
     private function isEmptyRow(array $row): bool
     {
         foreach ($row as $value) {
@@ -218,44 +222,23 @@ class RekapBumilImport implements
         return true;
     }
 
-    /**
-     * Convert ke integer — handle string kosong, null, koma, titik
-     */
     private function toInt($value): int
     {
-        if ($value === null || $value === '' || $value === '-') {
-            return 0;
-        }
+        if ($value === null || $value === '' || $value === '-') return 0;
+        if (is_int($value)) return $value;
+        if (is_float($value)) return (int) $value;
 
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) $value;
-        }
-
-        // Handle string: "1.000" atau "1,000"
         $cleaned = preg_replace('/[^\d-]/', '', (string) $value);
-
         return (int) ($cleaned ?: 0);
     }
 
-    /**
-     * Clean string — trim, null kalau kosong
-     */
     private function clean($value): ?string
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return trim((string) $value);
+        if ($value === null) return null;
+        $value = trim((string) $value);
+        return $value === '' ? null : $value;
     }
 
-    /**
-     * Nama bulan Indonesia
-     */
     private function namaBulan(int $bulan): string
     {
         $bulanIndo = [

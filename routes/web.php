@@ -53,6 +53,12 @@ use App\Http\Controllers\Backend\Kecamatan\ExportKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\PrintKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\BeritaKecamatanController;
 
+// ✅ KECAMATAN PKK CONTROLLERS — BARU
+use App\Http\Controllers\Backend\Kecamatan\DataUmumKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\KegiatanKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\BumilKecamatanController;
+use App\Http\Controllers\Backend\Kecamatan\ExportKecamatanPkkController;
+
 // ============================================
 // DESA CONTROLLERS
 // ============================================
@@ -174,7 +180,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth');
 
 // ============================================
-// BACKEND ROUTES (Protected with Auth) — ADMIN KABUPATEN
+// BACKEND ROUTES — ADMIN KABUPATEN
 // ============================================
 Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function () {
 
@@ -353,6 +359,36 @@ Route::prefix('kecamatan')
 
     Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])
         ->name('print');
+
+    // ============================================================
+    // ✅ DATA PKK — BARU
+    // ============================================================
+
+    // Data Umum PKK Kecamatan
+    Route::get('data-pkk/umum', [DataUmumKecamatanController::class, 'index'])
+        ->name('data-umum.index');
+    Route::get('data-pkk/umum/{desa}', [DataUmumKecamatanController::class, 'show'])
+        ->name('data-umum.show');
+
+    // Rekap Kegiatan Warga Kecamatan
+    Route::get('data-pkk/kegiatan', [KegiatanKecamatanController::class, 'index'])
+        ->name('kegiatan.index');
+    Route::get('data-pkk/kegiatan/{desa}', [KegiatanKecamatanController::class, 'show'])
+        ->name('kegiatan.show');
+
+    // Rekap Bumil Kecamatan
+    Route::get('data-pkk/bumil', [BumilKecamatanController::class, 'index'])
+        ->name('bumil.index');
+    Route::get('data-pkk/bumil/{desa}', [BumilKecamatanController::class, 'show'])
+        ->name('bumil.show');
+
+    // Export PKK
+    Route::get('data-pkk/export/umum', [ExportKecamatanPkkController::class, 'dataUmum'])
+        ->name('export.data-umum');
+    Route::get('data-pkk/export/kegiatan', [ExportKecamatanPkkController::class, 'kegiatan'])
+        ->name('export.kegiatan');
+    Route::get('data-pkk/export/bumil', [ExportKecamatanPkkController::class, 'bumil'])
+        ->name('export.bumil');
 });
 
 // ============================================================

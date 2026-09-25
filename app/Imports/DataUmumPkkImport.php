@@ -9,7 +9,6 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Validators\Failure;
@@ -22,7 +21,6 @@ class DataUmumPkkImport implements
     SkipsEmptyRows,
     SkipsOnError,
     SkipsOnFailure,
-    WithBatchInserts,
     WithChunkReading,
     WithCalculatedFormulas
 {
@@ -59,17 +57,19 @@ class DataUmumPkkImport implements
 
         $this->successCount++;
 
-        return new DataUmumPkk([
-            // === IDENTITAS WILAYAH ===
+        // === KUNCI UNIK — untuk cek duplikat ===
+        $uniqueKey = [
             'kecamatan' => $this->kecamatan,
-            'nama_kecamatan' => $this->kecamatan,
             'desa' => $this->desa,
-            'nama_desa' => $this->desa,
             'tahun' => $this->tahun,
             'level' => $this->level,
-
-            // === WILAYAH ===
             'dusun' => $this->clean($row['dusun'] ?? null),
+        ];
+
+        // === DATA LENGKAP ===
+        $data = array_merge($uniqueKey, [
+            'nama_kecamatan' => $this->kecamatan,
+            'nama_desa' => $this->desa,
             'nama_dusun' => $this->clean($row['nama_dusun'] ?? $row['dusun'] ?? null),
 
             // === JUMLAH KELOMPOK ===
@@ -103,6 +103,9 @@ class DataUmumPkkImport implements
             // === META ===
             'created_by' => auth()->id(),
         ]);
+
+        // === UPSERT — update kalau ada, insert kalau belum ===
+        return DataUmumPkk::updateOrCreate($uniqueKey, $data);
     }
 
     public function rules(): array
@@ -119,11 +122,6 @@ class DataUmumPkkImport implements
             'jiwa_l' => 'nullable|numeric|min:0',
             'jiwa_p' => 'nullable|numeric|min:0',
         ];
-    }
-
-    public function batchSize(): int
-    {
-        return 100;
     }
 
     public function chunkSize(): int
@@ -173,9 +171,6 @@ class DataUmumPkkImport implements
     // HELPER METHODS
     // ============================================================
 
-    /**
-     * Cek apakah baris benar-benar kosong
-     */
     private function isEmptyRow(array $row): bool
     {
         foreach ($row as $value) {
@@ -186,9 +181,6 @@ class DataUmumPkkImport implements
         return true;
     }
 
-    /**
-     * Convert ke integer — handle string kosong, null, koma, titik
-     */
     private function toInt($value): int
     {
         if ($value === null || $value === '' || $value === '-') {
@@ -203,15 +195,11 @@ class DataUmumPkkImport implements
             return (int) $value;
         }
 
-        // Handle string: "1.000" atau "1,000"
         $cleaned = preg_replace('/[^\d-]/', '', (string) $value);
 
         return (int) ($cleaned ?: 0);
     }
 
-    /**
-     * Clean string — trim, uppercase, null kalau kosong
-     */
     private function clean($value): ?string
     {
         if ($value === null || $value === '') {

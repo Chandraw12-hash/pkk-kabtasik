@@ -18,13 +18,13 @@ class RekapKegiatanWargaExport implements
     ShouldAutoSize
 {
     protected string $kecamatan;
-    protected string $desa;
+    protected ?string $desa;
     protected int $tahun;
     protected ?string $level;
 
     public function __construct(
         string $kecamatan,
-        string $desa,
+        ?string $desa,
         int $tahun,
         ?string $level = null
     ) {
@@ -35,15 +35,16 @@ class RekapKegiatanWargaExport implements
     }
 
     /**
-     * Data yang di-export — filter by kecamatan, desa, tahun, level
+     * Data yang di-export — filter by kecamatan, desa (nullable), tahun, level
      */
     public function collection()
     {
         return RekapKegiatanWarga::query()
             ->where('kecamatan', $this->kecamatan)
-            ->where('desa', $this->desa)
+            ->when($this->desa, fn($q) => $q->where('desa', $this->desa))
             ->where('tahun', $this->tahun)
             ->when($this->level, fn($q) => $q->where('level', $this->level))
+            ->orderBy('desa')
             ->orderBy('dusun')
             ->orderBy('rw')
             ->orderBy('rt')

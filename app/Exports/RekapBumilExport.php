@@ -18,14 +18,14 @@ class RekapBumilExport implements
     ShouldAutoSize
 {
     protected string $kecamatan;
-    protected string $desa;
+    protected ?string $desa;
     protected int $tahun;
     protected ?string $level;
     protected ?int $bulan;
 
     public function __construct(
         string $kecamatan,
-        string $desa,
+        ?string $desa,
         int $tahun,
         ?string $level = null,
         ?int $bulan = null
@@ -38,16 +38,17 @@ class RekapBumilExport implements
     }
 
     /**
-     * Data yang di-export — filter by kecamatan, desa, tahun, level, bulan
+     * Data yang di-export — filter by kecamatan, desa (nullable), tahun, level, bulan
      */
     public function collection()
     {
         return RekapBumil::query()
             ->where('kecamatan', $this->kecamatan)
-            ->where('desa', $this->desa)
+            ->when($this->desa, fn($q) => $q->where('desa', $this->desa))
             ->where('tahun', $this->tahun)
             ->when($this->level, fn($q) => $q->where('level', $this->level))
             ->when($this->bulan, fn($q) => $q->where('bulan', $this->bulan))
+            ->orderBy('desa')
             ->orderBy('bulan')
             ->orderBy('dusun')
             ->orderBy('rw')

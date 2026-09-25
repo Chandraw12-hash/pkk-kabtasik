@@ -16,7 +16,8 @@ import {
     Moon,
     Sun,
     User,
-    Newspaper, // ✅ TAMBAH INI
+    Newspaper,
+    Package, // ✅ TAMBAH INI
 } from 'lucide-react';
 
 // 🔥 IMPORT NOTIFIKASI BELL
@@ -53,6 +54,7 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
 
     const [isOpen, setIsOpen] = useState(false);
     const [rekapOpen, setRekapOpen] = useState(true);
+    const [dataPkkOpen, setDataPkkOpen] = useState(true); // ✅ TAMBAH INI
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -212,7 +214,6 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         <span>Laporan Kecamatan</span>
                     </Link>
 
-                    {/* ✅ BERITA KECAMATAN — TAMBAH INI */}
                     <Link
                         href="/kecamatan/berita"
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
@@ -232,6 +233,82 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         />
                         <span>Berita Kecamatan</span>
                     </Link>
+
+                    {/* ✅ DATA PKK DROPDOWN — BARU */}
+                    <div className="mt-1">
+                        <button
+                            type="button"
+                            onClick={() => setDataPkkOpen(!dataPkkOpen)}
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
+                                isActive("/kecamatan/data-pkk")
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Package
+                                    size={20}
+                                    strokeWidth={2}
+                                    className={`shrink-0 ${
+                                        isActive("/kecamatan/data-pkk")
+                                            ? "text-teal-600 dark:text-teal-400"
+                                            : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                    }`}
+                                />
+                                <span>Data PKK</span>
+                            </div>
+                            <ChevronDown
+                                size={16}
+                                className={`transition-transform duration-300 ${
+                                    dataPkkOpen ? "rotate-180" : ""
+                                }`}
+                            />
+                        </button>
+
+                        <div
+                            className={`overflow-hidden transition-all duration-300 ${
+                                dataPkkOpen ? "max-h-96" : "max-h-0"
+                            }`}
+                        >
+                            <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
+                                <Link
+                                    href="/kecamatan/data-pkk/umum"
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isActive("/kecamatan/data-pkk/umum")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <FileText size={16} />
+                                    <span>Data Umum PKK</span>
+                                </Link>
+
+                                <Link
+                                    href="/kecamatan/data-pkk/kegiatan"
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isActive("/kecamatan/data-pkk/kegiatan")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <BarChart3 size={16} />
+                                    <span>Rekap Kegiatan</span>
+                                </Link>
+
+                                <Link
+                                    href="/kecamatan/data-pkk/bumil"
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isActive("/kecamatan/data-pkk/bumil")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <User size={16} />
+                                    <span>Rekap Bumil</span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Rekap Dropdown */}
                     <div className="mt-1">
@@ -444,9 +521,7 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                 MAIN CONTENT
             ============================================================ */}
             <div className="md:ml-72">
-                {/* ============================================================
-                    HEADER (Desktop + Mobile) — DENGAN LONCENG NOTIFIKASI
-                ============================================================ */}
+                {/* HEADER */}
                 <header className="sticky top-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                     {/* Desktop Header */}
                     <div className="hidden md:flex items-center justify-between px-6 lg:px-8 py-4">
@@ -460,7 +535,6 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         </div>
 
                         <div className="flex items-center gap-3">
-                            {/* 🔔 NOTIFIKASI BELL */}
                             <NotificationBellKecamatan />
                         </div>
                     </div>
@@ -484,7 +558,6 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                             </div>
                         </div>
 
-                        {/* 🔔 NOTIFIKASI BELL (Mobile) */}
                         <NotificationBellKecamatan />
                     </div>
                 </header>
