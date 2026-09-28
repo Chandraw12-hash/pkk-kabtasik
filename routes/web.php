@@ -422,6 +422,8 @@ Route::prefix('desa')
         ->name('kegiatan.store');
     Route::get('/kegiatan/template', [KegiatanDesaController::class, 'downloadTemplate'])
         ->name('kegiatan.template');
+    Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])
+        ->name('kegiatan.dusun.destroy');
 
     // Rekap Bumil
     Route::get('/bumil', [BumilDesaController::class, 'index'])

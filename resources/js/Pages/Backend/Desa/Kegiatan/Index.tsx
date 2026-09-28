@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import AdminDesaLayout from '@/Components/Layout/AdminDesaLayout';
 import Card from '@/Components/UI/Card';
 import { Users, Upload, Download } from 'lucide-react';
+import TabRT from './TabRT';
 import TabRW from './TabRW';
 import TabDusun from './TabDusun';
 import TabDesa from './TabDesa';
@@ -15,8 +16,8 @@ interface KegiatanIndexProps {
 }
 
 export default function Index({ data, stats, activeLevel, filters }: KegiatanIndexProps) {
-    // Input per RW. Level Dusun dan Desa dihitung otomatis oleh sistem.
     const levels = [
+        { key: 'rt', label: 'RT', component: TabRT },
         { key: 'rw', label: 'RW', component: TabRW },
         { key: 'dusun', label: 'Dusun', component: TabDusun },
         { key: 'desa', label: 'Desa', component: TabDesa },
@@ -37,7 +38,7 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
                             Rekap Kegiatan Warga
                         </h1>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Data diinput per RW, Dusun dan Desa dihitung otomatis
+                            Data diinput per RT, Level RW, Dusun, dan Desa dihitung otomatis
                         </p>
                     </div>
                     <div className="flex items-center gap-2">

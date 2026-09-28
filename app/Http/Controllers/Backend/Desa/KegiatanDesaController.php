@@ -36,29 +36,29 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * List rekap kegiatan warga — tab level (RW, Dusun, Desa)
+     * List rekap kegiatan warga — tab level (RT, RW, Dusun, Desa)
      *
-     * Data sumber: level RW (dari import, 1 baris Excel = 1 RW)
-     * Level Dusun dan Desa: AGREGASI LIVE via GROUP BY
+     * Data sumber: level RT (dari import)
+     * Level RW, Dusun, Desa: AGREGASI LIVE via GROUP BY
      */
     public function index(Request $request)
     {
         $user = auth()->user();
-        $level = $request->input('level', 'rw');
-        if (!in_array($level, ['rw', 'dusun', 'desa'], true)) {
-            $level = 'rw';
+        $level = $request->input('level', 'rt');
+        if (!in_array($level, ['rt', 'rw', 'dusun', 'desa'], true)) {
+            $level = 'rt';
         }
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        // === BASE QUERY — selalu filter level RW (baris input) ===
+        // === BASE QUERY — selalu filter level RT (baris input) ===
         $baseQuery = RekapKegiatanWarga::query()
             ->where('kecamatan', $user->kecamatan)
             ->where('desa', $user->desa)
             ->where('tahun', $tahun)
-            ->where('level', 'rw');
+            ->where('level', 'rt');
 
-        if ($level === 'rw') {
-            // === LEVEL RW — baris apa adanya ===
+        if ($level === 'rt') {
+            // === LEVEL RT — baris apa adanya ===
             $query = clone $baseQuery;
 
             if ($request->filled('dusun')) {
@@ -69,12 +69,27 @@ class KegiatanDesaController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_dusun', 'ilike', "%{$search}%")
-                      ->orWhere('rw', 'ilike', "%{$search}%");
+                      ->orWhere('rw', 'ilike', "%{$search}%")
+                      ->orWhere('rt', 'ilike', "%{$search}%");
                 });
             }
 
             $data = $query->orderBy('dusun')
-                ->orderByRaw('CAST(NULLIF(regexp_replace(rw, \'\D\', \'\', \'g\'), \'\') AS INTEGER)')
+                ->orderBy('rw')
+                ->orderBy('rt')
+                ->paginate(15)
+                ->withQueryString();
+
+        } elseif ($level === 'rw') {
+            // === LEVEL RW — GROUP BY dusun + rw ===
+            $data = (clone $baseQuery)
+                ->selectRaw(
+                    'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, rw, '
+                    . 'COUNT(*) as jumlah_rt, ' . $this->sumSelect()
+                )
+                ->groupBy('kecamatan', 'desa', 'nama_kecamatan', 'nama_desa', 'dusun', 'nama_dusun', 'rw')
+                ->orderBy('dusun')
+                ->orderBy('rw')
                 ->paginate(15)
                 ->withQueryString();
 
@@ -83,7 +98,7 @@ class KegiatanDesaController extends Controller
             $data = (clone $baseQuery)
                 ->selectRaw(
                     'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, '
-                    . 'COUNT(*) as jumlah_rw, ' . $this->sumSelect()
+                    . 'COUNT(DISTINCT rw) as jumlah_rw, COUNT(*) as jumlah_rt, ' . $this->sumSelect()
                 )
                 ->groupBy('kecamatan', 'desa', 'nama_kecamatan', 'nama_desa', 'dusun', 'nama_dusun')
                 ->orderBy('dusun')
@@ -91,23 +106,25 @@ class KegiatanDesaController extends Controller
                 ->withQueryString();
 
         } else {
-            // === LEVEL DESA — SUM semua ===
+            // === LEVEL DESA — GROUP BY dusun (breakdown per dusun di dalam desa) ===
             $data = (clone $baseQuery)
                 ->selectRaw(
-                    'kecamatan, desa, nama_kecamatan, nama_desa, '
-                    . 'COUNT(DISTINCT dusun) as jumlah_dusun, COUNT(*) as jumlah_rw, '
+                    'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, '
+                    . 'COUNT(DISTINCT rw) as jumlah_rw, COUNT(*) as jumlah_rt, '
                     . $this->sumSelect()
                 )
-                ->groupBy('kecamatan', 'desa', 'nama_kecamatan', 'nama_desa')
+                ->groupBy('kecamatan', 'desa', 'nama_kecamatan', 'nama_desa', 'dusun', 'nama_dusun')
+                ->orderBy('dusun')
                 ->paginate(15)
                 ->withQueryString();
         }
 
         // === STATISTIK PER LEVEL (COUNT) ===
         $statsPerLevel = [
-            'rw' => (clone $baseQuery)->count(),
-            'dusun' => (clone $baseQuery)->distinct()->count('dusun'),
-            'desa' => (clone $baseQuery)->exists() ? 1 : 0,
+            'rt' => (clone $baseQuery)->count(),
+            'rw' => (clone $baseQuery)->distinct('rw')->count('rw'),
+            'dusun' => (clone $baseQuery)->distinct('dusun')->count('dusun'),
+            'desa' => (clone $baseQuery)->distinct('dusun')->count('dusun'),
         ];
 
         // === STATISTIK TOTAL ===
@@ -137,7 +154,7 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * Handle import Excel — SINGLE SHEET (level RW)
+     * Handle import Excel — SINGLE SHEET (level RT)
      */
     public function store(Request $request)
     {
@@ -169,7 +186,7 @@ class KegiatanDesaController extends Controller
                 $user->kecamatan,
                 $user->desa,
                 $tahun,
-                'rw'  // level input: RW
+                'rt'  // level input: RT
             );
 
             Excel::import($import, $request->file('file'));
@@ -211,7 +228,7 @@ class KegiatanDesaController extends Controller
             return redirect()
                 ->route('desa.kegiatan.index', ['tahun' => $tahun])
                 ->with('success',
-                    "Import berhasil! {$success} data masuk, {$skip} di-skip. Level Dusun dan Desa akan dihitung otomatis."
+                    "Import berhasil! {$success} data masuk, {$skip} di-skip. Level RW, Dusun, dan Desa akan dihitung otomatis."
                 );
 
         } catch (Throwable $e) {
@@ -244,5 +261,26 @@ class KegiatanDesaController extends Controller
             new RekapKegiatanWargaTemplateExport(),
             $filename
         );
+    }
+
+    /**
+     * Hapus data per dusun (semua RT di dusun tersebut)
+     */
+    public function destroyDusun(Request $request, string $dusun)
+    {
+        $user = auth()->user();
+        $tahun = (int) $request->input('tahun', date('Y'));
+
+        $deleted = RekapKegiatanWarga::query()
+            ->where('kecamatan', $user->kecamatan)
+            ->where('desa', $user->desa)
+            ->where('tahun', $tahun)
+            ->where('level', 'rt')
+            ->where('dusun', $dusun)
+            ->delete();
+
+        return redirect()
+            ->route('desa.kegiatan.index', ['tahun' => $tahun, 'level' => 'dusun'])
+            ->with('success', "Data dusun {$dusun} berhasil dihapus ({$deleted} record RT).");
     }
 }

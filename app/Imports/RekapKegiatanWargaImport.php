@@ -23,42 +23,43 @@ class RekapKegiatanWargaImport implements
     WithChunkReading,
     WithCalculatedFormulas
 {
-    // === PETA KOLOM (0-based) — 1 baris Excel = 1 RW ===
+    // === PETA KOLOM (0-based) — 1 baris Excel = 1 RT ===
     private const COL_NO = 0;
     private const COL_NAMA_DUSUN = 1;
     private const COL_RW = 2;
-    private const COL_JUMLAH_RT = 3;
-    private const COL_JUMLAH_DASA_WISMA = 4;
-    private const COL_JUMLAH_KRT = 5;
-    private const COL_JUMLAH_KK = 6;
-    private const COL_TOTAL_L = 7;
-    private const COL_TOTAL_P = 8;
-    private const COL_BALITA_L = 9;
-    private const COL_BALITA_P = 10;
-    private const COL_PUS = 11;
-    private const COL_WUS = 12;
-    private const COL_IBU_HAMIL = 13;
-    private const COL_IBU_MENYUSUI = 14;
-    private const COL_LANSIA = 15;
-    private const COL_BUTA_L = 16;
-    private const COL_BUTA_P = 17;
-    private const COL_RUMAH_SEHAT = 18;
-    private const COL_RUMAH_KURANG_SEHAT = 19;
-    private const COL_TEMPAT_SAMPAH = 20;
-    private const COL_SPAL = 21;
-    private const COL_STIKER_P4K = 22;
-    private const COL_PDAM = 23;
-    private const COL_SUMUR = 24;
-    private const COL_SUNGAI = 25;
-    private const COL_AIR_DLL = 26;
-    private const COL_JAMBAN = 27;
-    private const COL_POKOK_BERAS = 28;
-    private const COL_NON_BERAS = 29;
-    private const COL_UP2K = 30;
-    private const COL_TANAH_PEKARANGAN = 31;
-    private const COL_INDUSTRI_RT = 32;
-    private const COL_KESLING = 33;
-    private const COL_KET = 34;
+    private const COL_RT = 3;
+    private const COL_JUMLAH_RT = 4;
+    private const COL_JUMLAH_DASA_WISMA = 5;
+    private const COL_JUMLAH_KRT = 6;
+    private const COL_JUMLAH_KK = 7;
+    private const COL_TOTAL_L = 8;
+    private const COL_TOTAL_P = 9;
+    private const COL_BALITA_L = 10;
+    private const COL_BALITA_P = 11;
+    private const COL_PUS = 12;
+    private const COL_WUS = 13;
+    private const COL_IBU_HAMIL = 14;
+    private const COL_IBU_MENYUSUI = 15;
+    private const COL_LANSIA = 16;
+    private const COL_BUTA_L = 17;
+    private const COL_BUTA_P = 18;
+    private const COL_RUMAH_SEHAT = 19;
+    private const COL_RUMAH_KURANG_SEHAT = 20;
+    private const COL_TEMPAT_SAMPAH = 21;
+    private const COL_SPAL = 22;
+    private const COL_STIKER_P4K = 23;
+    private const COL_PDAM = 24;
+    private const COL_SUMUR = 25;
+    private const COL_SUNGAI = 26;
+    private const COL_AIR_DLL = 27;
+    private const COL_JAMBAN = 28;
+    private const COL_POKOK_BERAS = 29;
+    private const COL_NON_BERAS = 30;
+    private const COL_UP2K = 31;
+    private const COL_TANAH_PEKARANGAN = 32;
+    private const COL_INDUSTRI_RT = 33;
+    private const COL_KESLING = 34;
+    private const COL_KET = 35;
 
     protected string $kecamatan;
     protected string $desa;
@@ -73,7 +74,7 @@ class RekapKegiatanWargaImport implements
         string $kecamatan,
         string $desa,
         int $tahun,
-        string $level = 'rw'
+        string $level = 'rt'
     ) {
         $this->kecamatan = trim($kecamatan);
         $this->desa = trim($desa);
@@ -95,17 +96,19 @@ class RekapKegiatanWargaImport implements
 
         $namaDusun = $this->clean($row[self::COL_NAMA_DUSUN] ?? null);
         $rw = $this->cleanRw($row[self::COL_RW] ?? null);
+        $rt = $this->clean($row[self::COL_RT] ?? null);
 
         // Dusun dan RW wajib ada, kalau tidak baris tidak bisa dinaikkan ke level atas
-        if ($namaDusun === null || $rw === null) {
+        if ($namaDusun === null || $rw === null || $rt === null) {
             $this->skipCount++;
             $this->errors[] = [
                 'type' => 'validation',
-                'message' => 'Baris di-skip: Nama Dusun atau RW kosong.',
+                'message' => 'Baris di-skip: Nama Dusun, RW, atau RT kosong.',
                 'values' => [
                     'no' => $row[self::COL_NO] ?? null,
                     'dusun' => $namaDusun,
                     'rw' => $rw,
+                    'rt' => $rt,
                 ],
             ];
             return null;
@@ -118,7 +121,7 @@ class RekapKegiatanWargaImport implements
             'level' => $this->level,
             'dusun' => $namaDusun,
             'rw' => $rw,
-            'rt' => null,
+            'rt' => $rt,
         ];
 
         $data = array_merge($uniqueKey, [
