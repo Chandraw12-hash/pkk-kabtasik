@@ -16,9 +16,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolePermissionSeeder::class,
-            AdminUserSeeder::class, // <-- Pastikan ini ada di sini
+            AdminUserSeeder::class,
             IndikatorSeeder::class,
             RoleKecamatanSeeder::class,
+            AdminDesaSeeder::class,  // ← TAMBAH INI
         ]);
     }
 }
