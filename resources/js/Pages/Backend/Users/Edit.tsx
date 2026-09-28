@@ -5,20 +5,21 @@ import SelectInput from "@/Components/Form/SelectInput";
 import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ChevronLeft, MapPin } from "lucide-react";
+import { ChevronLeft, MapPin, Home } from "lucide-react";
 import { Role, User } from "@/types/model";
 
 interface EditProps {
-    user: User & { username?: string; kecamatan?: string };
+    user: User & {
+        username?: string;
+        kecamatan?: string;
+        desa?: string;
+        nama_desa?: string;
+    };
     roles: Role[];
     userRoles: string[];
-    kecamatanList: string[];  // ✅ TAMBAH INI
+    kecamatanList: string[];
 }
 
-/**
- * 39 Kecamatan Kabupaten Tasikmalaya
- * Fallback kalau props `kecamatanList` dari controller kosong
- */
 const KECAMATAN_FALLBACK = [
     'Bantarkalong', 'Bojongasih', 'Bojonggambir', 'Ciawi', 'Cibalong',
     'Cigalontang', 'Cikalong', 'Cikatomas', 'Cineam', 'Cipatujah',
@@ -31,7 +32,6 @@ const KECAMATAN_FALLBACK = [
 ];
 
 export default function Edit({ user, roles, userRoles, kecamatanList }: EditProps) {
-    // ✅ Pakai props dari controller, fallback ke list statis
     const kecamatans = kecamatanList?.length ? kecamatanList : KECAMATAN_FALLBACK;
 
     const { data, setData, put, processing, errors } = useForm({
@@ -41,7 +41,9 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
         password: "",
         password_confirmation: "",
         roles: userRoles || ([] as string[]),
-        kecamatan: user.kecamatan || "",  // ✅ TAMBAH — isi dari data user
+        kecamatan: user.kecamatan || "",
+        desa: user.desa || "",              // ✅ TAMBAH
+        nama_desa: user.nama_desa || "",    // ✅ TAMBAH
     });
 
     const handleSubmit: FormEventHandler = (e) => {
@@ -52,27 +54,30 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
     const handleRoleChange = (roleName: string) => {
         const currentRoles = [...data.roles];
         if (currentRoles.includes(roleName)) {
-            setData(
-                "roles",
-                currentRoles.filter((r) => r !== roleName),
-            );
+            setData("roles", currentRoles.filter((r) => r !== roleName));
         } else {
             setData("roles", [...currentRoles, roleName]);
         }
     };
 
-    // ✅ Cek apakah role "kecamatan" sedang dipilih
+    // ✅ Cek role yang dipilih
     const isKecamatanRole = data.roles.includes("kecamatan");
+    const isAdminDesaRole = data.roles.includes("admin desa");
+
+    // ✅ Tampilkan field kecamatan kalau role = kecamatan ATAU admin desa
+    const showKecamatan = isKecamatanRole || isAdminDesaRole;
+
+    // ✅ Tampilkan field desa kalau role = admin desa
+    const showDesa = isAdminDesaRole;
 
     return (
         <MainLayout>
             <Head title={`Edit Pengguna - ${user.name}`} />
 
-            {/* Header Section */}
             <div className="flex items-center gap-4 mb-8">
                 <Link
                     href={route("be.users.index")}
-                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-brand-blue-600 hover:border-brand-blue-100 transition-all shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:hover:text-brand-blue-400"
+                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-brand-blue-600 hover:border-brand-blue-100 transition-all shadow-sm dark:bg-slate-700 dark:border-slate-600"
                 >
                     <ChevronLeft size={20} />
                 </Link>
@@ -87,7 +92,6 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Essential Info */}
                 <div className="lg:col-span-2 space-y-6">
                     <Card as="form" onSubmit={handleSubmit} className="dark:bg-slate-800 dark:border-slate-700">
                         <div className="p-8">
@@ -100,9 +104,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                     <TextInput
                                         placeholder="Masukkan nama lengkap..."
                                         value={data.name}
-                                        onChange={(e) =>
-                                            setData("name", e.target.value)
-                                        }
+                                        onChange={(e) => setData("name", e.target.value)}
                                         className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.name}
                                     />
@@ -116,9 +118,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                     <TextInput
                                         placeholder="Masukkan username..."
                                         value={data.username}
-                                        onChange={(e) =>
-                                            setData("username", e.target.value)
-                                        }
+                                        onChange={(e) => setData("username", e.target.value)}
                                         className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.username}
                                     />
@@ -133,9 +133,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                         type="email"
                                         placeholder="user@example.com"
                                         value={data.email}
-                                        onChange={(e) =>
-                                            setData("email", e.target.value)
-                                        }
+                                        onChange={(e) => setData("email", e.target.value)}
                                         className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.email}
                                     />
@@ -150,9 +148,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                         type="password"
                                         placeholder="Kosongkan jika tidak ingin diubah"
                                         value={data.password}
-                                        onChange={(e) =>
-                                            setData("password", e.target.value)
-                                        }
+                                        onChange={(e) => setData("password", e.target.value)}
                                         className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         error={errors.password}
                                     />
@@ -167,18 +163,13 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                         type="password"
                                         placeholder="Ulangi password"
                                         value={data.password_confirmation}
-                                        onChange={(e) =>
-                                            setData(
-                                                "password_confirmation",
-                                                e.target.value,
-                                            )
-                                        }
+                                        onChange={(e) => setData("password_confirmation", e.target.value)}
                                         className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                     />
                                 </div>
 
-                                {/* ✅ KECAMATAN — MUNCUL KALAU ROLE = "kecamatan" */}
-                                {isKecamatanRole && (
+                                {/* ✅ KECAMATAN — MUNCUL KALAU ROLE = "kecamatan" ATAU "admin desa" */}
+                                {showKecamatan && (
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                             <MapPin size={14} className="text-cyan-600" />
@@ -193,18 +184,37 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                             error={errors.kecamatan}
                                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                         >
-                                            <option value="">
-                                                -- Pilih Kecamatan --
-                                            </option>
+                                            <option value="">-- Pilih Kecamatan --</option>
                                             {kecamatans.map((kec) => (
-                                                <option key={kec} value={kec}>
-                                                    {kec}
-                                                </option>
+                                                <option key={kec} value={kec}>{kec}</option>
                                             ))}
                                         </SelectInput>
                                         <p className="text-xs text-slate-400">
                                             Pilih kecamatan yang menjadi wilayah kerja user ini.
-                                            Wajib diisi untuk role "kecamatan".
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* ✅ DESA — MUNCUL KALAU ROLE = "admin desa" */}
+                                {showDesa && (
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                            <Home size={14} className="text-teal-600" />
+                                            Nama Desa
+                                            <span className="text-rose-500">*</span>
+                                        </label>
+                                        <TextInput
+                                            placeholder="Contoh: Desa Cikatomas"
+                                            value={data.desa}
+                                            onChange={(e) => {
+                                                setData("desa", e.target.value);
+                                                setData("nama_desa", e.target.value);
+                                            }}
+                                            className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                            error={errors.desa}
+                                        />
+                                        <p className="text-xs text-slate-400">
+                                            Isi nama desa lengkap. Wajib untuk role "admin desa".
                                         </p>
                                     </div>
                                 )}
@@ -213,10 +223,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
 
                         {/* Action Footer */}
                         <div className="p-8 bg-slate-50/30 border-t border-slate-100 flex justify-end gap-3 dark:bg-slate-700/20 dark:border-slate-700">
-                            <Button
-                                variant="secondary"
-                                href={route("be.users.index")}
-                            >
+                            <Button variant="secondary" href={route("be.users.index")}>
                                 Batal
                             </Button>
                             <Button
@@ -225,15 +232,13 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                 disabled={processing}
                                 className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
                             >
-                                <span>
-                                    {processing ? "Menyimpan..." : "Perbarui"}
-                                </span>
+                                <span>{processing ? "Menyimpan..." : "Perbarui"}</span>
                             </Button>
                         </div>
                     </Card>
                 </div>
 
-                {/* Right Column: Roles Assignment */}
+                {/* Right Column: Roles */}
                 <div className="space-y-6">
                     <Card className="dark:bg-slate-800 dark:border-slate-700">
                         <div className="p-6 border-b border-slate-100 bg-slate-50/30 dark:bg-slate-700/20 dark:border-slate-700">
@@ -252,32 +257,24 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                         flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all dark:bg-slate-700/20
                                         ${
                                             data.roles.includes(role.name)
-                                                ? "border-brand-blue-500 bg-brand-blue-50/50 ring-4 ring-brand-blue-500/5 dark:border-brand-blue-600 dark:bg-brand-blue-900/10 dark:ring-brand-blue-500/10"
-                                                : "border-slate-100 hover:border-slate-200 dark:border-slate-700 dark:hover:border-slate-600"
+                                                ? "border-brand-blue-500 bg-brand-blue-50/50 ring-4 ring-brand-blue-500/5"
+                                                : "border-slate-100 hover:border-slate-200 dark:border-slate-700"
                                         }
                                     `}
                                 >
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="checkbox"
-                                            className="w-5 h-5 rounded-lg border-slate-300 text-brand-blue-600 focus:ring-brand-blue-500 dark:bg-slate-700 dark:border-slate-600"
-                                            checked={data.roles.includes(
-                                                role.name,
-                                            )}
-                                            onChange={() =>
-                                                handleRoleChange(role.name)
-                                            }
+                                            className="w-5 h-5 rounded-lg border-slate-300 text-brand-blue-600 focus:ring-brand-blue-500"
+                                            checked={data.roles.includes(role.name)}
+                                            onChange={() => handleRoleChange(role.name)}
                                         />
                                         <div>
-                                            <p
-                                                className={`text-sm font-bold ${
-                                                    data.roles.includes(
-                                                        role.name,
-                                                    )
-                                                        ? "text-brand-blue-700 dark:text-brand-blue-400"
-                                                        : "text-slate-700 dark:text-slate-200"
-                                                }`}
-                                            >
+                                            <p className={`text-sm font-bold ${
+                                                data.roles.includes(role.name)
+                                                    ? "text-brand-blue-700 dark:text-brand-blue-400"
+                                                    : "text-slate-700 dark:text-slate-200"
+                                            }`}>
                                                 {role.name.toUpperCase()}
                                             </p>
                                             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -288,9 +285,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                 </label>
                             ))}
                             {errors.roles && (
-                                <p className="text-xs text-rose-500 mt-2">
-                                    {errors.roles}
-                                </p>
+                                <p className="text-xs text-rose-500 mt-2">{errors.roles}</p>
                             )}
                         </div>
                     </Card>
@@ -301,10 +296,12 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                             Informasi Sistem
                         </h4>
                         <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80">
-                            Password hanya perlu diisi jika Anda ingin memperbarui sandi akun kader. Jika dibiarkan kosong, password lama tetap akan digunakan.
+                            Password hanya perlu diisi jika Anda ingin memperbarui sandi akun kader.
+                            Jika dibiarkan kosong, password lama tetap akan digunakan.
                         </p>
                         <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80 mt-2">
-                            <strong>Catatan:</strong> Untuk role <strong>kecamatan</strong>, kolom Wilayah Kecamatan wajib diisi.
+                            <strong>Catatan:</strong> Untuk role <strong>kecamatan</strong> — wajib pilih kecamatan.
+                            Untuk <strong>admin desa</strong> — wajib pilih kecamatan + isi nama desa.
                         </p>
                     </div>
                 </div>

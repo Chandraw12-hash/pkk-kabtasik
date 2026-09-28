@@ -236,46 +236,50 @@ export default function TabDataKegiatan({
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs min-w-[2600px]">
+                        {/*
+                          HEADER 2 BARIS — 36 kolom, urutan sama dengan <tbody>.
+                          (Sebelumnya 3 baris dengan colSpan salah sehingga header
+                          bergeser dari "Sehat" ke kanan.)
+                        */}
                         <thead>
+                            {/* BARIS 1 — kolom tunggal (rowSpan 2) + judul grup */}
                             <tr className="bg-slate-200 text-slate-800 border-b border-slate-300">
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold sticky left-0 bg-slate-200 z-10 min-w-[40px]">No.</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold sticky left-[40px] bg-slate-200 z-10 min-w-[150px]">Nama Kecamatan</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[70px]">Jumlah Dusun</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah RW</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah RT</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[90px]">Jumlah Dasa Wisma</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah KRT</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah KK</th>
-                                <th colSpan={4} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Jumlah Anggota Keluarga</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold sticky left-0 bg-slate-200 z-10 min-w-[40px]">No.</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold sticky left-[40px] bg-slate-200 z-10 min-w-[150px]">Nama Kecamatan</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[70px]">Jumlah Dusun</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah RW</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah RT</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[90px]">Jumlah Dasa Wisma</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah KRT</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Jumlah KK</th>
+
+                                <th colSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Jumlah Anggota Keluarga</th>
                                 <th colSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Balita</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[50px]">PUS</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[50px]">WUS</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[70px]">Ibu Hamil</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[80px]">Ibu Menyusui</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Lansia</th>
+
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[50px]">PUS</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[50px]">WUS</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[70px]">Ibu Hamil</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[80px]">Ibu Menyusui</th>
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[60px]">Lansia</th>
+
                                 <th colSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">3 Buta</th>
                                 <th colSpan={5} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Kriteria Rumah</th>
                                 <th colSpan={4} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Sumber Air Keluarga</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[90px]">Jumlah Jamban Keluarga</th>
+
+                                <th rowSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[90px]">Jumlah Jamban Keluarga</th>
+
                                 <th colSpan={2} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Makanan</th>
                                 <th colSpan={4} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200">Warga Mengikuti Kegiatan</th>
-                                <th rowSpan={3} className="p-2 border-r border-slate-300 text-center font-bold bg-slate-200 min-w-[80px]">Ket</th>
+
+                                <th rowSpan={2} className="p-2 text-center font-bold bg-slate-200 min-w-[80px]">Ket</th>
                             </tr>
+
+                            {/* BARIS 2 — sub-header (21 kolom) */}
                             <tr className="bg-slate-100 text-slate-700 border-b border-slate-300">
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">Total</th>
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">Balita</th>
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">3 Buta</th>
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">Sehat / Kurang</th>
-                                <th colSpan={3} className="p-1 border-r border-slate-300 text-center font-semibold">Sanitasi</th>
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">Makanan</th>
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">Pemanfaatan</th>
-                                <th colSpan={2} className="p-1 border-r border-slate-300 text-center font-semibold">Industri / Kesling</th>
-                            </tr>
-                            <tr className="bg-slate-50 text-slate-600 border-b border-slate-300">
-                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">L</th>
-                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">P</th>
-                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">L</th>
-                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">P</th>
+                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">Total L</th>
+                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">Total P</th>
+                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">Balita L</th>
+                                <th className="p-1.5 border-r border-slate-300 text-center font-medium">Balita P</th>
                                 <th className="p-1.5 border-r border-slate-300 text-center font-medium">L</th>
                                 <th className="p-1.5 border-r border-slate-300 text-center font-medium">P</th>
                                 <th className="p-1.5 border-r border-slate-300 text-center font-medium">Sehat</th>

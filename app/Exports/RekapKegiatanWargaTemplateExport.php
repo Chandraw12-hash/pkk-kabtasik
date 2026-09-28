@@ -13,16 +13,6 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-/**
- * PENTING: urutan & jumlah kolom di sini HARUS SAMA PERSIS dengan
- * konstanta COL_* di App\Imports\RekapKegiatanWargaImport. Kalau nambah/
- * hapus/geser kolom di sini, WAJIB update juga importer-nya.
- *
- * Total kolom: 36 (A sampai AJ). $headerRow1 dan $headerRow2 di bawah
- * masing-masing WAJIB punya persis 36 elemen — sebelumnya ada bug di
- * mana array ini kelebihan 2 elemen kosong sehingga semua kolom setelah
- * "Balita" geser 2 posisi dari merge-nya.
- */
 class RekapKegiatanWargaTemplateExport implements
     FromArray,
     WithTitle,
@@ -31,6 +21,7 @@ class RekapKegiatanWargaTemplateExport implements
     ShouldAutoSize
 {
     private const MAX_ROWS = 500;
+    private const TOTAL_COLS = 35; // A..AI
 
     public function title(): string
     {
@@ -39,14 +30,14 @@ class RekapKegiatanWargaTemplateExport implements
 
     public function array(): array
     {
-        // Baris kosong — header & data dibuat manual di registerEvents()
         return [];
     }
 
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_TEXT,
+            'B' => NumberFormat::FORMAT_TEXT, // Nama Dusun
+            'C' => NumberFormat::FORMAT_TEXT, // RW
         ];
     }
 
@@ -57,54 +48,49 @@ class RekapKegiatanWargaTemplateExport implements
                 $sheet = $event->sheet->getDelegate();
 
                 // ============================================================
-                // HEADER — 36 kolom (A..AJ), index 0..35
+                // HEADER — 35 kolom (A..AI). 1 baris Excel = 1 RW
+                // Urutan HARUS sama dengan peta kolom di RekapKegiatanWargaImport
                 // ============================================================
                 $headerRow1 = [
-                    'No.',                          // A  (0)
-                    'Nama Kecamatan',                // B  (1)
-                    'Jumlah Dusun',                  // C  (2)
-                    'Jumlah RW',                     // D  (3)
-                    'Jumlah RT',                     // E  (4)
-                    'Jumlah Dasa Wisma',              // F  (5)
-                    'Jumlah KRT',                    // G  (6)
-                    'Jumlah KK',                     // H  (7)
-                    'Jumlah Anggota Keluarga', '',    // I-J  (8-9)
-                    'Balita', '',                    // K-L  (10-11)
-                    'PUS',                           // M  (12)
-                    'WUS',                           // N  (13)
-                    'Ibu Hamil',                     // O  (14)
-                    'Ibu Menyusui',                  // P  (15)
-                    'Lansia',                        // Q  (16)
-                    '3 Buta', '',                    // R-S  (17-18)
-                    'Kriteria Rumah', '', '', '', '', // T-X  (19-23)
-                    'Sumber Air Keluarga', '', '', '', // Y-AB (24-27)
-                    'Jumlah Jamban Keluarga',        // AC (28)
-                    'Makanan', '',                   // AD-AE (29-30)
-                    'Warga Mengikuti Kegiatan', '', '', '', // AF-AI (31-34)
-                    'Ket',                           // AJ (35)
+                    'No.',                              // A  (0)
+                    'Nama Dusun',                       // B  (1)
+                    'RW',                               // C  (2)
+                    'Jumlah RT',                        // D  (3)
+                    'Jumlah Dasa Wisma',                // E  (4)
+                    'Jumlah KRT',                       // F  (5)
+                    'Jumlah KK',                        // G  (6)
+                    'Jumlah Anggota Keluarga', '',      // H-I  (7-8)
+                    'Balita', '',                       // J-K  (9-10)
+                    'PUS',                              // L  (11)
+                    'WUS',                              // M  (12)
+                    'Ibu Hamil',                        // N  (13)
+                    'Ibu Menyusui',                     // O  (14)
+                    'Lansia',                           // P  (15)
+                    '3 Buta', '',                       // Q-R  (16-17)
+                    'Kriteria Rumah', '', '', '', '',   // S-W  (18-22)
+                    'Sumber Air Keluarga', '', '', '',  // X-AA (23-26)
+                    'Jumlah Jamban Keluarga',           // AB (27)
+                    'Makanan', '',                      // AC-AD (28-29)
+                    'Warga Mengikuti Kegiatan', '', '', '', // AE-AH (30-33)
+                    'Ket',                              // AI (34)
                 ];
 
                 $headerRow2 = [
-                    '', '', '', '', '', '', '', '',  // A-H — tidak ada sub-header
-                    'Total L', 'Total P',            // I-J
-                    'Balita L', 'Balita P',          // K-L
-                    '',                               // M (PUS)
-                    '',                               // N (WUS)
-                    '',                               // O (Ibu Hamil)
-                    '',                               // P (Ibu Menyusui)
-                    '',                               // Q (Lansia)
-                    'L', 'P',                        // R-S (3 Buta)
-                    'Sehat', 'Kurang Sehat', 'Sampah', 'SPAL', 'Stiker P4K', // T-X
-                    'PDAM', 'Sumur', 'Sungai', 'DLL', // Y-AB
-                    '',                               // AC (Jamban)
-                    'Pokok Beras', 'Non Beras',       // AD-AE
-                    'UP2K', 'Tanah Pekarangan', 'Industri RT', 'Kesling', // AF-AI
-                    '',                               // AJ (Ket)
+                    '', '', '', '', '', '', '',         // A-G
+                    'Total L', 'Total P',               // H-I
+                    'Balita L', 'Balita P',             // J-K
+                    '', '', '', '', '',                 // L-P
+                    'L', 'P',                           // Q-R
+                    'Sehat', 'Kurang Sehat', 'Sampah', 'SPAL', 'Stiker P4K', // S-W
+                    'PDAM', 'Sumur', 'Sungai', 'DLL',   // X-AA
+                    '',                                 // AB
+                    'Pokok Beras', 'Non Beras',         // AC-AD
+                    'UP2K', 'Tanah Pekarangan', 'Industri RT', 'Kesling', // AE-AH
+                    '',                                 // AI
                 ];
 
-                // Sanity check saat development — jangan sampai lolos lagi ke prod
-                assert(count($headerRow1) === 36, 'headerRow1 harus 36 kolom (A..AJ)');
-                assert(count($headerRow2) === 36, 'headerRow2 harus 36 kolom (A..AJ)');
+                assert(count($headerRow1) === self::TOTAL_COLS, 'headerRow1 harus 35 kolom');
+                assert(count($headerRow2) === self::TOTAL_COLS, 'headerRow2 harus 35 kolom');
 
                 foreach ($headerRow1 as $col => $value) {
                     $sheet->setCellValueByColumnAndRow($col + 1, 1, $value);
@@ -114,14 +100,19 @@ class RekapKegiatanWargaTemplateExport implements
                 }
 
                 // ============================================================
-                // CONTOH DATA — 5 baris (dari baris 3), 36 kolom
+                // CONTOH DATA — 5 baris RW (hapus sebelum upload data asli)
+                // No | Dusun | RW | Jml RT | Dasa Wisma | KRT | KK |
+                // Total L | Total P | Balita L | Balita P | PUS | WUS | Ibu Hamil | Ibu Menyusui |
+                // Lansia | Buta L | Buta P | Sehat | Kurang Sehat | Sampah | SPAL | Stiker P4K |
+                // PDAM | Sumur | Sungai | DLL | Jamban | Pokok Beras | Non Beras |
+                // UP2K | Tanah Pekarangan | Industri RT | Kesling | Ket
                 // ============================================================
                 $contohData = [
-                    ['Dusun 1', 1, 1, 1, 10, 10, 25, 25, 25, 0, 2, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
-                    ['Dusun 2', 1, 1, 1, 12, 12, 30, 30, 28, 0, 3, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
-                    ['Dusun 3', 1, 1, 1, 8, 8, 20, 20, 19, 0, 2, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
-                    ['Dusun 4', 1, 1, 1, 10, 10, 26, 26, 24, 0, 2, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
-                    ['Dusun 5', 1, 1, 1, 11, 11, 28, 28, 27, 0, 3, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+                    [1, 'Bojongsari', '1', 4, 8, 150, 160, 270, 260, 20, 18, 40, 110, 3, 4, 45, 0, 0, 120, 30, 140, 130, 110, 60, 85, 5, 0, 150, 155, 5, 12, 40, 6, 18, ''],
+                    [2, 'Bojongsari', '2', 3, 6, 120, 130, 220, 215, 15, 14, 32, 90, 2, 3, 38, 0, 0, 100, 20, 115, 105, 90, 50, 70, 5, 0, 120, 125, 5, 10, 32, 5, 14, ''],
+                    [3, 'Cikuya', '1', 4, 7, 140, 150, 250, 245, 18, 16, 36, 100, 2, 4, 42, 1, 0, 110, 30, 130, 120, 100, 55, 80, 5, 0, 140, 145, 5, 11, 36, 6, 16, ''],
+                    [4, 'Cikuya', '2', 3, 5, 110, 115, 200, 195, 14, 12, 30, 85, 1, 2, 35, 0, 1, 95, 15, 100, 95, 80, 45, 65, 5, 0, 110, 112, 3, 8, 28, 4, 12, ''],
+                    [5, 'Cintabodas', '1', 5, 9, 170, 180, 310, 300, 22, 20, 45, 125, 4, 5, 50, 0, 0, 140, 30, 160, 150, 125, 70, 95, 5, 0, 170, 175, 5, 14, 45, 7, 20, ''],
                 ];
 
                 $rowStart = 3;
@@ -132,35 +123,23 @@ class RekapKegiatanWargaTemplateExport implements
                 }
 
                 // ============================================================
-                // MERGE HEADER — 36 kolom, A..AJ
+                // MERGE HEADER
                 // ============================================================
-                $sheet->mergeCells('A1:A2');   // No
-                $sheet->mergeCells('B1:B2');   // Nama Kecamatan
-                $sheet->mergeCells('C1:C2');   // Jumlah Dusun
-                $sheet->mergeCells('D1:D2');   // Jumlah RW
-                $sheet->mergeCells('E1:E2');   // Jumlah RT
-                $sheet->mergeCells('F1:F2');   // Jumlah Dasa Wisma
-                $sheet->mergeCells('G1:G2');   // Jumlah KRT
-                $sheet->mergeCells('H1:H2');   // Jumlah KK
-                $sheet->mergeCells('I1:J1');   // Jumlah Anggota Keluarga (Total L/P)
-                $sheet->mergeCells('K1:L1');   // Balita (L/P)
-                $sheet->mergeCells('M1:M2');   // PUS
-                $sheet->mergeCells('N1:N2');   // WUS
-                $sheet->mergeCells('O1:O2');   // Ibu Hamil
-                $sheet->mergeCells('P1:P2');   // Ibu Menyusui
-                $sheet->mergeCells('Q1:Q2');   // Lansia
-                $sheet->mergeCells('R1:S1');   // 3 Buta (L/P)
-                $sheet->mergeCells('T1:X1');   // Kriteria Rumah
-                $sheet->mergeCells('Y1:AB1');  // Sumber Air Keluarga
-                $sheet->mergeCells('AC1:AC2'); // Jumlah Jamban Keluarga
-                $sheet->mergeCells('AD1:AE1'); // Makanan
-                $sheet->mergeCells('AF1:AI1'); // Warga Mengikuti Kegiatan
-                $sheet->mergeCells('AJ1:AJ2'); // Ket
+                foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'L', 'M', 'N', 'O', 'P', 'AB', 'AI'] as $col) {
+                    $sheet->mergeCells("{$col}1:{$col}2");
+                }
+                $sheet->mergeCells('H1:I1');   // Jumlah Anggota Keluarga
+                $sheet->mergeCells('J1:K1');   // Balita
+                $sheet->mergeCells('Q1:R1');   // 3 Buta
+                $sheet->mergeCells('S1:W1');   // Kriteria Rumah
+                $sheet->mergeCells('X1:AA1');  // Sumber Air
+                $sheet->mergeCells('AC1:AD1'); // Makanan
+                $sheet->mergeCells('AE1:AH1'); // Kegiatan
 
                 // ============================================================
                 // STYLE HEADER
                 // ============================================================
-                $lastCol = 'AJ';
+                $lastCol = 'AI';
 
                 $sheet->getStyle("A1:{$lastCol}2")->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
@@ -179,7 +158,7 @@ class RekapKegiatanWargaTemplateExport implements
                 $sheet->getRowDimension(2)->setRowHeight(25);
 
                 // ============================================================
-                // STYLE BARIS DATA
+                // STYLE DATA
                 // ============================================================
                 $lastRow = self::MAX_ROWS + 2;
 
@@ -189,15 +168,18 @@ class RekapKegiatanWargaTemplateExport implements
                     ],
                 ]);
 
+                // Baris contoh (3-7) abu-abu miring
                 $sheet->getStyle("A3:{$lastCol}7")->applyFromArray([
                     'font' => ['italic' => true, 'color' => ['rgb' => '9CA3AF']],
                 ]);
 
-                $sheet->getStyle("B3:B{$lastRow}")
+                // Nama Dusun & RW sebagai teks
+                $sheet->getStyle("B3:C{$lastRow}")
                     ->getNumberFormat()
                     ->setFormatCode(NumberFormat::FORMAT_TEXT);
 
-                $sheet->freezePane('B3');
+                // Freeze sampai kolom RW, supaya identitas dusun/RW tetap terlihat saat scroll
+                $sheet->freezePane('D3');
             },
         ];
     }

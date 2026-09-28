@@ -9,6 +9,26 @@ use Inertia\Inertia;
 
 class KegiatanKecamatanController extends Controller
 {
+    private const SUM_COLUMNS = [
+        'jumlah_rt', 'jumlah_dasa_wisma', 'jumlah_krt', 'jumlah_kk',
+        'total_l', 'total_p', 'balita_l', 'balita_p', 'pus', 'wus',
+        'ibu_hamil', 'ibu_menyusui', 'lansia', 'buta_l', 'buta_p',
+        'rumah_sehat', 'rumah_kurang_sehat', 'memiliki_tempat_sampah',
+        'memiliki_spal', 'memiliki_stiker_p4k',
+        'air_pdam', 'air_sumur', 'air_sungai', 'air_dll',
+        'jumlah_jamban_keluarga',
+        'makanan_pokok_beras', 'makanan_pokok_non_beras',
+        'kegiatan_up2k', 'kegiatan_tanah_pekarangan',
+        'kegiatan_industri_rumah_tangga', 'kegiatan_kesehatan_lingkungan',
+    ];
+
+    private function sumSelect(): string
+    {
+        return collect(self::SUM_COLUMNS)
+            ->map(fn ($c) => "COALESCE(SUM({$c}), 0) as {$c}")
+            ->implode(', ');
+    }
+
     /**
      * List Rekap Kegiatan — rekap per desa di kecamatan user
      */
@@ -19,11 +39,11 @@ class KegiatanKecamatanController extends Controller
         $tahun = (int) $request->input('tahun', date('Y'));
 
         // === BASE QUERY ===
-        // Data sumber: level 'rt' — ga filter level 'desa'
+        // Data sumber: level 'rw' (baris input admin desa)
         $baseQuery = RekapKegiatanWarga::query()
             ->where('kecamatan', $kecamatan)
             ->where('tahun', $tahun)
-            ->where('level', 'rt');
+            ->where('level', 'rw');
 
         // Search desa
         if ($request->filled('search')) {
@@ -36,20 +56,12 @@ class KegiatanKecamatanController extends Controller
 
         // Rekap per desa
         $data = (clone $baseQuery)
-            ->selectRaw('
-                desa,
-                MAX(nama_desa) as nama_desa,
-                SUM(jumlah_kk) as jumlah_kk,
-                SUM(jumlah_krt) as jumlah_krt,
-                SUM(total_l) as total_l,
-                SUM(total_p) as total_p,
-                SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma,
-                SUM(balita_l) as balita_l,
-                SUM(balita_p) as balita_p,
-                SUM(ibu_hamil) as ibu_hamil,
-                SUM(ibu_menyusui) as ibu_menyusui,
-                SUM(lansia) as lansia
-            ')
+            ->selectRaw(
+                'desa, MAX(nama_desa) as nama_desa, '
+                . 'COUNT(DISTINCT dusun) as jumlah_dusun, '
+                . 'COUNT(*) as jumlah_rw, '
+                . $this->sumSelect()
+            )
             ->groupBy('desa')
             ->orderBy('desa')
             ->paginate(15)
@@ -57,7 +69,7 @@ class KegiatanKecamatanController extends Controller
 
         // Statistik total
         $stats = [
-            'total_desa' => (clone $baseQuery)->distinct('desa')->count('desa'),
+            'total_desa' => (clone $baseQuery)->distinct()->count('desa'),
             'total_kk' => (int) (clone $baseQuery)->sum('jumlah_kk'),
             'total_jiwa' => (int) ((clone $baseQuery)
                 ->selectRaw('COALESCE(SUM(total_l + total_p), 0) as total')
@@ -74,7 +86,7 @@ class KegiatanKecamatanController extends Controller
     }
 
     /**
-     * Detail per desa
+     * Detail per desa — 1 baris = 1 RW
      */
     public function show(Request $request, string $desa)
     {
@@ -82,32 +94,22 @@ class KegiatanKecamatanController extends Controller
         $kecamatan = $user->kecamatan;
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        // === QUERY — level rt, by desa ===
-        $data = RekapKegiatanWarga::query()
-            ->where('kecamatan', $kecamatan)
-            ->where('desa', $desa)
-            ->where('tahun', $tahun)
-            ->where('level', 'rt')
-            ->orderBy('dusun')
-            ->orderBy('rw')
-            ->orderBy('rt')
-            ->paginate(20)
-            ->withQueryString();
-
-        $infoDesa = RekapKegiatanWarga::query()
-            ->where('kecamatan', $kecamatan)
-            ->where('desa', $desa)
-            ->where('tahun', $tahun)
-            ->where('level', 'rt')
-            ->first();
-
-        // Statistik desa
+        // === BASE QUERY — level rw, by desa ===
         $baseQuery = RekapKegiatanWarga::query()
             ->where('kecamatan', $kecamatan)
             ->where('desa', $desa)
             ->where('tahun', $tahun)
-            ->where('level', 'rt');
+            ->where('level', 'rw');
 
+        $data = (clone $baseQuery)
+            ->orderBy('dusun')
+            ->orderByRaw("CAST(NULLIF(regexp_replace(rw, '\\D', '', 'g'), '') AS INTEGER)")
+            ->paginate(20)
+            ->withQueryString();
+
+        $infoDesa = (clone $baseQuery)->first();
+
+        // Statistik desa
         $stats = [
             'total_data' => (clone $baseQuery)->count(),
             'total_kk' => (int) (clone $baseQuery)->sum('jumlah_kk'),

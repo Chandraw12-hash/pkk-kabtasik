@@ -35,6 +35,7 @@ class ExportKecamatanPkkController extends Controller
 
     /**
      * Export Kegiatan tingkat kecamatan
+     * Sumber data: baris level RW dari semua desa di kecamatan
      */
     public function kegiatan(Request $request)
     {
@@ -46,9 +47,9 @@ class ExportKecamatanPkkController extends Controller
         return Excel::download(
             new RekapKegiatanWargaExport(
                 $user->kecamatan,
-                null,
+                null,     // null = semua desa di kecamatan
                 $tahun,
-                'desa'
+                'rw'      // ← dulu 'desa'
             ),
             $filename
         );

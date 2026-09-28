@@ -348,8 +348,9 @@ class IndexController extends Controller
             ->orderBy('kecamatan', 'asc')
             ->get();
 
-        // ✅ Rekap Kegiatan Warga
+        // ✅ Rekap Kegiatan Warga (sumber: baris input level RW dari admin desa)
         $rekapKegiatanWarga = RekapKegiatanWarga::query()
+            ->where('level', 'rw')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -385,14 +386,15 @@ class IndexController extends Controller
     }
 
     /**
-     * The public table is one row per kecamatan. Older imports can contain
-     * multiple rows for the same kecamatan, so merge their counters before
-     * sending the data to Inertia.
+     * Tabel publik = 1 baris per kecamatan. Sumbernya baris input level RW
+     * dari semua desa, jadi counter dijumlahkan per kecamatan.
+     * jumlah_dusun & jumlah_rw dihitung dari baris yang masuk (tidak diinput).
      */
     private function gabungkanRekapKegiatanPerKecamatan($items)
     {
+        // jumlah_dusun & jumlah_rw sengaja tidak di sini, dihitung terpisah di bawah
         $numericFields = [
-            'jumlah_dusun', 'jumlah_rw', 'jumlah_rt', 'jumlah_dasa_wisma',
+            'jumlah_rt', 'jumlah_dasa_wisma',
             'jumlah_krt', 'jumlah_kk', 'total_l', 'total_p',
             'balita_l', 'balita_p', 'pus', 'wus', 'ibu_hamil',
             'ibu_menyusui', 'lansia', 'buta_l', 'buta_p', 'rumah_sehat',
@@ -411,7 +413,8 @@ class IndexController extends Controller
                 ));
             })
             ->map(function ($group) use ($numericFields) {
-                $merged = $group->first()->toArray();
+                $first = $group->first();
+                $merged = $first->toArray();
 
                 foreach ($numericFields as $field) {
                     $merged[$field] = $group->sum(
@@ -419,11 +422,26 @@ class IndexController extends Controller
                     );
                 }
 
-                $merged['nama_kecamatan'] =
-                    $group->first()->nama_kecamatan
-                    ?: $group->first()->kecamatan;
-                $merged['kecamatan'] = $group->first()->kecamatan
-                    ?: $group->first()->nama_kecamatan;
+                // 1 baris = 1 RW. Dusun dihitung unik per desa + dusun,
+                // karena beda desa bisa punya nama dusun yang sama.
+                $merged['jumlah_rw'] = $group->count();
+                $merged['jumlah_dusun'] = $group
+                    ->map(fn ($item) => mb_strtolower(trim(
+                        ($item->desa ?? '') . '|' . ($item->dusun ?? '')
+                    )))
+                    ->unique()
+                    ->count();
+
+                // Baris gabungan ini level kecamatan, kosongkan identitas baris pertama
+                $merged['desa'] = null;
+                $merged['nama_desa'] = null;
+                $merged['dusun'] = null;
+                $merged['nama_dusun'] = null;
+                $merged['rw'] = null;
+                $merged['rt'] = null;
+
+                $merged['nama_kecamatan'] = $first->nama_kecamatan ?: $first->kecamatan;
+                $merged['kecamatan'] = $first->kecamatan ?: $first->nama_kecamatan;
 
                 return $merged;
             })

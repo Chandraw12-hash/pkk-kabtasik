@@ -48,13 +48,11 @@ class UserController extends Controller
                       ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            // ✅ TAMBAH: Filter by role
             ->when($request->role, function ($query, $role) {
                 $query->whereHas('roles', function ($q) use ($role) {
                     $q->where('name', $role);
                 });
             })
-            // ✅ TAMBAH: Filter by status
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
             })
@@ -75,7 +73,7 @@ class UserController extends Controller
     {
         return Inertia::render('Backend/Users/Create', [
             'roles' => \Spatie\Permission\Models\Role::all(),
-            'kecamatanList' => self::KECAMATAN_LIST, // ✅ TAMBAH
+            'kecamatanList' => self::KECAMATAN_LIST,
         ]);
     }
 
@@ -90,7 +88,9 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
-            'kecamatan' => 'nullable|string|max:255', // ✅ TAMBAH
+            'kecamatan' => 'nullable|string|max:255',
+            'desa' => 'nullable|string|max:255',        // ✅ TAMBAH
+            'nama_desa' => 'nullable|string|max:255',   // ✅ TAMBAH
         ]);
 
         $user = User::create([
@@ -98,8 +98,10 @@ class UserController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'kecamatan' => $request->kecamatan, // ✅ TAMBAH
-            'status' => 'active', // ✅ TAMBAH — default aktif
+            'kecamatan' => $request->kecamatan,
+            'desa' => $request->desa,           // ✅ TAMBAH
+            'nama_desa' => $request->nama_desa, // ✅ TAMBAH
+            'status' => 'active',
         ]);
 
         $user->assignRole($request->roles);
@@ -117,7 +119,7 @@ class UserController extends Controller
             'user' => $user->load(['roles']),
             'roles' => \Spatie\Permission\Models\Role::all(),
             'userRoles' => $user->getRoleNames(),
-            'kecamatanList' => self::KECAMATAN_LIST, // ✅ TAMBAH
+            'kecamatanList' => self::KECAMATAN_LIST,
         ]);
     }
 
@@ -132,14 +134,18 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'roles' => 'required|array',
-            'kecamatan' => 'nullable|string|max:255', // ✅ TAMBAH
+            'kecamatan' => 'nullable|string|max:255',
+            'desa' => 'nullable|string|max:255',        // ✅ TAMBAH
+            'nama_desa' => 'nullable|string|max:255',   // ✅ TAMBAH
         ]);
 
         $data = [
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'kecamatan' => $request->kecamatan, // ✅ TAMBAH
+            'kecamatan' => $request->kecamatan,
+            'desa' => $request->desa,           // ✅ TAMBAH
+            'nama_desa' => $request->nama_desa, // ✅ TAMBAH
         ];
 
         if ($request->filled('password')) {
@@ -158,7 +164,6 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        // Proteksi: Jangan biarkan user menghapus dirinya sendiri
         if (auth()->id() === $user->id) {
             return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri!');
         }

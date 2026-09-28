@@ -141,7 +141,7 @@ const FALLBACK_IMAGES = {
 
 const HERO_LOGOS = [
     { id: "diskominfo", src: "/assets/logo/diskominfo.jpeg", alt: "Dishubkominfo Kabupaten Tasikmalaya" },
-    { id: "pkk", src: "/assets/logo/logotasik.png", alt: "PKK Kabupaten Tasikmalaya" },
+    { id: "pkk", src: "/assets/logo/logotasik.png", alt: "TP PKK Kabupaten Tasikmalaya" },
     { id: "pemkab", src: "/assets/logo/pemkab.png", alt: "Pemerintah Kabupaten Tasikmalaya" },
 ];
 
@@ -245,8 +245,7 @@ const useHeroCarousel = <T,>(items: T[], interval: number = 5000) => {
 // CUSTOM HOOK - FOCUS TRAP
 // ============================================================
 
-// ✅ FIX: Hapus backtick & titik koma nyasar di akhir string
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])' as const;
 
 const useFocusTrap = (isOpen: boolean) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -418,13 +417,13 @@ export default function Welcome({
     );
 
     return (
-        <div className="min-h-screen flex flex-col bg-white text-slate-800 font-['Poppins',_sans-serif]">
+        <div className="min-h-screen flex flex-col bg-white text-slate-800 font-['Poppins',sans-serif]">
             <Head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-                <title>PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri</title>
+                <title>TP PKK Kabupaten Tasikmalaya</title>
 
                 <link rel="icon" type="image/png" href="/assets/logo/logotasik.png" />
                 <link rel="shortcut icon" type="image/png" href="/assets/logo/logotasik.png" />
@@ -439,7 +438,7 @@ export default function Welcome({
                 <meta name="language" content="id" />
                 <link rel="canonical" href="https://pkk.tasikmalayakab.go.id" />
 
-                <meta property="og:title" content="PKK Kabupaten Tasikmalaya - Sejahtera &amp; Mandiri" />
+                <meta property="og:title" content="TP PKK Kabupaten Tasikmalaya" />
                 <meta property="og:description" content="Situs resmi Tim Penggerak PKK Kabupaten Tasikmalaya." />
                 <meta property="og:type" content="website" />
                 <meta property="og:locale" content="id_ID" />
@@ -473,121 +472,113 @@ export default function Welcome({
             <Navbar />
 
             {/* ===================== HERO SECTION (FIXED) ===================== */}
-<section
-    ref={heroAnim.ref}
-    className={`relative flex items-center justify-center overflow-hidden anim-fade-up ${
-        heroAnim.isVisible ? "show" : ""
-    }`}
-    style={{ minHeight: "100svh" }}
-    aria-label="Hero section"
-    onMouseEnter={heroCarousel.handleMouseEnter}
-    onMouseLeave={heroCarousel.handleMouseLeave}
->
-    <div className="absolute inset-0">
-        {HERO_SLIDES.map((slide, idx) => (
-            <div
-                key={slide.id}
-                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                    idx === heroCarousel.index ? "opacity-100" : "opacity-0"
-                }`}
-                aria-hidden={idx !== heroCarousel.index}
+            <section
+                ref={heroAnim.ref}
+                className={`relative flex items-center justify-center overflow-hidden anim-fade-up ${heroAnim.isVisible ? "show" : ""}`}
+                style={{ minHeight: "100svh" }}
+                aria-label="Hero section"
+                onMouseEnter={heroCarousel.handleMouseEnter}
+                onMouseLeave={heroCarousel.handleMouseLeave}
             >
-                <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    className="w-full h-full object-cover object-center"
-                    loading={idx === 0 ? "eager" : "lazy"}
-                    onError={(event) => {
-                        const target = event.currentTarget;
-                        if (target.src !== getImageFallback("hero")) {
-                            target.src = getImageFallback("hero");
-                        }
-                    }}
-                />
+                <div className="absolute inset-0">
+                    {HERO_SLIDES.map((slide, idx) => (
+                        <div
+                            key={slide.id}
+                            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === heroCarousel.index ? "opacity-100" : "opacity-0"}`}
+                            aria-hidden={idx !== heroCarousel.index}
+                        >
+                            <img
+                                src={slide.src}
+                                alt={slide.alt}
+                                className="w-full h-full object-cover object-center"
+                                loading={idx === 0 ? "eager" : "lazy"}
+                                onError={(event) => {
+                                    const target = event.currentTarget;
+                                    if (target.src !== getImageFallback("hero")) {
+                                        target.src = getImageFallback("hero");
+                                    }
+                                }}
+                            />
+
+                            <div
+                                className="absolute inset-0 bg-slate-900/50"
+                                aria-hidden="true"
+                            />
+                        </div>
+                    ))}
+                </div>
+
+                <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 text-center pt-20 pb-16 sm:pt-24 sm:pb-20">
+                    <span className="inline-block text-teal-100 text-[10px] sm:text-xs font-medium tracking-[0.16em] uppercase mb-3 sm:mb-4">
+                        Tim Penggerak PKK Kabupaten Tasikmalaya
+                    </span>
+
+                    <h1 className="text-[1.65rem] leading-[1.2] sm:text-4xl md:text-5xl font-semibold text-white mb-3 sm:mb-5 tracking-tight">
+                        Membangun Keluarga<br />
+                        Sejahtera &amp; Mandiri<br />
+                        bersama TP PKK
+                    </h1>
+
+                    <p className="text-slate-100 text-sm sm:text-base leading-relaxed max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-7">
+                        Media informasi resmi Tim Penggerak PKK Kabupaten Tasikmalaya dalam mewujudkan pemberdayaan dan kesejahteraan keluarga.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-[240px] sm:max-w-none mx-auto">
+                        <Link
+                            href="/profil/sejarah"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] bg-[#0072BC] hover:bg-[#FFC72C] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-[#FFC72C] focus:ring-offset-2 border border-[#FFC72C]/30"
+                        >
+                            Lihat Profil PKK
+                            <ArrowRight size={15} aria-hidden="true" className="ml-1" />
+                        </Link>
+
+                        <Link
+                            href="#data"
+                            className="inline-flex items-center justify-center gap-2 min-h-[44px] border border-white/60 hover:bg-white/10 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors focus:ring-2 focus:ring-white/50 focus:outline-none"
+                        >
+                            Lihat Data PKK
+                        </Link>
+                    </div>
+
+                    <div
+                        className="logo-marquee-container"
+                        aria-label="Mitra dan instansi terkait"
+                    >
+                        <div className="logo-marquee-track">
+                            {[...HERO_LOGOS, ...HERO_LOGOS].map((logo, idx) => (
+                                <div key={`${logo.id}-${idx}`} className="logo-marquee-item">
+                                    <img
+                                        src={logo.src}
+                                        alt={logo.alt}
+                                        onError={(event) => {
+                                            event.currentTarget.style.display = "none";
+                                        }}
+                                    />
+                                    <span className="label">{logo.alt}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
                 <div
-                    className="absolute inset-0 bg-slate-900/50"
-                    aria-hidden="true"
-                />
-            </div>
-        ))}
-    </div>
-
-    <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 text-center pt-20 pb-16 sm:pt-24 sm:pb-20">
-        <span className="inline-block text-teal-100 text-[10px] sm:text-xs font-medium tracking-[0.16em] uppercase mb-3 sm:mb-4">
-            Tim Penggerak PKK Kabupaten Tasikmalaya
-        </span>
-
-        <h1 className="text-[1.65rem] leading-[1.2] sm:text-4xl md:text-5xl font-semibold text-white mb-3 sm:mb-5 tracking-tight">
-            Membangun Keluarga<br />
-            Sejahtera &amp; Mandiri<br />
-            bersama TP PKK
-        </h1>
-
-        <p className="text-slate-100 text-sm sm:text-base leading-relaxed max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-7">
-            Media informasi resmi Tim Penggerak PKK Kabupaten Tasikmalaya dalam mewujudkan pemberdayaan dan kesejahteraan keluarga.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-[240px] sm:max-w-none mx-auto">
-            <Link
-    href="/profil/sejarah"
-    className="inline-flex items-center justify-center gap-2 min-h-[44px] bg-[#0072BC] hover:bg-[#FFC72C] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-[#FFC72C] focus:ring-offset-2 border border-[#FFC72C]/30"
->
-    Lihat Profil PKK
-    <ArrowRight size={15} aria-hidden="true" className="ml-1" />
-</Link>
-
-            <Link
-                href="#data"
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] border border-white/60 hover:bg-white/10 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors focus:ring-2 focus:ring-white/50 focus:outline-none"
-            >
-                Lihat Data PKK
-            </Link>
-        </div>
-
-        <div
-            className="logo-marquee-container"
-            aria-label="Mitra dan instansi terkait"
-        >
-            <div className="logo-marquee-track">
-                {[...HERO_LOGOS, ...HERO_LOGOS].map((logo, idx) => (
-                    <div key={`${logo.id}-${idx}`} className="logo-marquee-item">
-                        <img
-                            src={logo.src}
-                            alt={logo.alt}
-                            onError={(event) => {
-                                event.currentTarget.style.display = "none";
-                            }}
+                    className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5"
+                    role="tablist"
+                    aria-label="Pilihan slide"
+                >
+                    {HERO_SLIDES.map((slide, idx) => (
+                        <button
+                            key={slide.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={idx === heroCarousel.index}
+                            onClick={() => heroCarousel.goTo(idx)}
+                            className={`h-2 rounded-full transition-all duration-300 ${idx === heroCarousel.index ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"}`}
+                            aria-label={`Tampilkan slide ${idx + 1}`}
                         />
-                        <span className="label">{logo.alt}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    </div>
-
-    <div
-        className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5"
-        role="tablist"
-        aria-label="Pilihan slide"
-    >
-        {HERO_SLIDES.map((slide, idx) => (
-            <button
-                key={slide.id}
-                type="button"
-                role="tab"
-                aria-selected={idx === heroCarousel.index}
-                onClick={() => heroCarousel.goTo(idx)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                    idx === heroCarousel.index
-                        ? "w-6 bg-white"
-                        : "w-2 bg-white/50 hover:bg-white/80"
-                }`}
-                aria-label={`Tampilkan slide ${idx + 1}`}
-            />
-        ))}
-    </div>
-</section>
+                    ))}
+                </div>
+            </section>
 
             {/* ===================== SAMBUTAN KETUA (WARNA BIRU PKK) ===================== */}
             <section ref={sambutanAnim.ref} id="tentang" className={`py-12 sm:py-16 lg:py-20 bg-white border-t border-slate-100 anim-fade-up scroll-mt-20 ${sambutanAnim.isVisible ? "show" : ""}`} aria-labelledby="sambutan-title">

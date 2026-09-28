@@ -15,28 +15,50 @@ use Throwable;
 
 class KegiatanDesaController extends Controller
 {
+    private const SUM_COLUMNS = [
+        'jumlah_rt', 'jumlah_dasa_wisma', 'jumlah_krt', 'jumlah_kk',
+        'total_l', 'total_p', 'balita_l', 'balita_p', 'pus', 'wus',
+        'ibu_hamil', 'ibu_menyusui', 'lansia', 'buta_l', 'buta_p',
+        'rumah_sehat', 'rumah_kurang_sehat', 'memiliki_tempat_sampah',
+        'memiliki_spal', 'memiliki_stiker_p4k',
+        'air_pdam', 'air_sumur', 'air_sungai', 'air_dll',
+        'jumlah_jamban_keluarga',
+        'makanan_pokok_beras', 'makanan_pokok_non_beras',
+        'kegiatan_up2k', 'kegiatan_tanah_pekarangan',
+        'kegiatan_industri_rumah_tangga', 'kegiatan_kesehatan_lingkungan',
+    ];
+
+    private function sumSelect(): string
+    {
+        return collect(self::SUM_COLUMNS)
+            ->map(fn ($c) => "COALESCE(SUM({$c}), 0) as {$c}")
+            ->implode(', ');
+    }
+
     /**
-     * List rekap kegiatan warga — dengan tab level (RT, RW, Dusun, Desa)
+     * List rekap kegiatan warga — tab level (RW, Dusun, Desa)
      *
-     * Data sumber: level RT (dari import)
-     * Level RW, Dusun, Desa: AGREGASI LIVE via GROUP BY
+     * Data sumber: level RW (dari import, 1 baris Excel = 1 RW)
+     * Level Dusun dan Desa: AGREGASI LIVE via GROUP BY
      */
     public function index(Request $request)
     {
         $user = auth()->user();
-        $level = $request->input('level', 'rt');
+        $level = $request->input('level', 'rw');
+        if (!in_array($level, ['rw', 'dusun', 'desa'], true)) {
+            $level = 'rw';
+        }
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        // === BASE QUERY — selalu filter level RT ===
+        // === BASE QUERY — selalu filter level RW (baris input) ===
         $baseQuery = RekapKegiatanWarga::query()
             ->where('kecamatan', $user->kecamatan)
             ->where('desa', $user->desa)
             ->where('tahun', $tahun)
-            ->where('level', 'rt');
+            ->where('level', 'rw');
 
-        // === QUERY — tergantung level ===
-        if ($level === 'rt') {
-            // === LEVEL RT — tampil per RT ===
+        if ($level === 'rw') {
+            // === LEVEL RW — baris apa adanya ===
             $query = clone $baseQuery;
 
             if ($request->filled('dusun')) {
@@ -47,107 +69,45 @@ class KegiatanDesaController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_dusun', 'ilike', "%{$search}%")
-                      ->orWhere('rw', 'ilike', "%{$search}%")
-                      ->orWhere('rt', 'ilike', "%{$search}%");
+                      ->orWhere('rw', 'ilike', "%{$search}%");
                 });
             }
 
             $data = $query->orderBy('dusun')
-                ->orderBy('rw')
-                ->orderBy('rt')
-                ->paginate(15)
-                ->withQueryString();
-
-        } elseif ($level === 'rw') {
-            // === LEVEL RW — GROUP BY dusun + rw ===
-            $data = (clone $baseQuery)
-                ->selectRaw('
-                    kecamatan, desa, nama_kecamatan, nama_desa,
-                    dusun, nama_dusun, rw,
-                    SUM(jumlah_kk) as jumlah_kk,
-                    SUM(jumlah_krt) as jumlah_krt,
-                    SUM(total_l) as total_l,
-                    SUM(total_p) as total_p,
-                    SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma,
-                    SUM(balita_l) as balita_l,
-                    SUM(balita_p) as balita_p,
-                    SUM(pus) as pus,
-                    SUM(wus) as wus,
-                    SUM(ibu_hamil) as ibu_hamil,
-                    SUM(ibu_menyusui) as ibu_menyusui,
-                    SUM(lansia) as lansia
-                ')
-                ->groupBy(
-                    'kecamatan', 'desa', 'nama_kecamatan', 'nama_desa',
-                    'dusun', 'nama_dusun', 'rw'
-                )
-                ->orderBy('dusun')
-                ->orderBy('rw')
+                ->orderByRaw('CAST(NULLIF(regexp_replace(rw, \'\D\', \'\', \'g\'), \'\') AS INTEGER)')
                 ->paginate(15)
                 ->withQueryString();
 
         } elseif ($level === 'dusun') {
             // === LEVEL DUSUN — GROUP BY dusun ===
             $data = (clone $baseQuery)
-                ->selectRaw('
-                    kecamatan, desa, nama_kecamatan, nama_desa,
-                    dusun, nama_dusun,
-                    SUM(jumlah_kk) as jumlah_kk,
-                    SUM(jumlah_krt) as jumlah_krt,
-                    SUM(total_l) as total_l,
-                    SUM(total_p) as total_p,
-                    SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma,
-                    SUM(balita_l) as balita_l,
-                    SUM(balita_p) as balita_p,
-                    SUM(pus) as pus,
-                    SUM(wus) as wus,
-                    SUM(ibu_hamil) as ibu_hamil,
-                    SUM(ibu_menyusui) as ibu_menyusui,
-                    SUM(lansia) as lansia
-                ')
-                ->groupBy(
-                    'kecamatan', 'desa', 'nama_kecamatan', 'nama_desa',
-                    'dusun', 'nama_dusun'
+                ->selectRaw(
+                    'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, '
+                    . 'COUNT(*) as jumlah_rw, ' . $this->sumSelect()
                 )
+                ->groupBy('kecamatan', 'desa', 'nama_kecamatan', 'nama_desa', 'dusun', 'nama_dusun')
                 ->orderBy('dusun')
                 ->paginate(15)
                 ->withQueryString();
 
-        } elseif ($level === 'desa') {
+        } else {
             // === LEVEL DESA — SUM semua ===
             $data = (clone $baseQuery)
-                ->selectRaw('
-                    kecamatan, desa, nama_kecamatan, nama_desa,
-                    SUM(jumlah_kk) as jumlah_kk,
-                    SUM(jumlah_krt) as jumlah_krt,
-                    SUM(total_l) as total_l,
-                    SUM(total_p) as total_p,
-                    SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma,
-                    SUM(balita_l) as balita_l,
-                    SUM(balita_p) as balita_p,
-                    SUM(pus) as pus,
-                    SUM(wus) as wus,
-                    SUM(ibu_hamil) as ibu_hamil,
-                    SUM(ibu_menyusui) as ibu_menyusui,
-                    SUM(lansia) as lansia
-                ')
-                ->groupBy(
-                    'kecamatan', 'desa', 'nama_kecamatan', 'nama_desa'
+                ->selectRaw(
+                    'kecamatan, desa, nama_kecamatan, nama_desa, '
+                    . 'COUNT(DISTINCT dusun) as jumlah_dusun, COUNT(*) as jumlah_rw, '
+                    . $this->sumSelect()
                 )
+                ->groupBy('kecamatan', 'desa', 'nama_kecamatan', 'nama_desa')
                 ->paginate(15)
                 ->withQueryString();
-
-        } else {
-            // Fallback
-            $data = (clone $baseQuery)->paginate(15)->withQueryString();
         }
 
         // === STATISTIK PER LEVEL (COUNT) ===
         $statsPerLevel = [
-            'rt' => (clone $baseQuery)->count(),
-            'rw' => (clone $baseQuery)->distinct('rw')->count('rw'),
-            'dusun' => (clone $baseQuery)->distinct('dusun')->count('dusun'),
-            'desa' => (clone $baseQuery)->distinct('desa')->count('desa'),
+            'rw' => (clone $baseQuery)->count(),
+            'dusun' => (clone $baseQuery)->distinct()->count('dusun'),
+            'desa' => (clone $baseQuery)->exists() ? 1 : 0,
         ];
 
         // === STATISTIK TOTAL ===
@@ -177,7 +137,7 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * Handle import Excel — SINGLE SHEET (level RT)
+     * Handle import Excel — SINGLE SHEET (level RW)
      */
     public function store(Request $request)
     {
@@ -209,7 +169,7 @@ class KegiatanDesaController extends Controller
                 $user->kecamatan,
                 $user->desa,
                 $tahun,
-                'rt'  // ← level default: RT
+                'rw'  // level input: RW
             );
 
             Excel::import($import, $request->file('file'));
@@ -251,7 +211,7 @@ class KegiatanDesaController extends Controller
             return redirect()
                 ->route('desa.kegiatan.index', ['tahun' => $tahun])
                 ->with('success',
-                    "Import berhasil! {$success} data masuk, {$skip} di-skip. Level RW, Dusun, Desa akan dihitung otomatis."
+                    "Import berhasil! {$success} data masuk, {$skip} di-skip. Level Dusun dan Desa akan dihitung otomatis."
                 );
 
         } catch (Throwable $e) {

@@ -3,7 +3,6 @@ import { Head, Link } from '@inertiajs/react';
 import AdminDesaLayout from '@/Components/Layout/AdminDesaLayout';
 import Card from '@/Components/UI/Card';
 import { Users, Upload, Download } from 'lucide-react';
-import TabRT from './TabRT';
 import TabRW from './TabRW';
 import TabDusun from './TabDusun';
 import TabDesa from './TabDesa';
@@ -16,8 +15,8 @@ interface KegiatanIndexProps {
 }
 
 export default function Index({ data, stats, activeLevel, filters }: KegiatanIndexProps) {
+    // Input per RW. Level Dusun dan Desa dihitung otomatis oleh sistem.
     const levels = [
-        { key: 'rt', label: 'RT', component: TabRT },
         { key: 'rw', label: 'RW', component: TabRW },
         { key: 'dusun', label: 'Dusun', component: TabDusun },
         { key: 'desa', label: 'Desa', component: TabDesa },
@@ -38,7 +37,7 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
                             Rekap Kegiatan Warga
                         </h1>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Data kegiatan warga per level
+                            Data diinput per RW, Dusun dan Desa dihitung otomatis
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -69,7 +68,7 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
                                 key={lvl.key}
                                 href={`/desa/kegiatan?level=${lvl.key}`}
                                 className={`px-4 py-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                                    activeLevel === lvl.key
+                                    activeTab.key === lvl.key
                                         ? 'text-teal-600 dark:text-teal-400 border-teal-600 dark:border-teal-400'
                                         : 'text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
@@ -93,7 +92,7 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
                             <StatCard label="Dasa Wisma" value={stats.total_dasa_wisma || 0} />
                         </div>
 
-                        {/* Tab Content — komponen per level */}
+                        {/* Tab Content */}
                         <ActiveComponent data={data?.data || []} />
                     </div>
                 </Card>
@@ -107,7 +106,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
             <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {value.toLocaleString('id-ID')}
+                {Number(value).toLocaleString('id-ID')}
             </p>
         </div>
     );

@@ -14,18 +14,6 @@ use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Validators\Failure;
 use Throwable;
 
-/**
- * PENTING: file template punya HEADER 2 BARIS (merged cells) yang cuma
- * untuk tampilan di Excel. WithHeadingRow tidak dipakai lagi di sini
- * karena baris header itu bakal ke-slug jadi key yang tidak pernah cocok
- * dengan field di bawah (mis. "Nama Kecamatan" -> nama_kecamatan, bukan
- * "dusun"), sehingga SEMUA baris ke-skip walau file-nya valid.
- *
- * Solusinya: baca Excel murni berdasarkan POSISI KOLOM (index 0 = kolom A,
- * dst), mulai dari baris 3 (WithStartRow), sesuai urutan kolom di
- * RekapKegiatanWargaTemplateExport. Kalau urutan kolom di export berubah,
- * WAJIB update juga konstanta COL_* di bawah ini.
- */
 class RekapKegiatanWargaImport implements
     ToModel,
     WithStartRow,
@@ -35,51 +23,42 @@ class RekapKegiatanWargaImport implements
     WithChunkReading,
     WithCalculatedFormulas
 {
-    // === PETA KOLOM (0-based, index array $row) ===
-    // Kolom A=0 ... AJ=35, harus SAMA PERSIS urutannya dengan
-    // RekapKegiatanWargaTemplateExport::registerEvents()
+    // === PETA KOLOM (0-based) — 1 baris Excel = 1 RW ===
     private const COL_NO = 0;
-    private const COL_NAMA_KECAMATAN = 1;
-    private const COL_JUMLAH_DUSUN = 2;
-    private const COL_JUMLAH_RW = 3;
-    private const COL_JUMLAH_RT = 4;
-    private const COL_JUMLAH_DASA_WISMA = 5;
-    private const COL_JUMLAH_KRT = 6;
-    private const COL_JUMLAH_KK = 7;
-    private const COL_TOTAL_L = 8;
-    private const COL_TOTAL_P = 9;
-    private const COL_BALITA_L = 10;
-    private const COL_BALITA_P = 11;
-    private const COL_PUS = 12;
-    private const COL_WUS = 13;
-    private const COL_IBU_HAMIL = 14;
-    private const COL_IBU_MENYUSUI = 15;
-    private const COL_LANSIA = 16;
-    private const COL_BUTA_L = 17;
-    private const COL_BUTA_P = 18;
-    private const COL_RUMAH_SEHAT = 19;
-    private const COL_RUMAH_KURANG_SEHAT = 20;
-    private const COL_TEMPAT_SAMPAH = 21;
-    private const COL_SPAL = 22;
-    private const COL_STIKER_P4K = 23;
-    private const COL_PDAM = 24;
-    private const COL_SUMUR = 25;
-    private const COL_SUNGAI = 26;
-    private const COL_AIR_DLL = 27;
-    private const COL_JAMBAN = 28;
-    private const COL_POKOK_BERAS = 29;
-    private const COL_NON_BERAS = 30;
-    private const COL_UP2K = 31;
-    private const COL_TANAH_PEKARANGAN = 32;
-    private const COL_INDUSTRI_RT = 33;
-    private const COL_KESLING = 34;
-    private const COL_KET = 35;
-
-    // NOTE: kolom "dusun" / "rw" / "rt" (identitas per-RT, dulu ada di
-    // template lama) TIDAK ADA lagi di template baru ini — yang ada cuma
-    // "Nama Kecamatan" + kolom jumlah/agregat. Kalau desain akhirnya tetap
-    // mau import per-baris = per-RT, kolom identitas dusun/rw/rt WAJIB
-    // ditambahkan lagi ke template (lihat catatan di akhir pesan).
+    private const COL_NAMA_DUSUN = 1;
+    private const COL_RW = 2;
+    private const COL_JUMLAH_RT = 3;
+    private const COL_JUMLAH_DASA_WISMA = 4;
+    private const COL_JUMLAH_KRT = 5;
+    private const COL_JUMLAH_KK = 6;
+    private const COL_TOTAL_L = 7;
+    private const COL_TOTAL_P = 8;
+    private const COL_BALITA_L = 9;
+    private const COL_BALITA_P = 10;
+    private const COL_PUS = 11;
+    private const COL_WUS = 12;
+    private const COL_IBU_HAMIL = 13;
+    private const COL_IBU_MENYUSUI = 14;
+    private const COL_LANSIA = 15;
+    private const COL_BUTA_L = 16;
+    private const COL_BUTA_P = 17;
+    private const COL_RUMAH_SEHAT = 18;
+    private const COL_RUMAH_KURANG_SEHAT = 19;
+    private const COL_TEMPAT_SAMPAH = 20;
+    private const COL_SPAL = 21;
+    private const COL_STIKER_P4K = 22;
+    private const COL_PDAM = 23;
+    private const COL_SUMUR = 24;
+    private const COL_SUNGAI = 25;
+    private const COL_AIR_DLL = 26;
+    private const COL_JAMBAN = 27;
+    private const COL_POKOK_BERAS = 28;
+    private const COL_NON_BERAS = 29;
+    private const COL_UP2K = 30;
+    private const COL_TANAH_PEKARANGAN = 31;
+    private const COL_INDUSTRI_RT = 32;
+    private const COL_KESLING = 33;
+    private const COL_KET = 34;
 
     protected string $kecamatan;
     protected string $desa;
@@ -94,7 +73,7 @@ class RekapKegiatanWargaImport implements
         string $kecamatan,
         string $desa,
         int $tahun,
-        string $level = 'rt'
+        string $level = 'rw'
     ) {
         $this->kecamatan = trim($kecamatan);
         $this->desa = trim($desa);
@@ -102,19 +81,11 @@ class RekapKegiatanWargaImport implements
         $this->level = $level;
     }
 
-    /**
-     * Data mulai dibaca dari baris 3 (baris 1-2 = header ganda).
-     */
     public function startRow(): int
     {
         return 3;
     }
 
-    /**
-     * ============================================================
-     * PROSES SETIAP BARIS (array $row berindeks angka, bukan nama kolom)
-     * ============================================================
-     */
     public function model(array $row)
     {
         if ($this->isEmptyRow($row)) {
@@ -122,12 +93,21 @@ class RekapKegiatanWargaImport implements
             return null;
         }
 
-        $namaDusun = $this->clean($row[self::COL_NAMA_KECAMATAN] ?? null);
-        $kk = $this->toInt($row[self::COL_JUMLAH_KK] ?? null);
+        $namaDusun = $this->clean($row[self::COL_NAMA_DUSUN] ?? null);
+        $rw = $this->cleanRw($row[self::COL_RW] ?? null);
 
-        // Baris tanpa identitas & tanpa KK dianggap kosong/contoh, skip.
-        if ($namaDusun === null && $kk === 0) {
+        // Dusun dan RW wajib ada, kalau tidak baris tidak bisa dinaikkan ke level atas
+        if ($namaDusun === null || $rw === null) {
             $this->skipCount++;
+            $this->errors[] = [
+                'type' => 'validation',
+                'message' => 'Baris di-skip: Nama Dusun atau RW kosong.',
+                'values' => [
+                    'no' => $row[self::COL_NO] ?? null,
+                    'dusun' => $namaDusun,
+                    'rw' => $rw,
+                ],
+            ];
             return null;
         }
 
@@ -137,7 +117,7 @@ class RekapKegiatanWargaImport implements
             'tahun' => $this->tahun,
             'level' => $this->level,
             'dusun' => $namaDusun,
-            'rw' => null,
+            'rw' => $rw,
             'rt' => null,
         ];
 
@@ -146,12 +126,11 @@ class RekapKegiatanWargaImport implements
             'nama_desa' => $this->desa,
             'nama_dusun' => $namaDusun,
 
-            'jumlah_dusun' => $this->toInt($row[self::COL_JUMLAH_DUSUN] ?? null),
-            'jumlah_rw' => $this->toInt($row[self::COL_JUMLAH_RW] ?? null),
+            // jumlah_dusun & jumlah_rw dihitung sistem, tidak diinput
             'jumlah_rt' => $this->toInt($row[self::COL_JUMLAH_RT] ?? null),
             'jumlah_dasa_wisma' => $this->toInt($row[self::COL_JUMLAH_DASA_WISMA] ?? null),
             'jumlah_krt' => $this->toInt($row[self::COL_JUMLAH_KRT] ?? null),
-            'jumlah_kk' => $kk,
+            'jumlah_kk' => $this->toInt($row[self::COL_JUMLAH_KK] ?? null),
 
             'total_l' => $this->toInt($row[self::COL_TOTAL_L] ?? null),
             'total_p' => $this->toInt($row[self::COL_TOTAL_P] ?? null),
@@ -186,6 +165,7 @@ class RekapKegiatanWargaImport implements
             'kegiatan_industri_rumah_tangga' => $this->toInt($row[self::COL_INDUSTRI_RT] ?? null),
             'kegiatan_kesehatan_lingkungan' => $this->toInt($row[self::COL_KESLING] ?? null),
 
+            'keterangan' => $this->clean($row[self::COL_KET] ?? null),
             'created_by' => auth()->id(),
         ]);
 
@@ -205,10 +185,7 @@ class RekapKegiatanWargaImport implements
 
     public function onError(Throwable $e): void
     {
-        $this->errors[] = [
-            'type' => 'exception',
-            'message' => $e->getMessage(),
-        ];
+        $this->errors[] = ['type' => 'exception', 'message' => $e->getMessage()];
 
         Log::warning('RekapKegiatanWargaImport error', [
             'level' => $this->level,
@@ -260,5 +237,15 @@ class RekapKegiatanWargaImport implements
         if ($value === null) return null;
         $value = trim((string) $value);
         return $value === '' ? null : $value;
+    }
+
+    /** RW dari Excel bisa terbaca 1, 1.0, "01", atau "RW 01". Samakan jadi "1". */
+    private function cleanRw($value): ?string
+    {
+        $value = $this->clean($value);
+        if ($value === null) return null;
+        if (is_numeric($value)) return (string) (int) $value;
+        if (preg_match('/(\d+)/', $value, $m)) return (string) (int) $m[1];
+        return $value;
     }
 }
