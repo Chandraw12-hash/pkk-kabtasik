@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AdminKecamatanLayout from '@/Components/Layout/AdminKecamatanLayout';
-import Card from "@/Components/UI/Card";
-import Button from "@/Components/UI/Button";
-import TextInput from "@/Components/Form/TextInput";
+import Card from '@/Components/UI/Card';
+import Button from '@/Components/UI/Button';
+import TextInput from '@/Components/Form/TextInput';
 import {
     Building2,
     FileText,
@@ -39,12 +39,8 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
             (item.desa || '').toLowerCase().includes(search.toLowerCase())
         )
         .sort((a, b) => {
-            if (sortBy === 'nama') {
-                return (a.desa || '').localeCompare(b.desa || '');
-            }
-            if (sortBy === 'laporan') {
-                return b.jumlah_laporan - a.jumlah_laporan;
-            }
+            if (sortBy === 'nama') return (a.desa || '').localeCompare(b.desa || '');
+            if (sortBy === 'laporan') return b.jumlah_laporan - a.jumlah_laporan;
             return b.jumlah_dasa_wisma - a.jumlah_dasa_wisma;
         });
 
@@ -106,7 +102,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                             className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                         >
                             <Download size={16} />
-                            <span>Export Excel</span>
+                            <span>Export</span>
                         </Button>
                         <Button
                             variant="secondary"
@@ -129,7 +125,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                         label="Total Desa"
                         value={totalDesa}
                         color="blue"
-                        subtitle="Desa/Kelurahan"
+                        subtitle="Desa / kelurahan"
                     />
                     <StatCard
                         icon={FileText}
@@ -191,15 +187,14 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                             </span>{' '}
                             desa
                         </p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
-                            <BarChart3 className="w-3.5 h-3.5" />
-                            Diurutkan berdasarkan{' '}
-                            {sortBy === 'laporan'
-                                ? 'laporan terbanyak'
-                                : sortBy === 'dasa_wisma'
-                                ? 'dasa wisma terbanyak'
-                                : 'nama desa'}
-                        </p>
+                        {search && (
+                            <button
+                                onClick={() => setSearch('')}
+                                className="text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline"
+                            >
+                                Reset Filter
+                            </button>
+                        )}
                     </div>
 
                     {filteredRekap.length > 0 ? (
@@ -212,7 +207,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
 
                                 return (
                                     <div
-                                        key={item.desa}
+                                        key={`${item.desa}-${index}`}
                                         className="p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                                     >
                                         <div className="flex items-start gap-4">
@@ -228,7 +223,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                                                         <div className="flex items-center gap-2">
                                                             <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
                                                             <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                                                                {item.desa || 'Tidak Ada Desa'}
+                                                                {item.desa || 'Tidak Ada Nama'}
                                                             </h3>
                                                         </div>
                                                     </div>
@@ -236,7 +231,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                                                     {/* Stats */}
                                                     <div className="flex items-center gap-3">
                                                         <div className="text-right">
-                                                            <p className="text-xl font-bold text-teal-600 dark:text-teal-400">
+                                                            <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                                                                 {item.jumlah_laporan}
                                                             </p>
                                                             <p className="text-[10px] text-slate-400 uppercase tracking-wider">
@@ -245,7 +240,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                                                         </div>
                                                         <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
                                                         <div className="text-right">
-                                                            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                                                            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                                                                 {item.jumlah_dasa_wisma}
                                                             </p>
                                                             <p className="text-[10px] text-slate-400 uppercase tracking-wider">
@@ -282,7 +277,7 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                             </p>
                             <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
                                 {search
-                                    ? 'Coba kata kunci lain'
+                                    ? 'Coba ubah filter atau kata kunci'
                                     : 'Belum ada data desa dengan laporan'}
                             </p>
                         </div>
@@ -292,27 +287,51 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                 {/* ============================================================
                     QUICK LINK
                 ============================================================ */}
-                <Link
-                    href="/kecamatan/rekap/dasa-wisma"
-                    className="group block p-5 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 border border-purple-100 dark:border-purple-900 hover:border-purple-300 dark:hover:border-purple-700 transition-all"
-                >
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                <Home className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Link
+                        href="/kecamatan/rekap/kecamatan"
+                        className="group p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-all"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950 flex items-center justify-center">
+                                    <BarChart3 className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-slate-900 dark:text-slate-100">
+                                        Rekap Kecamatan
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Lihat ringkasan kecamatan
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="font-bold text-slate-900 dark:text-slate-100">
-                                    Rekap Per Dasa Wisma
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Lihat rekap data per dasa wisma
-                                </p>
-                            </div>
+                            <ArrowUpRight className="w-5 h-5 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                         </div>
-                        <ArrowUpRight className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                    </div>
-                </Link>
+                    </Link>
+
+                    <Link
+                        href="/kecamatan/rekap/dasa-wisma"
+                        className="group p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700 transition-all"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950 flex items-center justify-center">
+                                    <Home className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-slate-900 dark:text-slate-100">
+                                        Rekap Dasa Wisma
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Lihat rekap per dasa wisma
+                                    </p>
+                                </div>
+                            </div>
+                            <ArrowUpRight className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                        </div>
+                    </Link>
+                </div>
             </div>
         </AdminKecamatanLayout>
     );

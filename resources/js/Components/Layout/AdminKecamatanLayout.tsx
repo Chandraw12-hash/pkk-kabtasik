@@ -10,14 +10,12 @@ import {
     Menu,
     ChevronDown,
     MapPin,
-    Printer,
-    FileSpreadsheet,
     X,
     Moon,
     Sun,
     User,
     Newspaper,
-    Package, // ✅ TAMBAH INI
+    Package,
 } from 'lucide-react';
 
 // 🔥 IMPORT NOTIFIKASI BELL
@@ -386,38 +384,6 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         </div>
                     </div>
 
-                    {/* Export & Print */}
-                    <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
-                        Export & Print
-                    </p>
-
-                    <a
-                        href="/kecamatan/export/excel"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    >
-                        <FileSpreadsheet
-                            size={20}
-                            strokeWidth={2}
-                            className="shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
-                        />
-                        <span>Export Excel</span>
-                    </a>
-
-                    <a
-                        href="/kecamatan/print/kecamatan"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    >
-                        <Printer
-                            size={20}
-                            strokeWidth={2}
-                            className="shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
-                        />
-                        <span>Print Laporan</span>
-                    </a>
                 </nav>
 
                 {/* Footer - User Dropdown */}
