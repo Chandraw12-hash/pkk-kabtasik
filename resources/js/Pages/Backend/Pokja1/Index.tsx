@@ -3,8 +3,6 @@ import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import ConfirmationModal from "@/Components/UI/ConfirmationModal";
-import Badge from "@/Components/UI/Badge";
-import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
@@ -163,76 +161,85 @@ export default function Index({ pokjas, filters = {} }) {
                     )}
                 </div>
 
-                <Table
-                    isLoading={isLoading}
-                    emptyMessage="Belum ada data kegiatan Pokja I. Tambahkan data baru atau import dari Excel."
-                    columns={[
-                        {
-                            header: "#",
-                            className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                            headerClassName: "text-center w-16",
-                            render: (_, index) => {
-                                const currentPage = localPokjas.current_page ?? 1;
-                                const perPageVal = localPokjas.per_page ?? 10;
-                                return (currentPage - 1) * perPageVal + index + 1;
-                            },
-                        },
-                        {
-                            header: "Kategori",
-                            className: "text-center w-36",
-                            headerClassName: "text-center w-36",
-                            render: (item) => (
-                                <div className="flex justify-center">
-                                    <Badge type="info">{item.kategori || "Pokja I"}</Badge>
-                                </div>
-                            ),
-                        },
-                        {
-                            header: "Judul Kegiatan & Deskripsi",
-                            className: "w-auto",
-                            headerClassName: "w-auto",
-                            render: (item) => {
-                                // Data hasil import Excel massal tidak selalu punya judul/deskripsi spesifik,
-                                // jadi tampilkan nama kecamatan sebagai konteks alih-alih tanda "-" polos.
-                                const hasTitle = item.judul_kegiatan && item.judul_kegiatan !== "-";
-                                const hasDesc = item.deskripsi && item.deskripsi !== "-";
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {isLoading ? (
+                        <p className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Memuat data Pokja I...
+                        </p>
+                    ) : localPokjas.data.length > 0 ? (
+                        localPokjas.data.map((item, index) => {
+                            const hasTitle =
+                                item.judul_kegiatan &&
+                                item.judul_kegiatan !== "-";
+                            const hasDesc =
+                                item.deskripsi && item.deskripsi !== "-";
+                            const currentPage = localPokjas.current_page ?? 1;
+                            const perPageVal = localPokjas.per_page ?? 10;
 
-                                return (
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                            {hasTitle ? item.judul_kegiatan : `Rekap Data — ${item.kecamatan || "Tanpa Kecamatan"}`}
-                                        </p>
-                                        <p className="text-xs text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">
-                                            {hasDesc ? item.deskripsi : `Kecamatan: ${item.kecamatan || "-"}`}
+                            return (
+                                <article
+                                    key={item.id}
+                                    className="flex flex-col gap-4 px-5 py-4 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-700/30 sm:flex-row sm:items-center sm:px-6"
+                                >
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                                        {(currentPage - 1) * perPageVal +
+                                            index +
+                                            1}
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                                            <h2 className="min-w-0 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                                {hasTitle
+                                                    ? item.judul_kegiatan
+                                                    : `Rekap Data — ${
+                                                          item.kecamatan ||
+                                                          "Tanpa Kecamatan"
+                                                      }`}
+                                            </h2>
+                                            <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+                                                {item.kategori || "Pokja I"}
+                                            </span>
+                                        </div>
+                                        <p className="line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                            {hasDesc
+                                                ? item.deskripsi
+                                                : `Kecamatan: ${
+                                                      item.kecamatan || "-"
+                                                  }`}
                                         </p>
                                     </div>
-                                );
-                            },
-                        },
-                        {
-                            header: "Aksi",
-                            headerClassName: "text-center w-32",
-                            className: "text-center w-32",
-                            render: (item) => (
-                                <div className="flex items-center justify-center gap-2">
-                                    <Link
-                                        href={route("be.pokja1.edit", item.id)}
-                                        className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
-                                    >
-                                        <Edit2 size={16} />
-                                    </Link>
-                                    <button
-                                        onClick={() => openDeleteModal(item)}
-                                        className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ),
-                        },
-                    ]}
-                    data={localPokjas.data}
-                />
+                                    <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
+                                        <Link
+                                            href={route(
+                                                "be.pokja1.edit",
+                                                item.id
+                                            )}
+                                            aria-label="Edit data Pokja I"
+                                            className="inline-flex items-center justify-center rounded-lg p-2.5 text-slate-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-300 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-300"
+                                        >
+                                            <Edit2 size={16} />
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                openDeleteModal(item)
+                                            }
+                                            aria-label="Hapus data Pokja I"
+                                            className="inline-flex items-center justify-center rounded-lg p-2.5 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-300 dark:hover:bg-rose-950/50 dark:hover:text-rose-300"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </article>
+                            );
+                        })
+                    ) : (
+                        <p className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Belum ada data kegiatan Pokja I. Tambahkan data
+                            baru atau import dari Excel.
+                        </p>
+                    )}
+                </div>
 
                 <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
                     <p className="text-sm text-slate-500 dark:text-slate-200">

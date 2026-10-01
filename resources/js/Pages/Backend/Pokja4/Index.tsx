@@ -1,142 +1,315 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
-import ConfirmationModal from "@/Components/UI/ConfirmationModal";
-import Badge from "@/Components/UI/Badge";
-import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X } from "lucide-react";
+import { Head } from "@inertiajs/react";
+import Tabs, { Pokja4TabId } from "./Tabs";
+import KunjunganPyd from "./KunjunganPyd";
+import KegiatanPosyandu from "./KegiatanPosyandu";
+import Rekapitulasi from "./Rekapitulasi";
+import { Pokja4DataRow } from "./Pokja4TabUtils";
+import DataDisclosure from "./DataDisclosure";
+import {
+    Search,
+    RotateCcw,
+    Download,
+    FileText,
+} from "lucide-react";
 import axios from "axios";
 
-export default function Index({ pokjas, filters = {} }) {
+interface PageProps {
+    pokjas: {
+        data: Pokja4Item[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number | null;
+        to: number | null;
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+    };
+    filters?: {
+        search?: string;
+        per_page?: number;
+        tahun?: number;
+        active_tab?: Pokja4TabId;
+    };
+    tahunList?: number[];
+    kunjungan_pyd?: Pokja4DataRow[];
+    kegiatan_posyandu?: Pokja4DataRow[];
+    rekapitulasi?: Pokja4DataRow[];
+}
+
+interface Pokja4Item {
+    id: number;
+    kecamatan?: string | null;
+    nama_kecamatan?: string | null;
+    tahun?: number | null;
+    kader_kesehatan?: number | null;
+    kader_gizi?: number | null;
+    kader_kesling?: number | null;
+    kader_phbs?: number | null;
+    kader_kb?: number | null;
+    posyandu?: number | null;
+    imunisasi?: number | null;
+    pkg?: number | null;
+    tbc?: number | null;
+    jamban_keluarga?: number | null;
+    spal?: number | null;
+    tps?: number | null;
+    mck?: number | null;
+    air_pdam?: number | null;
+    air_sumur?: number | null;
+    air_lainnya?: number | null;
+    jumlah_pus?: number | null;
+    jumlah_wus?: number | null;
+    akseptor_kb_l?: number | null;
+    akseptor_kb_p?: number | null;
+    tabungan_keluarga?: number | null;
+    asuransi_kesehatan?: number | null;
+    phbs?: number | null;
+    program_kesehatan?: string | null;
+    program_lingkungan?: string | null;
+    program_perencanaan?: string | null;
+}
+
+const kaderFields: Array<{ key: keyof Pokja4Item; label: string }> = [
+    { key: "kader_kesehatan", label: "KES." },
+    { key: "kader_gizi", label: "GIZI" },
+    { key: "kader_kesling", label: "KESLING" },
+    { key: "kader_phbs", label: "PHBS" },
+    { key: "kader_kb", label: "KB" },
+];
+
+const valueFields: Array<{ key: keyof Pokja4Item; label: string }> = [
+    ...kaderFields,
+    { key: "posyandu", label: "POSYANDU" },
+    { key: "imunisasi", label: "IMUNISASI" },
+    { key: "pkg", label: "PKG" },
+    { key: "tbc", label: "TBC" },
+    { key: "jamban_keluarga", label: "JAMBAN" },
+    { key: "spal", label: "SPAL" },
+    { key: "tps", label: "TPS" },
+    { key: "mck", label: "MCK" },
+    { key: "air_pdam", label: "PDAM" },
+    { key: "air_sumur", label: "SUMUR" },
+    { key: "air_lainnya", label: "LAIN" },
+    { key: "jumlah_pus", label: "PUS" },
+    { key: "jumlah_wus", label: "WUS" },
+    { key: "akseptor_kb_l", label: "L" },
+    { key: "akseptor_kb_p", label: "P" },
+    { key: "tabungan_keluarga", label: "TABUNGAN" },
+    { key: "asuransi_kesehatan", label: "ASURANSI" },
+];
+
+const programFields: Array<{ key: keyof Pokja4Item; label: string }> = [
+    { key: "program_kesehatan", label: "KESEHATAN" },
+    { key: "program_lingkungan", label: "LINGKUNGAN" },
+    { key: "program_perencanaan", label: "PERENCANAAN" },
+];
+
+const numberValue = (item: Pokja4Item, key: keyof Pokja4Item) =>
+    Number(item[key]) || 0;
+const formattedNumber = (value: number) => value.toLocaleString("id-ID");
+
+export default function Index({
+    pokjas,
+    filters = {},
+    tahunList = [],
+    kunjungan_pyd = [],
+    kegiatan_posyandu = [],
+    rekapitulasi = [],
+}: PageProps) {
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [showImportModal, setShowImportModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
+    const currentYear = new Date().getFullYear();
+    const [tahun, setTahun] = useState(filters.tahun || currentYear);
+    const [activeTab, setActiveTab] = useState<Pokja4TabId>(
+        filters.active_tab || "pokja4"
+    );
+    const [kunjunganData, setKunjunganData] = useState(kunjungan_pyd);
+    const [posyanduData, setPosyanduData] = useState(kegiatan_posyandu);
+    const [rekapitulasiData, setRekapitulasiData] = useState(rekapitulasi);
+    const [availableYears, setAvailableYears] = useState(tahunList);
 
-    const [localPokjas, setLocalPokjas] = useState({
+    const [localData, setLocalData] = useState({
         ...pokjas,
         data: pokjas?.data || [],
     });
     const [isLoading, setIsLoading] = useState(false);
-    const isFirstRender = React.useRef(true);
+    const isFirstRender = useRef(true);
 
-    const { delete: destroy, processing } = useForm({});
-
-    const importForm = useForm({
-        file: null,
-    });
-
-    const fetchData = (url, params = {}) => {
+    // ========================================================
+    // FETCH DATA
+    // ========================================================
+    const fetchData = (url: string, params: Record<string, unknown> = {}) => {
         setIsLoading(true);
         axios
-            .get(url, { params, headers: { Accept: "application/json" } })
+            .get(url, {
+                params,
+                headers: { Accept: "application/json" },
+            })
             .then((res) => {
-                if (res.data && typeof res.data === "object" && "data" in res.data) {
-                    setLocalPokjas(res.data);
-                } else if (Array.isArray(res.data)) {
-                    setLocalPokjas((prev) => ({ ...prev, data: res.data }));
+                if (res.data?.pokjas) {
+                    setLocalData(res.data.pokjas);
+                    setKunjunganData(res.data.kunjungan_pyd || []);
+                    setPosyanduData(res.data.kegiatan_posyandu || []);
+                    setRekapitulasiData(res.data.rekapitulasi || []);
+                    setAvailableYears(res.data.tahunList || []);
                 }
             })
-            .catch((err) => console.error("Error fetching data:", err))
+            .catch((err) => console.error(err))
             .finally(() => setIsLoading(false));
     };
 
+    // ========================================================
+    // EFFECT — SEARCH & FILTER
+    // ========================================================
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
             return;
         }
-
         const timeout = setTimeout(() => {
-            fetchData(route("be.pokja4.index"), { search, per_page: perPage });
+            fetchData(route("be.pokja4.index"), {
+                search,
+                per_page: perPage,
+                tahun,
+            });
         }, 300);
-
         return () => clearTimeout(timeout);
-    }, [search, perPage]);
+    }, [search, perPage, tahun]);
 
-    const openDeleteModal = (item) => {
-        setSelectedItem(item);
-        setShowDeleteModal(true);
+    // ========================================================
+    // SYNC PROP
+    // ========================================================
+    useEffect(() => {
+        if (pokjas) {
+            setLocalData({
+                ...pokjas,
+                data: pokjas?.data || [],
+            });
+        }
+        setKunjunganData(kunjungan_pyd);
+        setPosyanduData(kegiatan_posyandu);
+        setRekapitulasiData(rekapitulasi);
+        setAvailableYears(tahunList);
+    }, [pokjas, kunjungan_pyd, kegiatan_posyandu, rekapitulasi, tahunList]);
+
+    // ========================================================
+    // RESET FILTER
+    // ========================================================
+    const handleReset = () => {
+        setSearch("");
+        setPerPage(10);
+        setTahun(currentYear);
     };
 
-    const handleDelete = () => {
-        if (!selectedItem) return;
-
-        destroy(route("be.pokja4.destroy", selectedItem.id), {
-            onSuccess: () => {
-                setShowDeleteModal(false);
-                setSelectedItem(null);
-                fetchData(route("be.pokja4.index"), { search, per_page: perPage });
-            },
-        });
+    const hasActiveFilter =
+        Boolean(search) || perPage !== 10 || tahun !== currentYear;
+    const exportUrls: Record<Pokja4TabId, string> = {
+        pokja4: `/pokja-4/export?tahun=${tahun}`,
+        kunjungan: `/pokja-4/export-pyd?tahun=${tahun}`,
+        posyandu: `/pokja-4/export-posyandu?tahun=${tahun}`,
+        rekapitulasi: `/pokja-4/export-rekap?tahun=${tahun}`,
     };
-
-    const handleImportSubmit = (e) => {
-        e.preventDefault();
-        importForm.post(route("be.pokja4.import"), {
-            onSuccess: () => {
-                setShowImportModal(false);
-                importForm.reset();
-                fetchData(route("be.pokja4.index"), { search, per_page: perPage });
-            },
-        });
-    };
-
+    // ========================================================
+    // RENDER
+    // ========================================================
     return (
         <MainLayout>
-            <Head title="Manajemen Data Pokja IV" />
+            <Head title="Data Pokja IV" />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            {/* ─── HEADER ─── */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Manajemen Data Pokja IV
+                        Data Pokja IV
                     </h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola data rekapitulasi kesehatan, posyandu, dan keluarga berencana Pokja IV TP PKK
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                        Data rekapitulasi Pokja IV —{" "}
+                        <span className="font-semibold text-teal-600">
+                            diinput oleh Pokja Mobile
+                        </span>
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
-                        type="button"
                         variant="secondary"
-                        onClick={() => setShowImportModal(true)}
-                        className="flex items-center gap-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                        href={exportUrls[activeTab]}
+                        target="_blank"
+                        className="flex items-center gap-2"
                     >
-                        <Upload size={16} />
-                        <span>Import Excel</span>
-                    </Button>
-                    <Button
-                        variant="primary"
-                        href={route("be.pokja4.create")}
-                        className="shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2"
-                    >
-                        <Plus size={16} />
-                        <span>Tambah Data</span>
+                        <Download size={16} />
+                        <span>Export Excel</span>
                     </Button>
                 </div>
             </div>
 
-            <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50">
-                <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex items-center gap-4">
-                    <div className="relative w-full max-w-md">
+            {/* ─── INFO BANNER ─── */}
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 rounded-xl flex items-start gap-3">
+                <FileText
+                    size={18}
+                    className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0"
+                />
+                <div className="text-sm">
+                    <p className="font-semibold text-blue-800 dark:text-blue-300">
+                        Data read-only
+                    </p>
+                    <p className="text-blue-700 dark:text-blue-400 mt-0.5">
+                        Data ini diinput oleh Pokja melalui aplikasi mobile
+                        dan otomatis disinkronkan setelah approve.
+                    </p>
+                </div>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+                <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+            {/* ─── CARD ─── */}
+            {activeTab === "pokja4" && (
+            <Card
+                id="pokja4-panel-pokja4"
+                role="tabpanel"
+                aria-labelledby="pokja4-tab-pokja4"
+                className="rounded-t-none border-0 shadow-none dark:bg-slate-800 dark:border-0"
+            >
+                {/* Filter Bar */}
+                <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex flex-col md:flex-row md:items-center gap-3">
+                    <div className="relative flex-1 min-w-[200px] max-w-md">
                         <TextInput
                             iconLeft={<Search size={18} />}
-                            placeholder="Cari nama kecamatan..."
+                            placeholder="Cari kecamatan..."
                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             containerClassName="relative w-full"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    {search && (
+
+                    <select
+                        value={tahun}
+                        onChange={(e) => setTahun(parseInt(e.target.value, 10))}
+                        className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
+                        aria-label="Pilih tahun data"
+                    >
+                        {availableYears.length > 0 ? (
+                            availableYears.map((year) => (
+                                <option key={year} value={year}>
+                                    {year}
+                                </option>
+                            ))
+                        ) : (
+                            <option value={tahun}>{tahun}</option>
+                        )}
+                    </select>
+
+                    {hasActiveFilter && (
                         <Button
                             variant="danger"
-                            onClick={() => { setSearch(""); setPerPage(10); }}
+                            onClick={handleReset}
                             className="flex items-center gap-2"
                         >
                             <RotateCcw size={16} />
@@ -145,114 +318,133 @@ export default function Index({ pokjas, filters = {} }) {
                     )}
                 </div>
 
-                <div className="overflow-x-auto">
-                    <Table
-                        isLoading={isLoading}
-                        columns={[
-                            {
-                                header: "#",
-                                className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                                headerClassName: "text-center w-16",
-                                render: (_, index) => {
-                                    const currentPage = localPokjas.current_page ?? 1;
-                                    const perPageVal = localPokjas.per_page ?? 10;
-                                    return (currentPage - 1) * perPageVal + index + 1;
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {isLoading ? (
+                        <p className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Memuat data Pokja IV...
+                        </p>
+                    ) : localData.data.length > 0 ? (
+                        localData.data.map((item, index) => {
+                            const detailGroups = [
+                                {
+                                    title: "Kesehatan",
+                                    keys: valueFields.slice(0, 9),
                                 },
-                            },
-                            {
-                                header: "Nama Kecamatan",
-                                className: "font-bold text-slate-700 dark:text-slate-200 min-w-[160px]",
-                                headerClassName: "min-w-[160px]",
-                                render: (item) => (
-                                    <div>
-                                        <p className="font-semibold text-slate-800 dark:text-slate-200">
-                                            {item.nama_kecamatan || item.kecamatan}
-                                        </p>
-                                        <span className="text-xs text-slate-400">
-                                            Kategori: {item.kategori || 'Umum'}
-                                        </span>
-                                    </div>
-                                ),
-                            },
-                            {
-                                header: "Posyandu",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.posyandu ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "Akseptor KB",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.akseptor_kb ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "PHBS",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.phbs ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "Jamban Keluarga",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.jamban_keluarga ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "Aksi",
-                                headerClassName: "text-center w-32",
-                                className: "text-center w-32",
-                                render: (item) => (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Link
-                                            href={route("be.pokja4.edit", item.id)}
-                                            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
-                                        >
-                                            <Edit2 size={16} />
-                                        </Link>
-                                        <button
-                                            onClick={() => openDeleteModal(item)}
-                                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ),
-                            },
-                        ]}
-                        data={localPokjas.data}
-                    />
+                                {
+                                    title: "Kelestarian lingkungan",
+                                    keys: valueFields.slice(9, 16),
+                                },
+                                {
+                                    title: "Perencanaan sehat",
+                                    keys: valueFields.slice(16),
+                                },
+                            ];
+
+                            return (
+                                <DataDisclosure
+                                    key={item.id}
+                                    number={
+                                        (localData.current_page - 1) *
+                                            localData.per_page +
+                                        index +
+                                        1
+                                    }
+                                    title={
+                                        item.nama_kecamatan ||
+                                        item.kecamatan ||
+                                        "Kecamatan belum ditentukan"
+                                    }
+                                    description={`Data Pokja IV · ${item.tahun || tahun}`}
+                                    metrics={[
+                                        {
+                                            label: "Jumlah kader",
+                                            value: formattedNumber(
+                                                kaderFields.reduce(
+                                                    (sum, field) =>
+                                                        sum +
+                                                        numberValue(
+                                                            item,
+                                                            field.key
+                                                        ),
+                                                    0
+                                                )
+                                            ),
+                                        },
+                                        {
+                                            label: "Posyandu",
+                                            value: formattedNumber(
+                                                numberValue(item, "posyandu")
+                                            ),
+                                        },
+                                        {
+                                            label: "PUS",
+                                            value: formattedNumber(
+                                                numberValue(item, "jumlah_pus")
+                                            ),
+                                        },
+                                        {
+                                            label: "WUS",
+                                            value: formattedNumber(
+                                                numberValue(item, "jumlah_wus")
+                                            ),
+                                        },
+                                    ]}
+                                    groups={[
+                                        ...detailGroups.map((group) => ({
+                                            title: group.title,
+                                            fields: group.keys.map((field) => ({
+                                                label: field.label,
+                                                value: formattedNumber(
+                                                    numberValue(item, field.key)
+                                                ),
+                                            })),
+                                        })),
+                                        {
+                                            title: "Program unggulan",
+                                            fields: programFields.map(
+                                                (field) => ({
+                                                    label: field.label,
+                                                    value: item[field.key] || "—",
+                                                })
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            );
+                        })
+                    ) : (
+                        <p className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Belum ada data Pokja IV untuk tahun {tahun}.
+                        </p>
+                    )}
                 </div>
 
-                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
-                    <p className="text-sm text-slate-500 dark:text-slate-200">
-                        Menampilkan <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.from ?? 0}</span> sampai{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.to ?? 0}</span> dari{" "}
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{localPokjas.total ?? 0}</span> data
+                {/* Pagination */}
+                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-slate-500">
+                        Menampilkan{" "}
+                        <span className="font-bold text-slate-800">
+                            {localData.from ?? 0}
+                        </span>{" "}
+                        sampai{" "}
+                        <span className="font-bold text-slate-800">
+                            {localData.to ?? 0}
+                        </span>{" "}
+                        dari{" "}
+                        <span className="font-bold text-slate-800">
+                            {localData.total ?? 0}
+                        </span>{" "}
+                        data
                     </p>
 
-                    <div className="flex items-center gap-3 text-sm text-slate-400">
+                    <div className="flex items-center gap-3 text-sm text-slate-500">
                         <span>Tampilkan</span>
                         <select
                             value={perPage}
-                            onChange={(e) => setPerPage(parseInt(e.target.value))}
-                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-3 focus:ring-indigo-500/10 focus:border-indigo-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            onChange={(e) =>
+                                setPerPage(parseInt(e.target.value))
+                            }
+                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl py-1.5 px-3 outline-none cursor-pointer dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -261,71 +453,62 @@ export default function Index({ pokjas, filters = {} }) {
                         </select>
                     </div>
 
-                    <Pagination links={localPokjas.links} onPageChange={(url) => fetchData(url)} />
+                    <Pagination
+                        links={localData.links}
+                        onPageChange={(url: string) => fetchData(url)}
+                    />
                 </div>
             </Card>
-
-            {/* Modal Import Excel Pokja IV */}
-            {showImportModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md shadow-xl border border-slate-100 dark:border-slate-700">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                                Import Data Excel Pokja IV
-                            </h3>
-                            <button
-                                onClick={() => setShowImportModal(false)}
-                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleImportSubmit}>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Pilih File Excel (.xlsx, .xls, .csv)
-                                </label>
-                                <input
-                                    type="file"
-                                    accept=".xlsx, .xls, .csv"
-                                    onChange={(e) => importForm.setData("file", e.target.files[0])}
-                                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-700 dark:file:text-indigo-400 cursor-pointer border border-slate-200 dark:border-slate-700 rounded-xl p-2"
-                                />
-                                {importForm.errors.file && (
-                                    <p className="text-sm text-rose-500 mt-1">{importForm.errors.file}</p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-end gap-3 mt-6">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => setShowImportModal(false)}
-                                >
-                                    Batal
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    disabled={importForm.processing}
-                                >
-                                    {importForm.processing ? "Mengimport..." : "Upload & Import"}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
             )}
 
-            <ConfirmationModal
-                show={showDeleteModal}
-                processing={processing}
-                title="Hapus Data Pokja IV"
-                message="Apakah Anda yakin ingin menghapus data rekapitulasi Pokja IV ini? Data yang dihapus tidak dapat dikembalikan."
-                onConfirm={handleDelete}
-                onCancel={() => setShowDeleteModal(false)}
-            />
+            {activeTab === "kunjungan" && (
+                <section
+                    id="pokja4-panel-kunjungan"
+                    role="tabpanel"
+                    aria-labelledby="pokja4-tab-kunjungan"
+                    className="bg-white dark:bg-slate-800"
+                >
+                    <KunjunganPyd
+                        data={kunjunganData}
+                        year={tahun}
+                        years={availableYears}
+                        onYearChange={setTahun}
+                    />
+                </section>
+            )}
+
+            {activeTab === "posyandu" && (
+                <section
+                    id="pokja4-panel-posyandu"
+                    role="tabpanel"
+                    aria-labelledby="pokja4-tab-posyandu"
+                    className="bg-white dark:bg-slate-800"
+                >
+                    <KegiatanPosyandu
+                        data={posyanduData}
+                        year={tahun}
+                        years={availableYears}
+                        onYearChange={setTahun}
+                    />
+                </section>
+            )}
+
+            {activeTab === "rekapitulasi" && (
+                <section
+                    id="pokja4-panel-rekapitulasi"
+                    role="tabpanel"
+                    aria-labelledby="pokja4-tab-rekapitulasi"
+                    className="bg-white dark:bg-slate-800"
+                >
+                    <Rekapitulasi
+                        data={rekapitulasiData}
+                        year={tahun}
+                        years={availableYears}
+                        onYearChange={setTahun}
+                    />
+                </section>
+            )}
+            </div>
         </MainLayout>
     );
 }

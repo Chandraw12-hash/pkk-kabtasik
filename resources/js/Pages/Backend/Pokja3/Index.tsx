@@ -3,11 +3,19 @@ import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import ConfirmationModal from "@/Components/UI/ConfirmationModal";
-import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X } from "lucide-react";
+import {
+    Search,
+    Edit2,
+    Trash2,
+    RotateCcw,
+    Plus,
+    Upload,
+    X,
+    ChevronDown,
+} from "lucide-react";
 import axios from "axios";
 
 export default function Index({ pokjas, filters = {} }) {
@@ -147,99 +155,268 @@ export default function Index({ pokjas, filters = {} }) {
                     )}
                 </div>
 
-                <div className="overflow-x-auto">
-                    <Table
-                        isLoading={isLoading}
-                        columns={[
-                            {
-                                header: "#",
-                                className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-16",
-                                headerClassName: "text-center w-16",
-                                render: (_, index) => {
-                                    const currentPage = localPokjas.current_page ?? 1;
-                                    const perPageVal = localPokjas.per_page ?? 10;
-                                    return (currentPage - 1) * perPageVal + index + 1;
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {isLoading ? (
+                        <p className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Memuat data Pokja III...
+                        </p>
+                    ) : localPokjas.data.length > 0 ? (
+                        localPokjas.data.map((item, index) => {
+                            const currentPage = localPokjas.current_page ?? 1;
+                            const perPageVal = localPokjas.per_page ?? 10;
+                            const metrics = [
+                                {
+                                    label: "Rumah sehat",
+                                    value: item.rumah_sehat ?? 0,
                                 },
-                            },
-                            {
-                                header: "Nama Kecamatan",
-                                className: "font-bold text-slate-700 dark:text-slate-200 min-w-[160px]",
-                                headerClassName: "min-w-[160px]",
-                                render: (item) => (
-                                    <div>
-                                        <p className="font-semibold text-slate-800 dark:text-slate-200">
-                                            {item.nama_kecamatan || item.kecamatan}
-                                        </p>
-                                        <span className="text-xs text-slate-400">
-                                            Kategori: {item.kategori || 'Umum'}
-                                        </span>
-                                    </div>
-                                ),
-                            },
-                            {
-                                header: "Rumah Sehat",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.rumah_sehat ?? 0}
+                                {
+                                    label: "Rumah tidak sehat",
+                                    value: item.rumah_tidak_sehat ?? 0,
+                                },
+                                {
+                                    label: "Pemanfaatan pekarangan",
+                                    value: item.pemanfaatan_pekarangan ?? 0,
+                                },
+                                {
+                                    label: "Industri rumah tangga",
+                                    value: item.industri_rumah_tangga ?? 0,
+                                },
+                            ];
+
+                            return (
+                                <article
+                                    key={item.id}
+                                    className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-700/30 sm:flex-row sm:items-start sm:px-6"
+                                >
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                                        {(currentPage - 1) * perPageVal +
+                                            index +
+                                            1}
                                     </span>
-                                ),
-                            },
-                            {
-                                header: "Rumah Tidak Sehat",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.rumah_tidak_sehat ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "Pemanfaatan Pekarangan",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.pemanfaatan_pekarangan ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "Industri Rumah Tangga",
-                                className: "text-center",
-                                headerClassName: "text-center",
-                                render: (item) => (
-                                    <span className="font-medium text-slate-600 dark:text-slate-300">
-                                        {item.industri_rumah_tangga ?? 0}
-                                    </span>
-                                ),
-                            },
-                            {
-                                header: "Aksi",
-                                headerClassName: "text-center w-32",
-                                className: "text-center w-32",
-                                render: (item) => (
-                                    <div className="flex items-center justify-center gap-2">
+                                    <details className="group min-w-0 flex-1">
+                                        <summary className="list-none cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-600 [&::-webkit-details-marker]:hidden">
+                                            <div className="flex flex-col gap-4 py-1 xl:flex-row xl:items-center">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                                                        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                                            {item.nama_kecamatan ||
+                                                                item.kecamatan ||
+                                                                "Kecamatan belum ditentukan"}
+                                                        </h2>
+                                                        <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+                                                            {item.kategori ||
+                                                                "Umum"}
+                                                        </span>
+                                                    </div>
+                                                    <p className="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+                                                        {item.judul_kegiatan ||
+                                                            "Rekap Pokja III"}
+                                                    </p>
+                                                </div>
+                                                <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4 xl:max-w-3xl">
+                                                    {metrics.map((metric) => (
+                                                        <div
+                                                            key={metric.label}
+                                                            className="min-w-0"
+                                                        >
+                                                            <dt className="truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                                                {metric.label}
+                                                            </dt>
+                                                            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+                                                                {metric.value}
+                                                            </dd>
+                                                        </div>
+                                                    ))}
+                                                </dl>
+                                                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-700 dark:text-teal-300">
+                                                    <span className="group-open:hidden">
+                                                        Lihat rincian
+                                                    </span>
+                                                    <span className="hidden group-open:inline">
+                                                        Tutup rincian
+                                                    </span>
+                                                    <ChevronDown
+                                                        size={16}
+                                                        className="transition-transform group-open:rotate-180"
+                                                        aria-hidden="true"
+                                                    />
+                                                </span>
+                                            </div>
+                                        </summary>
+                                        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/40 sm:p-5">
+                                            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                                                <section>
+                                                    <h3 className="mb-3 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                                        Identitas data
+                                                    </h3>
+                                                    <dl className="space-y-2 text-sm">
+                                                        <div className="flex justify-between gap-3">
+                                                            <dt className="text-slate-500 dark:text-slate-400">
+                                                                Kecamatan
+                                                            </dt>
+                                                            <dd className="text-right font-medium text-slate-700 dark:text-slate-200">
+                                                                {item.kecamatan ||
+                                                                    "—"}
+                                                            </dd>
+                                                        </div>
+                                                        <div className="flex justify-between gap-3">
+                                                            <dt className="text-slate-500 dark:text-slate-400">
+                                                                Nama kecamatan
+                                                            </dt>
+                                                            <dd className="text-right font-medium text-slate-700 dark:text-slate-200">
+                                                                {item.nama_kecamatan ||
+                                                                    "—"}
+                                                            </dd>
+                                                        </div>
+                                                        <div className="flex justify-between gap-3">
+                                                            <dt className="text-slate-500 dark:text-slate-400">
+                                                                Kategori
+                                                            </dt>
+                                                            <dd className="text-right font-medium text-slate-700 dark:text-slate-200">
+                                                                {item.kategori ||
+                                                                    "Umum"}
+                                                            </dd>
+                                                        </div>
+                                                    </dl>
+                                                </section>
+                                                <section>
+                                                    <h3 className="mb-3 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                                        Rumah & lingkungan
+                                                    </h3>
+                                                    <dl className="space-y-2 text-sm">
+                                                        {[
+                                                            {
+                                                                label: "Rumah sehat",
+                                                                value: item.rumah_sehat,
+                                                            },
+                                                            {
+                                                                label: "Rumah tidak sehat",
+                                                                value: item.rumah_tidak_sehat,
+                                                            },
+                                                            {
+                                                                label: "Jumlah rumah",
+                                                                value: item.jumlah_rumah,
+                                                            },
+                                                            {
+                                                                label: "Pemanfaatan pekarangan",
+                                                                value: item.pemanfaatan_pekarangan,
+                                                            },
+                                                            {
+                                                                label: "Industri rumah tangga",
+                                                                value: item.industri_rumah_tangga,
+                                                            },
+                                                        ].map((field) => (
+                                                            <div
+                                                                key={field.label}
+                                                                className="flex justify-between gap-3"
+                                                            >
+                                                                <dt className="text-slate-500 dark:text-slate-400">
+                                                                    {field.label}
+                                                                </dt>
+                                                                <dd className="text-right font-medium tabular-nums text-slate-700 dark:text-slate-200">
+                                                                    {field.value ??
+                                                                        0}
+                                                                </dd>
+                                                            </div>
+                                                        ))}
+                                                    </dl>
+                                                </section>
+                                                <section>
+                                                    <h3 className="mb-3 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                                        Kader & program
+                                                    </h3>
+                                                    <dl className="space-y-2 text-sm">
+                                                        {[
+                                                            {
+                                                                label: "Jumlah kader",
+                                                                value: item.jumlah_kader,
+                                                            },
+                                                            {
+                                                                label: "Jumlah kader perempuan",
+                                                                value: item.jumlah_kader_p,
+                                                            },
+                                                            {
+                                                                label: "Makanan pokok",
+                                                                value: item.makanan_pokok,
+                                                            },
+                                                            {
+                                                                label: "HATINYA PKK",
+                                                                value: item.hatinya_pkk,
+                                                            },
+                                                        ].map((field) => (
+                                                            <div
+                                                                key={field.label}
+                                                                className="flex justify-between gap-3"
+                                                            >
+                                                                <dt className="text-slate-500 dark:text-slate-400">
+                                                                    {field.label}
+                                                                </dt>
+                                                                <dd className="text-right font-medium tabular-nums text-slate-700 dark:text-slate-200">
+                                                                    {field.value ??
+                                                                        0}
+                                                                </dd>
+                                                            </div>
+                                                        ))}
+                                                    </dl>
+                                                </section>
+                                                <section className="sm:col-span-2 xl:col-span-3">
+                                                    <h3 className="mb-3 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                                        Keterangan kegiatan
+                                                    </h3>
+                                                    <dl className="space-y-3 text-sm">
+                                                        <div>
+                                                            <dt className="font-medium text-slate-500 dark:text-slate-400">
+                                                                Judul kegiatan
+                                                            </dt>
+                                                            <dd className="mt-1 text-slate-700 dark:text-slate-200">
+                                                                {item.judul_kegiatan ||
+                                                                    "—"}
+                                                            </dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt className="font-medium text-slate-500 dark:text-slate-400">
+                                                                Deskripsi
+                                                            </dt>
+                                                            <dd className="mt-1 whitespace-pre-wrap text-slate-700 dark:text-slate-200">
+                                                                {item.deskripsi ||
+                                                                    "—"}
+                                                            </dd>
+                                                        </div>
+                                                    </dl>
+                                                </section>
+                                            </div>
+                                        </div>
+                                    </details>
+                                    <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
                                         <Link
-                                            href={route("be.pokja3.edit", item.id)}
-                                            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl active:scale-90 transition-all cursor-pointer inline-flex items-center"
+                                            href={route(
+                                                "be.pokja3.edit",
+                                                item.id
+                                            )}
+                                            aria-label="Edit data Pokja III"
+                                            className="inline-flex items-center justify-center rounded-lg p-2.5 text-slate-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-300 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-300"
                                         >
                                             <Edit2 size={16} />
                                         </Link>
                                         <button
-                                            onClick={() => openDeleteModal(item)}
-                                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
+                                            type="button"
+                                            onClick={() =>
+                                                openDeleteModal(item)
+                                            }
+                                            aria-label="Hapus data Pokja III"
+                                            className="inline-flex items-center justify-center rounded-lg p-2.5 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-slate-300 dark:hover:bg-rose-950/50 dark:hover:text-rose-300"
                                         >
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
-                                ),
-                            },
-                        ]}
-                        data={localPokjas.data}
-                    />
+                                </article>
+                            );
+                        })
+                    ) : (
+                        <p className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Belum ada data dari Admin Desa
+                        </p>
+                    )}
                 </div>
 
                 <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">

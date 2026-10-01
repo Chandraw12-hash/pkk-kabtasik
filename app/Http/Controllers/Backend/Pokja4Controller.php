@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Imports\Pokja4Import;
 use App\Models\Pokja4;
+use App\Models\Pokja4KegiatanPosyandu;
+use App\Models\Pokja4KunjunganPyd;
+use App\Models\Pokja4Rekapitulasi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -14,20 +17,90 @@ class Pokja4Controller extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $perPage = $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 10);
+        $tahun = (int) $request->input('tahun', date('Y'));
 
-        $pokjaData = Pokja4::when($search, function ($query, $search) {
-                $query->where('nama_kecamatan', 'like', "%{$search}%")
-                      ->orWhere('kecamatan', 'like', "%{$search}%")
-                      ->orWhere('kategori', 'like', "%{$search}%");
-            })
-            ->latest()
+        $query = Pokja4::query()
+            ->where('tahun', $tahun)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_kecamatan', 'like', "%{$search}%")
+                        ->orWhere('kecamatan', 'like', "%{$search}%");
+                });
+            });
+
+        $pokjaData = $query
+            ->orderBy('kecamatan')
+            ->orderBy('nama_kecamatan')
             ->paginate($perPage)
             ->withQueryString();
 
+        $kunjunganPyd = Pokja4KunjunganPyd::query()
+            ->where('tahun', $tahun)
+            ->orderBy('bulan')
+            ->get();
+
+        $kegiatanPosyandu = Pokja4KegiatanPosyandu::query()
+            ->where('tahun', $tahun)
+            ->orderBy('bulan')
+            ->get();
+
+        $rekapitulasi = Pokja4Rekapitulasi::query()
+            ->where('tahun', $tahun)
+            ->orderBy('kecamatan')
+            ->get();
+
+        $tahunList = Pokja4::query()
+            ->select('tahun')
+            ->whereNotNull('tahun')
+            ->distinct()
+            ->pluck('tahun')
+            ->merge(
+                Pokja4KunjunganPyd::query()
+                    ->select('tahun')
+                    ->whereNotNull('tahun')
+                    ->distinct()
+                    ->pluck('tahun')
+            )
+            ->merge(
+                Pokja4KegiatanPosyandu::query()
+                    ->select('tahun')
+                    ->whereNotNull('tahun')
+                    ->distinct()
+                    ->pluck('tahun')
+            )
+            ->merge(
+                Pokja4Rekapitulasi::query()
+                    ->select('tahun')
+                    ->whereNotNull('tahun')
+                    ->distinct()
+                    ->pluck('tahun')
+            )
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        if ($tahunList->isEmpty()) {
+            $tahunList = collect([date('Y')]);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'pokjas' => $pokjaData,
+                'kunjungan_pyd' => $kunjunganPyd,
+                'kegiatan_posyandu' => $kegiatanPosyandu,
+                'rekapitulasi' => $rekapitulasi,
+                'tahunList' => $tahunList,
+            ]);
+        }
+
         return Inertia::render('Backend/Pokja4/Index', [
             'pokjas' => $pokjaData,
-            'filters' => $request->only(['search', 'per_page']),
+            'kunjungan_pyd' => $kunjunganPyd,
+            'kegiatan_posyandu' => $kegiatanPosyandu,
+            'rekapitulasi' => $rekapitulasi,
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'active_tab']),
+            'tahunList' => $tahunList,
         ]);
     }
 
