@@ -307,51 +307,51 @@ export default function TabKegiatanPosyandu({
                             <tr className="bg-slate-100 text-slate-700 border-b border-slate-200">
                                 <th rowSpan={2} className="p-2 border-r border-slate-200 text-center font-bold sticky left-0 bg-slate-100 z-10">NO</th>
                                 <th rowSpan={2} className="p-2 border-r border-slate-200 text-center font-bold sticky left-[50px] bg-slate-100 z-10 min-w-[100px]">BULAN</th>
-                                <th colSpan={4} className="p-2 border-r border-slate-200 text-center font-bold bg-rose-50">IBU</th>
-                                <th colSpan={7} className="p-2 border-r border-slate-200 text-center font-bold bg-teal-50">AKSEPTOR KB</th>
-                                <th colSpan={8} className="p-2 border-r border-slate-200 text-center font-bold bg-blue-50">BALITA</th>
-                                <th colSpan={2} className="p-2 border-r border-slate-200 text-center font-bold bg-amber-50">VIT A</th>
-                                <th colSpan={14} className="p-2 border-r border-slate-200 text-center font-bold bg-green-50">IMUNISASI</th>
-                                <th colSpan={2} className="p-2 text-center font-bold bg-cyan-50">DIARE</th>
+                                <th colSpan={4} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">IBU</th>
+                                <th colSpan={7} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">AKSEPTOR KB</th>
+                                <th colSpan={8} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">BALITA</th>
+                                <th colSpan={2} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">VIT A</th>
+                                <th colSpan={14} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">IMUNISASI</th>
+                                <th colSpan={2} className="p-2 text-center font-bold bg-slate-200">DIARE</th>
                             </tr>
                             <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Hamil</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Diperiksa</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Dapat Fe</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Menyusui</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">IUD</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">MOW</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">MOP</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">Implan</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">Pil</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">Suntik</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-teal-50/50">Kondom</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">L</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">P</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">KIA L</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">KIA P</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">Timbang L</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">Timbang P</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">Naik L</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">Naik P</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-amber-50/50">Vit A-1</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-amber-50/50">Vit A-2</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">TT-1</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">TT-2</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">BCG</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">DPT-1</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">DPT-2</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">DPT-3</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Polio-1</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Polio-2</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Polio-3</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Polio-4</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Campak</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Hep-1</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Hep-2</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-green-50/50">Hep-3</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-cyan-50/50">Diare</th>
-                                <th className="p-2 text-center font-semibold bg-cyan-50/50">Oralit</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Hamil</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Diperiksa</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Dapat Fe</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Menyusui</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">IUD</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">MOW</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">MOP</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Implan</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Pil</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Suntik</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Kondom</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">KIA L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">KIA P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Timbang L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Timbang P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Naik L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Naik P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Vit A-1</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Vit A-2</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">TT-1</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">TT-2</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">BCG</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">DPT-1</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">DPT-2</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">DPT-3</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Polio-1</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Polio-2</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Polio-3</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Polio-4</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Campak</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Hep-1</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Hep-2</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Hep-3</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Diare</th>
+                                <th className="p-2 text-center font-semibold bg-slate-50">Oralit</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-700">

@@ -7,6 +7,7 @@ import TabPokja4 from "./TabPokja4";
 import TabKunjunganPyd from "./TabKunjunganPyd";
 import TabKegiatanPosyandu from "./TabKegiatanPosyandu";
 import TabRekapitulasi from "./TabRekapitulasi";
+import { Activity, Baby, ClipboardList, HeartPulse } from "lucide-react";
 
 interface Props {
     data: any;
@@ -40,10 +41,10 @@ export default function Index({
     }, [filters.activeTab, filters.tahun]);
 
     const tabs = [
-        { id: "pokja4", label: "POKJA IV" },
-        { id: "kunjungan", label: "Kunjungan PYD" },
-        { id: "posyandu", label: "Kegiatan Posyandu" },
-        { id: "rekapitulasi", label: "Rekapitulasi" },
+        { id: "pokja4", label: "POKJA IV", icon: Activity },
+        { id: "kunjungan", label: "Kunjungan PYD", icon: Baby },
+        { id: "posyandu", label: "Kegiatan Posyandu", icon: HeartPulse },
+        { id: "rekapitulasi", label: "Rekapitulasi", icon: ClipboardList },
     ];
 
     // ✅ FIX: Ganti tab — update URL — BIAR DATA REFRESH
@@ -87,27 +88,35 @@ export default function Index({
             <Navbar />
 
             {/* TAB BAR */}
-            <div className="bg-white border-b border-slate-200 sticky top-14 sm:top-16 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex gap-1 overflow-x-auto">
-                        {tabs.map((tab) => {
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className={`shrink-0 px-4 sm:px-5 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
-                                        isActive
-                                            ? "text-[#0072BC] border-[#0072BC]"
-                                            : "text-slate-500 border-transparent hover:text-slate-700"
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            );
-                        })}
-                    </div>
+            <div className="sticky top-14 sm:top-16 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+                <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+                    <nav
+                        aria-label="Bagian data Pokja IV"
+                        className="overflow-x-auto"
+                    >
+                        <div className="inline-flex min-w-full gap-1.5 rounded-xl border border-slate-200 bg-slate-100/80 p-1.5 sm:min-w-0">
+                            {tabs.map((tab) => {
+                                const isActive = activeTab === tab.id;
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => handleTabChange(tab.id)}
+                                        aria-current={isActive ? "page" : undefined}
+                                        className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#0072BC] focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 ${
+                                            isActive
+                                                ? "border-blue-100 bg-white text-[#0072BC] shadow-sm"
+                                                : "border-transparent bg-transparent text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                                        }`}
+                                    >
+                                        <Icon size={17} strokeWidth={2} aria-hidden="true" />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </nav>
                 </div>
             </div>
 

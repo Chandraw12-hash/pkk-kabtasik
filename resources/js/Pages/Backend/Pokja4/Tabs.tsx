@@ -45,10 +45,10 @@ export default function Tabs({ activeTab, onTabChange }: Props) {
                             aria-selected={isActive}
                             aria-controls={`pokja4-panel-${tab.id}`}
                             onClick={() => onTabChange(tab.id)}
-                            className={`flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 py-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-600 ${
+                            className={`flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 py-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-500 ${
                                 isActive
-                                    ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400"
-                                    : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                                    ? "border-slate-700 text-slate-800 dark:border-slate-300 dark:text-slate-100"
+                                    : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                             }`}
                         >
                             <Icon size={16} aria-hidden="true" />

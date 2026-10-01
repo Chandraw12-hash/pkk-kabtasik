@@ -28,7 +28,7 @@ export default function DataDisclosure({
 }: Props) {
     return (
         <details className="group border-b border-slate-100 last:border-b-0 dark:border-slate-700">
-            <summary className="list-none cursor-pointer px-5 py-4 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-600 dark:hover:bg-slate-700/40 sm:px-6 [&::-webkit-details-marker]:hidden">
+            <summary className="list-none cursor-pointer px-5 py-4 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-500 dark:hover:bg-slate-700/40 sm:px-6 [&::-webkit-details-marker]:hidden">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         {typeof number === "number" ? (
@@ -36,10 +36,10 @@ export default function DataDisclosure({
                                 {number}
                             </span>
                         ) : (
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/50">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
                                 <MapPin
                                     size={15}
-                                    className="text-teal-600 dark:text-teal-400"
+                                    className="text-slate-500 dark:text-slate-300"
                                     aria-hidden="true"
                                 />
                             </span>
@@ -69,7 +69,7 @@ export default function DataDisclosure({
                         ))}
                     </dl>
 
-                    <span className="hidden shrink-0 items-center gap-1 text-xs font-medium text-teal-700 group-open:flex dark:text-teal-300">
+                    <span className="hidden shrink-0 items-center gap-1 text-xs font-medium text-slate-600 group-open:flex dark:text-slate-300">
                         Tutup rincian
                         <ChevronDown
                             size={15}
@@ -77,7 +77,7 @@ export default function DataDisclosure({
                             aria-hidden="true"
                         />
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-teal-700 group-open:hidden dark:text-teal-300">
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-slate-600 group-open:hidden dark:text-slate-300">
                         Lihat rincian
                         <ChevronDown size={15} aria-hidden="true" />
                     </span>

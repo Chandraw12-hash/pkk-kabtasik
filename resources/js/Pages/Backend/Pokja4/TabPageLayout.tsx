@@ -42,7 +42,7 @@ export default function TabPageLayout({
                     onChange={(event) =>
                         onYearChange(Number(event.target.value))
                     }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 md:w-auto"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 md:w-auto"
                 >
                     {years.length > 0 ? (
                         years.map((itemYear) => (

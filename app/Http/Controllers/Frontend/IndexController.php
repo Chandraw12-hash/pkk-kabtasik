@@ -517,7 +517,27 @@ class IndexController extends Controller
                         ->orWhere('nama_wilayah', 'like', "%{$search}%");
                 });
             })
-            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->where(function ($yearQuery) use ($tahun) {
+                    $yearQuery->where('tahun', $tahun);
+
+                    if ((int) $tahun === (int) now()->year) {
+                        $yearQuery->orWhereNull('tahun');
+                    } else {
+                        $yearQuery->orWhere(function ($legacyQuery) use ($tahun) {
+                            $legacyQuery->whereNull('tahun')
+                                ->whereExists(function ($reports) use ($tahun) {
+                                    $reports->selectRaw('1')
+                                        ->from('laporan_kegiatans')
+                                        ->whereColumn('laporan_kegiatans.kecamatan', 'pokja_ones.kecamatan')
+                                        ->where('laporan_kegiatans.kategori_pokja', 'I')
+                                        ->where('laporan_kegiatans.status', 'approved')
+                                        ->whereYear('laporan_kegiatans.created_at', $tahun);
+                                });
+                        });
+                    }
+                });
+            })
             ->orderBy('kecamatan', 'asc')
             ->paginate($perPage)
             ->withQueryString();
@@ -750,7 +770,27 @@ class IndexController extends Controller
                         ->orWhere('nama_wilayah', 'like', "%{$search}%");
                 });
             })
-            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->where(function ($yearQuery) use ($tahun) {
+                    $yearQuery->where('tahun', $tahun);
+
+                    if ((int) $tahun === (int) now()->year) {
+                        $yearQuery->orWhereNull('tahun');
+                    } else {
+                        $yearQuery->orWhere(function ($legacyQuery) use ($tahun) {
+                            $legacyQuery->whereNull('tahun')
+                                ->whereExists(function ($reports) use ($tahun) {
+                                    $reports->selectRaw('1')
+                                        ->from('laporan_kegiatans')
+                                        ->whereColumn('laporan_kegiatans.kecamatan', 'pokja_ones.kecamatan')
+                                        ->where('laporan_kegiatans.kategori_pokja', 'I')
+                                        ->where('laporan_kegiatans.status', 'approved')
+                                        ->whereYear('laporan_kegiatans.created_at', $tahun);
+                                });
+                        });
+                    }
+                });
+            })
             ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }

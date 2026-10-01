@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { router } from "@inertiajs/react";
+import React from "react";
 import { Download, ClipboardList, Users, Baby, Heart, FileText } from "lucide-react";
 
 interface RekapitulasiItem {
@@ -28,11 +27,15 @@ interface RekapitulasiItem {
 
 interface Props {
     data?: RekapitulasiItem[];
-    filters?: any;
+    tahun?: string;
+    onTahunChange?: (tahun: string) => void;
 }
 
-export default function TabRekapitulasi({ data = [], filters = {} }: Props) {
-    const [tahun, setTahun] = useState(filters.tahun || "2025");
+export default function TabRekapitulasi({
+    data = [],
+    tahun = new Date().getFullYear().toString(),
+    onTahunChange,
+}: Props) {
     const items = data || [];
 
     const sum = (key: keyof RekapitulasiItem) =>
@@ -63,13 +66,7 @@ export default function TabRekapitulasi({ data = [], filters = {} }: Props) {
                     <label className="text-sm font-medium text-slate-600">Tahun</label>
                     <select
                         value={tahun}
-                        onChange={(e) => {
-                            setTahun(e.target.value);
-                            router.get('/pokja-4', { tahun: e.target.value }, {
-                                preserveState: true,
-                                preserveScroll: true,
-                            });
-                        }}
+                        onChange={(e) => onTahunChange?.(e.target.value)}
                         className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0072BC]"
                     >
                         <option value="2026">2026</option>
@@ -135,24 +132,24 @@ export default function TabRekapitulasi({ data = [], filters = {} }: Props) {
                             <tr className="bg-slate-100 text-slate-700 border-b border-slate-200">
                                 <th rowSpan={2} className="p-2 border-r border-slate-200 text-center font-bold sticky left-0 bg-slate-100 z-10">NO</th>
                                 <th rowSpan={2} className="p-2 border-r border-slate-200 text-center font-bold sticky left-[50px] bg-slate-100 z-10 min-w-[140px]">KECAMATAN</th>
-                                <th colSpan={4} className="p-2 border-r border-slate-200 text-center font-bold bg-rose-50">IBU</th>
-                                <th colSpan={4} className="p-2 border-r border-slate-200 text-center font-bold bg-blue-50">BAYI LAHIR</th>
-                                <th colSpan={2} className="p-2 border-r border-slate-200 text-center font-bold bg-amber-50">BAYI MENINGGAL</th>
-                                <th colSpan={2} className="p-2 text-center font-bold bg-purple-50">BALITA MENINGGAL</th>
+                                <th colSpan={4} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">IBU</th>
+                                <th colSpan={4} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">BAYI LAHIR</th>
+                                <th colSpan={2} className="p-2 border-r border-slate-200 text-center font-bold bg-slate-200">BAYI MENINGGAL</th>
+                                <th colSpan={2} className="p-2 text-center font-bold bg-slate-200">BALITA MENINGGAL</th>
                             </tr>
                             <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Hamil</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Melahirkan</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Nifas</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-rose-50/50">Meninggal</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">L</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">P</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">Akte Ada</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-blue-50/50">Akte Tidak</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-amber-50/50">L</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-amber-50/50">P</th>
-                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-purple-50/50">L</th>
-                                <th className="p-2 text-center font-semibold bg-purple-50/50">P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Hamil</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Melahirkan</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Nifas</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Meninggal</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Akte Ada</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">Akte Tidak</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-semibold bg-slate-50">L</th>
+                                <th className="p-2 text-center font-semibold bg-slate-50">P</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-700">

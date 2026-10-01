@@ -6,7 +6,7 @@ import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X, FileSpreadsheet, CheckCircle2, ChevronDown } from "lucide-react";
 import axios from "axios";
 
 export default function Index({ pokjas, filters = {} }) {
@@ -175,11 +175,68 @@ export default function Index({ pokjas, filters = {} }) {
                                 item.deskripsi && item.deskripsi !== "-";
                             const currentPage = localPokjas.current_page ?? 1;
                             const perPageVal = localPokjas.per_page ?? 10;
+                            const detailGroups = [
+                                {
+                                    title: "Wilayah & kader",
+                                    fields: [
+                                        { key: "kecamatan", label: "Kecamatan" },
+                                        { key: "nama_kecamatan", label: "Nama kecamatan" },
+                                        { key: "nama_wilayah", label: "Nama wilayah" },
+                                        { key: "tahun", label: "Tahun" },
+                                        { key: "kategori", label: "Kategori" },
+                                        { key: "kader_umum", label: "Kader umum" },
+                                        { key: "kader_khusus", label: "Kader khusus" },
+                                    ],
+                                },
+                                ...[
+                                    ["KISAH", "kisah"],
+                                    ["KILAS", "kilas"],
+                                    ["KRISAN", "krisan"],
+                                    ["KIAT", "kiat"],
+                                    ["KISAK", "kisak"],
+                                    ["PKBN", "pkbn"],
+                                ].map(([title, prefix]) => ({
+                                    title,
+                                    fields: [
+                                        { key: `${prefix}_kegiatan`, label: "Kegiatan" },
+                                        { key: `${prefix}_volume`, label: "Volume" },
+                                        { key: `${prefix}_metode`, label: "Metode" },
+                                        { key: `${prefix}_sasaran`, label: "Sasaran" },
+                                    ],
+                                })),
+                                {
+                                    title: "Keterangan tambahan",
+                                    fields: [
+                                        { key: "judul_kegiatan", label: "Judul kegiatan" },
+                                        { key: "deskripsi", label: "Deskripsi" },
+                                        { key: "keterangan", label: "Keterangan" },
+                                        { key: "foto", label: "Foto" },
+                                    ],
+                                },
+                            ];
+                            const summaryMetrics = [
+                                {
+                                    label: "Kader umum",
+                                    value: item.kader_umum ?? 0,
+                                },
+                                {
+                                    label: "Kader khusus",
+                                    value: item.kader_khusus ?? 0,
+                                },
+                                {
+                                    label: "Tahun",
+                                    value: item.tahun ?? "—",
+                                },
+                                {
+                                    label: "Kategori",
+                                    value: item.kategori || "Pokja I",
+                                },
+                            ];
 
                             return (
                                 <article
                                     key={item.id}
-                                    className="flex flex-col gap-4 px-5 py-4 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-700/30 sm:flex-row sm:items-center sm:px-6"
+                                    className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-700/30 sm:flex-row sm:items-start sm:px-6"
                                 >
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-700 dark:text-slate-300">
                                         {(currentPage - 1) * perPageVal +
@@ -208,6 +265,52 @@ export default function Index({ pokjas, filters = {} }) {
                                                   }`}
                                         </p>
                                     </div>
+                                    <details className="group min-w-0 flex-1">
+                                        <summary className="list-none cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-600 [&::-webkit-details-marker]:hidden">
+                                                <div className="flex flex-col gap-4 py-1 xl:flex-row xl:items-center">
+                                                    <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4 xl:max-w-3xl">
+                                                        {summaryMetrics.map((metric) => (
+                                                            <div key={metric.label} className="min-w-0">
+                                                                <dt className="truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                                                    {metric.label}
+                                                                </dt>
+                                                                <dd className="mt-0.5 truncate text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+                                                                    {metric.value}
+                                                                </dd>
+                                                            </div>
+                                                        ))}
+                                                    </dl>
+                                                    <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-700 dark:text-teal-300">
+                                                        <span className="group-open:hidden">Lihat rincian</span>
+                                                        <span className="hidden group-open:inline">Tutup rincian</span>
+                                                        <ChevronDown size={16} className="transition-transform group-open:rotate-180" aria-hidden="true" />
+                                                    </span>
+                                                </div>
+                                        </summary>
+                                        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/40 sm:p-5">
+                                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+                                                    {detailGroups.map((group) => (
+                                                        <section key={group.title} className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                                            <h3 className="mb-3 border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                                                {group.title}
+                                                            </h3>
+                                                            <dl className="space-y-2 text-sm">
+                                                                {group.fields.map((field) => (
+                                                                    <div key={field.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-3">
+                                                                        <dt className="min-w-0 break-words text-slate-500 dark:text-slate-400">{field.label}</dt>
+                                                                        <dd className="min-w-0 whitespace-pre-wrap break-words text-right font-medium tabular-nums text-slate-700 dark:text-slate-200">
+                                                                            {item[field.key] === null || item[field.key] === undefined || item[field.key] === ""
+                                                                                ? "—"
+                                                                                : item[field.key]}
+                                                                        </dd>
+                                                                    </div>
+                                                                ))}
+                                                            </dl>
+                                                        </section>
+                                                    ))}
+                                                </div>
+                                        </div>
+                                    </details>
                                     <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
                                         <Link
                                             href={route(

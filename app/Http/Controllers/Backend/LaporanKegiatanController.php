@@ -219,10 +219,16 @@ class LaporanKegiatanController extends Controller
         ]);
 
         switch ($pokja) {
-            case 'I':  $this->updatePokja1($kecamatan, $dataAngka); break;
+            case 'I':
+                $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
+                $this->updatePokja1($kecamatan, $dataAngka, $tahun);
+                break;
             case 'II': $this->updatePokja2($kecamatan, $dataAngka); break;
             case 'III': $this->updatePokja3($kecamatan, $dataAngka); break;
-            case 'IV': $this->updatePokja4($kecamatan, $dataAngka); break;
+            case 'IV':
+                $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
+                $this->updatePokja4($kecamatan, $dataAngka, $tahun);
+                break;
             case 'IV-PYD': $this->updateKunjunganPyd($kecamatan, $dataAngka); break;
             case 'IV-POSYANDU': $this->updateKegiatanPosyandu($kecamatan, $dataAngka); break;
             case 'IV-REKAP': $this->updateRekapitulasi($kecamatan, $dataAngka); break;
@@ -232,7 +238,7 @@ class LaporanKegiatanController extends Controller
         }
     }
 
-    private function updatePokja1($kecamatan, $dataAngka)
+    private function updatePokja1($kecamatan, $dataAngka, int $tahun)
     {
         $pokja = Pokja1::firstOrCreate(
             ['kecamatan' => $kecamatan],
@@ -243,6 +249,7 @@ class LaporanKegiatanController extends Controller
                 'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
             ]
         );
+        $pokja->tahun = $pokja->tahun ?? $tahun;
 
         // Kader — angka — increment
         foreach (['kader_umum', 'kader_khusus'] as $field) {
@@ -304,9 +311,44 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        $fields = ['warga_buta_l', 'warga_buta_p', 'kelompok_belajar_paket_a', 'kelompok_belajar_paket_b', 'kelompok_belajar_paket_c', 'kf', 'paud', 'koperasi_berbadan_hukum'];
+        $fields = [
+            'warga_buta_l',
+            'warga_buta_p',
+            'kelompok_belajar_paket_a',
+            'kelompok_belajar_paket_b',
+            'kelompok_belajar_paket_c',
+            'kf',
+            'paud',
+            'koperasi_berbadan_hukum',
+            'warga_belajar_paket_a',
+            'warga_belajar_paket_b',
+            'warga_belajar_paket_c',
+            'warga_belajar_kf',
+            'taman_bacaan',
+            'kelompok_bkb',
+            'peserta_bkb',
+            'ape_bkb',
+            'kelompok_simulasi_bkb',
+            'tutor_kf',
+            'tutor_paud',
+            'kader_bkb',
+            'kelompok_kader_koperasi',
+            'kader_keterampilan',
+            'kader_dilatih_pengelolaan',
+            'kader_dilatih_tp_pkk',
+            'kader_dilatih_damas',
+            'up2k_pemula_kelompok',
+            'up2k_pemula_peserta',
+            'up2k_madya_kelompok',
+            'up2k_madya_peserta',
+            'up2k_utama_kelompok',
+            'up2k_utama_peserta',
+            'up2k_mandiri_kelompok',
+            'up2k_mandiri_peserta',
+            'anggota_koperasi',
+        ];
         foreach ($fields as $field) {
-            $value = $dataAngka[$field] ?? 0;
+            $value = (int) ($dataAngka[$field] ?? 0);
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
@@ -328,9 +370,19 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        $fields = ['rumah_sehat', 'rumah_tidak_sehat', 'pemanfaatan_pekarangan', 'industri_rumah_tangga'];
+        $fields = [
+            'rumah_sehat',
+            'rumah_tidak_sehat',
+            'pemanfaatan_pekarangan',
+            'industri_rumah_tangga',
+            'jumlah_kader',
+            'jumlah_kader_p',
+            'makanan_pokok',
+            'hatinya_pkk',
+            'jumlah_rumah',
+        ];
         foreach ($fields as $field) {
-            $value = $dataAngka[$field] ?? 0;
+            $value = (int) ($dataAngka[$field] ?? 0);
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
@@ -340,12 +392,13 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Pokja III updated untuk: ' . $kecamatan);
     }
 
-    private function updatePokja4($kecamatan, $dataAngka)
+    private function updatePokja4($kecamatan, $dataAngka, int $tahun)
     {
         $pokja = Pokja4::firstOrCreate(
-            ['kecamatan' => $kecamatan],
+            ['kecamatan' => $kecamatan, 'tahun' => $tahun],
             [
                 'nama_kecamatan' => $kecamatan,
+                'tahun' => $tahun,
                 'kategori' => 'Pokja IV',
                 'judul_kegiatan' => "Rekapitulasi Pokja IV - $kecamatan",
                 'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
@@ -426,25 +479,30 @@ class LaporanKegiatanController extends Controller
 
         $record->nama_bulan = $namaBulan;
 
-        $record->bayi_0_12_l = $dataAngka['bayi_0_12_l'] ?? 0;
-        $record->bayi_0_12_p = $dataAngka['bayi_0_12_p'] ?? 0;
-        $record->bayi_0_12_laki_l = $dataAngka['bayi_0_12_laki_l'] ?? 0;
-        $record->bayi_0_12_laki_p = $dataAngka['bayi_0_12_laki_p'] ?? 0;
-        $record->balita_1_5_l = $dataAngka['balita_1_5_l'] ?? 0;
-        $record->balita_1_5_p = $dataAngka['balita_1_5_p'] ?? 0;
-        $record->balita_1_5_laki_l = $dataAngka['balita_1_5_laki_l'] ?? 0;
-        $record->balita_1_5_laki_p = $dataAngka['balita_1_5_laki_p'] ?? 0;
-        $record->wus = $dataAngka['wus'] ?? 0;
-        $record->pus = $dataAngka['pus'] ?? 0;
-        $record->ibu_hamil = $dataAngka['ibu_hamil'] ?? 0;
-        $record->ibu_menyusui = $dataAngka['ibu_menyusui'] ?? 0;
-        $record->bayi_lahir = $dataAngka['bayi_lahir'] ?? 0;
-        $record->bayi_meninggal = $dataAngka['bayi_meninggal'] ?? 0;
-        $record->kematian_ibu = $dataAngka['kematian_ibu'] ?? 0;
-        $record->petugas_kader = $dataAngka['petugas_kader'] ?? 0;
-        $record->petugas_plkb = $dataAngka['petugas_plkb'] ?? 0;
-        $record->petugas_medis = $dataAngka['petugas_medis'] ?? 0;
-        $record->keterangan = $dataAngka['keterangan'] ?? null;
+        foreach ([
+            'bayi_0_12_l',
+            'bayi_0_12_p',
+            'bayi_0_12_laki_l',
+            'bayi_0_12_laki_p',
+            'balita_1_5_l',
+            'balita_1_5_p',
+            'balita_1_5_laki_l',
+            'balita_1_5_laki_p',
+            'wus',
+            'pus',
+            'ibu_hamil',
+            'ibu_menyusui',
+            'bayi_lahir',
+            'bayi_meninggal',
+            'kematian_ibu',
+            'petugas_kader',
+            'petugas_plkb',
+            'petugas_medis',
+        ] as $field) {
+            $record->{$field} = (int) ($record->{$field} ?? 0)
+                + (int) ($dataAngka[$field] ?? 0);
+        }
+        $record->keterangan = $dataAngka['keterangan'] ?? $record->keterangan;
 
         $record->save();
 

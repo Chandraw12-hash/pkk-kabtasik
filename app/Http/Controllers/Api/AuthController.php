@@ -83,4 +83,31 @@ class AuthController extends Controller
             'data' => $request->user()->toMobileAuthArray(),
         ]);
     }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!Hash::check($validated['current_password'], $request->user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kata sandi lama tidak sesuai.',
+                'errors' => [
+                    'current_password' => ['Kata sandi lama tidak sesuai.'],
+                ],
+            ], 422);
+        }
+
+        $request->user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kata sandi berhasil diperbarui.',
+        ]);
+    }
 }

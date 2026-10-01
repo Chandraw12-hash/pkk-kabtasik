@@ -577,7 +577,8 @@ class LaporanKegiatanController extends Controller
         // ✅ UPDATE: tambah 3 case baru
         switch ($laporan->kategori_pokja) {
             case 'I':
-                $this->sinkronkanPokja1($kecamatan, $dataAngka);
+                $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
+                $this->sinkronkanPokja1($kecamatan, $dataAngka, $tahun);
                 break;
             case 'II':
                 $this->sinkronkanPokja2($kecamatan, $dataAngka);
@@ -586,7 +587,8 @@ class LaporanKegiatanController extends Controller
                 $this->sinkronkanPokja3($kecamatan, $dataAngka);
                 break;
             case 'IV':
-                $this->sinkronkanPokja4($kecamatan, $dataAngka);
+                $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
+                $this->sinkronkanPokja4($kecamatan, $dataAngka, $tahun);
                 break;
             case 'IV-PYD':
                 $this->sinkronkanKunjunganPyd($kecamatan, $dataAngka);
@@ -603,9 +605,10 @@ class LaporanKegiatanController extends Controller
     }
 
     // ─── SINKRON POKJA 1 ──────────────────────────────────────────────────────
-    private function sinkronkanPokja1($kecamatan, $data)
+    private function sinkronkanPokja1($kecamatan, $data, int $tahun)
     {
         $pokja = Pokja1::firstOrNew(['kecamatan' => $kecamatan]);
+        $pokja->tahun = $pokja->tahun ?? $tahun;
 
         // Kader — angka
         $pokja->kader_umum = ($pokja->kader_umum ?? 0) + ($data['kader_umum'] ?? 0);
@@ -724,9 +727,13 @@ class LaporanKegiatanController extends Controller
     }
 
     // ─── SINKRON POKJA 4 ──────────────────────────────────────────────────────
-    private function sinkronkanPokja4($kecamatan, $data)
+    private function sinkronkanPokja4($kecamatan, $data, int $tahun)
     {
-        $pokja = Pokja4::firstOrNew(['kecamatan' => $kecamatan]);
+        $pokja = Pokja4::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'tahun' => $tahun,
+        ]);
+        $pokja->tahun = $tahun;
 
         $pokja->posyandu = ($pokja->posyandu ?? 0) + ($data['posyandu'] ?? 0);
         $pokja->akseptor_kb = ($pokja->akseptor_kb ?? 0) + ($data['akseptor_kb'] ?? 0);
@@ -785,25 +792,30 @@ class LaporanKegiatanController extends Controller
             'tahun' => $tahun,
         ]);
 
-        $record->bayi_0_12_l = $data['bayi_0_12_l'] ?? 0;
-        $record->bayi_0_12_p = $data['bayi_0_12_p'] ?? 0;
-        $record->bayi_0_12_laki_l = $data['bayi_0_12_laki_l'] ?? 0;
-        $record->bayi_0_12_laki_p = $data['bayi_0_12_laki_p'] ?? 0;
-        $record->balita_1_5_l = $data['balita_1_5_l'] ?? 0;
-        $record->balita_1_5_p = $data['balita_1_5_p'] ?? 0;
-        $record->balita_1_5_laki_l = $data['balita_1_5_laki_l'] ?? 0;
-        $record->balita_1_5_laki_p = $data['balita_1_5_laki_p'] ?? 0;
-        $record->wus = $data['wus'] ?? 0;
-        $record->pus = $data['pus'] ?? 0;
-        $record->ibu_hamil = $data['ibu_hamil'] ?? 0;
-        $record->ibu_menyusui = $data['ibu_menyusui'] ?? 0;
-        $record->bayi_lahir = $data['bayi_lahir'] ?? 0;
-        $record->bayi_meninggal = $data['bayi_meninggal'] ?? 0;
-        $record->kematian_ibu = $data['kematian_ibu'] ?? 0;
-        $record->petugas_kader = $data['petugas_kader'] ?? 0;
-        $record->petugas_plkb = $data['petugas_plkb'] ?? 0;
-        $record->petugas_medis = $data['petugas_medis'] ?? 0;
-        $record->keterangan = $data['keterangan'] ?? null;
+        foreach ([
+            'bayi_0_12_l',
+            'bayi_0_12_p',
+            'bayi_0_12_laki_l',
+            'bayi_0_12_laki_p',
+            'balita_1_5_l',
+            'balita_1_5_p',
+            'balita_1_5_laki_l',
+            'balita_1_5_laki_p',
+            'wus',
+            'pus',
+            'ibu_hamil',
+            'ibu_menyusui',
+            'bayi_lahir',
+            'bayi_meninggal',
+            'kematian_ibu',
+            'petugas_kader',
+            'petugas_plkb',
+            'petugas_medis',
+        ] as $field) {
+            $record->{$field} = (int) ($record->{$field} ?? 0)
+                + (int) ($data[$field] ?? 0);
+        }
+        $record->keterangan = $data['keterangan'] ?? $record->keterangan;
 
         $record->save();
 

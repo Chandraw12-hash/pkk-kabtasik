@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ─── AUTH ─────────────────────────────────────────────────
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────
     Route::post('/laporan-kegiatan', [LaporanKegiatanController::class, 'store']);

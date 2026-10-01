@@ -181,16 +181,16 @@ export default function TabKunjunganPyd({
                     <table className="w-full text-left border-collapse text-xs min-w-[1000px]">
                         <thead>
                             <tr className="bg-slate-100 text-slate-700 border-b border-slate-200">
-                                <th className="p-2 border-r text-center font-bold">NO</th>
-                                <th className="p-2 border-r text-center font-bold min-w-[120px]">BULAN</th>
-                                <th className="p-2 border-r text-center font-bold bg-blue-50">BAYI 0-12 L</th>
-                                <th className="p-2 border-r text-center font-bold bg-blue-50">BAYI 0-12 P</th>
-                                <th className="p-2 border-r text-center font-bold bg-green-50">BALITA 1-5 L</th>
-                                <th className="p-2 border-r text-center font-bold bg-green-50">BALITA 1-5 P</th>
-                                <th className="p-2 border-r text-center font-bold bg-amber-50">WUS</th>
-                                <th className="p-2 border-r text-center font-bold bg-amber-50">IBU HAMIL</th>
-                                <th className="p-2 border-r text-center font-bold bg-amber-50">MENYUSUI</th>
-                                <th className="p-2 text-center font-bold bg-indigo-50">BAYI LAHIR</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold">NO</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold min-w-[120px]">BULAN</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">BAYI 0-12 L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">BAYI 0-12 P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">BALITA 1-5 L</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">BALITA 1-5 P</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">WUS</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">IBU HAMIL</th>
+                                <th className="p-2 border-r border-slate-200 text-center font-bold bg-slate-50">MENYUSUI</th>
+                                <th className="p-2 text-center font-bold bg-slate-50">BAYI LAHIR</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -203,17 +203,17 @@ export default function TabKunjunganPyd({
                             ) : (
                                 groupedItems.map((item, idx) => (
                                     <tr key={`${item.bulan}-${idx}`} className="hover:bg-slate-50">
-                                        <td className="p-2 border-r text-center text-slate-500">{idx + 1}</td>
-                                        <td className="p-2 border-r text-center font-semibold text-slate-900">
+                                        <td className="p-2 border-r border-slate-200 text-center text-slate-500">{idx + 1}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center font-semibold text-slate-900">
                                             {item.nama_bulan}
                                         </td>
-                                        <td className="p-2 border-r text-center">{item.bayi_0_12_l || 0}</td>
-                                        <td className="p-2 border-r text-center">{item.bayi_0_12_p || 0}</td>
-                                        <td className="p-2 border-r text-center">{item.balita_1_5_l || 0}</td>
-                                        <td className="p-2 border-r text-center">{item.balita_1_5_p || 0}</td>
-                                        <td className="p-2 border-r text-center">{item.wus || 0}</td>
-                                        <td className="p-2 border-r text-center">{item.ibu_hamil || 0}</td>
-                                        <td className="p-2 border-r text-center">{item.ibu_menyusui || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.bayi_0_12_l || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.bayi_0_12_p || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.balita_1_5_l || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.balita_1_5_p || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.wus || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.ibu_hamil || 0}</td>
+                                        <td className="p-2 border-r border-slate-200 text-center">{item.ibu_menyusui || 0}</td>
                                         <td className="p-2 text-center">{item.bayi_lahir || 0}</td>
                                     </tr>
                                 ))
@@ -222,16 +222,16 @@ export default function TabKunjunganPyd({
                         {groupedItems.length > 0 && (
                             <tfoot>
                                 <tr className="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-300">
-                                    <td colSpan={2} className="p-2 border-r border-slate-200 text-center">
+                                    <td colSpan={2} className="p-2 border-r border-slate-200 border-slate-200 text-center">
                                         JUMLAH
                                     </td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("bayi_0_12_l")}</td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("bayi_0_12_p")}</td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("balita_1_5_l")}</td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("balita_1_5_p")}</td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("wus")}</td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("ibu_hamil")}</td>
-                                    <td className="p-2 border-r border-slate-200 text-center">{sumField("ibu_menyusui")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("bayi_0_12_l")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("bayi_0_12_p")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("balita_1_5_l")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("balita_1_5_p")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("wus")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("ibu_hamil")}</td>
+                                    <td className="p-2 border-r border-slate-200 border-slate-200 text-center">{sumField("ibu_menyusui")}</td>
                                     <td className="p-2 text-center">{sumField("bayi_lahir")}</td>
                                 </tr>
                             </tfoot>
