@@ -95,10 +95,19 @@ export default function RekapDasaWisma({
                 ============================================================ */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400">
+                                Sistem Informasi TP PKK
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                Kecamatan {kecamatan}
+                            </span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                             Rekap Per Dasa Wisma
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                             Rekapitulasi data per dasa wisma di Kecamatan{' '}
                             <span className="font-semibold text-teal-600 dark:text-teal-400">
                                 {kecamatan}
@@ -110,7 +119,7 @@ export default function RekapDasaWisma({
                             variant="primary"
                             href="/kecamatan/export/excel"
                             target="_blank"
-                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
+                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                         >
                             <Download size={16} />
                             <span>Export</span>
@@ -240,7 +249,7 @@ export default function RekapDasaWisma({
                                     >
                                         <div className="flex items-start gap-4">
                                             {/* Rank Badge */}
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0 text-white font-bold shadow-sm">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0 text-white font-bold shadow-sm">
                                                 {index + 1}
                                             </div>
 
@@ -266,7 +275,7 @@ export default function RekapDasaWisma({
 
                                                     {/* Jumlah Laporan */}
                                                     <div className="text-right">
-                                                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                                                        <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                                                             {item.jumlah_laporan}
                                                         </p>
                                                         <p className="text-[10px] text-slate-400 uppercase tracking-wider">
@@ -279,7 +288,7 @@ export default function RekapDasaWisma({
                                                 <div className="mt-3">
                                                     <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                                                         <div
-                                                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                                                            className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-500"
                                                             style={{
                                                                 width: `${percentage}%`,
                                                             }}

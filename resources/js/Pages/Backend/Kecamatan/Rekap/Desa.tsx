@@ -79,10 +79,19 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                 ============================================================ */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400">
+                                Sistem Informasi TP PKK
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                Kecamatan {kecamatan}
+                            </span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                             Rekap Per Desa
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                             Rekapitulasi data per desa di Kecamatan{' '}
                             <span className="font-semibold text-teal-600 dark:text-teal-400">
                                 {kecamatan}
@@ -94,10 +103,10 @@ export default function RekapDesa({ kecamatan, rekap }: RekapDesaProps) {
                             variant="primary"
                             href="/kecamatan/export/excel"
                             target="_blank"
-                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
+                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                         >
                             <Download size={16} />
-                            <span>Export</span>
+                            <span>Export Excel</span>
                         </Button>
                         <Button
                             variant="secondary"

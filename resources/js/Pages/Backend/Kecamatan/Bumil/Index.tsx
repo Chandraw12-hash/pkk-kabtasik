@@ -2,8 +2,18 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminKecamatanLayout from '@/Components/Layout/AdminKecamatanLayout';
 import Card from '@/Components/UI/Card';
+import Button from '@/Components/UI/Button';
 import TextInput from '@/Components/Form/TextInput';
-import { Baby, Search, ChevronRight, Building2 } from 'lucide-react';
+import {
+    Baby,
+    Search,
+    ChevronRight,
+    Building2,
+    Heart,
+    Users,
+    BarChart3,
+    Download,
+} from 'lucide-react';
 
 interface IndexProps {
     kecamatan: string;
@@ -25,35 +35,74 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
             <Head title={`Rekap Bumil - ${kecamatan}`} />
 
             <div className="space-y-6">
+                {/* ─── HEADER ─── */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100">
-                            Rekap Bumil & Bayi
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400">
+                                Sistem Informasi TP PKK
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                Kecamatan {kecamatan}
+                            </span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                            Rekap Bumil &amp; Bayi
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                             Rekap per desa — Kecamatan{' '}
-                            <span className="font-semibold text-pink-600 dark:text-pink-400">
+                            <span className="font-semibold text-teal-600 dark:text-teal-400">
                                 {kecamatan}
                             </span>
                         </p>
                     </div>
-                    <a
-                        href="/kecamatan/data-pkk/export/bumil"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold transition-colors"
-                    >
-                        Export Excel
-                    </a>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="primary"
+                            href="/kecamatan/data-pkk/export/bumil"
+                            target="_blank"
+                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
+                        >
+                            <Download size={16} />
+                            <span>Export Excel</span>
+                        </Button>
+                    </div>
                 </div>
 
+                {/* ─── STAT CARDS ─── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard label="Total Desa" value={stats.total_desa || 0} color="pink" />
-                    <StatCard label="Ibu Hamil" value={stats.total_ibu_hamil || 0} color="pink" />
-                    <StatCard label="Melahirkan" value={stats.total_ibu_melahirkan || 0} color="blue" />
-                    <StatCard label="Bayi Lahir" value={stats.total_bayi_lahir || 0} color="purple" />
+                    <StatCard
+                        icon={Building2}
+                        label="Total Desa"
+                        value={stats.total_desa || 0}
+                        color="blue"
+                        subtitle="Desa/Kelurahan"
+                    />
+                    <StatCard
+                        icon={Heart}
+                        label="Ibu Hamil"
+                        value={stats.total_ibu_hamil || 0}
+                        color="pink"
+                        subtitle="Sedang hamil"
+                    />
+                    <StatCard
+                        icon={Users}
+                        label="Melahirkan"
+                        value={stats.total_ibu_melahirkan || 0}
+                        color="teal"
+                        subtitle="Ibu melahirkan"
+                    />
+                    <StatCard
+                        icon={Baby}
+                        label="Bayi Lahir"
+                        value={stats.total_bayi_lahir || 0}
+                        color="purple"
+                        subtitle="Total bayi lahir"
+                    />
                 </div>
 
+                {/* ─── SEARCH ─── */}
                 <Card className="p-4 dark:bg-slate-800 dark:border-slate-700">
                     <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
                         <div className="relative flex-1">
@@ -68,21 +117,26 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
                         </div>
                         <button
                             type="submit"
-                            className="px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold transition-colors"
+                            className="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors"
                         >
                             Cari
                         </button>
                     </form>
                 </Card>
 
+                {/* ─── TABLE ─── */}
                 <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
-                    <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                    <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                         <p className="text-sm text-slate-600 dark:text-slate-400">
                             Menampilkan{' '}
                             <span className="font-semibold text-slate-900 dark:text-slate-100">
                                 {data.data?.length || 0}
                             </span>{' '}
                             dari {data.total || 0} desa
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            Data bumil &amp; bayi
                         </p>
                     </div>
 
@@ -103,25 +157,25 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                     {data.data.map((item: any, idx: number) => (
-                                        <tr key={item.desa} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                        <tr key={item.desa} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                             <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
-                                                    <Building2 className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                                                    <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                                                     <span className="font-semibold text-slate-900 dark:text-slate-100">
                                                         {item.nama_desa || item.desa}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-right">{Number(item.ibu_hamil || 0).toLocaleString('id-ID')}</td>
-                                            <td className="px-4 py-3 text-right">{Number(item.ibu_melahirkan || 0).toLocaleString('id-ID')}</td>
-                                            <td className="px-4 py-3 text-right">{Number(item.ibu_nifas || 0).toLocaleString('id-ID')}</td>
-                                            <td className="px-4 py-3 text-right">{Number(item.bayi_lahir_l || 0).toLocaleString('id-ID')}</td>
-                                            <td className="px-4 py-3 text-right">{Number(item.bayi_lahir_p || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.ibu_hamil || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.ibu_melahirkan || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.ibu_nifas || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.bayi_lahir_l || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.bayi_lahir_p || 0).toLocaleString('id-ID')}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <Link
                                                     href={`/kecamatan/data-pkk/bumil/${item.desa}`}
-                                                    className="inline-flex items-center gap-1 text-pink-600 dark:text-pink-400 text-xs font-semibold hover:underline"
+                                                    className="inline-flex items-center gap-1 text-teal-600 dark:text-teal-400 text-xs font-semibold hover:underline"
                                                 >
                                                     Detail
                                                     <ChevronRight className="w-3 h-3" />
@@ -140,6 +194,9 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
                             <p className="text-base font-semibold text-slate-600 dark:text-slate-400">
                                 Belum Ada Data
                             </p>
+                            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                                Belum ada data bumil &amp; bayi yang tercatat
+                            </p>
                         </div>
                     )}
                 </Card>
@@ -148,18 +205,69 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
     );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
-    const colorClasses: Record<string, string> = {
-        pink: 'text-pink-600 dark:text-pink-400',
-        blue: 'text-blue-600 dark:text-blue-400',
-        purple: 'text-purple-600 dark:text-purple-400',
+// ============================================================
+// SUB-COMPONENT: StatCard
+// ============================================================
+function StatCard({
+    icon: Icon,
+    label,
+    value,
+    color,
+    subtitle,
+}: {
+    icon: any;
+    label: string;
+    value: number;
+    color: 'teal' | 'blue' | 'purple' | 'pink';
+    subtitle?: string;
+}) {
+    const colorClasses = {
+        teal: {
+            bg: 'bg-teal-50 dark:bg-teal-950',
+            icon: 'text-teal-600 dark:text-teal-400',
+            subtitle: 'text-teal-600 dark:text-teal-400',
+        },
+        blue: {
+            bg: 'bg-blue-50 dark:bg-blue-950',
+            icon: 'text-blue-600 dark:text-blue-400',
+            subtitle: 'text-blue-600 dark:text-blue-400',
+        },
+        purple: {
+            bg: 'bg-purple-50 dark:bg-purple-950',
+            icon: 'text-purple-600 dark:text-purple-400',
+            subtitle: 'text-purple-600 dark:text-purple-400',
+        },
+        pink: {
+            bg: 'bg-pink-50 dark:bg-pink-950',
+            icon: 'text-pink-600 dark:text-pink-400',
+            subtitle: 'text-pink-600 dark:text-pink-400',
+        },
     };
+
+    const c = colorClasses[color];
+
     return (
         <Card className="p-5 dark:bg-slate-800 dark:border-slate-700">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-            <p className={`text-2xl font-bold mt-1.5 ${colorClasses[color] || 'text-slate-600'}`}>
-                {Number(value).toLocaleString('id-ID')}
-            </p>
+            <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                        {label}
+                    </p>
+                    <p className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1.5">
+                        {Number(value).toLocaleString('id-ID')}
+                    </p>
+                    {subtitle && (
+                        <p className={`text-xs font-medium mt-1 ${c.subtitle}`}>
+                            {subtitle}
+                        </p>
+                    )}
+                </div>
+                <div
+                    className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl ${c.bg} flex items-center justify-center shrink-0 ml-2`}
+                >
+                    <Icon className={`w-5 h-5 lg:w-6 lg:h-6 ${c.icon}`} />
+                </div>
+            </div>
         </Card>
     );
 }
