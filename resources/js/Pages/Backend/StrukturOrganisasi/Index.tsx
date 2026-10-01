@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import MainLayout from "@/Layouts/MainLayout";
-import { Head, Link, usePage, router } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import {
     Plus,
     Edit,
@@ -9,7 +9,6 @@ import {
     EyeOff,
     Users,
     UserCog,
-    FileText,
     Search,
     ChevronDown,
     ChevronUp,
@@ -21,7 +20,15 @@ import {
     Activity,
     Upload,
     X,
+    FileSpreadsheet,
+    CheckCircle2,
+    Loader2,
+    Info,
 } from "lucide-react";
+
+// ============================================================
+// INTERFACE
+// ============================================================
 
 interface PengurusItem {
     id: number;
@@ -52,6 +59,10 @@ interface IndexProps {
     };
 }
 
+// ============================================================
+// KONFIGURASI KATEGORI
+// ============================================================
+
 const KATEGORI_LABEL: Record<string, string> = {
     ketua: "Ketua TP PKK",
     pimpinan_inti: "Pimpinan Inti",
@@ -79,6 +90,10 @@ const KATEGORI_COLOR: Record<string, string> = {
     pokja_iv: "bg-teal-50 border-teal-200",
 };
 
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
 export default function Index({ pengurus, flash }: IndexProps) {
     const [expandedKategori, setExpandedKategori] = useState<Record<string, boolean>>({
         ketua: true,
@@ -94,6 +109,9 @@ export default function Index({ pengurus, flash }: IndexProps) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
 
+    // ========================================================
+    // HANDLERS
+    // ========================================================
     const toggleKategori = (key: string) => {
         setExpandedKategori((prev) => ({ ...prev, [key]: !prev[key] }));
     };
@@ -137,6 +155,16 @@ export default function Index({ pengurus, flash }: IndexProps) {
         });
     };
 
+    const closeImportModal = () => {
+        if (!isUploading) {
+            setShowImportModal(false);
+            setSelectedFile(null);
+        }
+    };
+
+    // ========================================================
+    // HELPERS
+    // ========================================================
     const totalPengurus = Object.values(pengurus).reduce(
         (acc, items) => acc + items.length,
         0
@@ -151,6 +179,9 @@ export default function Index({ pengurus, flash }: IndexProps) {
         );
     };
 
+    // ========================================================
+    // RENDER
+    // ========================================================
     return (
         <MainLayout>
             <Head title="Struktur Organisasi - Manajemen Pengurus" />
@@ -158,12 +189,14 @@ export default function Index({ pengurus, flash }: IndexProps) {
             <div className="py-6">
                 {/* Flash Message */}
                 {flash?.success && (
-                    <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                    <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+                        <CheckCircle2 size={16} />
                         {flash.success}
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+                        <X size={16} />
                         {flash.error}
                     </div>
                 )}
@@ -185,6 +218,7 @@ export default function Index({ pengurus, flash }: IndexProps) {
                             <span className="text-slate-400">Pengurus</span>
                         </div>
                         <button
+                            type="button"
                             onClick={() => setShowImportModal(true)}
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                         >
@@ -234,6 +268,7 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                     KATEGORI_COLOR[key] || "bg-white border-slate-200"
                                 }`}
                             >
+                                {/* Header Kategori */}
                                 <button
                                     type="button"
                                     onClick={() => toggleKategori(key)}
@@ -255,6 +290,7 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                     )}
                                 </button>
 
+                                {/* Konten Kategori */}
                                 {isExpanded && (
                                     <div className="p-4 pt-0 border-t border-slate-200/50">
                                         {filtered.length === 0 ? (
@@ -270,24 +306,27 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                                         key={item.id}
                                                         className="bg-white rounded-lg border border-slate-200 p-4 flex items-start gap-4 hover:shadow-sm transition-shadow"
                                                     >
-                                                        <div className="w-12 h-12 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200">
+                                                        {/* Foto */}
+                                                        <div className="w-14 h-14 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200">
                                                             {item.foto ? (
                                                                 <img
                                                                     src={`/storage/${item.foto}`}
                                                                     alt={item.nama}
-                                                                    className="w-full h-full object-cover"
+                                                                    className="w-full h-full object-cover object-top"
                                                                     onError={(e) => {
-                                                                        (e.target as HTMLImageElement).style.display =
-                                                                            "none";
+                                                                        (
+                                                                            e.target as HTMLImageElement
+                                                                        ).style.display = "none";
                                                                     }}
                                                                 />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                                                    <User size={20} />
+                                                                    <User size={22} />
                                                                 </div>
                                                             )}
                                                         </div>
 
+                                                        {/* Info */}
                                                         <div className="flex-1 min-w-0">
                                                             <p className="font-semibold text-sm text-slate-900 truncate">
                                                                 {item.nama}
@@ -295,7 +334,7 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                                             <p className="text-xs text-slate-500 truncate">
                                                                 {item.jabatan}
                                                             </p>
-                                                            <div className="flex items-center gap-2 mt-1.5">
+                                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                                                 <span
                                                                     className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                                                                         item.is_active
@@ -315,12 +354,12 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                                             </div>
                                                         </div>
 
+                                                        {/* Actions */}
                                                         <div className="flex flex-col gap-1 flex-shrink-0">
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
-                                                                    handleToggleStatus(
-                                                                        item.id
-                                                                    )
+                                                                    handleToggleStatus(item.id)
                                                                 }
                                                                 className={`p-1.5 rounded-lg transition-colors ${
                                                                     item.is_active
@@ -347,11 +386,9 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                                                 <Edit size={14} />
                                                             </Link>
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
-                                                                    handleDelete(
-                                                                        item.id,
-                                                                        item.nama
-                                                                    )
+                                                                    handleDelete(item.id, item.nama)
                                                                 }
                                                                 className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                                                                 title="Hapus"
@@ -370,6 +407,7 @@ export default function Index({ pengurus, flash }: IndexProps) {
                     })}
                 </div>
 
+                {/* Empty State */}
                 {totalPengurus === 0 && (
                     <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
                         <Users size={48} className="text-slate-300 mx-auto mb-4" />
@@ -388,6 +426,7 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                 Tambah Pengurus
                             </Link>
                             <button
+                                type="button"
                                 onClick={() => setShowImportModal(true)}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                             >
@@ -408,27 +447,28 @@ export default function Index({ pengurus, flash }: IndexProps) {
                     role="dialog"
                     aria-modal="true"
                     onClick={(e) => {
-                        if (e.target === e.currentTarget) {
-                            if (!isUploading) {
-                                setShowImportModal(false);
-                                setSelectedFile(null);
-                            }
-                        }
+                        if (e.target === e.currentTarget) closeImportModal();
                     }}
                 >
-                    <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-slate-900">
-                                Import Data Excel
-                            </h3>
+                    <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                                    <FileSpreadsheet size={18} className="text-blue-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-900">
+                                        Import Data Excel
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        Upload file struktur organisasi
+                                    </p>
+                                </div>
+                            </div>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    if (!isUploading) {
-                                        setShowImportModal(false);
-                                        setSelectedFile(null);
-                                    }
-                                }}
+                                onClick={closeImportModal}
                                 className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
                                 disabled={isUploading}
                             >
@@ -436,18 +476,32 @@ export default function Index({ pengurus, flash }: IndexProps) {
                             </button>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                                <p className="font-semibold">📋 Panduan:</p>
-                                <ul className="list-disc pl-4 mt-1 space-y-0.5 text-xs">
-                                    <li>Format file: .xlsx, .xls, .csv</li>
-                                    <li>Kolom: nama, jabatan, kategori, pokja, urutan, is_active, deskripsi</li>
-                                    <li>Kategori: ketua, pimpinan_inti, pokja_i, pokja_ii, pokja_iii, pokja_iv</li>
-                                    <li>Pokja: I, II, III, IV (khusus kategori pokja)</li>
-                                    <li>is_active: 1 = Aktif, 0 = Nonaktif</li>
+                        {/* Body */}
+                        <div className="p-6 space-y-4">
+                            {/* Panduan */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Info size={14} className="text-blue-600" />
+                                    <p className="font-semibold text-sm text-blue-700">
+                                        Panduan Format
+                                    </p>
+                                </div>
+                                <ul className="space-y-1 text-xs text-blue-700">
+                                    <li>• Format file: .xlsx, .xls, .csv</li>
+                                    <li>
+                                        • Kolom: nama, jabatan, kategori, pokja, urutan,
+                                        is_active, deskripsi
+                                    </li>
+                                    <li>
+                                        • Kategori: ketua, pimpinan_inti, pokja_i, pokja_ii,
+                                        pokja_iii, pokja_iv
+                                    </li>
+                                    <li>• Pokja: I, II, III, IV (khusus kategori pokja)</li>
+                                    <li>• is_active: 1 = Aktif, 0 = Nonaktif</li>
                                 </ul>
                             </div>
 
+                            {/* File Input */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Pilih File Excel
@@ -460,45 +514,45 @@ export default function Index({ pengurus, flash }: IndexProps) {
                                     disabled={isUploading}
                                 />
                                 {selectedFile && (
-                                    <p className="text-xs text-green-600 mt-2">
-                                        ✅ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
-                                    </p>
+                                    <div className="flex items-center gap-2 text-xs text-green-600 mt-2">
+                                        <CheckCircle2 size={14} />
+                                        <span>
+                                            {selectedFile.name} (
+                                            {(selectedFile.size / 1024).toFixed(1)} KB)
+                                        </span>
+                                    </div>
                                 )}
                             </div>
+                        </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (!isUploading) {
-                                            setShowImportModal(false);
-                                            setSelectedFile(null);
-                                        }
-                                    }}
-                                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                                    disabled={isUploading}
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleImport}
-                                    disabled={!selectedFile || isUploading}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
-                                    {isUploading ? (
-                                        <>
-                                            <span className="animate-spin">⏳</span>
-                                            Mengimport...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Upload size={16} />
-                                            Import
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
+                            <button
+                                type="button"
+                                onClick={closeImportModal}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                                disabled={isUploading}
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleImport}
+                                disabled={!selectedFile || isUploading}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {isUploading ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Mengimport...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload size={16} />
+                                        Import
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>

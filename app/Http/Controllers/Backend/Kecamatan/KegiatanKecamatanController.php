@@ -38,12 +38,11 @@ class KegiatanKecamatanController extends Controller
         $kecamatan = $user->kecamatan;
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        // === BASE QUERY ===
-        // Data sumber: level 'rw' (baris input admin desa)
+        // === BASE QUERY — pakai level 'rt' ===
         $baseQuery = RekapKegiatanWarga::query()
             ->where('kecamatan', $kecamatan)
             ->where('tahun', $tahun)
-            ->where('level', 'rw');
+            ->where('level', 'rt');  // ← FIX: ganti dari 'rw' ke 'rt'
 
         // Search desa
         if ($request->filled('search')) {
@@ -59,7 +58,7 @@ class KegiatanKecamatanController extends Controller
             ->selectRaw(
                 'desa, MAX(nama_desa) as nama_desa, '
                 . 'COUNT(DISTINCT dusun) as jumlah_dusun, '
-                . 'COUNT(*) as jumlah_rw, '
+                . 'COUNT(DISTINCT rw) as jumlah_rw, '  // ← hitung RW unik
                 . $this->sumSelect()
             )
             ->groupBy('desa')
@@ -86,7 +85,7 @@ class KegiatanKecamatanController extends Controller
     }
 
     /**
-     * Detail per desa — 1 baris = 1 RW
+     * Detail per desa — 1 baris = 1 RT
      */
     public function show(Request $request, string $desa)
     {
@@ -94,16 +93,17 @@ class KegiatanKecamatanController extends Controller
         $kecamatan = $user->kecamatan;
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        // === BASE QUERY — level rw, by desa ===
+        // === BASE QUERY — level rt, by desa ===
         $baseQuery = RekapKegiatanWarga::query()
             ->where('kecamatan', $kecamatan)
             ->where('desa', $desa)
             ->where('tahun', $tahun)
-            ->where('level', 'rw');
+            ->where('level', 'rt');  // ← FIX: ganti dari 'rw' ke 'rt'
 
         $data = (clone $baseQuery)
             ->orderBy('dusun')
             ->orderByRaw("CAST(NULLIF(regexp_replace(rw, '\\D', '', 'g'), '') AS INTEGER)")
+            ->orderByRaw("CAST(NULLIF(regexp_replace(rt, '\\D', '', 'g'), '') AS INTEGER)")
             ->paginate(20)
             ->withQueryString();
 

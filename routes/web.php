@@ -190,13 +190,30 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->names('kader')
         ->except(['show']);
 
-    // SEKRETARIAT & POKJA + IMPORT EXCEL
-    Route::resource('sekretariat', DataUmumSekretariatController::class)
-        ->names('sekretariat')
-        ->except(['show']);
-    Route::post('sekretariat/import', [DataUmumSekretariatController::class, 'import'])
-        ->name('sekretariat.import');
+    // ============================================================
+    // SEKRETARIAT — 3 TAB (Data Umum, Kegiatan, Bumil)
+    // ============================================================
+    Route::prefix('sekretariat')->name('sekretariat.')->group(function () {
+        // Tab 1 — Data Umum PKK
+        Route::get('/', [DataUmumSekretariatController::class, 'index'])
+            ->name('index');
 
+        // Tab 2 — Data Kegiatan
+        Route::get('/kegiatan', [DataUmumSekretariatController::class, 'kegiatan'])
+            ->name('kegiatan');
+
+        // Tab 3 — Rekap Bumil
+        Route::get('/bumil', [DataUmumSekretariatController::class, 'bumil'])
+            ->name('bumil');
+
+        // Export CSV
+        Route::get('/export', [DataUmumSekretariatController::class, 'export'])
+            ->name('export');
+    });
+
+    // ============================================================
+    // POKJA 1-4
+    // ============================================================
     Route::resource('pokja1', Pokja1Controller::class)
         ->names('pokja1')
         ->except(['show']);

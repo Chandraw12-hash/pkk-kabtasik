@@ -4,21 +4,50 @@ const MARS_PKK_SRC = "/sound/mars-pkk.mp3";
 const WELCOME_AUDIO_SRC = "/sound/welcome-pkk.mp3";
 const WELCOME_SHOWN_KEY = "pkk-welcome-shown";
 
-// 🔥 FIX: tambahkan "login" dan "dashboard" ke daftar halaman senyap.
-// Sebelumnya kedua halaman ini TIDAK ada di list, jadi waktu user
-// pindah ke Login/Dashboard, sistem menganggapnya "bukan halaman
-// senyap" dan malah me-resume lagu yang sedang jalan di sana.
+// 🔥 FIX: tambah semua route backend — desa, kecamatan, dashboard, dll
+// biar lagu TIDAK nyala di halaman admin/desa/kecamatan.
 const SILENT_PAGES = [
-    "profil", "program", "berita", "struktur",
-    "sekretariat", "pokja-1", "pokja-2",
-    "pokja-3", "pokja-4", "galeri", "dokumen", "survey",
-    "login", "dashboard",
+    // === FRONTEND PUBLIC ===
+    "profil",
+    "program",
+    "berita",
+    "struktur",
+    "sekretariat",
+    "pokja-1",
+    "pokja-2",
+    "pokja-3",
+    "pokja-4",
+    "galeri",
+    "dokumen",
+    "survey",
+    "login",
+
+    // === BACKEND ===
+    "dashboard",
+    "users",
+    "roles",
+    "settings",
+    "kader",
+    "indikator",
+    "eviden",
+    "infografis",
+    "agenda",
+    "laporan-kegiatan",
+    "struktur-organisasi",
+
+    // === DESA ===
+    "desa",
+
+    // === KECAMATAN ===
+    "kecamatan",
 ];
 
-// 🔥 FIX: helper buat cek apakah sedang di Beranda ("/"). Dipakai
-// supaya lagu HANYA bisa mulai diputar kalau interaksi pertama user
-// terjadi di Beranda — bukan di halaman manapun secara global.
+// 🔥 Helper: cek apakah di Beranda
 const isBerandaPage = () => window.location.pathname === "/";
+
+// 🔥 Helper: cek apakah di halaman silent
+const isSilentPage = (url: string) =>
+    SILENT_PAGES.some((p) => url.includes(p));
 
 export default function WelcomeGreeting() {
     const marsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -27,7 +56,7 @@ export default function WelcomeGreeting() {
     const isMarsPausedRef = useRef(false);
     const isSessionActiveRef = useRef(false);
 
-    // ─── ⭐ CEK SESSIONSTORAGE (BUKAN HAPUS) ────────────────────────────────
+    // ─── CEK SESSIONSTORAGE ────────────────────────────────────────────────
     useEffect(() => {
         try {
             const alreadyShown =
@@ -40,7 +69,7 @@ export default function WelcomeGreeting() {
 
             if (alreadyShown) {
                 hasPlayedRef.current = true;
-                console.log("🔇 Welcome sudah pernah diputar di sesi tab ini — dilewati");
+                console.log("🔇 Welcome sudah pernah diputar — dilewati");
             }
         } catch (err) {
             console.warn("⚠️ sessionStorage tidak bisa diakses:", err);
@@ -54,7 +83,7 @@ export default function WelcomeGreeting() {
         mars.volume = 0.5;
         marsAudioRef.current = mars;
 
-        mars.addEventListener('ended', () => {
+        mars.addEventListener("ended", () => {
             isMarsPausedRef.current = false;
             console.log("⏹️ MARS ENDED");
         });
@@ -75,7 +104,7 @@ export default function WelcomeGreeting() {
         };
     }, []);
 
-    // ─── PANTAU URL (pause di halaman "silent", resume di beranda) ─────────────
+    // ─── PANTAU URL — PAUSE DI SILENT, RESUME DI BERANDA ───────────────────
     useEffect(() => {
         let prevUrl = window.location.pathname;
 
@@ -84,33 +113,40 @@ export default function WelcomeGreeting() {
             if (currentUrl === prevUrl) return;
 
             prevUrl = currentUrl;
-            const isSilent = SILENT_PAGES.some((p) => currentUrl.includes(p));
+            const silent = isSilentPage(currentUrl);
             const mars = marsAudioRef.current;
+            const welcome = welcomeAudioRef.current;
 
-            if (!mars) return;
-
-            if (isSilent) {
-                // 🔥 MATI (PAUSE) - SIMPAN POSISI
-                // Sekarang ini juga otomatis berlaku untuk /login dan
-                // /dashboard karena sudah ditambahkan ke SILENT_PAGES.
-                if (!mars.paused) {
+            // === SILENT — PAUSE SEMUA AUDIO ===
+            if (silent) {
+                if (mars && !mars.paused) {
                     mars.pause();
                     isMarsPausedRef.current = true;
-                    console.log("⏹️ MARS PAUSED (posisi:", mars.currentTime, ")", currentUrl);
+                    console.log("⏹️ MARS PAUSED —", currentUrl);
                 }
-            } else {
-                // 🔥 LANJUTKAN DARI POSISI TERAKHIR (JANGAN RESET)
-                if (hasPlayedRef.current && isSessionActiveRef.current) {
-                    if (isMarsPausedRef.current || mars.paused) {
-                        mars.play()
-                            .then(() => {
-                                isMarsPausedRef.current = false;
-                                console.log("▶️ MARS RESUME (dari posisi", mars.currentTime, ")", currentUrl);
-                            })
-                            .catch(() => {
-                                console.log("⚠️ GAGAL RESUME");
-                            });
-                    }
+                if (welcome && !welcome.paused) {
+                    welcome.pause();
+                    console.log("⏹️ WELCOME PAUSED —", currentUrl);
+                }
+                return;
+            }
+
+            // === BUKAN SILENT — RESUME DI BERANDA SAJA ===
+            // Kalau user pindah ke halaman non-silent (bukan beranda),
+            // jangan resume — biar aman.
+            if (!isBerandaPage()) return;
+
+            // Resume MARS kalau udah pernah main & lagi paused
+            if (hasPlayedRef.current && isSessionActiveRef.current) {
+                if (mars && (isMarsPausedRef.current || mars.paused)) {
+                    mars.play()
+                        .then(() => {
+                            isMarsPausedRef.current = false;
+                            console.log("▶️ MARS RESUME —", currentUrl);
+                        })
+                        .catch(() => {
+                            console.log("⚠️ GAGAL RESUME");
+                        });
                 }
             }
         };
@@ -122,20 +158,16 @@ export default function WelcomeGreeting() {
         };
     }, []);
 
-    // ─── WELCOME + MARS (cuma jalan sekali per sesi tab, KHUSUS BERANDA) ────
+    // ─── WELCOME + MARS — CUMA DI BERANDA ─────────────────────────────────
     useEffect(() => {
         if (hasPlayedRef.current) return;
 
         const handleFirstInteraction = () => {
             if (hasPlayedRef.current) return;
 
-            // 🔥 FIX UTAMA: kalau interaksi pertama user terjadi BUKAN di
-            // Beranda (misal user langsung buka /login atau /dashboard
-            // dan klik di situ duluan), JANGAN mainkan apa-apa dan JANGAN
-            // tandai hasPlayedRef — supaya listener ini tetap "menunggu"
-            // sampai user benar-benar berada di Beranda saat berinteraksi.
+            // 🔥 Kalau interaksi BUKAN di Beranda → jangan mainkan lagu
             if (!isBerandaPage()) {
-                console.log("🔇 Interaksi terjadi di luar Beranda — lagu tidak diputar");
+                console.log("🔇 Interaksi di luar Beranda — lagu tidak diputar");
                 return;
             }
 
@@ -144,12 +176,9 @@ export default function WelcomeGreeting() {
 
             try {
                 sessionStorage.setItem(WELCOME_SHOWN_KEY, "true");
-                console.log(
-                    "✅ sessionStorage SET:",
-                    sessionStorage.getItem(WELCOME_SHOWN_KEY)
-                );
+                console.log("✅ sessionStorage SET");
             } catch (err) {
-                console.warn("⚠️ Gagal menyimpan sessionStorage:", err);
+                console.warn("⚠️ Gagal set sessionStorage:", err);
             }
 
             const welcomeAudio = welcomeAudioRef.current;
@@ -177,19 +206,19 @@ export default function WelcomeGreeting() {
 
             welcomeAudio.addEventListener("ended", handleEnded);
 
-            document.removeEventListener('click', handleFirstInteraction);
-            document.removeEventListener('touchstart', handleFirstInteraction);
-            document.removeEventListener('keydown', handleFirstInteraction);
+            document.removeEventListener("click", handleFirstInteraction);
+            document.removeEventListener("touchstart", handleFirstInteraction);
+            document.removeEventListener("keydown", handleFirstInteraction);
         };
 
-        document.addEventListener('click', handleFirstInteraction);
-        document.addEventListener('touchstart', handleFirstInteraction);
-        document.addEventListener('keydown', handleFirstInteraction);
+        document.addEventListener("click", handleFirstInteraction);
+        document.addEventListener("touchstart", handleFirstInteraction);
+        document.addEventListener("keydown", handleFirstInteraction);
 
         return () => {
-            document.removeEventListener('click', handleFirstInteraction);
-            document.removeEventListener('touchstart', handleFirstInteraction);
-            document.removeEventListener('keydown', handleFirstInteraction);
+            document.removeEventListener("click", handleFirstInteraction);
+            document.removeEventListener("touchstart", handleFirstInteraction);
+            document.removeEventListener("keydown", handleFirstInteraction);
         };
     }, []);
 

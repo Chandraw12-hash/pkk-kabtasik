@@ -58,8 +58,6 @@ class User extends Authenticatable
 
     public const MOBILE_ROLES = [
         'admin',
-        'pkk',
-        'kader_dasawisma',
         'pokja1',
         'pokja2',
         'pokja3',
@@ -110,7 +108,7 @@ class User extends Authenticatable
      */
     public function allowedPokjaKategori(): ?array
     {
-        if ($this->hasAnyRole(['admin', 'pkk', 'kader_dasawisma'])) {
+        if ($this->hasRole('admin')) {
             return null;
         }
 

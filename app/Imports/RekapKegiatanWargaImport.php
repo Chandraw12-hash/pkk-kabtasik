@@ -23,43 +23,46 @@ class RekapKegiatanWargaImport implements
     WithChunkReading,
     WithCalculatedFormulas
 {
-    // === PETA KOLOM (0-based) — 1 baris Excel = 1 RT ===
-    private const COL_NO = 0;
-    private const COL_NAMA_DUSUN = 1;
-    private const COL_RW = 2;
-    private const COL_RT = 3;
-    private const COL_JUMLAH_RT = 4;
-    private const COL_JUMLAH_DASA_WISMA = 5;
-    private const COL_JUMLAH_KRT = 6;
-    private const COL_JUMLAH_KK = 7;
-    private const COL_TOTAL_L = 8;
-    private const COL_TOTAL_P = 9;
-    private const COL_BALITA_L = 10;
-    private const COL_BALITA_P = 11;
-    private const COL_PUS = 12;
-    private const COL_WUS = 13;
-    private const COL_IBU_HAMIL = 14;
-    private const COL_IBU_MENYUSUI = 15;
-    private const COL_LANSIA = 16;
-    private const COL_BUTA_L = 17;
-    private const COL_BUTA_P = 18;
-    private const COL_RUMAH_SEHAT = 19;
-    private const COL_RUMAH_KURANG_SEHAT = 20;
-    private const COL_TEMPAT_SAMPAH = 21;
-    private const COL_SPAL = 22;
-    private const COL_STIKER_P4K = 23;
-    private const COL_PDAM = 24;
-    private const COL_SUMUR = 25;
-    private const COL_SUNGAI = 26;
-    private const COL_AIR_DLL = 27;
-    private const COL_JAMBAN = 28;
-    private const COL_POKOK_BERAS = 29;
-    private const COL_NON_BERAS = 30;
-    private const COL_UP2K = 31;
-    private const COL_TANAH_PEKARANGAN = 32;
-    private const COL_INDUSTRI_RT = 33;
-    private const COL_KESLING = 34;
-    private const COL_KET = 35;
+    // === PETA KOLOM (0-based) — HARUS SAMA dengan RekapKegiatanWargaTemplateExport ===
+    // 1 baris Excel = 1 RT. Total 37 kolom (A..AK).
+    private const COL_NO = 0;                     // A
+    private const COL_NAMA_DUSUN = 1;             // B
+    private const COL_RW = 2;                     // C
+    private const COL_RT = 3;                     // D
+    private const COL_JUMLAH_DUSUN = 4;           // E  (diabaikan, dihitung sistem)
+    private const COL_JUMLAH_RW = 5;              // F  (diabaikan, dihitung sistem)
+    private const COL_JUMLAH_RT = 6;              // G
+    private const COL_JUMLAH_DASA_WISMA = 7;      // H
+    private const COL_JUMLAH_KRT = 8;             // I
+    private const COL_JUMLAH_KK = 9;              // J
+    private const COL_TOTAL_L = 10;               // K
+    private const COL_TOTAL_P = 11;               // L
+    private const COL_BALITA_L = 12;              // M
+    private const COL_BALITA_P = 13;              // N
+    private const COL_PUS = 14;                   // O
+    private const COL_WUS = 15;                   // P
+    private const COL_IBU_HAMIL = 16;             // Q
+    private const COL_IBU_MENYUSUI = 17;          // R
+    private const COL_LANSIA = 18;                // S
+    private const COL_BUTA_L = 19;                // T
+    private const COL_BUTA_P = 20;                // U
+    private const COL_RUMAH_SEHAT = 21;           // V
+    private const COL_RUMAH_KURANG_SEHAT = 22;    // W
+    private const COL_TEMPAT_SAMPAH = 23;         // X
+    private const COL_SPAL = 24;                  // Y
+    private const COL_STIKER_P4K = 25;            // Z
+    private const COL_PDAM = 26;                  // AA
+    private const COL_SUMUR = 27;                 // AB
+    private const COL_SUNGAI = 28;                // AC
+    private const COL_AIR_DLL = 29;               // AD
+    private const COL_JAMBAN = 30;                // AE
+    private const COL_POKOK_BERAS = 31;           // AF
+    private const COL_NON_BERAS = 32;             // AG
+    private const COL_UP2K = 33;                  // AH
+    private const COL_TANAH_PEKARANGAN = 34;      // AI
+    private const COL_INDUSTRI_RT = 35;           // AJ
+    private const COL_KESLING = 36;               // AK
+    private const COL_KET = 37;                   // (template tidak punya kolom ini -> selalu null)
 
     protected string $kecamatan;
     protected string $desa;
@@ -95,10 +98,10 @@ class RekapKegiatanWargaImport implements
         }
 
         $namaDusun = $this->clean($row[self::COL_NAMA_DUSUN] ?? null);
-        $rw = $this->cleanRw($row[self::COL_RW] ?? null);
-        $rt = $this->clean($row[self::COL_RT] ?? null);
+        $rw = $this->cleanNomor($row[self::COL_RW] ?? null);
+        $rt = $this->cleanNomor($row[self::COL_RT] ?? null);
 
-        // Dusun dan RW wajib ada, kalau tidak baris tidak bisa dinaikkan ke level atas
+        // Dusun, RW, dan RT wajib ada, kalau tidak baris tidak bisa dinaikkan ke level atas
         if ($namaDusun === null || $rw === null || $rt === null) {
             $this->skipCount++;
             $this->errors[] = [
@@ -129,7 +132,7 @@ class RekapKegiatanWargaImport implements
             'nama_desa' => $this->desa,
             'nama_dusun' => $namaDusun,
 
-            // jumlah_dusun & jumlah_rw dihitung sistem, tidak diinput
+            // jumlah_dusun & jumlah_rw dihitung sistem, kolom E & F di Excel diabaikan
             'jumlah_rt' => $this->toInt($row[self::COL_JUMLAH_RT] ?? null),
             'jumlah_dasa_wisma' => $this->toInt($row[self::COL_JUMLAH_DASA_WISMA] ?? null),
             'jumlah_krt' => $this->toInt($row[self::COL_JUMLAH_KRT] ?? null),
@@ -172,13 +175,15 @@ class RekapKegiatanWargaImport implements
             'created_by' => auth()->id(),
         ]);
 
+        // updateOrCreate sudah menyimpan ke database, jadi jangan return model lagi
+        // (kalau di-return, ToModel akan menyimpan sekali lagi = query dobel).
         $result = RekapKegiatanWarga::updateOrCreate($uniqueKey, $data);
 
         if ($result) {
             $this->successCount++;
         }
 
-        return $result;
+        return null;
     }
 
     public function chunkSize(): int
@@ -242,8 +247,11 @@ class RekapKegiatanWargaImport implements
         return $value === '' ? null : $value;
     }
 
-    /** RW dari Excel bisa terbaca 1, 1.0, "01", atau "RW 01". Samakan jadi "1". */
-    private function cleanRw($value): ?string
+    /**
+     * RW/RT dari Excel bisa terbaca 1, 1.0, "01", "RW 01", atau "RT 01".
+     * Samakan jadi "1" supaya RW/RT yang sama tidak tersimpan dobel.
+     */
+    private function cleanNomor($value): ?string
     {
         $value = $this->clean($value);
         if ($value === null) return null;

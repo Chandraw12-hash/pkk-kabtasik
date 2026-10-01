@@ -8,7 +8,7 @@ use Inertia\Inertia;
 use App\Models\Eviden;
 use App\Models\User;
 use App\Models\Kader;
-use App\Models\DataUmumSekretariat;
+use App\Models\DataUmumPkk;
 use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
@@ -32,7 +32,8 @@ class DashboardController extends Controller
             $kaderAktif = Kader::where('status_aktif', true)->count();
 
             // ─── DATA POKJA & SEKRETARIAT (REAL) ──────────────────────────────
-            $totalSekretariat = DataUmumSekretariat::count();
+            // ✅ FIX: Ganti DataUmumSekretariat → DataUmumPkk (level kecamatan)
+            $totalSekretariat = DataUmumPkk::where('level', 'kecamatan')->count();
             $totalPokja1 = Pokja1::count();
             $totalPokja2 = Pokja2::count();
             $totalPokja3 = Pokja3::count();

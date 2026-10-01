@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AdminKecamatanLayout from '@/Components/Layout/AdminKecamatanLayout';
 import Card from "@/Components/UI/Card";
 import Button from "@/Components/UI/Button";
@@ -11,10 +11,9 @@ import {
     FileText,
     Download,
     Printer,
-    ArrowUpRight,
     PieChart,
 } from 'lucide-react';
-import StatCard from "@/Components/UI/SatistikCard"; // Using the standard StatCard
+import StatCard from "@/Components/UI/SatistikCard";
 
 interface RekapKecamatan {
     kecamatan: string;
@@ -49,7 +48,27 @@ export default function RekapKecamatan({
     };
 
     const safeRekapPokja: RekapPokjaItem[] = rekapPokja ?? [];
-    const totalPokja = safeRekapPokja.reduce((sum, item) => sum + item.jumlah, 0);
+
+    // ============================================================
+    // Helper — jumlahkan semua varian Pokja IV
+    // Contoh: 'IV' → gabungin IV + IV-PYD + IV-POSYANDU + IV-REKAP
+    // ============================================================
+    const getPokjaCount = (pokjaStr: string): number => {
+        return safeRekapPokja
+            .filter((p) => {
+                return (
+                    p.kategori_pokja === pokjaStr ||
+                    p.kategori_pokja.startsWith(`${pokjaStr}-`)
+                );
+            })
+            .reduce((sum, p) => sum + p.jumlah, 0);
+    };
+
+    // Total semua Pokja
+    const totalPokja = ['I', 'II', 'III', 'IV'].reduce(
+        (sum, p) => sum + getPokjaCount(p),
+        0
+    );
 
     const pokjaConfig: Record<string, { label: string; color: string; bg: string }> = {
         I: {
@@ -219,10 +238,10 @@ export default function RekapKecamatan({
                                     </h4>
                                     <div className="space-y-4">
                                         {['I', 'II', 'III', 'IV'].map((pokjaStr) => {
-                                            const item = safeRekapPokja.find((p) => p.kategori_pokja === pokjaStr);
+                                            const count = getPokjaCount(pokjaStr);
                                             const config = pokjaConfig[pokjaStr];
-                                            const count = item ? item.jumlah : 0;
-                                            const percentage = totalPokja > 0 ? (count / totalPokja) * 100 : 0;
+                                            const percentage =
+                                                totalPokja > 0 ? (count / totalPokja) * 100 : 0;
 
                                             return (
                                                 <div key={pokjaStr}>
@@ -231,7 +250,10 @@ export default function RekapKecamatan({
                                                             {config.label}
                                                         </span>
                                                         <span className={`font-bold ${config.color}`}>
-                                                            {count} <span className="text-xs text-slate-400 font-normal ml-1">({percentage.toFixed(1)}%)</span>
+                                                            {count}{' '}
+                                                            <span className="text-xs text-slate-400 font-normal ml-1">
+                                                                ({percentage.toFixed(1)}%)
+                                                            </span>
                                                         </span>
                                                     </div>
                                                     <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
@@ -251,34 +273,62 @@ export default function RekapKecamatan({
                         {activeTab === 'pokja' && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {['I', 'II', 'III', 'IV'].map((pokjaStr) => {
-                                    const item = safeRekapPokja.find((p) => p.kategori_pokja === pokjaStr);
+                                    const count = getPokjaCount(pokjaStr);
                                     const config = pokjaConfig[pokjaStr];
-                                    const count = item ? item.jumlah : 0;
+
+                                    // Breakdown khusus Pokja IV
+                                    const varianIV = pokjaStr === 'IV'
+                                        ? safeRekapPokja.filter((p) => p.kategori_pokja.startsWith('IV'))
+                                        : [];
 
                                     return (
                                         <div
                                             key={pokjaStr}
-                                            className="p-5 border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-between group hover:border-teal-200 dark:hover:border-teal-800 transition-colors"
+                                            className="p-5 border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex flex-col gap-3 group hover:border-teal-200 dark:hover:border-teal-800 transition-colors"
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-white shadow-md ${config.bg}`}>
-                                                    <span className="font-bold text-lg">{pokjaStr}</span>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-white shadow-md ${config.bg}`}>
+                                                        <span className="font-bold text-lg">{pokjaStr}</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                                            Pokja {pokjaStr}
+                                                        </p>
+                                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                            {config.label.split(' - ')[1]}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                                                        Pokja {pokjaStr}
+                                                <div className="text-right">
+                                                    <p className={`text-2xl font-bold ${config.color}`}>
+                                                        {count}
                                                     </p>
-                                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                        {config.label.split(' - ')[1]}
-                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5">Laporan</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className={`text-2xl font-bold ${config.color}`}>
-                                                    {count}
-                                                </p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">Laporan</p>
-                                            </div>
+
+                                            {/* Breakdown Pokja IV — kalau ada varian */}
+                                            {pokjaStr === 'IV' && varianIV.length > 1 && (
+                                                <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+                                                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                                                        Rincian
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {varianIV.map((v) => (
+                                                            <span
+                                                                key={v.kategori_pokja}
+                                                                className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-2 py-0.5 rounded-full"
+                                                            >
+                                                                {v.kategori_pokja}
+                                                                <span className="font-bold text-slate-800 dark:text-slate-200">
+                                                                    {v.jumlah}
+                                                                </span>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}

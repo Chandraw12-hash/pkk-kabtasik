@@ -2,32 +2,80 @@ import React, { useState, useEffect, useRef } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
-import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm, router } from "@inertiajs/react";
+import SekretariatTabs from "@/Components/UI/SekretariatTabs";
+import { Head } from "@inertiajs/react";
 import {
     Search,
-    Edit2,
-    Trash2,
     RotateCcw,
-    Plus,
-    Upload,
-    FileSpreadsheet,
-    X,
+    Download,
+    FileText,
+    MapPin,
 } from "lucide-react";
 import axios from "axios";
 
-export default function Index({ sekretariats, filters = {} }: any) {
+// ============================================================
+// INTERFACE
+// ============================================================
+
+interface SekretariatItem {
+    id: number;
+    kecamatan: string;
+    nama_kecamatan?: string;
+    tahun: number;
+    jumlah_pkk_rw: number;
+    jumlah_pkk_rt: number;
+    jumlah_dasa_wisma: number;
+    jumlah_kk: number;
+    jiwa_l: number;
+    jiwa_p: number;
+    kader_umum_l: number;
+    kader_umum_p: number;
+    kader_khusus_l: number;
+    kader_khusus_p: number;
+    tp_pkk_l: number;
+    tp_pkk_p: number;
+    sekretariat_honorer_l: number;
+    sekretariat_honorer_p: number;
+    sekretariat_bantuan_l: number;
+    sekretariat_bantuan_p: number;
+}
+
+interface PageProps {
+    sekretariats: {
+        data: SekretariatItem[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number;
+        to: number;
+        links: any[];
+    };
+    filters?: {
+        search?: string;
+        per_page?: number;
+        tahun?: number;
+    };
+    tahunList?: number[];
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
+export default function Index({
+    sekretariats,
+    filters = {},
+    tahunList = [],
+}: PageProps) {
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<any>(null);
-
-    const [showImportModal, setShowImportModal] = useState(false);
-    const [importFile, setImportFile] = useState<File | null>(null);
-    const [importing, setImporting] = useState(false);
+    const [tahun, setTahun] = useState<number>(
+        filters.tahun || new Date().getFullYear()
+    );
 
     const [localData, setLocalData] = useState({
         ...sekretariats,
@@ -36,14 +84,22 @@ export default function Index({ sekretariats, filters = {} }: any) {
     const [isLoading, setIsLoading] = useState(false);
     const isFirstRender = useRef(true);
 
-    const { delete: destroy, processing } = useForm({});
-
+    // ========================================================
+    // FETCH DATA
+    // ========================================================
     const fetchData = (url: string, params: any = {}) => {
         setIsLoading(true);
         axios
-            .get(url, { params, headers: { Accept: "application/json" } })
+            .get(url, {
+                params,
+                headers: { Accept: "application/json" },
+            })
             .then((res) => {
-                if (res.data && typeof res.data === "object" && "data" in res.data) {
+                if (
+                    res.data &&
+                    typeof res.data === "object" &&
+                    "data" in res.data
+                ) {
                     setLocalData(res.data);
                 }
             })
@@ -51,6 +107,9 @@ export default function Index({ sekretariats, filters = {} }: any) {
             .finally(() => setIsLoading(false));
     };
 
+    // ========================================================
+    // EFFECT — SEARCH & FILTER
+    // ========================================================
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
@@ -60,11 +119,15 @@ export default function Index({ sekretariats, filters = {} }: any) {
             fetchData(route("be.sekretariat.index"), {
                 search,
                 per_page: perPage,
+                tahun,
             });
         }, 300);
         return () => clearTimeout(timeout);
-    }, [search, perPage]);
+    }, [search, perPage, tahun]);
 
+    // ========================================================
+    // SYNC PROP
+    // ========================================================
     useEffect(() => {
         if (sekretariats) {
             setLocalData({
@@ -74,304 +137,241 @@ export default function Index({ sekretariats, filters = {} }: any) {
         }
     }, [sekretariats]);
 
-    const openDeleteModal = (item: any) => {
-        setSelectedItem(item);
-        setShowDeleteModal(true);
+    // ========================================================
+    // RESET FILTER
+    // ========================================================
+    const handleReset = () => {
+        setSearch("");
+        setPerPage(10);
+        setTahun(new Date().getFullYear());
     };
 
-    const handleDelete = () => {
-        if (!selectedItem) return;
-        destroy(route("be.sekretariat.destroy", selectedItem.id), {
-            onSuccess: () => {
-                setShowDeleteModal(false);
-                setSelectedItem(null);
-                fetchData(route("be.sekretariat.index"), {
-                    search,
-                    per_page: perPage,
-                });
-            },
-        });
-    };
+    const hasActiveFilter = Boolean(search) || perPage !== 10;
 
-    const handleImport = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!importFile) return;
-
-        const formData = new FormData();
-        formData.append("file", importFile);
-        setImporting(true);
-
-        router.post(route("be.sekretariat.import"), formData, {
-            forceFormData: true,
-            onSuccess: () => {
-                setShowImportModal(false);
-                setImportFile(null);
-                fetchData(route("be.sekretariat.index"), {
-                    search,
-                    per_page: perPage,
-                });
-            },
-            onFinish: () => setImporting(false),
-        });
-    };
-
+    // ========================================================
+    // RENDER
+    // ========================================================
     return (
         <MainLayout>
-            <Head title="Manajemen Data Sekretariat" />
+            <Head title="Data PKK — Sekretariat" />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            {/* ─── HEADER ─── */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Manajemen Data Sekretariat
+                        Data PKK — Sekretariat
                     </h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola data statistik Sekretariat per kecamatan
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                        Data statistik Sekretariat per kecamatan —{" "}
+                        <span className="font-semibold text-teal-600">
+                            diinput oleh Admin Desa
+                        </span>
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
                         variant="secondary"
-                        onClick={() => setShowImportModal(true)}
+                        href={`/dashboard/sekretariat/export?tahun=${tahun}`}
+                        target="_blank"
                         className="flex items-center gap-2"
                     >
-                        <Upload size={16} />
-                        <span>Import Excel</span>
-                    </Button>
-                    <Button
-                        variant="primary"
-                        href={route("be.sekretariat.create")}
-                        className="flex items-center gap-2"
-                    >
-                        <Plus size={16} />
-                        <span>Tambah Data</span>
+                        <Download size={16} />
+                        <span>Export Excel</span>
                     </Button>
                 </div>
             </div>
 
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
-                <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex items-center gap-4">
-                    <div className="relative w-full max-w-md">
-                        <TextInput
-                            iconLeft={<Search size={18} />}
-                            placeholder="Cari kecamatan..."
-                            className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                            containerClassName="relative w-full"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                    {search && (
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                setSearch("");
-                                setPerPage(10);
-                            }}
-                            className="flex items-center gap-2"
-                        >
-                            <RotateCcw size={16} />
-                            <span>Reset</span>
-                        </Button>
-                    )}
-                </div>
-
-                <Table
-                    isLoading={isLoading}
-                    columns={[
-                        {
-                            header: "#",
-                            className: "text-center w-14",
-                            headerClassName: "text-center w-14",
-                            render: (_: any, index: number) => {
-                                const currentPage = localData.current_page ?? 1;
-                                const perPageVal = localData.per_page ?? 10;
-                                return (currentPage - 1) * perPageVal + index + 1;
-                            },
-                        },
-                        {
-                            header: "Kecamatan",
-                            render: (item: any) => (
-                                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                    {item.kecamatan || "-"}
-                                </span>
-                            ),
-                        },
-                        {
-                            header: "PKK RW",
-                            className: "text-center",
-                            headerClassName: "text-center",
-                            render: (item: any) => item.jumlah_pkk_rw ?? 0,
-                        },
-                        {
-                            header: "PKK RT",
-                            className: "text-center",
-                            headerClassName: "text-center",
-                            render: (item: any) => item.jumlah_pkk_rt ?? 0,
-                        },
-                        {
-                            header: "Dasawisma",
-                            className: "text-center",
-                            headerClassName: "text-center",
-                            render: (item: any) => item.jumlah_dasa_wisma ?? 0,
-                        },
-                        {
-                            header: "KK",
-                            className: "text-center",
-                            headerClassName: "text-center",
-                            render: (item: any) => item.jumlah_kk ?? 0,
-                        },
-                        {
-                            header: "Jiwa (L/P)",
-                            className: "text-center",
-                            headerClassName: "text-center",
-                            render: (item: any) =>
-                                `${item.jiwa_l ?? 0} / ${item.jiwa_p ?? 0}`,
-                        },
-                        {
-                            header: "Kader Umum",
-                            className: "text-center",
-                            headerClassName: "text-center",
-                            render: (item: any) =>
-                                (item.kader_umum_l ?? 0) + (item.kader_umum_p ?? 0),
-                        },
-                        {
-                            header: "Aksi",
-                            headerClassName: "text-center w-28",
-                            className: "text-center w-28",
-                            render: (item: any) => (
-                                <div className="flex items-center justify-center gap-2">
-                                    <Link
-                                        href={route("be.sekretariat.edit", item.id)}
-                                        className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all"
-                                    >
-                                        <Edit2 size={16} />
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => openDeleteModal(item)}
-                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ),
-                        },
-                    ]}
-                    data={localData.data}
+            {/* ─── INFO BANNER ─── */}
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 rounded-xl flex items-start gap-3">
+                <FileText
+                    size={18}
+                    className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0"
                 />
-
-                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-slate-500">
-                        Menampilkan{" "}
-                        <span className="font-bold text-slate-800">
-                            {localData.from ?? 0}
-                        </span>{" "}
-                        sampai{" "}
-                        <span className="font-bold text-slate-800">
-                            {localData.to ?? 0}
-                        </span>{" "}
-                        dari{" "}
-                        <span className="font-bold text-slate-800">
-                            {localData.total ?? 0}
-                        </span>{" "}
-                        data
+                <div className="text-sm">
+                    <p className="font-semibold text-blue-800 dark:text-blue-300">
+                        Data read-only
                     </p>
-
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
-                        <span>Tampilkan</span>
-                        <select
-                            value={perPage}
-                            onChange={(e) => setPerPage(parseInt(e.target.value))}
-                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl py-1.5 px-3 outline-none cursor-pointer"
-                        >
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-
-                    <Pagination
-                        links={localData.links}
-                        onPageChange={(url: string) => fetchData(url)}
-                    />
+                    <p className="text-blue-700 dark:text-blue-400 mt-0.5">
+                        Data ini diinput oleh Admin Desa melalui panel desa.
+                    </p>
                 </div>
-            </Card>
+            </div>
 
-            {/* Modal Import Excel */}
-            {showImportModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                                Import Data Excel
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setShowImportModal(false)}
-                                className="text-slate-400 hover:text-slate-600"
-                            >
-                                <X size={18} />
-                            </button>
+            {/* ─── TABS + CARD ─── */}
+            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                <SekretariatTabs activeTab="umum" tahun={tahun} />
+
+                <Card className="rounded-t-none border-0 dark:bg-slate-800 dark:border-0">
+                    {/* Filter Bar */}
+                    <div className="p-6 border-b border-slate-50 dark:border-slate-700 flex flex-col md:flex-row md:items-center gap-3">
+                        <div className="relative flex-1 min-w-[200px] max-w-md">
+                            <TextInput
+                                iconLeft={<Search size={18} />}
+                                placeholder="Cari kecamatan..."
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                containerClassName="relative w-full"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
                         </div>
 
-                        <p className="text-sm text-slate-500 mb-4">
-                            Upload file <strong>.xlsx</strong> / <strong>.csv</strong>.
-                            Baris pertama harus berisi header kolom.
+                        <select
+                            value={tahun}
+                            onChange={(e) => setTahun(parseInt(e.target.value))}
+                            className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
+                        >
+                            {tahunList.length > 0 ? (
+                                tahunList.map((t) => (
+                                    <option key={t} value={t}>
+                                        {t}
+                                    </option>
+                                ))
+                            ) : (
+                                <option value={new Date().getFullYear()}>
+                                    {new Date().getFullYear()}
+                                </option>
+                            )}
+                        </select>
+
+                        {hasActiveFilter && (
+                            <Button
+                                variant="danger"
+                                onClick={handleReset}
+                                className="flex items-center gap-2"
+                            >
+                                <RotateCcw size={16} />
+                                <span>Reset</span>
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Table */}
+                    <Table
+                        isLoading={isLoading}
+                        columns={[
+                            {
+                                header: "#",
+                                className: "text-center w-14",
+                                headerClassName: "text-center w-14",
+                                render: (_: any, index: number) => {
+                                    const currentPage = localData.current_page ?? 1;
+                                    const perPageVal = localData.per_page ?? 10;
+                                    return (
+                                        (currentPage - 1) * perPageVal + index + 1
+                                    );
+                                },
+                            },
+                            {
+                                header: "Kecamatan",
+                                render: (item: any) => (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-900/50 flex items-center justify-center shrink-0">
+                                            <MapPin
+                                                size={14}
+                                                className="text-teal-600 dark:text-teal-400"
+                                            />
+                                        </div>
+                                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                            {item.kecamatan || "-"}
+                                        </span>
+                                    </div>
+                                ),
+                            },
+                            {
+                                header: "PKK RW",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item: any) => item.jumlah_pkk_rw ?? 0,
+                            },
+                            {
+                                header: "PKK RT",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item: any) => item.jumlah_pkk_rt ?? 0,
+                            },
+                            {
+                                header: "Dasawisma",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item: any) => item.jumlah_dasa_wisma ?? 0,
+                            },
+                            {
+                                header: "KK",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item: any) => item.jumlah_kk ?? 0,
+                            },
+                            {
+                                header: "Jiwa (L/P)",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item: any) =>
+                                    `${item.jiwa_l ?? 0} / ${item.jiwa_p ?? 0}`,
+                            },
+                            {
+                                header: "Kader Umum",
+                                className: "text-center",
+                                headerClassName: "text-center",
+                                render: (item: any) =>
+                                    (item.kader_umum_l ?? 0) +
+                                    (item.kader_umum_p ?? 0),
+                            },
+                            {
+                                header: "Tahun",
+                                className: "text-center w-20",
+                                headerClassName: "text-center w-20",
+                                render: (item: any) => (
+                                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                        {item.tahun ?? "-"}
+                                    </span>
+                                ),
+                            },
+                        ]}
+                        data={localData.data}
+                        emptyMessage="Belum ada data dari Admin Desa"
+                    />
+
+                    {/* Pagination */}
+                    <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <p className="text-sm text-slate-500">
+                            Menampilkan{" "}
+                            <span className="font-bold text-slate-800">
+                                {localData.from ?? 0}
+                            </span>{" "}
+                            sampai{" "}
+                            <span className="font-bold text-slate-800">
+                                {localData.to ?? 0}
+                            </span>{" "}
+                            dari{" "}
+                            <span className="font-bold text-slate-800">
+                                {localData.total ?? 0}
+                            </span>{" "}
+                            data
                         </p>
 
-                        <form onSubmit={handleImport} className="space-y-4">
-                            <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-6 cursor-pointer hover:border-teal-400 transition-colors">
-                                <FileSpreadsheet
-                                    size={28}
-                                    className="text-teal-600 mb-2"
-                                />
-                                <span className="text-sm text-slate-600 text-center">
-                                    {importFile
-                                        ? importFile.name
-                                        : "Pilih file Excel"}
-                                </span>
-                                <input
-                                    type="file"
-                                    accept=".xlsx,.xls,.csv"
-                                    className="hidden"
-                                    onChange={(e) =>
-                                        setImportFile(e.target.files?.[0] || null)
-                                    }
-                                />
-                            </label>
+                        <div className="flex items-center gap-3 text-sm text-slate-500">
+                            <span>Tampilkan</span>
+                            <select
+                                value={perPage}
+                                onChange={(e) =>
+                                    setPerPage(parseInt(e.target.value))
+                                }
+                                className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl py-1.5 px-3 outline-none cursor-pointer dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
 
-                            <div className="flex gap-3 justify-end">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => setShowImportModal(false)}
-                                >
-                                    Batal
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    disabled={!importFile || importing}
-                                    className="flex items-center gap-2"
-                                >
-                                    <Upload size={16} />
-                                    {importing ? "Mengimpor..." : "Import Sekarang"}
-                                </Button>
-                            </div>
-                        </form>
+                        <Pagination
+                            links={localData.links}
+                            onPageChange={(url: string) => fetchData(url)}
+                        />
                     </div>
-                </div>
-            )}
-
-            <ConfirmationModal
-                show={showDeleteModal}
-                processing={processing}
-                title="Hapus Data Sekretariat"
-                message="Apakah Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan."
-                onConfirm={handleDelete}
-                onCancel={() => setShowDeleteModal(false)}
-            />
+                </Card>
+            </div>
         </MainLayout>
     );
 }

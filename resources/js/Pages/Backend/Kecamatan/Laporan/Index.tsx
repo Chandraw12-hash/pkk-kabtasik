@@ -107,7 +107,7 @@ export default function LaporanIndex({
         setStatus('');
         setDesa('');
         setIsLoading(true);
-        router.get('/kecamatan/laporan', {}, { 
+        router.get('/kecamatan/laporan', {}, {
             preserveState: true,
             onFinish: () => setIsLoading(false),
         });
@@ -127,7 +127,7 @@ export default function LaporanIndex({
         };
         return map[status] || 'default';
     };
-    
+
     const getStatusBadgeLabel = (status: string) => {
         const map: Record<string, string> = {
             pending: 'Menunggu',
@@ -154,7 +154,7 @@ export default function LaporanIndex({
                         </span>
                     </p>
                 </div>
-                
+
                 <Button
                     variant="primary"
                     href="/kecamatan/export/excel"

@@ -18,6 +18,10 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+// ============================================================
+// INTERFACE
+// ============================================================
+
 interface BeritaItem {
     id: number;
     judul: string;
@@ -59,10 +63,18 @@ interface KecamatanTeraktifItem {
     total: number;
 }
 
+// ============================================================
+// KONSTANTA
+// ============================================================
+
 const DEFAULT_KATEGORI = "Kegiatan";
 const ITEMS_PER_PAGE = 10;
 const FALLBACK_IMAGE =
     "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80";
+
+// ============================================================
+// HELPERS
+// ============================================================
 
 const getBeritaImageSrc = (item: BeritaItem): string => {
     return (
@@ -90,14 +102,9 @@ const formatDate = (dateString?: string): string => {
     }
 };
 
-const getDeskripsi = (item: BeritaItem): string => {
-    return (
-        item.deskripsi ||
-        item.deskripsi_singkat ||
-        item.konten?.replace(/<[^>]*>?/gm, "").substring(0, 110) ||
-        "Tidak ada deskripsi."
-    );
-};
+// ============================================================
+// KECAMATAN TERAKTIF WIDGET — JANGAN DIUBAH
+// ============================================================
 
 function KecamatanTeraktifWidget({
     data,
@@ -228,6 +235,10 @@ function KecamatanTeraktifWidget({
         </div>
     );
 }
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
 export default function Berita({
     berita = [],
@@ -404,34 +415,40 @@ export default function Berita({
             </Head>
             <Navbar />
 
-            {/* Header */}
+            {/* ============================================================
+                HEADER SECTION
+            ============================================================ */}
             <div className="bg-white border-b border-slate-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-                    <p className="text-[#0072BC] text-[11px] font-semibold tracking-wider uppercase mb-1">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+                    <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-2">
                         Informasi
                     </p>
-                    <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight">
                         Berita Terkini
                     </h1>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <div className="w-12 h-1 bg-[#0072BC] rounded-full mt-4 mb-4" />
+                    <p className="text-sm sm:text-base text-slate-500 max-w-2xl">
                         Kegiatan dan informasi TP PKK Kabupaten Tasikmalaya
                     </p>
                 </div>
             </div>
 
-            {/* Filter */}
+            {/* ============================================================
+                FILTER SECTION
+            ============================================================ */}
             <section className="bg-white border-b border-slate-100 sticky top-14 sm:top-16 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-0.5 px-0.5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    {/* Kategori pills */}
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-0.5 px-0.5 pb-1">
                         {filterKategori.map((kat) => (
                             <button
                                 key={kat}
                                 type="button"
                                 onClick={() => setActiveFilter(kat)}
                                 aria-pressed={activeFilter === kat}
-                                className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                                className={`shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-colors ${
                                     activeFilter === kat
-                                        ? "bg-[#0072BC] text-white"
+                                        ? "bg-[#0072BC] text-white shadow-sm"
                                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }`}
                             >
@@ -440,7 +457,8 @@ export default function Berita({
                         ))}
                     </div>
 
-                    <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
+                    {/* Search + Kecamatan */}
+                    <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3">
                         <div className="flex flex-1 gap-2 min-w-0">
                             {kecamatanList.length > 0 && (
                                 <select
@@ -448,7 +466,7 @@ export default function Berita({
                                     onChange={(e) =>
                                         setSelectedKecamatan(e.target.value)
                                     }
-                                    className="text-xs border border-slate-200 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-[#0072BC] max-w-[42%] sm:max-w-[160px]"
+                                    className="text-xs border border-slate-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#0072BC]/20 focus:border-[#0072BC] max-w-[42%] sm:max-w-[200px] cursor-pointer"
                                 >
                                     <option value="">Semua kecamatan</option>
                                     {kecamatanList.map((k) => (
@@ -460,8 +478,8 @@ export default function Berita({
                             )}
                             <div className="relative flex-1 min-w-0">
                                 <Search
-                                    size={14}
-                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                    size={15}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                 />
                                 <input
                                     type="search"
@@ -470,7 +488,7 @@ export default function Berita({
                                     onChange={(e) =>
                                         setSearchQuery(e.target.value)
                                     }
-                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-[#0072BC] bg-white placeholder:text-slate-400"
+                                    className="w-full pl-9 pr-3 py-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0072BC]/20 focus:border-[#0072BC] bg-white placeholder:text-slate-400"
                                 />
                             </div>
                         </div>
@@ -478,41 +496,72 @@ export default function Berita({
                             <button
                                 type="button"
                                 onClick={handleReset}
-                                className="inline-flex items-center gap-1 text-xs text-[#0072BC] hover:text-[#005A94] font-medium self-start sm:self-auto"
+                                className="inline-flex items-center gap-1.5 text-xs text-[#0072BC] hover:text-[#005A94] font-medium self-start sm:self-auto px-3 py-2.5 rounded-lg hover:bg-[#0072BC]/5 transition-colors"
                             >
-                                <X size={13} />
+                                <X size={14} />
                                 Reset
                             </button>
                         )}
                     </div>
 
+                    {/* Info jumlah */}
                     {hasAnyBerita && (
-                        <p className="text-[11px] text-slate-400 mt-2">
-                            {pagination?.total ?? filteredBerita.length} berita
-                            {activeFilter !== "Semua" && ` · ${activeFilter}`}
-                            {selectedKecamatan && ` · ${selectedKecamatan}`}
-                            {searchQuery && ` · "${searchQuery}"`}
+                        <p className="text-xs text-slate-500 mt-3">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-slate-700">
+                                {pagination?.total ?? filteredBerita.length}
+                            </span>{" "}
+                            berita
+                            {activeFilter !== "Semua" && (
+                                <>
+                                    {" "}
+                                    di kategori{" "}
+                                    <span className="font-semibold text-slate-700">
+                                        {activeFilter}
+                                    </span>
+                                </>
+                            )}
+                            {selectedKecamatan && (
+                                <>
+                                    {" "}
+                                    ·{" "}
+                                    <span className="font-semibold text-slate-700">
+                                        {selectedKecamatan}
+                                    </span>
+                                </>
+                            )}
+                            {searchQuery && (
+                                <>
+                                    {" "}
+                                    ·{" "}
+                                    <span className="font-semibold text-slate-700">
+                                        "{searchQuery}"
+                                    </span>
+                                </>
+                            )}
                         </p>
                     )}
                 </div>
             </section>
 
-            {/* Konten */}
-            <section className="py-7 sm:py-9 flex-1">
+            {/* ============================================================
+                KONTEN
+            ============================================================ */}
+            <section className="py-10 sm:py-12 flex-1">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-5 lg:gap-7">
-                        {/* Grid */}
+                    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                        {/* Grid Berita */}
                         <div className="flex-1 min-w-0 order-2 lg:order-1">
                             {isLoading ? (
-                                <div className="text-center py-14">
-                                    <div className="inline-block animate-spin rounded-full h-7 w-7 border-2 border-[#0072BC] border-t-transparent" />
-                                    <p className="text-slate-500 text-sm mt-2.5">
+                                <div className="text-center py-20">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#0072BC] border-t-transparent" />
+                                    <p className="text-slate-500 text-sm mt-3">
                                         Memuat berita...
                                     </p>
                                 </div>
                             ) : hasFilteredResult ? (
                                 <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-7">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {paginatedBerita.map((item) => {
                                             const imageSrc =
                                                 getBeritaImageSrc(item);
@@ -520,65 +569,81 @@ export default function Berita({
                                             return (
                                                 <article
                                                     key={item.id}
-                                                    className="bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden"
+                                                    className="bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all overflow-hidden group"
                                                 >
-                                                    <div className="flex gap-0 sm:gap-0">
+                                                    <div className="flex gap-4 p-4">
+                                                        {/* Gambar */}
                                                         <Link
                                                             href={href}
-                                                            className="block w-[96px] sm:w-[110px] h-[72px] sm:h-[80px] shrink-0 overflow-hidden bg-slate-100"
+                                                            className="block w-[140px] h-[110px] shrink-0 overflow-hidden bg-slate-100 rounded-lg"
                                                         >
                                                             <img
                                                                 src={imageSrc}
                                                                 alt={item.judul}
                                                                 loading="lazy"
-                                                                className="w-full h-full object-cover"
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                                 onError={(e) => {
                                                                     e.currentTarget.src =
                                                                         FALLBACK_IMAGE;
                                                                 }}
                                                             />
                                                         </Link>
-                                                        <div className="flex-1 min-w-0 p-2.5 flex flex-col justify-between">
+
+                                                        {/* Konten */}
+                                                        <div className="flex-1 min-w-0 flex flex-col justify-between">
                                                             <div>
-                                                                <div className="flex flex-wrap items-center gap-1 mb-0.5 text-[10px] text-slate-400">
-                                                                    <span className="font-medium text-[#0072BC] bg-[#0072BC]/10 px-1.5 py-0.5 rounded">
+                                                                {/* Meta */}
+                                                                <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-slate-500">
+                                                                    <span className="inline-flex items-center gap-1 font-semibold text-[#0072BC] bg-[#0072BC]/10 px-2 py-0.5 rounded-md">
                                                                         {item.kategori ||
                                                                             DEFAULT_KATEGORI}
                                                                     </span>
                                                                     {item.kecamatan && (
-                                                                        <span className="inline-flex items-center gap-0.5">
-                                                                            <MapPin size={9} />
-                                                                            {item.kecamatan}
+                                                                        <span className="inline-flex items-center gap-1">
+                                                                            <MapPin
+                                                                                size={11}
+                                                                            />
+                                                                            {
+                                                                                item.kecamatan
+                                                                            }
                                                                         </span>
                                                                     )}
-                                                                    <span className="inline-flex items-center gap-0.5">
-                                                                        <Calendar size={9} />
+                                                                    <span className="inline-flex items-center gap-1">
+                                                                        <Calendar
+                                                                            size={11}
+                                                                        />
                                                                         {formatDate(
                                                                             item.created_at ||
                                                                                 item.tanggal
                                                                         )}
                                                                     </span>
                                                                 </div>
-                                                                <h2 className="text-[13px] font-semibold text-slate-900 leading-snug line-clamp-2">
-                                                                    <Link
-                                                                        href={href}
-                                                                        className="hover:text-[#0072BC]"
-                                                                    >
+
+                                                                {/* Judul */}
+                                                                <h2 className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-[#0072BC] transition-colors">
+                                                                    <Link href={href}>
                                                                         {item.judul}
                                                                     </Link>
                                                                 </h2>
                                                             </div>
-                                                            <div className="flex items-center justify-between mt-1.5">
-                                                                <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
-                                                                    <User size={10} />
-                                                                    {item.author || "Admin"}
+
+                                                            {/* Footer */}
+                                                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                                                                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                                                                    <User
+                                                                        size={12}
+                                                                    />
+                                                                    {item.author ||
+                                                                        "Admin"}
                                                                 </span>
                                                                 <Link
                                                                     href={href}
-                                                                    className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#0072BC] hover:text-[#005A94]"
+                                                                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#0072BC] hover:text-[#005A94]"
                                                                 >
                                                                     Baca
-                                                                    <ArrowRight size={11} />
+                                                                    <ArrowRight
+                                                                        size={12}
+                                                                    />
                                                                 </Link>
                                                             </div>
                                                         </div>
@@ -588,9 +653,10 @@ export default function Berita({
                                         })}
                                     </div>
 
+                                    {/* Pagination */}
                                     {totalPages > 1 && (
                                         <nav
-                                            className="flex items-center justify-center gap-1"
+                                            className="flex items-center justify-center gap-1.5 mt-10"
                                             aria-label="Navigasi halaman"
                                         >
                                             <button
@@ -599,16 +665,16 @@ export default function Berita({
                                                     goToPage(currentPage - 1)
                                                 }
                                                 disabled={currentPage === 1}
-                                                className="w-8 h-8 rounded-md flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                             >
-                                                <ChevronLeft size={14} />
+                                                <ChevronLeft size={15} />
                                             </button>
                                             {paginationNumbers.map(
                                                 (page, idx) =>
                                                     page === "ellipsis" ? (
                                                         <span
                                                             key={`e-${idx}`}
-                                                            className="text-slate-400 px-0.5 text-xs"
+                                                            className="text-slate-400 px-1 text-sm"
                                                         >
                                                             …
                                                         </span>
@@ -625,10 +691,10 @@ export default function Berita({
                                                                     ? "page"
                                                                     : undefined
                                                             }
-                                                            className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-semibold ${
+                                                            className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-semibold transition-colors ${
                                                                 currentPage ===
                                                                 page
-                                                                    ? "bg-[#0072BC] text-white"
+                                                                    ? "bg-[#0072BC] text-white shadow-sm"
                                                                     : "border border-slate-200 text-slate-600 hover:bg-slate-100"
                                                             }`}
                                                         >
@@ -644,51 +710,51 @@ export default function Berita({
                                                 disabled={
                                                     currentPage === totalPages
                                                 }
-                                                className="w-8 h-8 rounded-md flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                             >
-                                                <ChevronRight size={14} />
+                                                <ChevronRight size={15} />
                                             </button>
                                         </nav>
                                     )}
                                 </>
                             ) : hasAnyBerita ? (
-                                <div className="text-center py-12">
+                                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
                                     <Search
-                                        size={28}
-                                        className="text-slate-300 mx-auto mb-2"
+                                        size={32}
+                                        className="text-slate-300 mx-auto mb-3"
                                     />
-                                    <p className="text-slate-700 text-sm font-medium mb-0.5">
+                                    <p className="text-slate-700 text-sm font-semibold mb-1">
                                         Tidak ada berita yang cocok
                                     </p>
-                                    <p className="text-slate-400 text-xs mb-3">
-                                        Ubah kata kunci atau filter.
+                                    <p className="text-slate-400 text-xs mb-4">
+                                        Ubah kata kunci atau filter pencarian.
                                     </p>
                                     <button
                                         type="button"
                                         onClick={handleReset}
-                                        className="text-xs font-medium text-[#0072BC] border border-[#0072BC]/30 hover:bg-[#0072BC]/10 px-3 py-1.5 rounded-md"
+                                        className="text-xs font-semibold text-[#0072BC] border border-[#0072BC]/30 hover:bg-[#0072BC]/10 px-4 py-2 rounded-lg transition-colors"
                                     >
                                         Reset filter
                                     </button>
                                 </div>
                             ) : (
-                                <div className="text-center py-12">
+                                <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
                                     <Newspaper
-                                        size={28}
-                                        className="text-slate-300 mx-auto mb-2"
+                                        size={32}
+                                        className="text-slate-300 mx-auto mb-3"
                                     />
-                                    <p className="text-slate-700 text-sm font-medium">
+                                    <p className="text-slate-700 text-sm font-semibold">
                                         Belum ada berita
                                     </p>
-                                    <p className="text-slate-400 text-xs mt-0.5">
+                                    <p className="text-slate-400 text-xs mt-1">
                                         Silakan cek lagi nanti.
                                     </p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Sidebar */}
-                        <aside className="w-full lg:w-64 xl:w-72 shrink-0 order-1 lg:order-2">
+                        {/* Sidebar — JANGAN DIUBAH */}
+                        <aside className="w-full lg:w-72 xl:w-80 shrink-0 order-1 lg:order-2">
                             <KecamatanTeraktifWidget
                                 data={kecamatanTeraktif}
                                 isLoading={isLoadingTeraktif}
@@ -700,18 +766,20 @@ export default function Berita({
                 </div>
             </section>
 
-            {/* Newsletter */}
-            <section className="py-9 bg-white border-t border-slate-100">
+            {/* ============================================================
+                NEWSLETTER
+            ============================================================ */}
+            <section className="py-12 bg-white border-t border-slate-100">
                 <div className="max-w-md mx-auto px-4 text-center">
-                    <h2 className="text-base font-semibold text-slate-900 mb-0.5">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-1">
                         Newsletter PKK
                     </h2>
-                    <p className="text-xs text-slate-500 mb-4">
-                        Update kegiatan TP PKK ke email Anda.
+                    <p className="text-sm text-slate-500 mb-5">
+                        Update kegiatan TP PKK langsung ke email Anda.
                     </p>
                     {newsletterStatus === "success" ? (
-                        <div className="inline-flex items-center gap-1.5 text-[#0072BC] bg-[#0072BC]/10 border border-[#0072BC]/20 rounded-md px-3 py-2 text-xs">
-                            <CheckCircle2 size={14} />
+                        <div className="inline-flex items-center gap-2 text-[#0072BC] bg-[#0072BC]/10 border border-[#0072BC]/20 rounded-lg px-4 py-2.5 text-sm">
+                            <CheckCircle2 size={16} />
                             Email berhasil didaftarkan.
                         </div>
                     ) : (
@@ -721,8 +789,8 @@ export default function Berita({
                         >
                             <div className="relative flex-1">
                                 <Mail
-                                    size={13}
-                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                    size={14}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                 />
                                 <input
                                     type="email"
@@ -731,17 +799,17 @@ export default function Berita({
                                     onChange={(e) =>
                                         setNewsletterEmail(e.target.value)
                                     }
-                                    className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:border-[#0072BC]"
+                                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0072BC]/20 focus:border-[#0072BC]"
                                     required
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={newsletterStatus === "loading"}
-                                className="sm:w-auto px-4 py-2 text-xs font-semibold text-white bg-[#0072BC] hover:bg-[#005A94] rounded-md disabled:opacity-60"
+                                className="sm:w-auto px-5 py-2.5 text-sm font-semibold text-white bg-[#0072BC] hover:bg-[#005A94] rounded-lg disabled:opacity-60 transition-colors"
                             >
                                 {newsletterStatus === "loading"
-                                    ? "..."
+                                    ? "Memproses..."
                                     : "Daftar"}
                             </button>
                         </form>

@@ -11,7 +11,7 @@ use Inertia\Inertia;
 class RekapKecamatanController extends Controller
 {
     /**
-     * Rekap per Kecamatan — total semua laporan di kecamatan ini.
+     * Rekap per Kecamatan — total laporan APPROVED di kecamatan ini.
      */
     public function kecamatan(Request $request)
     {
@@ -19,7 +19,7 @@ class RekapKecamatanController extends Controller
         $kecamatan = $user->kecamatan;
 
         // ============================================================
-        // REKAP KECAMATAN
+        // REKAP KECAMATAN — filter approved
         // ============================================================
         $rekap = LaporanKegiatan::select([
                 DB::raw('UPPER(TRIM(kecamatan)) as kecamatan'),
@@ -27,16 +27,18 @@ class RekapKecamatanController extends Controller
                 DB::raw('COUNT(DISTINCT UPPER(TRIM(desa_kelurahan))) as jumlah_desa'),
                 DB::raw('COUNT(DISTINCT UPPER(TRIM(nama_dasawisma))) as jumlah_dasa_wisma'),
             ])
+            ->where('status', 'approved')
             ->groupBy(DB::raw('UPPER(TRIM(kecamatan))'))
             ->first();
 
         // ============================================================
-        // REKAP PER POKJA
+        // REKAP PER POKJA — filter approved
         // ============================================================
         $rekapPokja = LaporanKegiatan::select([
                 'kategori_pokja',
                 DB::raw('COUNT(*) as jumlah'),
             ])
+            ->where('status', 'approved')
             ->groupBy('kategori_pokja')
             ->orderBy('kategori_pokja')
             ->get();
@@ -49,7 +51,7 @@ class RekapKecamatanController extends Controller
     }
 
     /**
-     * Rekap per Desa.
+     * Rekap per Desa — filter approved.
      */
     public function desa(Request $request)
     {
@@ -61,6 +63,7 @@ class RekapKecamatanController extends Controller
                 DB::raw('COUNT(*) as jumlah_laporan'),
                 DB::raw('COUNT(DISTINCT UPPER(TRIM(nama_dasawisma))) as jumlah_dasa_wisma'),
             ])
+            ->where('status', 'approved')
             ->whereNotNull('desa_kelurahan')
             ->where('desa_kelurahan', '!=', '')
             ->groupBy(DB::raw('UPPER(TRIM(desa_kelurahan))'))
@@ -74,7 +77,7 @@ class RekapKecamatanController extends Controller
     }
 
     /**
-     * Rekap per Dasa Wisma.
+     * Rekap per Dasa Wisma — filter approved.
      */
     public function dasaWisma(Request $request)
     {
@@ -86,6 +89,7 @@ class RekapKecamatanController extends Controller
                 DB::raw('UPPER(TRIM(desa_kelurahan)) as desa'),
                 DB::raw('COUNT(*) as jumlah_laporan'),
             ])
+            ->where('status', 'approved')
             ->whereNotNull('nama_dasawisma')
             ->where('nama_dasawisma', '!=', '')
             ->groupBy(

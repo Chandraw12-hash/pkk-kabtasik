@@ -1,10 +1,47 @@
 import React from 'react';
-import { FileText, Trash2 } from 'lucide-react';
-import { router } from '@inertiajs/react';
+import { FileText } from 'lucide-react';
 
 interface TabDesaProps {
     data: any[];
 }
+
+// Kolom angka yang dijumlahkan dari semua dusun. Urutan mengikuti template Excel.
+const NUMERIC_COLUMNS: { label: string; key: string }[] = [
+    { label: 'Jml RW', key: 'jumlah_rw' },
+    { label: 'Jml RT', key: 'jumlah_rt' },
+    { label: 'Jml Dasa Wisma', key: 'jumlah_dasa_wisma' },
+    { label: 'Jml KRT', key: 'jumlah_krt' },
+    { label: 'Jumlah KK', key: 'jumlah_kk' },
+    { label: 'Total L', key: 'total_l' },
+    { label: 'Total P', key: 'total_p' },
+    { label: 'Balita L', key: 'balita_l' },
+    { label: 'Balita P', key: 'balita_p' },
+    { label: 'PUS', key: 'pus' },
+    { label: 'WUS', key: 'wus' },
+    { label: 'Ibu Hamil', key: 'ibu_hamil' },
+    { label: 'Ibu Menyusui', key: 'ibu_menyusui' },
+    { label: 'Lansia', key: 'lansia' },
+    { label: '3 Buta L', key: 'buta_l' },
+    { label: '3 Buta P', key: 'buta_p' },
+    { label: 'Sehat/Layak Huni', key: 'rumah_sehat' },
+    { label: 'Tidak Sehat', key: 'rumah_kurang_sehat' },
+    { label: 'Tempat Sampah', key: 'memiliki_tempat_sampah' },
+    { label: 'SPAL', key: 'memiliki_spal' },
+    { label: 'Stiker P4K', key: 'memiliki_stiker_p4k' },
+    { label: 'PDAM', key: 'air_pdam' },
+    { label: 'Sumur', key: 'air_sumur' },
+    { label: 'Sungai', key: 'air_sungai' },
+    { label: 'DLL', key: 'air_dll' },
+    { label: 'Jamban', key: 'jumlah_jamban_keluarga' },
+    { label: 'Beras', key: 'makanan_pokok_beras' },
+    { label: 'Non Beras', key: 'makanan_pokok_non_beras' },
+    { label: 'UP2K', key: 'kegiatan_up2k' },
+    { label: 'Tanah Pekarangan', key: 'kegiatan_tanah_pekarangan' },
+    { label: 'Industri RT', key: 'kegiatan_industri_rumah_tangga' },
+    { label: 'Kesling', key: 'kegiatan_kesehatan_lingkungan' },
+];
+
+const formatAngka = (value: any): string => Number(value || 0).toLocaleString('id-ID');
 
 export default function TabDesa({ data }: TabDesaProps) {
     if (!data || data.length === 0) {
@@ -23,14 +60,15 @@ export default function TabDesa({ data }: TabDesaProps) {
         );
     }
 
-    const handleDelete = (dusun: string) => {
-        if (!confirm(`Yakin hapus data dusun "${dusun}"? Semua data RT di dusun ini akan terhapus.`)) {
-            return;
-        }
-        router.delete(`/desa/kegiatan/dusun/${encodeURIComponent(dusun)}`, {
-            preserveScroll: true,
-        });
-    };
+    // Jumlahkan semua baris (per dusun) menjadi 1 baris untuk desa.
+    // Pakai Number() supaya aman kalau database mengirim angka sebagai string.
+    const totals: Record<string, number> = {};
+    NUMERIC_COLUMNS.forEach((col) => {
+        totals[col.key] = data.reduce((sum, item) => sum + Number(item[col.key] || 0), 0);
+    });
+
+    const jumlahDusun = new Set(data.map((item) => item.nama_dusun || item.dusun)).size;
+    const namaDesa = data[0]?.nama_desa || data[0]?.desa || 'Desa';
 
     return (
         <div className="overflow-x-auto">
@@ -38,91 +76,33 @@ export default function TabDesa({ data }: TabDesaProps) {
                 <thead className="bg-slate-50 dark:bg-slate-700/50">
                     <tr className="text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         <th className="px-4 py-3">No</th>
-                        <th className="px-4 py-3">Nama Dusun/Lingkungan</th>
-                        <th className="px-4 py-3 text-right">Jml RW</th>
-                        <th className="px-4 py-3 text-right">Jml RT</th>
-                        <th className="px-4 py-3 text-right">Jml Dasa Wisma</th>
-                        <th className="px-4 py-3 text-right">Jml KRT</th>
-                        <th className="px-4 py-3 text-right">Jumlah KK</th>
-                        <th className="px-4 py-3 text-right">Total L</th>
-                        <th className="px-4 py-3 text-right">Total P</th>
-                        <th className="px-4 py-3 text-right">Balita L</th>
-                        <th className="px-4 py-3 text-right">Balita P</th>
-                        <th className="px-4 py-3 text-right">PUS</th>
-                        <th className="px-4 py-3 text-right">WUS</th>
-                        <th className="px-4 py-3 text-right">Ibu Hamil</th>
-                        <th className="px-4 py-3 text-right">Ibu Menyusui</th>
-                        <th className="px-4 py-3 text-right">Lansia</th>
-                        <th className="px-4 py-3 text-right">3 Buta L</th>
-                        <th className="px-4 py-3 text-right">3 Buta P</th>
-                        <th className="px-4 py-3 text-right">Berkebutuhan Khusus</th>
-                        <th className="px-4 py-3 text-right">Sehat/Layak Huni</th>
-                        <th className="px-4 py-3 text-right">Tidak Sehat</th>
-                        <th className="px-4 py-3 text-right">Tempat Sampah</th>
-                        <th className="px-4 py-3 text-right">SPAL</th>
-                        <th className="px-4 py-3 text-right">Sarana MCK</th>
-                        <th className="px-4 py-3 text-right">PDAM</th>
-                        <th className="px-4 py-3 text-right">Sumur</th>
-                        <th className="px-4 py-3 text-right">Sungai</th>
-                        <th className="px-4 py-3 text-right">DLL</th>
-                        <th className="px-4 py-3 text-right">Beras</th>
-                        <th className="px-4 py-3 text-right">Non Beras</th>
-                        <th className="px-4 py-3 text-right">UP2K</th>
-                        <th className="px-4 py-3 text-right">Tanah Pekarangan</th>
-                        <th className="px-4 py-3 text-right">Industri RT</th>
-                        <th className="px-4 py-3 text-right">Kesling</th>
-                        <th className="px-4 py-3">Ket</th>
-                        <th className="px-4 py-3 text-center">Aksi</th>
+                        <th className="px-4 py-3">Desa</th>
+                        <th className="px-4 py-3 text-right">Jml Dusun</th>
+                        {NUMERIC_COLUMNS.map((col) => (
+                            <th key={col.key} className="px-4 py-3 text-right">
+                                {col.label}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                    {data.map((item, idx) => (
-                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                            <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
-                            <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">{item.nama_dusun || item.dusun || '-'}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.jumlah_rw || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.jumlah_rt || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.jumlah_dasa_wisma || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.jumlah_krt || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.jumlah_kk?.toLocaleString('id-ID') || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.total_l?.toLocaleString('id-ID') || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.total_p?.toLocaleString('id-ID') || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.balita_l || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.balita_p || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.pus || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.wus || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.ibu_hamil || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.ibu_menyusui || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.lansia || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.buta_l || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.buta_p || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.rumah_sehat || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.rumah_kurang_sehat || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.memiliki_tempat_sampah || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.memiliki_spal || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.memiliki_stiker_p4k || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.air_pdam || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.air_sumur || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.air_sungai || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.air_dll || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.makanan_pokok_beras || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.makanan_pokok_non_beras || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.kegiatan_up2k || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.kegiatan_tanah_pekarangan || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.kegiatan_industri_rumah_tangga || 0}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.kegiatan_kesehatan_lingkungan || 0}</td>
-                            <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{item.keterangan || '-'}</td>
-                            <td className="px-4 py-3 text-center">
-                                <button
-                                    onClick={() => handleDelete(item.nama_dusun || item.dusun)}
-                                    className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors p-1"
-                                    title="Hapus dusun"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                    <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td className="px-4 py-3 text-slate-500">1</td>
+                        <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
+                            {namaDesa}
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">
+                            {formatAngka(jumlahDusun)}
+                        </td>
+                        {NUMERIC_COLUMNS.map((col) => (
+                            <td
+                                key={col.key}
+                                className="px-4 py-3 text-right text-slate-700 dark:text-slate-300"
+                            >
+                                {formatAngka(totals[col.key])}
                             </td>
-                        </tr>
-                    ))}
+                        ))}
+                    </tr>
                 </tbody>
             </table>
         </div>

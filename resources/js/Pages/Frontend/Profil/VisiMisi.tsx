@@ -14,6 +14,10 @@ import {
     Eye,
 } from "lucide-react";
 
+// ============================================================
+// HOOK SCROLL ANIMATION
+// ============================================================
+
 function useScrollAnimation() {
     const ref = useRef<HTMLDivElement>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -36,6 +40,10 @@ function useScrollAnimation() {
 
     return { ref, isVisible };
 }
+
+// ============================================================
+// DATA MISI
+// ============================================================
 
 const misiList = [
     {
@@ -64,6 +72,10 @@ const misiList = [
         desc: "Memperkuat kelembagaan PKK yang lebih sistematis dan terencana, serta mendorong pemanfaatan teknologi informasi.",
     },
 ];
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
 export default function VisiMisi() {
     const mainAnim = useScrollAnimation();
@@ -108,65 +120,74 @@ export default function VisiMisi() {
             <Navbar />
 
             {/* ====================================================
-                VISI & MISI — 1 SEKSI TERPADU (FIT 1 LAYAR)
+                SECTION 1 — VISI & MISI
             ==================================================== */}
             <section
                 ref={mainAnim.ref}
-                className={`py-10 sm:py-12 lg:py-16 bg-white anim-fade-up ${
+                className={`py-16 sm:py-20 bg-white anim-fade-up ${
                     mainAnim.isVisible ? "show" : ""
                 }`}
             >
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* ---------- VISI ---------- */}
-                    <div className="text-center mb-10 sm:mb-12">
-                        <h2 className="text-[#0072BC] text-base sm:text-lg md:text-xl font-bold tracking-wider uppercase mb-3">
-                            VISI
+                    <div className="text-center mb-16">
+                        <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-3">
+                            Visi
+                        </p>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-8">
+                            Visi Gerakan PKK
                         </h2>
-                        <div className="max-w-3xl mx-auto bg-[#0072BC]/10/70 border border-[#0072BC]/20 rounded-2xl px-6 py-6 sm:px-8 sm:py-7 shadow-sm">
-                            <p className="text-slate-900 text-sm sm:text-base lg:text-lg font-medium leading-relaxed">
-                                &ldquo;Terwujudnya keluarga berdaya dan sejahtera untuk mendukung asta cita menuju Indonesia emas 2045&rdquo;
+
+                        <div className="max-w-2xl mx-auto">
+                            <p className="text-slate-800 text-base sm:text-lg leading-relaxed italic">
+                                &ldquo;Terwujudnya keluarga berdaya dan
+                                sejahtera untuk mendukung asta cita menuju
+                                Indonesia emas 2045&rdquo;
                             </p>
                         </div>
                     </div>
 
                     {/* ---------- MISI ---------- */}
-                    <div className="text-center mb-8 sm:mb-10 max-w-3xl mx-auto">
-                        <h2 className="text-[#0072BC] text-base sm:text-lg md:text-xl font-bold tracking-wider uppercase mb-2">
-                            MISI
+                    <div className="text-center mb-10">
+                        <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-3">
+                            Misi
+                        </p>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3">
+                            Misi Gerakan PKK
                         </h2>
-                        <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                            Untuk mewujudkan visi tersebut, Gerakan PKK menetapkan sejumlah misi yang menjadi landasan gerak dan strategi implementatif:
+                        <p className="text-slate-500 text-sm sm:text-base max-w-xl mx-auto">
+                            Untuk mewujudkan visi tersebut, Gerakan PKK
+                            menetapkan sejumlah misi sebagai landasan gerak
+                            dan strategi implementatif.
                         </p>
                     </div>
 
-                    {/* Grid Misi — 3 kolom di desktop, 2 di tablet, 1 di mobile */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                    {/* Grid Misi */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {misiList.map((misi, i) => {
                             const Icon = misi.icon;
+                            const isLastRow = i >= 3 && misiList.length === 5;
+
                             return (
                                 <div
                                     key={i}
-                                    className={`bg-white border border-slate-200 rounded-xl p-5 sm:p-6 hover:border-[#FFC72C] hover:shadow-md transition-all duration-300 flex flex-col ${
-                                        i === 4
-                                            ? "sm:col-span-2 lg:col-span-1"
+                                    className={`bg-white border border-slate-200 rounded-xl p-5 sm:p-6 hover:border-slate-300 transition-colors flex flex-col ${
+                                        isLastRow && i === 3
+                                            ? "sm:col-span-2 lg:col-span-1 lg:col-start-1"
+                                            : ""
+                                    } ${
+                                        isLastRow && i === 4
+                                            ? "sm:col-span-2 lg:col-span-1 lg:col-start-2"
                                             : ""
                                     }`}
                                 >
-                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
-                                            <Icon
-                                                size={17}
-                                                className="text-[#0072BC]"
-                                            />
-                                        </div>
-                                        <span className="text-[10px] sm:text-xs font-bold text-[#0072BC] bg-[#0072BC]/10 px-2.5 py-1 rounded-full">
-                                            {i + 1}
-                                        </span>
+                                    <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center mb-4">
+                                        <Icon size={18} className="text-[#0072BC]" />
                                     </div>
-                                    <h3 className="text-slate-900 font-bold text-sm sm:text-[15px] mb-2 leading-snug">
+                                    <h3 className="text-slate-900 font-semibold text-[15px] mb-2 leading-snug">
                                         {misi.title}
                                     </h3>
-                                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                                    <p className="text-slate-500 text-sm leading-relaxed flex-1">
                                         {misi.desc}
                                     </p>
                                 </div>
@@ -177,95 +198,98 @@ export default function VisiMisi() {
             </section>
 
             {/* ====================================================
-                POSTER — yang bawah cuma ini doang
+                SECTION 2 — POSTER INFOGRAFIS (KECIL)
             ==================================================== */}
             <section
                 ref={posterAnim.ref}
-                className={`py-14 lg:py-16 bg-white border-t border-slate-100 anim-fade-up ${
+                className={`py-14 bg-slate-50 border-t border-slate-100 anim-fade-up ${
                     posterAnim.isVisible ? "show" : ""
                 }`}
             >
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <span className="text-[#0072BC] text-xs font-semibold tracking-[0.2em] uppercase mb-2 block">
-                        Dokumentasi Resmi
-                    </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-3">
-                        Infografis Visi &amp; Misi PKK
-                    </h2>
-                    <p className="text-slate-500 text-sm sm:text-base mb-6 max-w-xl mx-auto">
-                        Anda juga dapat melihat atau mengunduh infografis
-                        poster resmi Visi dan Misi Gerakan PKK di bawah ini.
-                    </p>
-
-                    {/* Preview Poster */}
-                    <div className="relative group rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-slate-900 max-w-sm mx-auto mb-6">
-                        <img
-                            src="/assets/images/Visi%20Misi%20PKK.jpg"
-                            alt="Poster Visi Misi Gerakan PKK"
-                            className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
-                            onError={(e) => {
-                                e.currentTarget.src =
-                                    "/assets/images/Visi Misi PKK.png";
-                            }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-6">
-                            <span className="text-white text-sm font-medium bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
-                                Infografis Resmi PKK
-                            </span>
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-12">
+                        {/* Poster — KECIL */}
+                        <div className="shrink-0">
+                            <div className="w-48 sm:w-56 rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-white">
+                                <img
+                                    src="/assets/images/Visi%20Misi%20PKK.jpg"
+                                    alt="Poster Visi Misi Gerakan PKK"
+                                    className="w-full h-auto block"
+                                    onError={(e) => {
+                                        e.currentTarget.src =
+                                            "/assets/images/Visi Misi PKK.png";
+                                    }}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Tombol Aksi */}
-                    <div className="flex flex-wrap justify-center gap-3">
-                        <a
-                            href="/assets/images/Visi%20Misi%20PKK.jpg"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs sm:text-sm px-4 py-2 rounded-full transition-colors"
-                        >
-                            <Eye size={15} /> Lihat Ukuran Penuh
-                        </a>
-                        <a
-                            href="/assets/images/Visi%20Misi%20PKK.jpg"
-                            download
-                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-full transition-colors shadow-sm"
-                        >
-                            <Download size={15} /> Unduh Poster
-                        </a>
+                        {/* Teks + Tombol */}
+                        <div className="flex-1 text-center sm:text-left">
+                            <p className="text-[#0072BC] text-xs font-semibold tracking-wider uppercase mb-2">
+                                Dokumentasi Resmi
+                            </p>
+                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mb-3">
+                                Infografis Visi &amp; Misi
+                            </h2>
+                            <p className="text-slate-500 text-sm leading-relaxed mb-5 max-w-md">
+                                Lihat atau unduh poster resmi Visi dan Misi
+                                Gerakan PKK Kabupaten Tasikmalaya.
+                            </p>
+
+                            <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                                <a
+                                    href="/assets/images/Visi%20Misi%20PKK.jpg"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2 rounded-md transition-colors"
+                                >
+                                    <Eye size={14} />
+                                    Lihat Penuh
+                                </a>
+                                <a
+                                    href="/assets/images/Visi%20Misi%20PKK.jpg"
+                                    download
+                                    className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#005A94] text-white font-medium text-xs px-4 py-2 rounded-md transition-colors"
+                                >
+                                    <Download size={14} />
+                                    Unduh
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* ====================================================
-                CTA
+                SECTION 3 — CTA
             ==================================================== */}
             <section
                 ref={ctaAnim.ref}
-                className={`py-14 lg:py-16 bg-white border-t border-slate-100 anim-fade-up ${
+                className={`py-16 bg-white border-t border-slate-100 anim-fade-up ${
                     ctaAnim.isVisible ? "show" : ""
                 }`}
             >
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-3">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mb-3">
                         Mewujudkan Tasikmalaya Mandiri &amp; Sejahtera
                     </h2>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-lg mx-auto mb-6">
+                    <p className="text-slate-500 text-sm leading-relaxed mb-6">
                         Mari bersama-sama membangun keluarga Indonesia yang
                         lebih maju, berdaya, dan berkualitas.
                     </p>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-wrap items-center justify-center gap-2">
                         <Link
-                            href="/program-kerja"
-                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#0072BC] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-colors shadow-sm"
+                            href="/program/program-kerja"
+                            className="inline-flex items-center gap-2 bg-[#0072BC] hover:bg-[#005A94] text-white font-medium text-xs px-4 py-2 rounded-md transition-colors"
                         >
                             Program Kerja
-                            <ChevronRight size={15} />
+                            <ChevronRight size={14} />
                         </Link>
                         <Link
-                            href="/kontak"
-                            className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-colors bg-white"
+                            href="/#kontak"
+                            className="inline-flex items-center gap-2 border border-slate-200 hover:border-slate-300 text-slate-700 font-medium text-xs px-4 py-2 rounded-md transition-colors bg-white"
                         >
-                            <Mail size={15} />
+                            <Mail size={14} />
                             Kontak Kami
                         </Link>
                     </div>

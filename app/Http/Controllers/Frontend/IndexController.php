@@ -7,7 +7,6 @@ use App\Models\Berita;
 use App\Models\Galeri;
 use App\Models\Agenda;
 use App\Models\Infografis;
-use App\Models\DataUmumSekretariat;
 use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
@@ -19,16 +18,20 @@ use App\Models\Survey;
 use App\Models\StrukturOrganisasi;
 use App\Models\LaporanKegiatan;
 
-// ✅ TAMBAH — 3 Model Baru
+// ✅ 3 Model Baru
 use App\Models\DataUmumPkk;
 use App\Models\RekapKegiatanWarga;
 use App\Models\RekapBumil;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class IndexController extends Controller
 {
+    // ============================================================
+    // BERANDA
+    // ============================================================
     public function index()
     {
         $isSurveyActive = true;
@@ -119,7 +122,31 @@ class IndexController extends Controller
                 ];
             });
 
-        $sekretariat = DataUmumSekretariat::latest()->take(6)->get();
+        // ============================================================
+        // ✅ FIX: Roll-up dari DataUmumPkk — level desa
+        // ============================================================
+        $sekretariat = DataUmumPkk::where('level', 'desa')
+            ->select([
+                'kecamatan',
+                DB::raw('MAX(nama_kecamatan) as nama_kecamatan'),
+                DB::raw('SUM(jumlah_pkk_rw) as jumlah_pkk_rw'),
+                DB::raw('SUM(jumlah_pkk_rt) as jumlah_pkk_rt'),
+                DB::raw('SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma'),
+                DB::raw('SUM(jumlah_kk) as jumlah_kk'),
+                DB::raw('SUM(jiwa_l) as jiwa_l'),
+                DB::raw('SUM(jiwa_p) as jiwa_p'),
+                DB::raw('SUM(tp_pkk_l) as tp_pkk_l'),
+                DB::raw('SUM(tp_pkk_p) as tp_pkk_p'),
+                DB::raw('SUM(kader_umum_l) as kader_umum_l'),
+                DB::raw('SUM(kader_umum_p) as kader_umum_p'),
+                DB::raw('SUM(kader_khusus_l) as kader_khusus_l'),
+                DB::raw('SUM(kader_khusus_p) as kader_khusus_p'),
+            ])
+            ->groupBy('kecamatan')
+            ->orderBy('kecamatan')
+            ->take(6)
+            ->get();
+
         $pokja1 = Pokja1::latest()->take(6)->get();
         $pokja2 = Pokja2::latest()->take(6)->get();
         $pokja3 = Pokja3::latest()->take(6)->get();
@@ -167,6 +194,9 @@ class IndexController extends Controller
         ]);
     }
 
+    // ============================================================
+    // LAPORAN KEGIATAN PUBLIC
+    // ============================================================
     public function laporanKegiatanPublic(Request $request)
     {
         $search = $request->input('search');
@@ -195,6 +225,9 @@ class IndexController extends Controller
         ]);
     }
 
+    // ============================================================
+    // SURVEY
+    // ============================================================
     public function surveyKepuasan()
     {
         return Inertia::render('Frontend/Survey/Index', ['isActive' => true]);
@@ -221,6 +254,9 @@ class IndexController extends Controller
         return redirect()->back()->with('success', 'Terima kasih atas partisipasi Anda! 🙏');
     }
 
+    // ============================================================
+    // PROFIL
+    // ============================================================
     public function sejarah() { return Inertia::render('Frontend/Profil/Sejarah'); }
     public function tugasFungsi() { return Inertia::render('Frontend/Profil/TugasFungsi'); }
     public function visiMisi() { return Inertia::render('Frontend/Profil/VisiMisi'); }
@@ -259,6 +295,9 @@ class IndexController extends Controller
     public function marsPkk() { return Inertia::render('Frontend/Program/MarsPkk'); }
     public function dokumen() { return Inertia::render('Frontend/Program/Dokumen'); }
 
+    // ============================================================
+    // BERITA
+    // ============================================================
     public function berita(Request $request)
     {
         $search = $request->get('search');
@@ -317,27 +356,56 @@ class IndexController extends Controller
         ]);
     }
 
-    // ✅ FIX: Sekretariat — kirim 4 props
+    // ============================================================
+    // ✅ SEKRETARIAT — LANDING PAGE KABUPATEN (ROLL-UP)
+    // ============================================================
     public function sekretariatPublic(Request $request)
     {
         $search = $request->input('search');
         $tahun = $request->input('year', $request->input('tahun', date('Y')));
         $perPage = (int) $request->input('per_page', 15);
 
-        // Data Umum Sekretariat (existing)
-        $data = DataUmumSekretariat::query()
+        // === ✅ DATA UMUM PKK — ROLL-UP dari level desa ===
+        $data = DataUmumPkk::query()
+            ->where('level', 'desa')
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
+            ->select([
+                'kecamatan',
+                DB::raw('MAX(nama_kecamatan) as nama_kecamatan'),
+                'tahun',
+                DB::raw('SUM(jumlah_dusun) as jumlah_dusun'),
+                DB::raw('SUM(jumlah_pkk_rw) as jumlah_pkk_rw'),
+                DB::raw('SUM(jumlah_pkk_rt) as jumlah_pkk_rt'),
+                DB::raw('SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma'),
+                DB::raw('SUM(jumlah_krt) as jumlah_krt'),
+                DB::raw('SUM(jumlah_kk) as jumlah_kk'),
+                DB::raw('SUM(jiwa_l) as jiwa_l'),
+                DB::raw('SUM(jiwa_p) as jiwa_p'),
+                DB::raw('SUM(tp_pkk_l) as tp_pkk_l'),
+                DB::raw('SUM(tp_pkk_p) as tp_pkk_p'),
+                DB::raw('SUM(kader_umum_l) as kader_umum_l'),
+                DB::raw('SUM(kader_umum_p) as kader_umum_p'),
+                DB::raw('SUM(kader_khusus_l) as kader_khusus_l'),
+                DB::raw('SUM(kader_khusus_p) as kader_khusus_p'),
+                DB::raw('SUM(sekretariat_honorer_l) as sekretariat_honorer_l'),
+                DB::raw('SUM(sekretariat_honorer_p) as sekretariat_honorer_p'),
+                DB::raw('SUM(sekretariat_bantuan_l) as sekretariat_bantuan_l'),
+                DB::raw('SUM(sekretariat_bantuan_p) as sekretariat_bantuan_p'),
+            ])
+            ->groupBy('kecamatan', 'tahun')
             ->orderBy('kecamatan', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
-        // ✅ Data Umum PKK
-        $dataUmumPkk = DataUmumPkk::query()
+        // === REKAP KEGIATAN WARGA — level RT ===
+        $rekapKegiatanWarga = RekapKegiatanWarga::query()
+            ->where('level', 'rt')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -348,24 +416,13 @@ class IndexController extends Controller
             ->orderBy('kecamatan', 'asc')
             ->get();
 
-        // ✅ Rekap Kegiatan Warga (sumber: baris input level RW dari admin desa)
-        $rekapKegiatanWarga = RekapKegiatanWarga::query()
-            ->where('level', 'rw')
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('kecamatan', 'like', "%{$search}%")
-                        ->orWhere('nama_kecamatan', 'like', "%{$search}%");
-                });
-            })
-            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
-            ->orderBy('kecamatan', 'asc')
-            ->get();
         $rekapKegiatanWarga = $this->gabungkanRekapKegiatanPerKecamatan(
             $rekapKegiatanWarga
         );
 
-        // ✅ Rekap Bumil
+        // === REKAP BUMIL — level RT ===
         $rekapBumil = RekapBumil::query()
+            ->where('level', 'rt')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -378,7 +435,7 @@ class IndexController extends Controller
             ->get();
 
         return Inertia::render('Frontend/data-data/Sekretariat/Index', [
-            'data' => $dataUmumPkk,
+            'data' => $data,
             'dataKegiatan' => $rekapKegiatanWarga,
             'rekapBumil' => $rekapBumil,
             'filters' => $request->only(['search', 'per_page', 'year', 'tahun', 'kecamatan', 'activeTab']),
@@ -386,13 +443,10 @@ class IndexController extends Controller
     }
 
     /**
-     * Tabel publik = 1 baris per kecamatan. Sumbernya baris input level RW
-     * dari semua desa, jadi counter dijumlahkan per kecamatan.
-     * jumlah_dusun & jumlah_rw dihitung dari baris yang masuk (tidak diinput).
+     * Gabungkan rekap kegiatan per kecamatan
      */
     private function gabungkanRekapKegiatanPerKecamatan($items)
     {
-        // jumlah_dusun & jumlah_rw sengaja tidak di sini, dihitung terpisah di bawah
         $numericFields = [
             'jumlah_rt', 'jumlah_dasa_wisma',
             'jumlah_krt', 'jumlah_kk', 'total_l', 'total_p',
@@ -422,8 +476,6 @@ class IndexController extends Controller
                     );
                 }
 
-                // 1 baris = 1 RW. Dusun dihitung unik per desa + dusun,
-                // karena beda desa bisa punya nama dusun yang sama.
                 $merged['jumlah_rw'] = $group->count();
                 $merged['jumlah_dusun'] = $group
                     ->map(fn ($item) => mb_strtolower(trim(
@@ -432,7 +484,6 @@ class IndexController extends Controller
                     ->unique()
                     ->count();
 
-                // Baris gabungan ini level kecamatan, kosongkan identitas baris pertama
                 $merged['desa'] = null;
                 $merged['nama_desa'] = null;
                 $merged['dusun'] = null;
@@ -449,7 +500,9 @@ class IndexController extends Controller
             ->values();
     }
 
-    // ✅ FIX: Pokja1 — filter tahun + search nama_wilayah
+    // ============================================================
+    // POKJA 1-4 PUBLIC
+    // ============================================================
     public function pokja1Public(Request $request)
     {
         $search = $request->input('search');
@@ -519,7 +572,6 @@ class IndexController extends Controller
         ]);
     }
 
-    // ✅ FIX: Pokja4 — kirim 4 props + activeTab
     public function pokja4Public(Request $request)
     {
         $search = $request->input('search');
@@ -534,24 +586,19 @@ class IndexController extends Controller
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->when($tahun, function ($query) use ($tahun) {
-                $query->where('tahun', $tahun);
-            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->orderBy('kecamatan', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
         $kunjunganPyd = Pokja4KunjunganPyd::where('tahun', $tahun)
-            ->orderBy('bulan')
-            ->get();
+            ->orderBy('bulan')->get();
 
         $kegiatanPosyandu = Pokja4KegiatanPosyandu::where('tahun', $tahun)
-            ->orderBy('bulan')
-            ->get();
+            ->orderBy('bulan')->get();
 
         $rekapitulasi = Pokja4Rekapitulasi::where('tahun', $tahun)
-            ->orderBy('kecamatan')
-            ->get();
+            ->orderBy('kecamatan')->get();
 
         return Inertia::render('Frontend/data-data/Pokja4/Index', [
             'data' => $data,
@@ -563,17 +610,13 @@ class IndexController extends Controller
     }
 
     // ============================================================
-    // ✅ TAMBAH — 3 METHOD BARU — DATA UMUM PKK, REKAP KEGIATAN, REKAP BUMIL
+    // ✅ 3 METHOD PUBLIC BARU
     // ============================================================
 
-    /**
-     * Halaman Data Umum PKK
-     */
     public function dataUmumPkkPublic(Request $request)
     {
         $search = $request->input('search');
         $tahun = $request->input('tahun', date('Y'));
-        $level = $request->input('level');
         $perPage = (int) $request->input('per_page', 15);
 
         $data = DataUmumPkk::query()
@@ -585,12 +628,7 @@ class IndexController extends Controller
                         ->orWhere('nama_desa', 'like', "%{$search}%");
                 });
             })
-            ->when($tahun, function ($query) use ($tahun) {
-                $query->where('tahun', $tahun);
-            })
-            ->when($level, function ($query) use ($level) {
-                $query->where('level', $level);
-            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->orderBy('kecamatan', 'asc')
             ->orderBy('desa', 'asc')
             ->paginate($perPage)
@@ -598,18 +636,14 @@ class IndexController extends Controller
 
         return Inertia::render('Frontend/data-data/DataUmumPkk/Index', [
             'data' => $data,
-            'filters' => $request->only(['search', 'per_page', 'tahun', 'level']),
+            'filters' => $request->only(['search', 'per_page', 'tahun']),
         ]);
     }
 
-    /**
-     * Halaman Rekap Kegiatan Warga
-     */
     public function rekapKegiatanWargaPublic(Request $request)
     {
         $search = $request->input('search');
         $tahun = $request->input('tahun', date('Y'));
-        $level = $request->input('level');
         $perPage = (int) $request->input('per_page', 15);
 
         $data = RekapKegiatanWarga::query()
@@ -621,12 +655,7 @@ class IndexController extends Controller
                         ->orWhere('nama_desa', 'like', "%{$search}%");
                 });
             })
-            ->when($tahun, function ($query) use ($tahun) {
-                $query->where('tahun', $tahun);
-            })
-            ->when($level, function ($query) use ($level) {
-                $query->where('level', $level);
-            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->orderBy('kecamatan', 'asc')
             ->orderBy('desa', 'asc')
             ->paginate($perPage)
@@ -634,19 +663,15 @@ class IndexController extends Controller
 
         return Inertia::render('Frontend/data-data/RekapKegiatanWarga/Index', [
             'data' => $data,
-            'filters' => $request->only(['search', 'per_page', 'tahun', 'level']),
+            'filters' => $request->only(['search', 'per_page', 'tahun']),
         ]);
     }
 
-    /**
-     * Halaman Rekap Bumil
-     */
     public function rekapBumilPublic(Request $request)
     {
         $search = $request->input('search');
         $tahun = $request->input('tahun', date('Y'));
         $bulan = $request->input('bulan');
-        $level = $request->input('level');
         $perPage = (int) $request->input('per_page', 15);
 
         $data = RekapBumil::query()
@@ -658,15 +683,8 @@ class IndexController extends Controller
                         ->orWhere('nama_desa', 'like', "%{$search}%");
                 });
             })
-            ->when($tahun, function ($query) use ($tahun) {
-                $query->where('tahun', $tahun);
-            })
-            ->when($bulan, function ($query) use ($bulan) {
-                $query->where('bulan', $bulan);
-            })
-            ->when($level, function ($query) use ($level) {
-                $query->where('level', $level);
-            })
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
+            ->when($bulan, fn($q) => $q->where('bulan', $bulan))
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'asc')
             ->orderBy('kecamatan', 'asc')
@@ -676,23 +694,46 @@ class IndexController extends Controller
 
         return Inertia::render('Frontend/data-data/RekapBumil/Index', [
             'data' => $data,
-            'filters' => $request->only(['search', 'per_page', 'tahun', 'bulan', 'level']),
+            'filters' => $request->only(['search', 'per_page', 'tahun', 'bulan']),
         ]);
     }
 
-    // JSON — sama
+    // ============================================================
+    // JSON — UNTUK API / MOBILE
+    // ============================================================
+
     public function sekretariatJson(Request $request)
     {
         $search = $request->input('search');
+        $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
-        $data = DataUmumSekretariat::query()
+
+        // ✅ FIX: Roll-up dari DataUmumPkk
+        $data = DataUmumPkk::query()
+            ->where('level', 'desa')
+            ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
                         ->orWhere('nama_kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
+            ->select([
+                'kecamatan',
+                DB::raw('MAX(nama_kecamatan) as nama_kecamatan'),
+                'tahun',
+                DB::raw('SUM(jumlah_pkk_rw) as jumlah_pkk_rw'),
+                DB::raw('SUM(jumlah_pkk_rt) as jumlah_pkk_rt'),
+                DB::raw('SUM(jumlah_dasa_wisma) as jumlah_dasa_wisma'),
+                DB::raw('SUM(jumlah_kk) as jumlah_kk'),
+                DB::raw('SUM(jiwa_l) as jiwa_l'),
+                DB::raw('SUM(jiwa_p) as jiwa_p'),
+            ])
+            ->groupBy('kecamatan', 'tahun')
+            ->orderBy('kecamatan', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return response()->json($data);
     }
 
@@ -759,10 +800,7 @@ class IndexController extends Controller
         return response()->json($data);
     }
 
-    // ============================================================
-    // ✅ TAMBAH — 3 METHOD JSON BARU
-    // ============================================================
-
+    // === JSON 3 METHOD BARU ===
     public function dataUmumPkkJson(Request $request)
     {
         $search = $request->input('search');
