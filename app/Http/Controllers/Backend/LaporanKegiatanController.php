@@ -11,7 +11,6 @@ use App\Models\Pokja4;
 use App\Models\Pokja4KunjunganPyd;
 use App\Models\Pokja4KegiatanPosyandu;
 use App\Models\Pokja4Rekapitulasi;
-use App\Models\DataUmumSekretariat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -203,6 +202,9 @@ class LaporanKegiatanController extends Controller
             ->with('success', '🗑️ Laporan berhasil dihapus.');
     }
 
+    // ============================================================
+    // UPDATE STATISTIK POKJA — SWITCH CASE
+    // ============================================================
     private function updateStatistikPokja(LaporanKegiatan $laporan, array $dataAngka)
     {
         $kecamatan = $laporan->kecamatan;
@@ -223,21 +225,31 @@ class LaporanKegiatanController extends Controller
                 $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
                 $this->updatePokja1($kecamatan, $dataAngka, $tahun);
                 break;
-            case 'II': $this->updatePokja2($kecamatan, $dataAngka); break;
-            case 'III': $this->updatePokja3($kecamatan, $dataAngka); break;
+            case 'II':
+                $this->updatePokja2($kecamatan, $dataAngka);
+                break;
+            case 'III':
+                $this->updatePokja3($kecamatan, $dataAngka);
+                break;
             case 'IV':
                 $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
                 $this->updatePokja4($kecamatan, $dataAngka, $tahun);
                 break;
-            case 'IV-PYD': $this->updateKunjunganPyd($kecamatan, $dataAngka); break;
-            case 'IV-POSYANDU': $this->updateKegiatanPosyandu($kecamatan, $dataAngka); break;
-            case 'IV-REKAP': $this->updateRekapitulasi($kecamatan, $dataAngka); break;
-            case 'SEKRETARIAT': $this->updateSekretariat($kecamatan, $dataAngka); break;
+            case 'IV-PYD':
+                $this->updateKunjunganPyd($kecamatan, $dataAngka);
+                break;
+            case 'IV-POSYANDU':
+                $this->updateKegiatanPosyandu($kecamatan, $dataAngka);
+                break;
+            case 'IV-REKAP':
+                $this->updateRekapitulasi($kecamatan, $dataAngka);
+                break;
             default:
                 Log::warning('⚠️ Kategori Pokja tidak dikenal: ' . $pokja);
         }
     }
 
+    // ─── POKJA 1 ─────────────────────────────────────────────────
     private function updatePokja1($kecamatan, $dataAngka, int $tahun)
     {
         $pokja = Pokja1::firstOrCreate(
@@ -259,36 +271,31 @@ class LaporanKegiatanController extends Controller
             }
         }
 
-        // 6 program — kegiatan (text), volume (int), metode (text), sasaran (int)
+        // 6 program
         $programs = ['kisah', 'kilas', 'krisan', 'kiat', 'kisak', 'pkbn'];
 
         foreach ($programs as $prog) {
-            // Kegiatan — text — replace
             $kegiatan = $dataAngka["{$prog}_kegiatan"] ?? null;
             if (!empty($kegiatan)) {
                 $pokja->{"{$prog}_kegiatan"} = $kegiatan;
             }
 
-            // Volume — int — increment
             $volume = (int) ($dataAngka["{$prog}_volume"] ?? 0);
             if ($volume > 0) {
                 $pokja->increment("{$prog}_volume", $volume);
             }
 
-            // Metode — text — replace
             $metode = $dataAngka["{$prog}_metode"] ?? null;
             if (!empty($metode)) {
                 $pokja->{"{$prog}_metode"} = $metode;
             }
 
-            // Sasaran — int — increment
             $sasaran = (int) ($dataAngka["{$prog}_sasaran"] ?? 0);
             if ($sasaran > 0) {
                 $pokja->increment("{$prog}_sasaran", $sasaran);
             }
         }
 
-        // Keterangan — text — replace
         $keterangan = $dataAngka['keterangan'] ?? null;
         if (!empty($keterangan)) {
             $pokja->keterangan = $keterangan;
@@ -299,6 +306,7 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Pokja I updated untuk: ' . $kecamatan);
     }
 
+    // ─── POKJA 2 ─────────────────────────────────────────────────
     private function updatePokja2($kecamatan, $dataAngka)
     {
         $pokja = Pokja2::firstOrCreate(
@@ -346,18 +354,33 @@ class LaporanKegiatanController extends Controller
             'up2k_mandiri_kelompok',
             'up2k_mandiri_peserta',
             'anggota_koperasi',
+
+            // ✅ 5 FIELD BARU
+            'ibu_set_bkb',
+            'lp3_pkk',
+            'tp3_pkk',
+            'damas_pkk',
         ];
+
         foreach ($fields as $field) {
             $value = (int) ($dataAngka[$field] ?? 0);
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
         }
+
+        // Keterangan — text
+        $keterangan = $dataAngka['keterangan'] ?? null;
+        if (!empty($keterangan)) {
+            $pokja->keterangan = $keterangan;
+        }
+
         $pokja->save();
 
         Log::info('✅ Pokja II updated untuk: ' . $kecamatan);
     }
 
+    // ─── POKJA 3 ─────────────────────────────────────────────────
     private function updatePokja3($kecamatan, $dataAngka)
     {
         $pokja = Pokja3::firstOrCreate(
@@ -381,17 +404,26 @@ class LaporanKegiatanController extends Controller
             'hatinya_pkk',
             'jumlah_rumah',
         ];
+
         foreach ($fields as $field) {
             $value = (int) ($dataAngka[$field] ?? 0);
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
         }
+
+        // ✅ Keterangan
+        $keterangan = $dataAngka['keterangan'] ?? null;
+        if (!empty($keterangan)) {
+            $pokja->keterangan = $keterangan;
+        }
+
         $pokja->save();
 
         Log::info('✅ Pokja III updated untuk: ' . $kecamatan);
     }
 
+    // ─── POKJA 4 ─────────────────────────────────────────────────
     private function updatePokja4($kecamatan, $dataAngka, int $tahun)
     {
         $pokja = Pokja4::firstOrCreate(
@@ -426,35 +458,18 @@ class LaporanKegiatanController extends Controller
         $pokja->program_lingkungan = $dataAngka['program_lingkungan'] ?? $pokja->program_lingkungan;
         $pokja->program_perencanaan = $dataAngka['program_perencanaan'] ?? $pokja->program_perencanaan;
 
+        // ✅ Keterangan
+        $keterangan = $dataAngka['keterangan'] ?? null;
+        if (!empty($keterangan)) {
+            $pokja->keterangan = $keterangan;
+        }
+
         $pokja->save();
 
         Log::info('✅ Pokja IV updated untuk: ' . $kecamatan);
     }
 
-    private function updateSekretariat($kecamatan, $dataAngka)
-    {
-        $sekretariat = DataUmumSekretariat::firstOrCreate(
-            ['kecamatan' => $kecamatan],
-            [
-                'nama_kecamatan' => $kecamatan,
-                'kategori' => 'Sekretariat',
-                'judul_kegiatan' => "Rekapitulasi Sekretariat - $kecamatan",
-                'deskripsi' => "Data rekapitulasi otomatis dari laporan mobile",
-            ]
-        );
-
-        $fields = ['jumlah_kk', 'jumlah_dasa_wisma', 'jiwa_l', 'jiwa_p', 'kader_umum_l', 'kader_umum_p', 'kader_khusus_l', 'kader_khusus_p', 'tp_pkk_l', 'tp_pkk_p'];
-        foreach ($fields as $field) {
-            $value = $dataAngka[$field] ?? 0;
-            if ($value > 0) {
-                $sekretariat->increment($field, $value);
-            }
-        }
-        $sekretariat->save();
-
-        Log::info('✅ Sekretariat updated untuk: ' . $kecamatan);
-    }
-
+    // ─── KUNJUNGAN PYD ────────────────────────────────────────────
     private function updateKunjunganPyd($kecamatan, $dataAngka)
     {
         $bulan = $dataAngka['bulan'] ?? null;
@@ -509,6 +524,7 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Kunjungan PYD updated untuk: ' . $kecamatan . ' bulan ' . $bulanInt . ' (' . $namaBulan . ')');
     }
 
+    // ─── KEGIATAN POSYANDU ────────────────────────────────────────
     private function updateKegiatanPosyandu($kecamatan, $dataAngka)
     {
         $bulan = $dataAngka['bulan'] ?? null;
@@ -583,6 +599,7 @@ class LaporanKegiatanController extends Controller
         Log::info('✅ Kegiatan Posyandu updated untuk: ' . $kecamatan . ' bulan ' . $bulanInt . ' (' . $namaBulan . ')');
     }
 
+    // ─── REKAPITULASI ─────────────────────────────────────────────
     private function updateRekapitulasi($kecamatan, $dataAngka)
     {
         $tahun = $dataAngka['tahun'] ?? date('Y');

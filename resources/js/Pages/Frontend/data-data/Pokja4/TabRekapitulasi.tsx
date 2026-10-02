@@ -88,7 +88,7 @@ export default function TabRekapitulasi({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Heart size={14} className="text-rose-500" />
+                        <Heart size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ibu Hamil</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalIbuHamil.toLocaleString("id-ID")}</p>
@@ -96,7 +96,7 @@ export default function TabRekapitulasi({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Baby size={14} className="text-blue-500" />
+                        <Baby size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bayi Lahir</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalBayiLahir.toLocaleString("id-ID")}</p>
@@ -104,7 +104,7 @@ export default function TabRekapitulasi({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <FileText size={14} className="text-teal-500" />
+                        <FileText size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akte Ada</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalAkteAda.toLocaleString("id-ID")}</p>
@@ -112,7 +112,7 @@ export default function TabRekapitulasi({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Users size={14} className="text-amber-500" />
+                        <Users size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ibu Meninggal</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalIbuMeninggal.toLocaleString("id-ID")}</p>

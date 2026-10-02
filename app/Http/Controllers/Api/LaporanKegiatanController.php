@@ -8,9 +8,9 @@ use App\Models\Pokja1;
 use App\Models\Pokja2;
 use App\Models\Pokja3;
 use App\Models\Pokja4;
-use App\Models\Pokja4KunjunganPyd;        // ✅ TAMBAH
-use App\Models\Pokja4KegiatanPosyandu;    // ✅ TAMBAH
-use App\Models\Pokja4Rekapitulasi;        // ✅ TAMBAH
+use App\Models\Pokja4KunjunganPyd;
+use App\Models\Pokja4KegiatanPosyandu;
+use App\Models\Pokja4Rekapitulasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -128,7 +128,6 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            // ✅ UPDATE: tambah IV-PYD, IV-POSYANDU, IV-REKAP
             'kategori_pokja' => 'required|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP',
             'data_angka' => 'nullable|array',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -165,40 +164,32 @@ class LaporanKegiatanController extends Controller
         // ✅ FIX: Pokja I, II, III, IV + 3 sheet baru
         $pokjaFields = [
             'I' => [
-                // Kader
                 'kader_umum',
                 'kader_khusus',
-                // KISAH
                 'kisah_kegiatan',
                 'kisah_volume',
                 'kisah_metode',
                 'kisah_sasaran',
-                // KILAS
                 'kilas_kegiatan',
                 'kilas_volume',
                 'kilas_metode',
                 'kilas_sasaran',
-                // KRISAN
                 'krisan_kegiatan',
                 'krisan_volume',
                 'krisan_metode',
                 'krisan_sasaran',
-                // KIAT
                 'kiat_kegiatan',
                 'kiat_volume',
                 'kiat_metode',
                 'kiat_sasaran',
-                // KISAK
                 'kisak_kegiatan',
                 'kisak_volume',
                 'kisak_metode',
                 'kisak_sasaran',
-                // PKBN
                 'pkbn_kegiatan',
                 'pkbn_volume',
                 'pkbn_metode',
                 'pkbn_sasaran',
-                // Keterangan
                 'keterangan',
             ],
             'II' => [
@@ -236,6 +227,13 @@ class LaporanKegiatanController extends Controller
                 'up2k_mandiri_kelompok',
                 'up2k_mandiri_peserta',
                 'anggota_koperasi',
+
+                // ✅ TAMBAH 5 FIELD BARU
+                'ibu_set_bkb',
+                'lp3_pkk',
+                'tp3_pkk',
+                'damas_pkk',
+                'keterangan',
             ],
             'III' => [
                 'rumah_sehat',
@@ -247,6 +245,7 @@ class LaporanKegiatanController extends Controller
                 'makanan_pokok',
                 'hatinya_pkk',
                 'jumlah_rumah',
+                'keterangan',
             ],
             'IV' => [
                 'posyandu',
@@ -276,8 +275,8 @@ class LaporanKegiatanController extends Controller
                 'program_kesehatan',
                 'program_lingkungan',
                 'program_perencanaan',
+                'keterangan',
             ],
-            // ✅ 3 SHEET BARU — POKJA IV
             'IV-PYD' => [
                 'bulan',
                 'tahun',
@@ -417,7 +416,6 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'sometimes|string|max:255',
             'deskripsi' => 'nullable|string',
-            // ✅ UPDATE
             'kategori_pokja' => 'sometimes|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP',
             'data_angka' => 'nullable|array',
             'kecamatan' => 'nullable|string|max:255',
@@ -556,9 +554,6 @@ class LaporanKegiatanController extends Controller
         if (is_string($dataAngka)) {
             $dataAngka = json_decode($dataAngka, true);
         }
-        if (is_string($dataAngka)) {
-            $dataAngka = json_decode($dataAngka, true);
-        }
 
         if (!is_array($dataAngka) || empty($dataAngka)) {
             Log::warning('Sinkronisasi gagal: data_angka kosong untuk laporan ID: ' . $laporan->id);
@@ -574,7 +569,6 @@ class LaporanKegiatanController extends Controller
 
         Log::info('Sinkronisasi Pokja ' . $laporan->kategori_pokja . ' untuk kecamatan: ' . $kecamatan);
 
-        // ✅ UPDATE: tambah 3 case baru
         switch ($laporan->kategori_pokja) {
             case 'I':
                 $tahun = $laporan->created_at ? $laporan->created_at->year : now()->year;
@@ -610,34 +604,27 @@ class LaporanKegiatanController extends Controller
         $pokja = Pokja1::firstOrNew(['kecamatan' => $kecamatan]);
         $pokja->tahun = $pokja->tahun ?? $tahun;
 
-        // Kader — angka
         $pokja->kader_umum = ($pokja->kader_umum ?? 0) + ($data['kader_umum'] ?? 0);
         $pokja->kader_khusus = ($pokja->kader_khusus ?? 0) + ($data['kader_khusus'] ?? 0);
 
-        // 6 program — kegiatan (text), volume (int), metode (text), sasaran (int)
         $programs = ['kisah', 'kilas', 'krisan', 'kiat', 'kisak', 'pkbn'];
 
         foreach ($programs as $prog) {
-            // Kegiatan — text — replace, bukan sum
             if (isset($data["{$prog}_kegiatan"]) && !empty($data["{$prog}_kegiatan"])) {
                 $pokja->{"{$prog}_kegiatan"} = $data["{$prog}_kegiatan"];
             }
 
-            // Volume — angka — sum
             $pokja->{"{$prog}_volume"} = ($pokja->{"{$prog}_volume"} ?? 0)
                 + (int)($data["{$prog}_volume"] ?? 0);
 
-            // Metode — text — replace
             if (isset($data["{$prog}_metode"]) && !empty($data["{$prog}_metode"])) {
                 $pokja->{"{$prog}_metode"} = $data["{$prog}_metode"];
             }
 
-            // Sasaran — angka — sum
             $pokja->{"{$prog}_sasaran"} = ($pokja->{"{$prog}_sasaran"} ?? 0)
                 + (int)($data["{$prog}_sasaran"] ?? 0);
         }
 
-        // Keterangan — text
         if (isset($data['keterangan']) && !empty($data['keterangan'])) {
             $pokja->keterangan = $data['keterangan'];
         }
@@ -656,6 +643,7 @@ class LaporanKegiatanController extends Controller
     {
         $pokja = Pokja2::firstOrNew(['kecamatan' => $kecamatan]);
 
+        // Field Lama
         $pokja->warga_buta_l = ($pokja->warga_buta_l ?? 0) + ($data['warga_buta_l'] ?? 0);
         $pokja->warga_buta_p = ($pokja->warga_buta_p ?? 0) + ($data['warga_buta_p'] ?? 0);
         $pokja->kelompok_belajar_paket_a = ($pokja->kelompok_belajar_paket_a ?? 0) + ($data['kelompok_belajar_paket_a'] ?? 0);
@@ -665,6 +653,7 @@ class LaporanKegiatanController extends Controller
         $pokja->paud = ($pokja->paud ?? 0) + ($data['paud'] ?? 0);
         $pokja->koperasi_berbadan_hukum = ($pokja->koperasi_berbadan_hukum ?? 0) + ($data['koperasi_berbadan_hukum'] ?? 0);
 
+        // Field Baru
         $pokja->warga_belajar_paket_a = ($pokja->warga_belajar_paket_a ?? 0) + ($data['warga_belajar_paket_a'] ?? 0);
         $pokja->warga_belajar_paket_b = ($pokja->warga_belajar_paket_b ?? 0) + ($data['warga_belajar_paket_b'] ?? 0);
         $pokja->warga_belajar_paket_c = ($pokja->warga_belajar_paket_c ?? 0) + ($data['warga_belajar_paket_c'] ?? 0);
@@ -692,6 +681,16 @@ class LaporanKegiatanController extends Controller
         $pokja->up2k_mandiri_peserta = ($pokja->up2k_mandiri_peserta ?? 0) + ($data['up2k_mandiri_peserta'] ?? 0);
         $pokja->anggota_koperasi = ($pokja->anggota_koperasi ?? 0) + ($data['anggota_koperasi'] ?? 0);
 
+        // ✅ 5 FIELD BARU
+        $pokja->ibu_set_bkb = ($pokja->ibu_set_bkb ?? 0) + ($data['ibu_set_bkb'] ?? 0);
+        $pokja->lp3_pkk = ($pokja->lp3_pkk ?? 0) + ($data['lp3_pkk'] ?? 0);
+        $pokja->tp3_pkk = ($pokja->tp3_pkk ?? 0) + ($data['tp3_pkk'] ?? 0);
+        $pokja->damas_pkk = ($pokja->damas_pkk ?? 0) + ($data['damas_pkk'] ?? 0);
+
+        if (isset($data['keterangan']) && !empty($data['keterangan'])) {
+            $pokja->keterangan = $data['keterangan'];
+        }
+
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja II';
         $pokja->judul_kegiatan = "Rekapitulasi Pokja II - $kecamatan";
@@ -716,6 +715,10 @@ class LaporanKegiatanController extends Controller
         $pokja->makanan_pokok = ($pokja->makanan_pokok ?? 0) + ($data['makanan_pokok'] ?? 0);
         $pokja->hatinya_pkk = ($pokja->hatinya_pkk ?? 0) + ($data['hatinya_pkk'] ?? 0);
         $pokja->jumlah_rumah = ($pokja->jumlah_rumah ?? 0) + ($data['jumlah_rumah'] ?? 0);
+
+        if (isset($data['keterangan']) && !empty($data['keterangan'])) {
+            $pokja->keterangan = $data['keterangan'];
+        }
 
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja III';
@@ -764,6 +767,10 @@ class LaporanKegiatanController extends Controller
         $pokja->program_lingkungan = $data['program_lingkungan'] ?? $pokja->program_lingkungan;
         $pokja->program_perencanaan = $data['program_perencanaan'] ?? $pokja->program_perencanaan;
 
+        if (isset($data['keterangan']) && !empty($data['keterangan'])) {
+            $pokja->keterangan = $data['keterangan'];
+        }
+
         $pokja->nama_kecamatan = $kecamatan;
         $pokja->kategori = 'Pokja IV';
         $pokja->judul_kegiatan = "Rekapitulasi Pokja IV - $kecamatan";
@@ -772,8 +779,6 @@ class LaporanKegiatanController extends Controller
 
         Log::info('Pokja 4 berhasil disinkronkan untuk: ' . $kecamatan);
     }
-
-    // ✅ ─── SINKRON 3 SHEET BARU — POKJA IV ─────────────────────────────────
 
     // ─── SINKRON KUNJUNGAN PYD ────────────────────────────────────────────────
     private function sinkronkanKunjunganPyd($kecamatan, $data)
@@ -839,13 +844,11 @@ class LaporanKegiatanController extends Controller
             'tahun' => $tahun,
         ]);
 
-        // IBU HAMIL & MENYUSUI
         $record->ibu_hamil = $data['ibu_hamil'] ?? 0;
         $record->ibu_hamil_diperiksa = $data['ibu_hamil_diperiksa'] ?? 0;
         $record->ibu_hamil_dapat_fe = $data['ibu_hamil_dapat_fe'] ?? 0;
         $record->menyusui = $data['menyusui'] ?? 0;
 
-        // KB
         $record->kb_iud = $data['kb_iud'] ?? 0;
         $record->kb_mow = $data['kb_mow'] ?? 0;
         $record->kb_mop = $data['kb_mop'] ?? 0;
@@ -854,7 +857,6 @@ class LaporanKegiatanController extends Controller
         $record->kb_suntik = $data['kb_suntik'] ?? 0;
         $record->kb_kondom = $data['kb_kondom'] ?? 0;
 
-        // BALITA
         $record->balita_l = $data['balita_l'] ?? 0;
         $record->balita_p = $data['balita_p'] ?? 0;
         $record->balita_kia_l = $data['balita_kia_l'] ?? 0;
@@ -864,11 +866,9 @@ class LaporanKegiatanController extends Controller
         $record->balita_naik_l = $data['balita_naik_l'] ?? 0;
         $record->balita_naik_p = $data['balita_naik_p'] ?? 0;
 
-        // VITAMIN
         $record->vit_a_1 = $data['vit_a_1'] ?? 0;
         $record->vit_a_2 = $data['vit_a_2'] ?? 0;
 
-        // IMUNISASI
         $record->imunisasi_tt_1 = $data['imunisasi_tt_1'] ?? 0;
         $record->imunisasi_tt_2 = $data['imunisasi_tt_2'] ?? 0;
         $record->imunisasi_bcg = $data['imunisasi_bcg'] ?? 0;
@@ -884,7 +884,6 @@ class LaporanKegiatanController extends Controller
         $record->imunisasi_hepatitis_2 = $data['imunisasi_hepatitis_2'] ?? 0;
         $record->imunisasi_hepatitis_3 = $data['imunisasi_hepatitis_3'] ?? 0;
 
-        // DIARE
         $record->balita_diare = $data['balita_diare'] ?? 0;
         $record->balita_oralit = $data['balita_oralit'] ?? 0;
 

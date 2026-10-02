@@ -140,28 +140,28 @@ export default function TabKunjunganPyd({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-2">
-                        <Baby size={16} className="text-blue-600" />
+                        <Baby size={16} className="text-slate-600" />
                         <p className="text-xs font-medium text-slate-500 uppercase">Total Bayi</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 mt-1">{totalBayi.toLocaleString("id-ID")}</p>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-2">
-                        <Users size={16} className="text-teal-600" />
+                        <Users size={16} className="text-slate-600" />
                         <p className="text-xs font-medium text-slate-500 uppercase">Total Balita</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 mt-1">{totalBalita.toLocaleString("id-ID")}</p>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-2">
-                        <Heart size={16} className="text-rose-600" />
+                        <Heart size={16} className="text-slate-600" />
                         <p className="text-xs font-medium text-slate-500 uppercase">Total WUS</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 mt-1">{totalWus.toLocaleString("id-ID")}</p>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <div className="flex items-center gap-2">
-                        <Calendar size={16} className="text-amber-600" />
+                        <Calendar size={16} className="text-slate-600" />
                         <p className="text-xs font-medium text-slate-500 uppercase">Ibu Hamil</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 mt-1">{totalIbuHamil.toLocaleString("id-ID")}</p>

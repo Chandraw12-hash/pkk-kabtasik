@@ -146,8 +146,8 @@ export default function TabPokja4({
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Posyandu</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{totalPosyandu.toLocaleString("id-ID")}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <HeartPulse size={18} className="text-blue-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <HeartPulse size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -155,8 +155,8 @@ export default function TabPokja4({
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Akseptor KB</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{(totalKbL + totalKbP).toLocaleString("id-ID")}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-[#0072BC]/10 flex items-center justify-center">
-                        <Activity size={18} className="text-[#0072BC]" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Activity size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -164,8 +164,8 @@ export default function TabPokja4({
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Rumah PHBS</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{totalPhbs.toLocaleString("id-ID")}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                        <ShieldPlus size={18} className="text-amber-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ShieldPlus size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -173,8 +173,8 @@ export default function TabPokja4({
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Jamban</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{totalJamban.toLocaleString("id-ID")}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
-                        <Home size={18} className="text-rose-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Home size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -184,8 +184,8 @@ export default function TabPokja4({
                             {(totalKaderKesehatan + totalKaderGizi + totalKaderKesling + totalKaderPhbs + totalKaderKb).toLocaleString("id-ID")}
                         </p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-                        <Users size={18} className="text-teal-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Users size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -193,8 +193,8 @@ export default function TabPokja4({
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Imunisasi</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{totalImunisasi.toLocaleString("id-ID")}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                        <Leaf size={18} className="text-green-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Leaf size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -204,8 +204,8 @@ export default function TabPokja4({
                             {(totalAirPdam + totalAirSumur + totalAirLainnya).toLocaleString("id-ID")}
                         </p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
-                        <Droplets size={18} className="text-cyan-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Droplets size={18} className="text-slate-600" />
                     </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between">
@@ -213,8 +213,8 @@ export default function TabPokja4({
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tabungan Keluarga</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{totalTabungan.toLocaleString("id-ID")}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                        <PiggyBank size={18} className="text-indigo-600" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <PiggyBank size={18} className="text-slate-600" />
                     </div>
                 </div>
             </div>

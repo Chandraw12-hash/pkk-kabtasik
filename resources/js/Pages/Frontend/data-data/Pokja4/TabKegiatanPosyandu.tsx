@@ -231,7 +231,7 @@ export default function TabKegiatanPosyandu({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <HeartPulse size={14} className="text-rose-500" />
+                        <HeartPulse size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ibu Hamil</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalIbuHamil.toLocaleString("id-ID")}</p>
@@ -239,7 +239,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Baby size={14} className="text-blue-500" />
+                        <Baby size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Menyusui</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalMenyusui.toLocaleString("id-ID")}</p>
@@ -247,7 +247,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Activity size={14} className="text-teal-500" />
+                        <Activity size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akseptor KB</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalKB.toLocaleString("id-ID")}</p>
@@ -255,7 +255,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Users size={14} className="text-purple-500" />
+                        <Users size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Balita</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalBalita.toLocaleString("id-ID")}</p>
@@ -263,7 +263,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Scale size={14} className="text-amber-500" />
+                        <Scale size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ditimbang</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalDitimbang.toLocaleString("id-ID")}</p>
@@ -271,7 +271,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Syringe size={14} className="text-green-500" />
+                        <Syringe size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Imunisasi</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalImunisasi.toLocaleString("id-ID")}</p>
@@ -279,7 +279,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Droplets size={14} className="text-cyan-500" />
+                        <Droplets size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Oralit</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{totalOralit.toLocaleString("id-ID")}</p>
@@ -287,7 +287,7 @@ export default function TabKegiatanPosyandu({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Activity size={14} className="text-indigo-500" />
+                        <Activity size={14} className="text-slate-600" />
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vit A</p>
                     </div>
                     <p className="text-2xl font-bold text-slate-900">{(totalVitA1 + totalVitA2).toLocaleString("id-ID")}</p>

@@ -55,6 +55,13 @@ class Pokja2 extends Model
         'up2k_mandiri_kelompok',
         'up2k_mandiri_peserta',
         'anggota_koperasi',
+
+        // ✅ BARU — 5 kolom dari Excel Pokja II
+        'ibu_set_bkb',
+        'lp3_pkk',
+        'tp3_pkk',
+        'damas_pkk',
+        'keterangan',
     ];
 
     protected $casts = [
@@ -95,6 +102,12 @@ class Pokja2 extends Model
         'up2k_mandiri_kelompok' => 'integer',
         'up2k_mandiri_peserta' => 'integer',
         'anggota_koperasi' => 'integer',
+
+        // ✅ BARU — 5 kolom
+        'ibu_set_bkb' => 'integer',
+        'lp3_pkk' => 'integer',
+        'tp3_pkk' => 'integer',
+        'damas_pkk' => 'integer',
     ];
 
     protected $appends = [
@@ -159,6 +172,7 @@ class Pokja2 extends Model
     {
         return ($this->kelompok_bkb ?? 0) +
                ($this->peserta_bkb ?? 0) +
+               ($this->ibu_set_bkb ?? 0) +
                ($this->ape_bkb ?? 0) +
                ($this->kelompok_simulasi_bkb ?? 0);
     }
@@ -172,7 +186,10 @@ class Pokja2 extends Model
                ($this->kader_keterampilan ?? 0) +
                ($this->kader_dilatih_pengelolaan ?? 0) +
                ($this->kader_dilatih_tp_pkk ?? 0) +
-               ($this->kader_dilatih_damas ?? 0);
+               ($this->kader_dilatih_damas ?? 0) +
+               ($this->lp3_pkk ?? 0) +
+               ($this->tp3_pkk ?? 0) +
+               ($this->damas_pkk ?? 0);
     }
 
     public function getTotalUp2kAttribute(): int
@@ -295,15 +312,6 @@ class Pokja2 extends Model
                 ->orWhere('paud', '>', 0)
                 ->orWhere('koperasi_berbadan_hukum', '>', 0);
         });
-    }
-
-    // ============================================
-    // RELATIONS
-    // ============================================
-
-    public function sekretariat()
-    {
-        return $this->hasOne(DataUmumSekretariat::class, 'kecamatan', 'kecamatan');
     }
 
     public function incrementStatistik(array $data): void
