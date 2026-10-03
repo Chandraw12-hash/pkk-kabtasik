@@ -194,19 +194,12 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     // SEKRETARIAT — 3 TAB (Data Umum, Kegiatan, Bumil)
     // ============================================================
     Route::prefix('sekretariat')->name('sekretariat.')->group(function () {
-        // Tab 1 — Data Umum PKK
         Route::get('/', [DataUmumSekretariatController::class, 'index'])
             ->name('index');
-
-        // Tab 2 — Data Kegiatan
         Route::get('/kegiatan', [DataUmumSekretariatController::class, 'kegiatan'])
             ->name('kegiatan');
-
-        // Tab 3 — Rekap Bumil
         Route::get('/bumil', [DataUmumSekretariatController::class, 'bumil'])
             ->name('bumil');
-
-        // Export CSV
         Route::get('/export', [DataUmumSekretariatController::class, 'export'])
             ->name('export');
     });
@@ -308,9 +301,26 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::patch('/survey/{survey}/toggle-status', [SurveyController::class, 'toggleStatus'])->name('survey.toggle-status');
     Route::delete('/survey/{survey}', [SurveyController::class, 'destroy'])->name('survey.destroy');
 
-    Route::resource('users', UserController::class)
-        ->names('users')
-        ->except(['show']);
+    // ============================================================
+    // ✅ USERS — MIDDLEWARE PERMISSION DI ROUTE
+    // ============================================================
+    Route::middleware('permission:view-users')->group(function () {
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+    });
+
+    Route::middleware('permission:create-user')->group(function () {
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+    });
+
+    Route::middleware('permission:edit-user')->group(function () {
+        Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+    });
+
+    Route::middleware('permission:delete-user')->group(function () {
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
 
     Route::resource('roles', RoleController::class)
         ->names('roles')
@@ -377,29 +387,22 @@ Route::prefix('kecamatan')
     Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])
         ->name('print');
 
-    // ============================================================
-    // ✅ DATA PKK — BARU
-    // ============================================================
-
-    // Data Umum PKK Kecamatan
+    // DATA PKK
     Route::get('data-pkk/umum', [DataUmumKecamatanController::class, 'index'])
         ->name('data-umum.index');
     Route::get('data-pkk/umum/{desa}', [DataUmumKecamatanController::class, 'show'])
         ->name('data-umum.show');
 
-    // Rekap Kegiatan Warga Kecamatan
     Route::get('data-pkk/kegiatan', [KegiatanKecamatanController::class, 'index'])
         ->name('kegiatan.index');
     Route::get('data-pkk/kegiatan/{desa}', [KegiatanKecamatanController::class, 'show'])
         ->name('kegiatan.show');
 
-    // Rekap Bumil Kecamatan
     Route::get('data-pkk/bumil', [BumilKecamatanController::class, 'index'])
         ->name('bumil.index');
     Route::get('data-pkk/bumil/{desa}', [BumilKecamatanController::class, 'show'])
         ->name('bumil.show');
 
-    // Export PKK
     Route::get('data-pkk/export/umum', [ExportKecamatanPkkController::class, 'dataUmum'])
         ->name('export.data-umum');
     Route::get('data-pkk/export/kegiatan', [ExportKecamatanPkkController::class, 'kegiatan'])
@@ -416,11 +419,9 @@ Route::prefix('desa')
     ->middleware(['auth', 'role:admin desa', 'scope.desa'])
     ->group(function () {
 
-    // Dashboard
     Route::get('/', [DashboardDesaController::class, 'index'])
         ->name('dashboard');
 
-    // Data Umum PKK
     Route::get('/data-umum', [DataUmumDesaController::class, 'index'])
         ->name('data-umum.index');
     Route::get('/data-umum/import', [DataUmumDesaController::class, 'import'])
@@ -430,7 +431,6 @@ Route::prefix('desa')
     Route::get('/data-umum/template', [DataUmumDesaController::class, 'downloadTemplate'])
         ->name('data-umum.template');
 
-    // Rekap Kegiatan Warga
     Route::get('/kegiatan', [KegiatanDesaController::class, 'index'])
         ->name('kegiatan.index');
     Route::get('/kegiatan/import', [KegiatanDesaController::class, 'import'])
@@ -442,7 +442,6 @@ Route::prefix('desa')
     Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])
         ->name('kegiatan.dusun.destroy');
 
-    // Rekap Bumil
     Route::get('/bumil', [BumilDesaController::class, 'index'])
         ->name('bumil.index');
     Route::get('/bumil/import', [BumilDesaController::class, 'import'])
@@ -452,7 +451,6 @@ Route::prefix('desa')
     Route::get('/bumil/template', [BumilDesaController::class, 'downloadTemplate'])
         ->name('bumil.template');
 
-    // Export
     Route::get('/export', [ExportDesaController::class, 'index'])
         ->name('export.index');
     Route::get('/export/data-umum', [ExportDesaController::class, 'exportDataUmum'])

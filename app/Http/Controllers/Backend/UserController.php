@@ -24,13 +24,8 @@ class UserController extends Controller
         'Sukaratu', 'Sukaresik', 'Tanjungjaya', 'Taraju',
     ];
 
-    public function __construct()
-    {
-        $this->middleware('permission:view-users')->only('index');
-        $this->middleware('permission:create-user')->only(['create', 'store']);
-        $this->middleware('permission:edit-user')->only(['edit', 'update']);
-        $this->middleware('permission:delete-user')->only('destroy');
-    }
+    // ⚠️ HAPUS constructor middleware — pindah ke route
+    // (Laravel 11 udah ga support $this->middleware() di constructor)
 
     /**
      * INDEX — List user + filter
@@ -89,18 +84,18 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
             'kecamatan' => 'nullable|string|max:255',
-            'desa' => 'nullable|string|max:255',        // ✅ TAMBAH
-            'nama_desa' => 'nullable|string|max:255',   // ✅ TAMBAH
+            'desa' => 'nullable|string|max:255',
+            'nama_desa' => 'nullable|string|max:255',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => Hash::make($request->password),  // ✅ pakai Hash
             'kecamatan' => $request->kecamatan,
-            'desa' => $request->desa,           // ✅ TAMBAH
-            'nama_desa' => $request->nama_desa, // ✅ TAMBAH
+            'desa' => $request->desa,
+            'nama_desa' => $request->nama_desa,
             'status' => 'active',
         ]);
 
@@ -135,8 +130,8 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'roles' => 'required|array',
             'kecamatan' => 'nullable|string|max:255',
-            'desa' => 'nullable|string|max:255',        // ✅ TAMBAH
-            'nama_desa' => 'nullable|string|max:255',   // ✅ TAMBAH
+            'desa' => 'nullable|string|max:255',
+            'nama_desa' => 'nullable|string|max:255',
         ]);
 
         $data = [
@@ -144,12 +139,12 @@ class UserController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'kecamatan' => $request->kecamatan,
-            'desa' => $request->desa,           // ✅ TAMBAH
-            'nama_desa' => $request->nama_desa, // ✅ TAMBAH
+            'desa' => $request->desa,
+            'nama_desa' => $request->nama_desa,
         ];
 
         if ($request->filled('password')) {
-            $data['password'] = bcrypt($request->password);
+            $data['password'] = Hash::make($request->password);  // ✅ pakai Hash
         }
 
         $user->update($data);

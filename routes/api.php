@@ -19,7 +19,16 @@ use App\Http\Controllers\Api\RekapBumilApiController;
 Route::post('/login', [AuthController::class, 'login']);
 
 // ─── LAPORAN KEGIATAN (PUBLIC) ────────────────────────────────
+// ⚠️ PENTING: Route SPESIFIK didaftarkan DULU, baru wildcard {id}
 Route::get('/laporan-kegiatan', [LaporanKegiatanController::class, 'index']);
+
+// ✅ FIX: Route my-laporan & saya di ATAS — sebelum {id}
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/laporan-kegiatan/saya', [LaporanKegiatanController::class, 'myLaporan']);
+    Route::get('/laporan-kegiatan/my-laporan', [LaporanKegiatanController::class, 'myLaporan']);
+});
+
+// ❌ Route {id} di BAWAH — biar ga "makan" route spesifik
 Route::get('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'show']);
 
 // ─── BERITA (PUBLIC) ──────────────────────────────────────────
@@ -37,8 +46,8 @@ Route::get('/galeri/{id}', [GaleriController::class, 'show']);
 
 // ─── AGENDA (PUBLIC) ──────────────────────────────────────────
 Route::get('/agenda', [AgendaApiController::class, 'index']);
-Route::get('/agenda/{id}', [AgendaApiController::class, 'show']);
 Route::get('/agenda/calendar', [AgendaApiController::class, 'calendar']);
+Route::get('/agenda/{id}', [AgendaApiController::class, 'show']);
 
 // ✅ TAMBAH — DATA UMUM PKK (PUBLIC)
 Route::get('/data-umum-pkk/rekap', [DataUmumPkkApiController::class, 'rekap']);
@@ -66,13 +75,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────
+    // ⚠️ Route SPESIFIK DULU
+    Route::get('/laporan-kegiatan/saya', [LaporanKegiatanController::class, 'myLaporan']);
+    Route::get('/laporan-kegiatan/my-laporan', [LaporanKegiatanController::class, 'myLaporan']);
+    Route::get('/admin/laporan-kegiatan', [LaporanKegiatanController::class, 'adminIndex']);
+
     Route::post('/laporan-kegiatan', [LaporanKegiatanController::class, 'store']);
     Route::put('/laporan-kegiatan/{id}/approve', [LaporanKegiatanController::class, 'approve']);
     Route::put('/laporan-kegiatan/{id}/reject', [LaporanKegiatanController::class, 'reject']);
     Route::put('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'update']);
     Route::delete('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'destroy']);
-    Route::get('/laporan-kegiatan/saya', [LaporanKegiatanController::class, 'myLaporan']);
-    Route::get('/admin/laporan-kegiatan', [LaporanKegiatanController::class, 'adminIndex']);
 
     // ─── BERITA (MOBILE) ──────────────────────────────────────
     Route::post('/berita', [BeritaController::class, 'store']);
@@ -108,11 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/test-routes', function () {
     $routes = [];
     foreach (Route::getRoutes() as $route) {
-        if (str_contains($route->uri(), 'berita')
-            || str_contains($route->uri(), 'laporan')
-            || str_contains($route->uri(), 'data-umum')
-            || str_contains($route->uri(), 'rekap-kegiatan')
-            || str_contains($route->uri(), 'rekap-bumil')) {
+        if (str_contains($route->uri(), 'laporan')) {
             $routes[] = [
                 'method' => implode('|', $route->methods()),
                 'uri' => $route->uri(),
