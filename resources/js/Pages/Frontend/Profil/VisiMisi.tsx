@@ -30,7 +30,7 @@ function useScrollAnimation() {
                     observer.unobserve(entry.target);
                 }
             },
-            { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+            { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
         );
         if (ref.current) observer.observe(ref.current);
         return () => {
@@ -135,7 +135,7 @@ export default function VisiMisi() {
                             Visi
                         </p>
                         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-8">
-                            Visi Gerakan PKK
+                            Visi Gerakan TP PKK
                         </h2>
 
                         <div className="max-w-2xl mx-auto">
@@ -157,8 +157,8 @@ export default function VisiMisi() {
                         </h2>
                         <p className="text-slate-500 text-sm sm:text-base max-w-xl mx-auto">
                             Untuk mewujudkan visi tersebut, Gerakan PKK
-                            menetapkan sejumlah misi sebagai landasan gerak
-                            dan strategi implementatif.
+                            menetapkan sejumlah misi sebagai landasan gerak dan
+                            strategi implementatif.
                         </p>
                     </div>
 
@@ -182,7 +182,10 @@ export default function VisiMisi() {
                                     }`}
                                 >
                                     <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center mb-4">
-                                        <Icon size={18} className="text-[#0072BC]" />
+                                        <Icon
+                                            size={18}
+                                            className="text-[#0072BC]"
+                                        />
                                     </div>
                                     <h3 className="text-slate-900 font-semibold text-[15px] mb-2 leading-snug">
                                         {misi.title}
