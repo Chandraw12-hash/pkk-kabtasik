@@ -24,8 +24,30 @@ class RoleController extends Controller
     {
         $perPage = $request->per_page ?? 10;
 
+        // Bersihkan dan hapus role 'pkk' secara otomatis
+        $pkkRole = Role::where('name', 'pkk')->first();
+        if ($pkkRole) {
+            $pkkRole->syncPermissions([]);
+            $pkkRole->users()->detach();
+            $pkkRole->delete();
+        }
+
+        // Buat role 'dasawisma' (web) & akun default jika belum ada
+        $dasawismaRole = Role::firstOrCreate(['name' => 'dasawisma', 'guard_name' => 'web']);
+        $existingDasawisma = \App\Models\User::where('username', 'dasawisma')->first();
+        if (!$existingDasawisma) {
+            $userDasawisma = \App\Models\User::create([
+                'name' => 'Kader Dasawisma',
+                'username' => 'dasawisma',
+                'email' => 'dasawisma@pkk.test',
+                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                'status' => 'active',
+            ]);
+            $userDasawisma->syncRoles([$dasawismaRole]);
+        }
+
         $roles = Role::with('permissions')
-            ->withCount('users')  // ✅ TAMBAH INI
+            ->withCount('users')
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
@@ -92,7 +114,15 @@ class RoleController extends Controller
      */
     public function destroy(Role $role): RedirectResponse
     {
+        if ($role->name === 'admin') {
+            return redirect()->route('be.roles.index')
+                ->with('error', 'Role admin tidak dapat dihapus');
+        }
+
+        $role->syncPermissions([]);
+        $role->users()->detach();
         $role->delete();
+
         return redirect()->route('be.roles.index')
             ->with('success', 'Role berhasil dihapus');
     }

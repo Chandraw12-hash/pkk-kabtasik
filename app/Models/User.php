@@ -57,7 +57,6 @@ class User extends Authenticatable
     }
 
     public const MOBILE_ROLES = [
-        'admin',
         'pokja1',
         'pokja2',
         'pokja3',

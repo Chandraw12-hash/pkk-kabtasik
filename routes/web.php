@@ -322,6 +322,17 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
+    Route::get('roles/cleanup-pkk-now', function () {
+        $role = \Spatie\Permission\Models\Role::where('name', 'pkk')->first();
+        if ($role) {
+            $role->syncPermissions([]);
+            $role->users()->detach();
+            $role->delete();
+            return redirect()->route('be.roles.index')->with('success', 'Role pkk berhasil dihapus permanen.');
+        }
+        return redirect()->route('be.roles.index')->with('message', 'Role pkk sudah tidak ada.');
+    })->name('roles.cleanup-pkk');
+
     Route::resource('roles', RoleController::class)
         ->names('roles')
         ->except(['show']);
@@ -459,4 +470,18 @@ Route::prefix('desa')
         ->name('export.kegiatan');
     Route::get('/export/bumil', [ExportDesaController::class, 'exportBumil'])
         ->name('export.bumil');
+});
+
+// ============================================================
+// ROUTES: KADER DASAWISMA (WEB)
+// ============================================================
+use App\Http\Controllers\Backend\Dasawisma\DashboardDasawismaController;
+
+Route::prefix('dasawisma')
+    ->name('dasawisma.')
+    ->middleware(['auth', 'dasawisma'])
+    ->group(function () {
+
+    Route::get('/', [DashboardDasawismaController::class, 'index'])
+        ->name('dashboard');
 });

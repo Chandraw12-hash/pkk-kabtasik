@@ -69,6 +69,11 @@ class LoginController extends Controller
                 return redirect()->intended('/desa');
             }
 
+            // Kalau role dasawisma → redirect ke /dasawisma
+            if ($user->hasRole('dasawisma')) {
+                return redirect()->intended('/dasawisma');
+            }
+
             // Kalau role kecamatan → redirect ke /kecamatan
             if ($user->hasRole('kecamatan')) {
                 return redirect()->intended('/kecamatan');

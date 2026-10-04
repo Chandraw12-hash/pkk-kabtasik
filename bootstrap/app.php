@@ -30,6 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // 🔥 Middleware Admin Desa
             'scope.desa' => \App\Http\Middleware\ScopeDesaMiddleware::class,
+
+            // 🔥 Middleware Kader Dasawisma
+            'dasawisma' => \App\Http\Middleware\DasawismaMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

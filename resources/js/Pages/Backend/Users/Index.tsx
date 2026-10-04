@@ -61,6 +61,7 @@ const getRoleBadge = (roleName: string) => {
         admin: { label: "Admin", color: "bg-red-100 text-red-700 border-red-200" },
         operator: { label: "Operator", color: "bg-blue-100 text-blue-700 border-blue-200" },
         kader_dasawisma: { label: "Kader", color: "bg-teal-100 text-teal-700 border-teal-200" },
+        dasawisma: { label: "Dasawisma", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
         'admin-pkk': { label: "Admin PKK", color: "bg-purple-100 text-purple-700 border-purple-200" },
         // ✅ TAMBAH: role kecamatan
         kecamatan: { label: "Kecamatan", color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
@@ -152,8 +153,9 @@ export default function Index({ users, filters = {} }: IndexProps) {
         { value: "admin", label: "Admin" },
         { value: "operator", label: "Operator" },
         { value: "kader_dasawisma", label: "Kader" },
+        { value: "dasawisma", label: "Dasawisma" },
         { value: "admin-pkk", label: "Admin PKK" },
-        { value: "kecamatan", label: "Admin Kecamatan" },  // ✅ TAMBAH
+        { value: "kecamatan", label: "Admin Kecamatan" },
     ];
 
     const statusOptions = [

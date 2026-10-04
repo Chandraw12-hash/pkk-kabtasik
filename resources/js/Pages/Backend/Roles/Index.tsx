@@ -38,7 +38,8 @@ const getRoleIcon = (roleName: string) => {
         operator: UserCog,
         'admin-pkk': ShieldCheck,
         kader_dasawisma: Users,
-        kecamatan: MapPin, // ✅ TAMBAH
+        dasawisma: Users,
+        kecamatan: MapPin,
     };
     return iconMap[roleName] || Shield;
 };
@@ -49,7 +50,8 @@ const getRoleColor = (roleName: string) => {
         operator: "bg-blue-50 text-blue-600 border-blue-100",
         'admin-pkk': "bg-purple-50 text-purple-600 border-purple-100",
         kader_dasawisma: "bg-teal-50 text-teal-600 border-teal-100",
-        kecamatan: "bg-cyan-50 text-cyan-600 border-cyan-100", // ✅ TAMBAH
+        dasawisma: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        kecamatan: "bg-cyan-50 text-cyan-600 border-cyan-100",
     };
     return colorMap[roleName] || "bg-slate-50 text-slate-600 border-slate-100";
 };
@@ -60,6 +62,7 @@ const getRoleLabel = (roleName: string) => {
         pokja2: "Pokja II",
         pokja3: "Pokja III",
         pokja4: "Pokja IV",
+        dasawisma: "Dasawisma",
     };
 
     return labels[roleName] || roleName?.replace(/-/g, " ");
