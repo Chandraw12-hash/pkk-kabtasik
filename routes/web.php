@@ -472,16 +472,4 @@ Route::prefix('desa')
         ->name('export.bumil');
 });
 
-// ============================================================
-// ROUTES: KADER DASAWISMA (WEB)
-// ============================================================
-use App\Http\Controllers\Backend\Dasawisma\DashboardDasawismaController;
-
-Route::prefix('dasawisma')
-    ->name('dasawisma.')
-    ->middleware(['auth', 'dasawisma'])
-    ->group(function () {
-
-    Route::get('/', [DashboardDasawismaController::class, 'index'])
-        ->name('dashboard');
-});
+require __DIR__.'/dasawisma.php';

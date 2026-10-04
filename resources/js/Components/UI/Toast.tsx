@@ -6,6 +6,7 @@ interface FlashProps {
     success?: string;
     message?: string;
     error?: string;
+    warning?: string;
 }
 
 interface SharedProps {
@@ -35,6 +36,11 @@ export default function Toast() {
         if (flash.error) {
             toast.error("Gagal!", {
                 description: flash.error,
+            });
+        }
+        if (flash.warning) {
+            toast.warning("Perhatian", {
+                description: flash.warning,
             });
         }
 

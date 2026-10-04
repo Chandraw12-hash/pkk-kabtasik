@@ -3,7 +3,15 @@
 namespace App\Http\Controllers\Backend\Dasawisma;
 
 use App\Http\Controllers\Controller;
+use App\Models\CatatanKeluarga;
+use App\Models\DaftarWarga;
+use App\Models\DataDasaWisma;
+use App\Models\IndustriRumahTangga;
+use App\Models\KegiatanDasaWisma;
+use App\Models\KegiatanWarga;
 use App\Models\LaporanKegiatan;
+use App\Models\PemanfaatanPekarangan;
+use App\Models\RekapBumilDasaWisma;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,54 +19,97 @@ class DashboardDasawismaController extends Controller
 {
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
+        $resources = [
+            ['model' => DaftarWarga::class, 'label' => 'Daftar Warga', 'href' => '/dasawisma/daftar-warga'],
+            ['model' => DataDasaWisma::class, 'label' => 'Data Dasa Wisma', 'href' => '/dasawisma/data-dasa-wisma'],
+            ['model' => CatatanKeluarga::class, 'label' => 'Catatan Keluarga', 'href' => '/dasawisma/catatan-keluarga'],
+            ['model' => KegiatanWarga::class, 'label' => 'Kegiatan Warga', 'href' => '/dasawisma/kegiatan-warga'],
+            ['model' => PemanfaatanPekarangan::class, 'label' => 'Pemanfaatan Pekarangan', 'href' => '/dasawisma/pemanfaatan-pekarangan'],
+            ['model' => IndustriRumahTangga::class, 'label' => 'Industri Rumah Tangga', 'href' => '/dasawisma/industri-rumah-tangga'],
+            ['model' => KegiatanDasaWisma::class, 'label' => 'Kegiatan Dasa Wisma', 'href' => '/dasawisma/kegiatan-dasa-wisma'],
+            ['model' => RekapBumilDasaWisma::class, 'label' => 'Rekap Bumil', 'href' => '/dasawisma/rekap-bumil'],
+        ];
+        $totals = ['total' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0];
+        $modules = [];
 
-        // Statistik laporan milik user ini
-        $totalLaporan = LaporanKegiatan::where('user_id', $user->id)->count();
-        $laporanPending = LaporanKegiatan::where('user_id', $user->id)->where('status', 'pending')->count();
-        $laporanApproved = LaporanKegiatan::where('user_id', $user->id)->where('status', 'approved')->count();
-        $laporanRejected = LaporanKegiatan::where('user_id', $user->id)->where('status', 'rejected')->count();
+        foreach ($resources as $resource) {
+            $model = $resource['model'];
+            $query = $model::query();
 
-        // Laporan terbaru
-        $laporanTerbaru = LaporanKegiatan::where('user_id', $user->id)
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'judul' => $item->judul ?? $item->jenis_kegiatan ?? 'Laporan',
-                    'status' => $item->status,
-                    'created_at' => $item->created_at?->format('d M Y H:i'),
-                    'diff' => $item->created_at?->diffForHumans(),
-                ];
-            });
+            if ($user->hasRole('admin')) {
+                $query->where('status', 'approved');
+            } elseif ($resource['model'] === CatatanKeluarga::class) {
+                $query->whereHas('daftarWarga', function ($parent) use ($user) {
+                    if ($user->hasRole('kecamatan')) {
+                        $parent->where('kecamatan', $user->kecamatan);
+                    } else {
+                        $parent->where('kecamatan', $user->kecamatan)
+                            ->where('desa', $user->desa);
+                    }
+                });
+                if ($user->hasRole('dasawisma')) {
+                    $query->where('created_by', $user->id);
+                }
+            } elseif ($user->hasRole('kecamatan')) {
+                $query->where('kecamatan', $user->kecamatan);
+            } elseif ($user->hasRole('admin desa')) {
+                $query->where('kecamatan', $user->kecamatan)->where('desa', $user->desa);
+            } else {
+                $query->where('created_by', $user->id);
+            }
 
-        // Grafik laporan per bulan (6 bulan terakhir)
-        $chartData = collect(range(5, 0))->map(function ($i) use ($user) {
-            $date = now()->subMonths($i);
-            return [
-                'bulan' => $date->format('M'),
-                'total' => LaporanKegiatan::where('user_id', $user->id)
-                    ->whereYear('created_at', $date->year)
-                    ->whereMonth('created_at', $date->month)
-                    ->count(),
+            $moduleCount = (clone $query)->count();
+            $modules[] = [
+                'label' => $resource['label'],
+                'href' => $resource['href'],
+                'count' => $moduleCount,
             ];
-        })->toArray();
+            $totals['total'] += $moduleCount;
 
-        return Inertia::render('Backend/Dasawisma/Dashboard', [
+            if (!$user->hasRole('admin')) {
+                foreach (['pending', 'approved', 'rejected'] as $status) {
+                    $totals[$status] += (clone $query)->where('status', $status)->count();
+                }
+            } else {
+                $totals['approved'] += $moduleCount;
+            }
+        }
+
+        $laporanQuery = LaporanKegiatan::query();
+        if (!$user->hasAnyRole(['admin', 'kecamatan', 'admin desa'])) {
+            $laporanQuery->where('user_id', $user->id);
+        } elseif ($user->hasRole('kecamatan')) {
+            $laporanQuery->where('kecamatan', $user->kecamatan);
+        } elseif ($user->hasRole('admin desa')) {
+            $laporanQuery->where('kecamatan', $user->kecamatan)
+                ->where('desa_kelurahan', $user->desa);
+        }
+
+        return Inertia::render('Dasawisma/Dashboard', [
             'user' => [
                 'name' => $user->name,
                 'username' => $user->username,
+                'kecamatan' => $user->kecamatan,
+                'desa' => $user->desa,
             ],
-            'stats' => [
-                'totalLaporan' => $totalLaporan,
-                'laporanPending' => $laporanPending,
-                'laporanApproved' => $laporanApproved,
-                'laporanRejected' => $laporanRejected,
+            'stats' => $totals,
+            'modules' => $modules,
+            'reports' => [
+                'total' => (clone $laporanQuery)->count(),
+                'pending' => (clone $laporanQuery)->where('status', 'pending')->count(),
             ],
-            'laporanTerbaru' => $laporanTerbaru,
-            'chartData' => $chartData,
+            'notifications' => $user->unreadNotifications()
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->map(fn ($notification) => [
+                    'id' => $notification->id,
+                    'message' => $notification->data['message'] ?? 'Ada pembaruan data Dasa Wisma.',
+                    'url' => $notification->data['url'] ?? '/dasawisma',
+                    'created_at' => $notification->created_at?->diffForHumans(),
+                ])
+                ->all(),
         ]);
     }
 }
