@@ -74,7 +74,7 @@ export default function Create({ permissions }: CreateProps) {
             <div className="flex items-center gap-4 mb-8">
                 <Link
                     href={route("be.roles.index")}
-                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-brand-blue-600 hover:border-brand-blue-200 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:text-brand-blue-400 dark:hover:border-slate-600"
+                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-teal-600 hover:border-teal-200 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:text-teal-400 dark:hover:border-slate-600"
                 >
                     <ArrowLeft size={20} />
                 </Link>
@@ -159,7 +159,7 @@ export default function Create({ permissions }: CreateProps) {
                                     return (
                                         <div
                                             key={groupName}
-                                            className="bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden"
+                                            className="bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden"
                                         >
                                             <div className="px-5 py-3 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                                                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-200">
@@ -170,8 +170,8 @@ export default function Create({ permissions }: CreateProps) {
                                                     onClick={toggleGroup}
                                                     className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-all ${
                                                         isAllSelected
-                                                            ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
-                                                            : "bg-brand-blue-50 text-brand-blue-600 dark:bg-brand-blue-500/10 dark:text-brand-blue-400"
+                                                        ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
+                                                        : "bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400"
                                                     }`}
                                                 >
                                                     {isAllSelected
@@ -197,7 +197,7 @@ export default function Create({ permissions }: CreateProps) {
                                                                             permission.name,
                                                                         )
                                                                     }
-                                                                    className="w-4 h-4 text-brand-blue-600 border-slate-300 rounded focus:ring-brand-blue-500 dark:bg-slate-700 dark:border-slate-600"
+                                                                    className="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 dark:bg-slate-700 dark:border-slate-600"
                                                                 />
                                                             </div>
                                                             <span
@@ -252,7 +252,7 @@ export default function Create({ permissions }: CreateProps) {
                             type="submit"
                             variant="primary"
                             disabled={processing}
-                            className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
+                            className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                         >
                             <span>Simpan Role</span>
                         </Button>

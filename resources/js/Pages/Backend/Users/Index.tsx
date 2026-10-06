@@ -41,36 +41,37 @@ interface IndexProps {
 }
 
 const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    const statusMap: Record<string, { label: string; type: "success" | "default" | "danger" | "warning" | "info"; icon: React.ReactNode }> = {
         active: {
             label: "Aktif",
-            color: "bg-green-100 text-green-700 border-green-200",
-            icon: <CheckCircle size={12} className="text-green-600" />
+            type: "success",
+            icon: <CheckCircle size={12} />
         },
         inactive: {
             label: "Nonaktif",
-            color: "bg-gray-100 text-gray-700 border-gray-200",
-            icon: <XCircle size={12} className="text-gray-500" />
+            type: "default",
+            icon: <XCircle size={12} />
         },
     };
     return statusMap[status] || {
         label: status,
-        color: "bg-gray-100 text-gray-700 border-gray-200",
+        type: "default" as const,
         icon: null
     };
 };
 
 const getRoleBadge = (roleName: string) => {
-    const roleMap: Record<string, { label: string; color: string }> = {
-        admin: { label: "Admin", color: "bg-red-100 text-red-700 border-red-200" },
-        operator: { label: "Operator", color: "bg-blue-100 text-blue-700 border-blue-200" },
-        kader_dasawisma: { label: "Kader", color: "bg-teal-100 text-teal-700 border-teal-200" },
-        dasawisma: { label: "Dasawisma", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-        'admin-pkk': { label: "Admin PKK", color: "bg-purple-100 text-purple-700 border-purple-200" },
-        // ✅ TAMBAH: role kecamatan
-        kecamatan: { label: "Kecamatan", color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
+    const roleMap: Record<string, { label: string; type: "success" | "default" | "danger" | "warning" | "info" }> = {
+        'super-admin': { label: "Super Admin", type: "danger" },
+        admin: { label: "Admin", type: "warning" },
+        operator: { label: "Operator", type: "info" },
+        kader_dasawisma: { label: "Kader", type: "success" },
+        dasawisma: { label: "Dasawisma", type: "success" },
+        'admin desa': { label: "Admin Desa", type: "info" },
+        'admin-pkk': { label: "Admin PKK", type: "info" },
+        kecamatan: { label: "Kecamatan", type: "info" },
     };
-    return roleMap[roleName] || { label: roleName, color: "bg-gray-100 text-gray-700 border-gray-200" };
+    return roleMap[roleName] || { label: roleName, type: "default" as const };
 };
 
 export default function Index({ users, filters = {} }: IndexProps) {
@@ -360,13 +361,14 @@ export default function Index({ users, filters = {} }: IndexProps) {
                                         {roles.map((role: any) => {
                                             const roleBadge = getRoleBadge(role.name);
                                             return (
-                                                <span
+                                                <Badge
                                                     key={role.id}
-                                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${roleBadge.color}`}
+                                                    type={roleBadge.type}
+                                                    className="gap-1"
                                                 >
                                                     <Shield size={11} />
                                                     {roleBadge.label}
-                                                </span>
+                                                </Badge>
                                             );
                                         })}
                                     </div>
@@ -380,10 +382,10 @@ export default function Index({ users, filters = {} }: IndexProps) {
                             render: (user: User) => {
                                 const status = getStatusBadge(user.status || "active");
                                 return (
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${status.color}`}>
+                                    <Badge type={status.type} className="gap-1">
                                         {status.icon}
                                         {status.label}
-                                    </span>
+                                    </Badge>
                                 );
                             },
                         },
@@ -559,7 +561,7 @@ export default function Index({ users, filters = {} }: IndexProps) {
                         className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
                         onClick={() => setShowResetModal(null)}
                     />
-                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                    <div className="relative bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-sm p-6">
                         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">
                             Reset Password
                         </h3>
@@ -572,7 +574,7 @@ export default function Index({ users, filters = {} }: IndexProps) {
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="Password baru"
-                            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm mb-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30"
+                            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm mb-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500"
                         />
                         <input
                             type="password"
@@ -581,7 +583,7 @@ export default function Index({ users, filters = {} }: IndexProps) {
                                 setNewPasswordConfirm(e.target.value)
                             }
                             placeholder="Ulangi password baru"
-                            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm mb-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30"
+                            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm mb-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500"
                         />
                         {newPassword &&
                             (newPassword.length < 10 ||
@@ -592,23 +594,24 @@ export default function Index({ users, filters = {} }: IndexProps) {
                                 </p>
                             )}
                         <div className="flex justify-end gap-2">
-                            <button
+                            <Button
+                                variant="secondary"
                                 onClick={() => setShowResetModal(null)}
-                                className="px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                             >
-                                Batal
-                            </button>
-                            <button
+                                <span>Batal</span>
+                            </Button>
+                            <Button
+                                variant="primary"
                                 onClick={handleResetPassword}
                                 disabled={
                                     processing ||
                                     newPassword.length < 10 ||
                                     newPassword !== newPasswordConfirm
                                 }
-                                className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-xl cursor-pointer disabled:opacity-50"
+                                className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                             >
-                                Simpan Password
-                            </button>
+                                <span>Simpan Password</span>
+                            </Button>
                         </div>
                     </div>
                 </div>

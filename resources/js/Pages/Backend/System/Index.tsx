@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import MainLayout from "@/Layouts/MainLayout";
+import Button from "@/Components/UI/Button";
+import Card from "@/Components/UI/Card";
+import StatCard from "@/Components/UI/SatistikCard";
 import { Head, useForm } from "@inertiajs/react";
 import {
     HeartPulse,
@@ -35,24 +38,17 @@ export default function SystemIndex({ health }: { health: Health }) {
     const cacheForm = useForm({});
     const maintForm = useForm({ down: false });
 
-    const cards = [
-        { icon: Database, label: "Ukuran Database", value: health.db_size_human, sub: "PostgreSQL" },
-        { icon: HardDrive, label: "Sisa Penyimpanan", value: health.disk_free_human, sub: `dari ${health.disk_total_human}` },
-        { icon: Layers, label: "Antrean", value: String(health.queue_pending), sub: "pekerjaan tertunda" },
-        { icon: Archive, label: "File Backup", value: String(health.backup_count), sub: "tersimpan lokal" },
-        { icon: GitBranch, label: "Versi Kode", value: health.commit, sub: `PHP ${health.php} · Laravel ${health.laravel}` },
-    ];
-
     return (
         <MainLayout>
             <Head title="Kesehatan Sistem" />
-            <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white shadow-lg shadow-emerald-500/25">
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 rounded-xl">
                         <HeartPulse size={24} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                        <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
                             Kesehatan Sistem
                         </h1>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -63,96 +59,135 @@ export default function SystemIndex({ health }: { health: Health }) {
             </div>
 
             {health.maintenance && (
-                <div className="mb-4 flex items-center gap-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-sm font-medium px-4 py-3 rounded-xl">
+                <div className="mb-6 flex items-center gap-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-sm font-medium px-4 py-3 rounded-xl">
                     <AlertTriangle size={16} />
                     Maintenance mode AKTIF — pengunjung tidak bisa akses situs.
                 </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                {cards.map((c) => (
-                    <div
-                        key={c.label}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 p-5 shadow-sm"
-                    >
-                        <c.icon size={18} className="text-emerald-600 dark:text-emerald-400 mb-3" />
-                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                            {c.label}
-                        </p>
-                        <p className="text-lg font-bold text-slate-800 dark:text-slate-100 truncate">
-                            {c.value}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1 truncate">{c.sub}</p>
-                    </div>
-                ))}
+                <StatCard
+                    title="Ukuran Database"
+                    value={health.db_size_human}
+                    icon={Database}
+                    color="bg-teal-600"
+                    className="border-l-4 border-teal-600"
+                    description="PostgreSQL"
+                />
+                <StatCard
+                    title="Sisa Penyimpanan"
+                    value={health.disk_free_human}
+                    icon={HardDrive}
+                    color="bg-blue-600"
+                    className="border-l-4 border-blue-600"
+                    description={`dari ${health.disk_total_human}`}
+                />
+                <StatCard
+                    title="Antrean"
+                    value={String(health.queue_pending)}
+                    icon={Layers}
+                    color="bg-amber-500"
+                    className="border-l-4 border-amber-500"
+                    description="pekerjaan tertunda"
+                />
+                <StatCard
+                    title="File Backup"
+                    value={String(health.backup_count)}
+                    icon={Archive}
+                    color="bg-emerald-600"
+                    className="border-l-4 border-emerald-600"
+                    description="tersimpan lokal"
+                />
+                <StatCard
+                    title="Versi Kode"
+                    value={health.commit}
+                    icon={GitBranch}
+                    color="bg-indigo-600"
+                    className="border-l-4 border-indigo-600"
+                    description={`PHP ${health.php} · Laravel ${health.laravel}`}
+                />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 p-6 shadow-sm">
-                    <h2 className="font-bold text-slate-800 dark:text-slate-100 mb-1">
+                <Card className="dark:bg-slate-800 dark:border-slate-700 p-6">
+                    <h2 className="font-bold text-slate-800 dark:text-slate-200 mb-1">
                         Bersihkan Cache
                     </h2>
-                    <p className="text-sm text-slate-500 mb-4">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                         Pakai kalau tampilan/setting baru tidak muncul.
                     </p>
-                    <button
-                        onClick={() => cacheForm.post(route("be.system.cache-clear"))}
+                    <Button
+                        variant="primary"
+                        onClick={() =>
+                            cacheForm.post(route("be.system.cache-clear"))
+                        }
                         disabled={cacheForm.processing}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl cursor-pointer disabled:opacity-50"
+                        className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                     >
-                        <RefreshCw size={16} className={cacheForm.processing ? "animate-spin" : ""} />
-                        Bersihkan Sekarang
-                    </button>
-                </div>
+                        <RefreshCw
+                            size={16}
+                            className={cacheForm.processing ? "animate-spin" : ""}
+                        />
+                        <span>Bersihkan Sekarang</span>
+                    </Button>
+                </Card>
 
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 p-6 shadow-sm">
-                    <h2 className="font-bold text-slate-800 dark:text-slate-100 mb-1">
+                <Card className="dark:bg-slate-800 dark:border-slate-700 p-6">
+                    <h2 className="font-bold text-slate-800 dark:text-slate-200 mb-1">
                         Mode Maintenance
                     </h2>
-                    <p className="text-sm text-slate-500 mb-4">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                         Tutup situs sementara saat perbaikan besar.
                     </p>
                     {!confirmDown ? (
                         health.maintenance ? (
-                            <button
-                                onClick={() => maintForm.post(route("be.system.maintenance"), { data: { down: false } } as never)}
+                            <Button
+                                variant="primary"
+                                onClick={() =>
+                                    maintForm.post(
+                                        route("be.system.maintenance"),
+                                        { data: { down: false } } as never
+                                    )
+                                }
                                 disabled={maintForm.processing}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl cursor-pointer disabled:opacity-50"
+                                className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                             >
                                 <Power size={16} />
-                                Matikan Maintenance
-                            </button>
+                                <span>Matikan Maintenance</span>
+                            </Button>
                         ) : (
-                            <button
+                            <Button
+                                variant="danger"
                                 onClick={() => setConfirmDown(true)}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-red-500 rounded-xl cursor-pointer"
                             >
                                 <Power size={16} />
-                                Nyalakan Maintenance
-                            </button>
+                                <span>Nyalakan Maintenance</span>
+                            </Button>
                         )
                     ) : (
                         <div className="flex items-center gap-3">
-                            <button
+                            <Button
+                                variant="danger"
                                 onClick={() => {
                                     maintForm.setData("down", true);
-                                    maintForm.post(route("be.system.maintenance"));
+                                    maintForm.post(
+                                        route("be.system.maintenance")
+                                    );
                                     setConfirmDown(false);
                                 }}
                                 disabled={maintForm.processing}
-                                className="px-5 py-2.5 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl cursor-pointer disabled:opacity-50"
                             >
-                                Ya, Tutup Situs
-                            </button>
-                            <button
+                                <span>Ya, Tutup Situs</span>
+                            </Button>
+                            <Button
+                                variant="secondary"
                                 onClick={() => setConfirmDown(false)}
-                                className="px-5 py-2.5 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                             >
-                                Batal
-                            </button>
+                                <span>Batal</span>
+                            </Button>
                         </div>
                     )}
-                </div>
+                </Card>
             </div>
         </MainLayout>
     );

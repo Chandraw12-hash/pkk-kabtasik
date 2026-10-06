@@ -445,7 +445,7 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                                     type="submit"
                                     variant="primary"
                                     disabled={processing}
-                                    className="shadow-sm"
+                                    className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                                 >
                                     {processing
                                         ? "Menyimpan..."
@@ -466,8 +466,8 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                             {/* Header */}
                             <div className="border-b border-slate-100 px-5 py-5 dark:border-slate-700">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-500/10">
-                                        <ShieldCheck className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-900/20">
+                                        <ShieldCheck className="h-5 w-5 text-teal-600 dark:text-teal-400" />
                                     </div>
 
                                     <div>
@@ -490,7 +490,7 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                                         Role dipilih
                                     </span>
 
-                                    <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+                                    <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:bg-teal-900/20 dark:text-teal-400">
                                         {data.roles.length} role
                                     </span>
                                 </div>
@@ -516,8 +516,8 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                                                     transition-all duration-200
                                                     ${
                                                         selected
-                                                            ? "border-violet-500 bg-violet-50 shadow-sm ring-1 ring-violet-500/30 dark:border-violet-400 dark:bg-violet-500/10"
-                                                            : "border-slate-200 bg-white hover:border-violet-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500 dark:hover:bg-slate-700/50"
+                                                            ? "border-teal-500 bg-teal-50 shadow-sm ring-1 ring-teal-500/30 dark:border-teal-400 dark:bg-teal-900/20"
+                                                            : "border-slate-200 bg-white hover:border-teal-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500 dark:hover:bg-slate-700/50"
                                                     }
                                                 `}
                                             >
@@ -540,8 +540,8 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                                                         rounded-full border transition-all
                                                         ${
                                                             selected
-                                                                ? "border-violet-600 bg-violet-600 text-white"
-                                                                : "border-slate-300 bg-white text-transparent group-hover:border-violet-400 dark:border-slate-600 dark:bg-slate-700"
+                                                            ? "border-teal-600 bg-teal-600 text-white"
+                                                            : "border-slate-300 bg-white text-transparent group-hover:border-teal-400 dark:border-slate-600 dark:bg-slate-700"
                                                         }
                                                     `}
                                                 >
@@ -558,7 +558,7 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                                                             text-sm font-semibold leading-tight
                                                             ${
                                                                 selected
-                                                                    ? "text-violet-700 dark:text-violet-300"
+                                                                    ? "text-teal-700 dark:text-teal-300"
                                                                     : "text-slate-800 dark:text-slate-100"
                                                             }
                                                         `}

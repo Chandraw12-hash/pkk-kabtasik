@@ -722,17 +722,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                 {isSuperAdmin && (
                     <>
-                        <p className="px-4 text-[11px] font-semibold text-violet-400 uppercase tracking-wider mb-2 mt-4">
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                             Super Admin
                         </p>
-                        <div className="space-y-1 rounded-2xl border border-violet-200/60 dark:border-violet-800/40 bg-violet-50/50 dark:bg-violet-900/10 p-2">
+                        <div className="space-y-1">
                             {hasBackup && (
                                 <Link
                                     href={route("be.backup.index")}
                                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                                         isCurrentRoute("be.backup.*")
-                                            ? "text-violet-700 dark:text-violet-300 bg-white dark:bg-slate-900 shadow-sm"
-                                            : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-900/60"
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                     }`}
                                 >
                                     <Database size={18} />
@@ -744,12 +744,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     href={route("be.activity-logs.index")}
                                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                                         isCurrentRoute("be.activity-logs.*")
-                                            ? "text-violet-700 dark:text-violet-300 bg-white dark:bg-slate-900 shadow-sm"
-                                            : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-900/60"
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                     }`}
                                 >
                                     <ScrollText size={18} />
-                                    <span>Catatan Kegiatan</span>
+                                    <span>Log Aktivitas</span>
                                 </Link>
                             )}
                             {hasSystem && (
@@ -757,8 +757,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     href={route("be.system.index")}
                                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                                         isCurrentRoute("be.system.*")
-                                            ? "text-violet-700 dark:text-violet-300 bg-white dark:bg-slate-900 shadow-sm"
-                                            : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-900/60"
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                     }`}
                                 >
                                     <Activity size={18} />

@@ -76,7 +76,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList, desaByKeca
             <div className="flex items-center gap-4 mb-8">
                 <Link
                     href={route("be.users.index")}
-                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-brand-blue-600 hover:border-brand-blue-100 transition-all shadow-sm dark:bg-slate-700 dark:border-slate-600"
+                    className="p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-teal-600 hover:border-teal-100 transition-all shadow-sm dark:bg-slate-700 dark:border-slate-600"
                 >
                     <ChevronLeft size={20} />
                 </Link>
@@ -242,7 +242,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList, desaByKeca
                                 type="submit"
                                 variant="primary"
                                 disabled={processing}
-                                className="shadow-lg shadow-brand-blue-100 dark:shadow-none"
+                                className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                             >
                                 <span>{processing ? "Menyimpan..." : "Perbarui"}</span>
                             </Button>
@@ -266,10 +266,10 @@ export default function Edit({ user, roles, userRoles, kecamatanList, desaByKeca
                                 <label
                                     key={role.id}
                                     className={`
-                                        flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all dark:bg-slate-700/20
+                                        flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all dark:bg-slate-700/20
                                         ${
                                             data.roles.includes(role.name)
-                                                ? "border-brand-blue-500 bg-brand-blue-50/50 ring-4 ring-brand-blue-500/5"
+                                                ? "border-teal-500 bg-teal-50/50 ring-4 ring-teal-500/5"
                                                 : "border-slate-100 hover:border-slate-200 dark:border-slate-700"
                                         }
                                     `}
@@ -277,14 +277,14 @@ export default function Edit({ user, roles, userRoles, kecamatanList, desaByKeca
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="checkbox"
-                                            className="w-5 h-5 rounded-lg border-slate-300 text-brand-blue-600 focus:ring-brand-blue-500"
+                                            className="w-5 h-5 rounded-lg border-slate-300 text-teal-600 focus:ring-teal-500"
                                             checked={data.roles.includes(role.name)}
                                             onChange={() => handleRoleChange(role.name)}
                                         />
                                         <div>
                                             <p className={`text-sm font-bold ${
                                                 data.roles.includes(role.name)
-                                                    ? "text-brand-blue-700 dark:text-brand-blue-400"
+                                                    ? "text-teal-700 dark:text-teal-400"
                                                     : "text-slate-700 dark:text-slate-200"
                                             }`}>
                                                 {role.name.toUpperCase()}
@@ -303,15 +303,15 @@ export default function Edit({ user, roles, userRoles, kecamatanList, desaByKeca
                     </Card>
 
                     {/* Information Box */}
-                    <div className="p-6 bg-brand-blue-50 rounded-3xl border border-brand-blue-100 dark:bg-brand-blue-900/20 dark:border-brand-blue-800/50">
-                        <h4 className="text-sm font-bold text-brand-blue-800 mb-2 dark:text-brand-blue-300">
+                    <div className="p-6 bg-teal-50 rounded-xl border border-teal-100 dark:bg-teal-900/20 dark:border-teal-800/50">
+                        <h4 className="text-sm font-bold text-teal-800 mb-2 dark:text-teal-300">
                             Informasi Sistem
                         </h4>
-                        <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80">
+                        <p className="text-xs text-teal-700/80 leading-relaxed dark:text-teal-200/80">
                             Password hanya perlu diisi jika Anda ingin memperbarui sandi akun kader.
                             Jika dibiarkan kosong, password lama tetap akan digunakan.
                         </p>
-                        <p className="text-xs text-brand-blue-700/80 leading-relaxed dark:text-brand-blue-200/80 mt-2">
+                        <p className="text-xs text-teal-700/80 leading-relaxed dark:text-teal-200/80 mt-2">
                             <strong>Catatan:</strong> Untuk role <strong>kecamatan</strong> — wajib pilih kecamatan.
                             Untuk <strong>admin desa</strong> — wajib pilih kecamatan + isi nama desa.
                         </p>
