@@ -18,13 +18,20 @@ class DashboardDesaController extends Controller
         $desa = $user->desa;
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        // === DATA UMUM — ambil data terbaru ===
-        $dataUmum = DataUmumPkk::query()
+        $dataUmumQuery = DataUmumPkk::query()
             ->where('kecamatan', $kecamatan)
             ->where('desa', $desa)
-            ->where('tahun', $tahun)
-            ->latest()
-            ->first();
+            ->where('tahun', $tahun);
+        $dataUmum = $dataUmumQuery->exists()
+            ? (clone $dataUmumQuery)->selectRaw('
+                COALESCE(SUM(jumlah_kk), 0) as jumlah_kk,
+                COALESCE(SUM(jumlah_krt), 0) as jumlah_krt,
+                COALESCE(SUM(jiwa_l), 0) as jiwa_l,
+                COALESCE(SUM(jiwa_p), 0) as jiwa_p,
+                COALESCE(SUM(jiwa_tidak_terpilah), 0) as jiwa_tidak_terpilah,
+                COALESCE(SUM(jumlah_dasa_wisma), 0) as jumlah_dasa_wisma
+            ')->first()
+            : null;
 
         // === KEGIATAN — count + sum KK ===
         $kegiatanStats = RekapKegiatanWarga::query()
@@ -48,6 +55,10 @@ class DashboardDesaController extends Controller
                 'jumlah_krt' => (int) $dataUmum->jumlah_krt,
                 'jiwa_l' => (int) $dataUmum->jiwa_l,
                 'jiwa_p' => (int) $dataUmum->jiwa_p,
+                'jiwa_tidak_terpilah' => (int) $dataUmum->jiwa_tidak_terpilah,
+                'total_jiwa' => (int) $dataUmum->jiwa_l
+                    + (int) $dataUmum->jiwa_p
+                    + (int) $dataUmum->jiwa_tidak_terpilah,
                 'jumlah_dasa_wisma' => (int) $dataUmum->jumlah_dasa_wisma,
             ] : null,
             'kegiatan_count' => (int) ($kegiatanStats->total_count ?? 0),

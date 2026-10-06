@@ -18,6 +18,8 @@ interface DashboardProps {
             jumlah_krt: number;
             jiwa_l: number;
             jiwa_p: number;
+            jiwa_tidak_terpilah: number;
+            total_jiwa: number;
             jumlah_dasa_wisma: number;
         } | null;
         kegiatan_count: number;
@@ -26,7 +28,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ user, tahun, stats }: DashboardProps) {
-    const totalJiwa = stats.data_umum ? stats.data_umum.jiwa_l + stats.data_umum.jiwa_p : 0;
+    const totalJiwa = stats.data_umum?.total_jiwa || 0;
 
     return (
         <AdminDesaLayout>
@@ -56,7 +58,7 @@ export default function Dashboard({ user, tahun, stats }: DashboardProps) {
                         icon={Users}
                         label="Total Jiwa"
                         value={totalJiwa}
-                        subtitle={`L: ${stats.data_umum?.jiwa_l || 0} — P: ${stats.data_umum?.jiwa_p || 0}`}
+                        subtitle={`L: ${stats.data_umum?.jiwa_l || 0} — P: ${stats.data_umum?.jiwa_p || 0} — belum terpilah: ${stats.data_umum?.jiwa_tidak_terpilah || 0}`}
                         color="blue"
                     />
                     <StatCard

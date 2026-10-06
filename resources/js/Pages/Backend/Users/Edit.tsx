@@ -18,6 +18,7 @@ interface EditProps {
     roles: Role[];
     userRoles: string[];
     kecamatanList: string[];
+    desaByKecamatan: Record<string, string[]>;
 }
 
 const KECAMATAN_FALLBACK = [
@@ -31,7 +32,7 @@ const KECAMATAN_FALLBACK = [
     'Sukaratu', 'Sukaresik', 'Tanjungjaya', 'Taraju',
 ];
 
-export default function Edit({ user, roles, userRoles, kecamatanList }: EditProps) {
+export default function Edit({ user, roles, userRoles, kecamatanList, desaByKecamatan }: EditProps) {
     const kecamatans = kecamatanList?.length ? kecamatanList : KECAMATAN_FALLBACK;
 
     const { data, setData, put, processing, errors } = useForm({
@@ -60,15 +61,13 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
         }
     };
 
-    // ✅ Cek role yang dipilih
     const isKecamatanRole = data.roles.includes("kecamatan");
     const isAdminDesaRole = data.roles.includes("admin desa");
+    const isDasawismaRole = data.roles.includes("dasawisma");
 
-    // ✅ Tampilkan field kecamatan kalau role = kecamatan ATAU admin desa
-    const showKecamatan = isKecamatanRole || isAdminDesaRole;
-
-    // ✅ Tampilkan field desa kalau role = admin desa
-    const showDesa = isAdminDesaRole;
+    const showKecamatan = isKecamatanRole || isAdminDesaRole || isDasawismaRole;
+    const showDesa = isAdminDesaRole || isDasawismaRole;
+    const desaOptions = data.kecamatan ? (desaByKecamatan[data.kecamatan] ?? []) : [];
 
     return (
         <MainLayout>
@@ -168,7 +167,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                     />
                                 </div>
 
-                                {/* ✅ KECAMATAN — MUNCUL KALAU ROLE = "kecamatan" ATAU "admin desa" */}
+                                {/* Wilayah kecamatan untuk akun yang dibatasi berdasarkan wilayah */}
                                 {showKecamatan && (
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
@@ -179,7 +178,11 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                         <SelectInput
                                             value={data.kecamatan}
                                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                                                setData("kecamatan", e.target.value)
+                                                {
+                                                    setData("kecamatan", e.target.value);
+                                                    setData("desa", "");
+                                                    setData("nama_desa", "");
+                                                }
                                             }
                                             error={errors.kecamatan}
                                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
@@ -195,7 +198,7 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                     </div>
                                 )}
 
-                                {/* ✅ DESA — MUNCUL KALAU ROLE = "admin desa" */}
+                                {/* Desa untuk admin desa dan kader Dasawisma */}
                                 {showDesa && (
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
@@ -203,18 +206,27 @@ export default function Edit({ user, roles, userRoles, kecamatanList }: EditProp
                                             Nama Desa
                                             <span className="text-rose-500">*</span>
                                         </label>
-                                        <TextInput
-                                            placeholder="Contoh: Desa Cikatomas"
+                                        <SelectInput
                                             value={data.desa}
                                             onChange={(e) => {
                                                 setData("desa", e.target.value);
                                                 setData("nama_desa", e.target.value);
                                             }}
+                                            disabled={!data.kecamatan || desaOptions.length === 0}
                                             className="w-full py-2.5 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                                             error={errors.desa}
-                                        />
+                                        >
+                                            <option value="">
+                                                {data.kecamatan
+                                                    ? "-- Pilih Desa --"
+                                                    : "-- Pilih Kecamatan Dahulu --"}
+                                            </option>
+                                            {desaOptions.map((desa) => (
+                                                <option key={desa} value={desa}>{desa}</option>
+                                            ))}
+                                        </SelectInput>
                                         <p className="text-xs text-slate-400">
-                                            Isi nama desa lengkap. Wajib untuk role "admin desa".
+                                            Daftar desa mengikuti kecamatan yang dipilih.
                                         </p>
                                     </div>
                                 )}

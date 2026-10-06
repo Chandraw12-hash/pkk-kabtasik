@@ -142,6 +142,7 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
                                         <th className="px-4 py-3 text-right">KK</th>
                                         <th className="px-4 py-3 text-right">L</th>
                                         <th className="px-4 py-3 text-right">P</th>
+                                        <th className="px-4 py-3 text-right">Belum terpilah</th>
                                         <th className="px-4 py-3 text-right">Dasa Wisma</th>
                                         <th className="px-4 py-3 text-right">Aksi</th>
                                     </tr>
@@ -169,6 +170,9 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
                                             </td>
                                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">
                                                 {Number(item.jiwa_p || 0).toLocaleString('id-ID')}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">
+                                                {Number(item.jiwa_tidak_terpilah || 0).toLocaleString('id-ID')}
                                             </td>
                                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">
                                                 {Number(item.jumlah_dasa_wisma || 0).toLocaleString('id-ID')}

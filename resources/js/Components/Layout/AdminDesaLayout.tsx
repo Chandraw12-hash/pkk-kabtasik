@@ -18,6 +18,7 @@ import {
     Upload,
     Users,
     Baby,
+    ClipboardCheck,
 } from 'lucide-react';
 
 import NotificationBellKecamatan from './NotificationBellKecamatan';
@@ -196,6 +197,26 @@ export default function AdminDesaLayout({ children }: AdminDesaLayoutProps) {
                             }`}
                         />
                         <span>Dashboard</span>
+                    </Link>
+
+                    <Link
+                        href="/desa/daftar-warga"
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
+                            isActive("/desa/daftar-warga")
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <ClipboardCheck
+                            size={20}
+                            strokeWidth={2}
+                            className={`shrink-0 ${
+                                isActive("/desa/daftar-warga")
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                            }`}
+                        />
+                        <span>Persetujuan Data KK</span>
                     </Link>
 
                     {/* Data Dropdown */}

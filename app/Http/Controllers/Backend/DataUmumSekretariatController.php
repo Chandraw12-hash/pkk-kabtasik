@@ -14,6 +14,7 @@ class DataUmumSekretariatController extends Controller
 {
     // ============================================================
     // TAB 1 — DATA UMUM PKK
+    // ✅ Filter: level=desa, dusun=NULL, kecamatan_status=approved
     // ============================================================
     public function index(Request $request)
     {
@@ -23,12 +24,14 @@ class DataUmumSekretariatController extends Controller
 
         $query = DataUmumPkk::query()
             ->where('level', 'desa')
+            ->whereNull('dusun')
+            ->where('kecamatan_status', 'approved')   // ✅ cuma approved kecamatan
             ->where('tahun', $tahun);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('kecamatan', 'like', "%{$search}%")
-                  ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                    ->orWhere('nama_kecamatan', 'like', "%{$search}%");
             });
         }
 
@@ -45,6 +48,7 @@ class DataUmumSekretariatController extends Controller
                 DB::raw('SUM(jumlah_kk) as jumlah_kk'),
                 DB::raw('SUM(jiwa_l) as jiwa_l'),
                 DB::raw('SUM(jiwa_p) as jiwa_p'),
+                DB::raw('SUM(jiwa_tidak_terpilah) as jiwa_tidak_terpilah'),
                 DB::raw('SUM(tp_pkk_l) as tp_pkk_l'),
                 DB::raw('SUM(tp_pkk_p) as tp_pkk_p'),
                 DB::raw('SUM(kader_umum_l) as kader_umum_l'),
@@ -61,7 +65,10 @@ class DataUmumSekretariatController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // ✅ FIX: cuma tampil tahun dari data approved
         $tahunList = DataUmumPkk::where('level', 'desa')
+            ->whereNull('dusun')
+            ->where('kecamatan_status', 'approved')   // ✅ TAMBAH
             ->select('tahun')
             ->distinct()
             ->orderByDesc('tahun')
@@ -95,7 +102,7 @@ class DataUmumSekretariatController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('kecamatan', 'like', "%{$search}%")
-                  ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                    ->orWhere('nama_kecamatan', 'like', "%{$search}%");
             });
         }
 
@@ -177,7 +184,7 @@ class DataUmumSekretariatController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('kecamatan', 'like', "%{$search}%")
-                  ->orWhere('nama_kecamatan', 'like', "%{$search}%");
+                    ->orWhere('nama_kecamatan', 'like', "%{$search}%");
             });
         }
 
@@ -228,12 +235,15 @@ class DataUmumSekretariatController extends Controller
 
     // ============================================================
     // EXPORT — Data Umum PKK (CSV)
+    // ✅ Filter kecamatan_status = approved
     // ============================================================
     public function export(Request $request)
     {
         $tahun = $request->input('tahun', date('Y'));
 
         $data = DataUmumPkk::where('level', 'desa')
+            ->whereNull('dusun')
+            ->where('kecamatan_status', 'approved')
             ->where('tahun', $tahun)
             ->select([
                 'kecamatan',
@@ -246,6 +256,7 @@ class DataUmumSekretariatController extends Controller
                 DB::raw('SUM(jumlah_kk) as jumlah_kk'),
                 DB::raw('SUM(jiwa_l) as jiwa_l'),
                 DB::raw('SUM(jiwa_p) as jiwa_p'),
+                DB::raw('SUM(jiwa_tidak_terpilah) as jiwa_tidak_terpilah'),
                 DB::raw('SUM(kader_umum_l) as kader_umum_l'),
                 DB::raw('SUM(kader_umum_p) as kader_umum_p'),
                 DB::raw('SUM(kader_khusus_l) as kader_khusus_l'),
@@ -273,6 +284,7 @@ class DataUmumSekretariatController extends Controller
                 'KK',
                 'Jiwa L',
                 'Jiwa P',
+                'Belum Terpilah',
                 'Kader Umum L',
                 'Kader Umum P',
                 'Kader Khusus L',
@@ -289,6 +301,7 @@ class DataUmumSekretariatController extends Controller
                     $row->jumlah_kk ?? 0,
                     $row->jiwa_l ?? 0,
                     $row->jiwa_p ?? 0,
+                    $row->jiwa_tidak_terpilah ?? 0,
                     $row->kader_umum_l ?? 0,
                     $row->kader_umum_p ?? 0,
                     $row->kader_khusus_l ?? 0,

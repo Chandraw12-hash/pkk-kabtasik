@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -69,6 +70,7 @@ class UserController extends Controller
         return Inertia::render('Backend/Users/Create', [
             'roles' => \Spatie\Permission\Models\Role::all(),
             'kecamatanList' => self::KECAMATAN_LIST,
+            'desaByKecamatan' => $this->desaByKecamatan(),
         ]);
     }
 
@@ -77,29 +79,32 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
-            'kecamatan' => 'nullable|string|max:255',
-            'desa' => 'nullable|string|max:255',
+            'roles.*' => ['required', 'string', Rule::exists('roles', 'name')],
+            'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(self::KECAMATAN_LIST)],
+            'desa' => ['nullable', 'string', 'max:255'],
             'nama_desa' => 'nullable|string|max:255',
         ]);
 
+        $this->validateUserRegion($request, $validated['roles']);
+
         $user = User::create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),  // ✅ pakai Hash
-            'kecamatan' => $request->kecamatan,
-            'desa' => $request->desa,
-            'nama_desa' => $request->nama_desa,
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'kecamatan' => $validated['kecamatan'] ?? null,
+            'desa' => $validated['desa'] ?? null,
+            'nama_desa' => $validated['desa'] ?? null,
             'status' => 'active',
         ]);
 
-        $user->assignRole($request->roles);
+        $user->assignRole($validated['roles']);
 
         return redirect()->route('be.users.index')
             ->with('message', 'User berhasil dibuat!');
@@ -115,6 +120,7 @@ class UserController extends Controller
             'roles' => \Spatie\Permission\Models\Role::all(),
             'userRoles' => $user->getRoleNames(),
             'kecamatanList' => self::KECAMATAN_LIST,
+            'desaByKecamatan' => $this->desaByKecamatan(),
         ]);
     }
 
@@ -123,32 +129,35 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'roles' => 'required|array',
-            'kecamatan' => 'nullable|string|max:255',
-            'desa' => 'nullable|string|max:255',
+            'roles.*' => ['required', 'string', Rule::exists('roles', 'name')],
+            'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(self::KECAMATAN_LIST)],
+            'desa' => ['nullable', 'string', 'max:255'],
             'nama_desa' => 'nullable|string|max:255',
         ]);
 
+        $this->validateUserRegion($request, $validated['roles']);
+
         $data = [
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'kecamatan' => $request->kecamatan,
-            'desa' => $request->desa,
-            'nama_desa' => $request->nama_desa,
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'kecamatan' => $validated['kecamatan'] ?? null,
+            'desa' => $validated['desa'] ?? null,
+            'nama_desa' => $validated['desa'] ?? null,
         ];
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);  // ✅ pakai Hash
+        if (!empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
         }
 
         $user->update($data);
-        $user->syncRoles($request->roles);
+        $user->syncRoles($validated['roles']);
 
         return redirect()->route('be.users.index')
             ->with('message', 'User berhasil diperbarui!');
@@ -167,5 +176,44 @@ class UserController extends Controller
 
         return redirect()->route('be.users.index')
             ->with('message', 'User berhasil dihapus!');
+    }
+
+    private function desaByKecamatan(): array
+    {
+        return User::role('admin desa')
+            ->whereNotNull('kecamatan')
+            ->whereNotNull('desa')
+            ->get(['kecamatan', 'desa'])
+            ->groupBy('kecamatan')
+            ->map(fn ($users) => $users->pluck('desa')->unique()->sort()->values()->all())
+            ->all();
+    }
+
+    private function validateUserRegion(Request $request, array $roles): void
+    {
+        $needsKecamatan = in_array('kecamatan', $roles, true)
+            || in_array('admin desa', $roles, true)
+            || in_array('dasawisma', $roles, true);
+        $needsDesa = in_array('admin desa', $roles, true)
+            || in_array('dasawisma', $roles, true);
+
+        $rules = [];
+        if ($needsKecamatan) {
+            $rules['kecamatan'] = ['required', Rule::in(self::KECAMATAN_LIST)];
+        }
+
+        if ($needsDesa) {
+            $availableDesa = $this->desaByKecamatan()[$request->input('kecamatan')] ?? [];
+            $rules['desa'] = ['required', 'string', Rule::in($availableDesa)];
+        }
+
+        if ($rules !== []) {
+            $request->validate($rules, [
+                'kecamatan.required' => 'Pilih kecamatan untuk akun ini.',
+                'kecamatan.in' => 'Pilih kecamatan yang tersedia.',
+                'desa.required' => 'Pilih desa untuk akun ini.',
+                'desa.in' => 'Desa harus sesuai dengan kecamatan yang dipilih.',
+            ]);
+        }
     }
 }

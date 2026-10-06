@@ -23,6 +23,7 @@ import { Role } from "@/types/model";
 interface CreateProps {
     roles: Role[];
     kecamatanList: string[];
+    desaByKecamatan: Record<string, string[]>;
 }
 
 const KECAMATAN_FALLBACK = [
@@ -67,7 +68,7 @@ const KECAMATAN_FALLBACK = [
     "Taraju",
 ];
 
-export default function Create({ roles, kecamatanList }: CreateProps) {
+export default function Create({ roles, kecamatanList, desaByKecamatan }: CreateProps) {
     const kecamatans = kecamatanList?.length
         ? kecamatanList
         : KECAMATAN_FALLBACK;
@@ -104,6 +105,11 @@ export default function Create({ roles, kecamatanList }: CreateProps) {
                 setData("nama_desa", "");
             }
 
+            if (roleName === "dasawisma") {
+                setData("desa", "");
+                setData("nama_desa", "");
+            }
+
             if (roleName === "kecamatan") {
                 setData("kecamatan", "");
             }
@@ -114,9 +120,11 @@ export default function Create({ roles, kecamatanList }: CreateProps) {
 
     const isKecamatanRole = data.roles.includes("kecamatan");
     const isAdminDesaRole = data.roles.includes("admin desa");
+    const isDasawismaRole = data.roles.includes("dasawisma");
 
-    const showKecamatan = isKecamatanRole || isAdminDesaRole;
-    const showDesa = isAdminDesaRole;
+    const showKecamatan = isKecamatanRole || isAdminDesaRole || isDasawismaRole;
+    const showDesa = isAdminDesaRole || isDasawismaRole;
+    const desaOptions = data.kecamatan ? (desaByKecamatan[data.kecamatan] ?? []) : [];
 
     const roleDescriptions: Record<string, string> = {
         admin: "Akses penuh sistem.",
@@ -353,12 +361,14 @@ export default function Create({ roles, kecamatanList }: CreateProps) {
                                             value={data.kecamatan}
                                             onChange={(
                                                 e: React.ChangeEvent<HTMLSelectElement>
-                                            ) =>
+                                            ) => {
                                                 setData(
                                                     "kecamatan",
                                                     e.target.value
-                                                )
-                                            }
+                                                );
+                                                setData("desa", "");
+                                                setData("nama_desa", "");
+                                            }}
                                             error={errors.kecamatan}
                                             className="w-full dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                                         >
@@ -388,26 +398,30 @@ export default function Create({ roles, kecamatanList }: CreateProps) {
                                                 </span>
                                             </label>
 
-                                            <TextInput
-                                                placeholder="Contoh: Desa Cikatomas"
+                                            <SelectInput
                                                 value={data.desa}
                                                 onChange={(e) => {
-                                                    setData(
-                                                        "desa",
-                                                        e.target.value
-                                                    );
-                                                    setData(
-                                                        "nama_desa",
-                                                        e.target.value
-                                                    );
+                                                    setData("desa", e.target.value);
+                                                    setData("nama_desa", e.target.value);
                                                 }}
+                                                disabled={!data.kecamatan || desaOptions.length === 0}
                                                 className="w-full dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                                                 error={errors.desa}
-                                            />
+                                            >
+                                                <option value="">
+                                                    {data.kecamatan
+                                                        ? "-- Pilih Desa --"
+                                                        : "-- Pilih Kecamatan Dahulu --"}
+                                                </option>
+                                                {desaOptions.map((desa) => (
+                                                    <option key={desa} value={desa}>
+                                                        {desa}
+                                                    </option>
+                                                ))}
+                                            </SelectInput>
 
                                             <p className="text-xs text-slate-400 dark:text-slate-500">
-                                                Isi nama desa lengkap (dengan
-                                                prefix "Desa").
+                                                Daftar desa mengikuti kecamatan yang dipilih.
                                             </p>
                                         </div>
                                     )}

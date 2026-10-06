@@ -123,9 +123,11 @@ class IndexController extends Controller
             });
 
         // ============================================================
-        // ✅ FIX: Roll-up dari DataUmumPkk — level desa
+        // ✅ FIX: Roll-up dari DataUmumPkk — cuma approved kecamatan
         // ============================================================
         $sekretariat = DataUmumPkk::where('level', 'desa')
+            ->whereNull('dusun')                          // ✅ cuma aggregat desa
+            ->where('kecamatan_status', 'approved')       // ✅ cuma approved kecamatan
             ->select([
                 'kecamatan',
                 DB::raw('MAX(nama_kecamatan) as nama_kecamatan'),
@@ -135,6 +137,7 @@ class IndexController extends Controller
                 DB::raw('SUM(jumlah_kk) as jumlah_kk'),
                 DB::raw('SUM(jiwa_l) as jiwa_l'),
                 DB::raw('SUM(jiwa_p) as jiwa_p'),
+                DB::raw('SUM(jiwa_tidak_terpilah) as jiwa_tidak_terpilah'),
                 DB::raw('SUM(tp_pkk_l) as tp_pkk_l'),
                 DB::raw('SUM(tp_pkk_p) as tp_pkk_p'),
                 DB::raw('SUM(kader_umum_l) as kader_umum_l'),
@@ -358,6 +361,7 @@ class IndexController extends Controller
 
     // ============================================================
     // ✅ SEKRETARIAT — LANDING PAGE KABUPATEN (ROLL-UP)
+    // ✅ FIX: Cuma tampil desa yang approved kecamatan
     // ============================================================
     public function sekretariatPublic(Request $request)
     {
@@ -365,9 +369,11 @@ class IndexController extends Controller
         $tahun = $request->input('year', $request->input('tahun', date('Y')));
         $perPage = (int) $request->input('per_page', 15);
 
-        // === ✅ DATA UMUM PKK — ROLL-UP dari level desa ===
+        // === ✅ DATA UMUM PKK — ROLL-UP (cuma approved kecamatan) ===
         $data = DataUmumPkk::query()
             ->where('level', 'desa')
+            ->whereNull('dusun')                          // ✅ cuma aggregat desa
+            ->where('kecamatan_status', 'approved')       // ✅ cuma approved kecamatan
             ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -387,6 +393,7 @@ class IndexController extends Controller
                 DB::raw('SUM(jumlah_kk) as jumlah_kk'),
                 DB::raw('SUM(jiwa_l) as jiwa_l'),
                 DB::raw('SUM(jiwa_p) as jiwa_p'),
+                DB::raw('SUM(jiwa_tidak_terpilah) as jiwa_tidak_terpilah'),
                 DB::raw('SUM(tp_pkk_l) as tp_pkk_l'),
                 DB::raw('SUM(tp_pkk_p) as tp_pkk_p'),
                 DB::raw('SUM(kader_umum_l) as kader_umum_l'),
@@ -640,6 +647,7 @@ class IndexController extends Controller
         $perPage = (int) $request->input('per_page', 15);
 
         $data = DataUmumPkk::query()
+            ->where('kecamatan_status', 'approved')       // ✅ cuma approved
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -728,9 +736,11 @@ class IndexController extends Controller
         $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
 
-        // ✅ FIX: Roll-up dari DataUmumPkk
+        // ✅ FIX: Roll-up dari DataUmumPkk — cuma approved kecamatan
         $data = DataUmumPkk::query()
             ->where('level', 'desa')
+            ->whereNull('dusun')                          // ✅ cuma aggregat desa
+            ->where('kecamatan_status', 'approved')       // ✅ cuma approved kecamatan
             ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -847,6 +857,7 @@ class IndexController extends Controller
         $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
         $data = DataUmumPkk::query()
+            ->where('kecamatan_status', 'approved')       // ✅ cuma approved
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")

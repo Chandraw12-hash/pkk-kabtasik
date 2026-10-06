@@ -53,7 +53,7 @@ use App\Http\Controllers\Backend\Kecamatan\ExportKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\PrintKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\BeritaKecamatanController;
 
-// ✅ KECAMATAN PKK CONTROLLERS — BARU
+// ✅ KECAMATAN PKK CONTROLLERS
 use App\Http\Controllers\Backend\Kecamatan\DataUmumKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\KegiatanKecamatanController;
 use App\Http\Controllers\Backend\Kecamatan\BumilKecamatanController;
@@ -67,6 +67,7 @@ use App\Http\Controllers\Backend\Desa\DataUmumDesaController;
 use App\Http\Controllers\Backend\Desa\KegiatanDesaController;
 use App\Http\Controllers\Backend\Desa\BumilDesaController;
 use App\Http\Controllers\Backend\Desa\ExportDesaController;
+use App\Http\Controllers\Backend\Desa\DaftarWargaApprovalController;
 
 // ============================================
 // FRONTEND ROUTES (Public)
@@ -191,108 +192,59 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         ->except(['show']);
 
     // ============================================================
-    // SEKRETARIAT — 3 TAB (Data Umum, Kegiatan, Bumil)
+    // SEKRETARIAT — 3 TAB
     // ============================================================
     Route::prefix('sekretariat')->name('sekretariat.')->group(function () {
-        Route::get('/', [DataUmumSekretariatController::class, 'index'])
-            ->name('index');
-        Route::get('/kegiatan', [DataUmumSekretariatController::class, 'kegiatan'])
-            ->name('kegiatan');
-        Route::get('/bumil', [DataUmumSekretariatController::class, 'bumil'])
-            ->name('bumil');
-        Route::get('/export', [DataUmumSekretariatController::class, 'export'])
-            ->name('export');
+        Route::get('/', [DataUmumSekretariatController::class, 'index'])->name('index');
+        Route::get('/kegiatan', [DataUmumSekretariatController::class, 'kegiatan'])->name('kegiatan');
+        Route::get('/bumil', [DataUmumSekretariatController::class, 'bumil'])->name('bumil');
+        Route::get('/export', [DataUmumSekretariatController::class, 'export'])->name('export');
     });
 
     // ============================================================
     // POKJA 1-4
     // ============================================================
-    Route::resource('pokja1', Pokja1Controller::class)
-        ->names('pokja1')
-        ->except(['show']);
-    Route::post('pokja1/import', [Pokja1Controller::class, 'import'])
-        ->name('pokja1.import');
+    Route::resource('pokja1', Pokja1Controller::class)->names('pokja1')->except(['show']);
+    Route::post('pokja1/import', [Pokja1Controller::class, 'import'])->name('pokja1.import');
 
-    Route::resource('pokja2', Pokja2Controller::class)
-        ->names('pokja2')
-        ->except(['show']);
-    Route::post('pokja2/import', [Pokja2Controller::class, 'import'])
-        ->name('pokja2.import');
+    Route::resource('pokja2', Pokja2Controller::class)->names('pokja2')->except(['show']);
+    Route::post('pokja2/import', [Pokja2Controller::class, 'import'])->name('pokja2.import');
 
-    Route::resource('pokja3', Pokja3Controller::class)
-        ->names('pokja3')
-        ->except(['show']);
-    Route::post('pokja3/import', [Pokja3Controller::class, 'import'])
-        ->name('pokja3.import');
+    Route::resource('pokja3', Pokja3Controller::class)->names('pokja3')->except(['show']);
+    Route::post('pokja3/import', [Pokja3Controller::class, 'import'])->name('pokja3.import');
 
-    Route::resource('pokja4', Pokja4Controller::class)
-        ->names('pokja4')
-        ->except(['show']);
-    Route::post('pokja4/import', [Pokja4Controller::class, 'import'])
-        ->name('pokja4.import');
+    Route::resource('pokja4', Pokja4Controller::class)->names('pokja4')->except(['show']);
+    Route::post('pokja4/import', [Pokja4Controller::class, 'import'])->name('pokja4.import');
 
-    Route::resource('galeri', GaleriController::class)
-        ->names('galeri')
-        ->except(['show']);
+    Route::resource('galeri', GaleriController::class)->names('galeri')->except(['show']);
 
     // BERITA
-    Route::get('berita/pending', [BeritaController::class, 'pending'])
-        ->name('berita.pending');
-    Route::get('berita/pending-count', [BeritaController::class, 'pendingCount'])
-        ->name('berita.pending-count');
-
-    Route::post('berita/{berita}/approve', [BeritaController::class, 'approve'])
-        ->name('berita.approve');
-    Route::post('berita/{berita}/reject', [BeritaController::class, 'reject'])
-        ->name('berita.reject');
-
-    Route::post('berita/{berita}/toggle-status', [BeritaController::class, 'toggleStatus'])
-        ->name('berita.toggle-status');
-
-    Route::resource('berita', BeritaController::class)
-        ->names('berita')
-        ->parameters(['berita' => 'berita']);
+    Route::get('berita/pending', [BeritaController::class, 'pending'])->name('berita.pending');
+    Route::get('berita/pending-count', [BeritaController::class, 'pendingCount'])->name('berita.pending-count');
+    Route::post('berita/{berita}/approve', [BeritaController::class, 'approve'])->name('berita.approve');
+    Route::post('berita/{berita}/reject', [BeritaController::class, 'reject'])->name('berita.reject');
+    Route::post('berita/{berita}/toggle-status', [BeritaController::class, 'toggleStatus'])->name('berita.toggle-status');
+    Route::resource('berita', BeritaController::class)->names('berita')->parameters(['berita' => 'berita']);
 
     // INFOGRAFIS
     Route::resource('infografis', InfografisController::class)->except(['show']);
-    Route::patch('infografis/{infografis}/toggle-status', [InfografisController::class, 'toggleStatus'])
-        ->name('infografis.toggle-status');
+    Route::patch('infografis/{infografis}/toggle-status', [InfografisController::class, 'toggleStatus'])->name('infografis.toggle-status');
 
     // AGENDA
-    Route::resource('agenda', AgendaController::class)
-        ->names('agenda')
-        ->except(['show']);
-
-    Route::get('agenda/{agenda}', [AgendaController::class, 'show'])
-        ->name('agenda.show');
-
-    Route::delete('agenda/bulk-destroy', [AgendaController::class, 'bulkDestroy'])
-        ->name('agenda.bulk-destroy');
-    Route::put('agenda/bulk-update-status', [AgendaController::class, 'bulkUpdateStatus'])
-        ->name('agenda.bulk-update-status');
-    Route::get('agenda/export', [AgendaController::class, 'export'])
-        ->name('agenda.export');
-    Route::get('agenda/calendar/data', [AgendaController::class, 'calendar'])
-        ->name('agenda.calendar');
-    Route::post('agenda/auto-update-status', [AgendaController::class, 'autoUpdateStatus'])
-        ->name('agenda.auto-update-status');
+    Route::resource('agenda', AgendaController::class)->names('agenda')->except(['show']);
+    Route::get('agenda/{agenda}', [AgendaController::class, 'show'])->name('agenda.show');
+    Route::delete('agenda/bulk-destroy', [AgendaController::class, 'bulkDestroy'])->name('agenda.bulk-destroy');
+    Route::put('agenda/bulk-update-status', [AgendaController::class, 'bulkUpdateStatus'])->name('agenda.bulk-update-status');
+    Route::get('agenda/export', [AgendaController::class, 'export'])->name('agenda.export');
+    Route::get('agenda/calendar/data', [AgendaController::class, 'calendar'])->name('agenda.calendar');
+    Route::post('agenda/auto-update-status', [AgendaController::class, 'autoUpdateStatus'])->name('agenda.auto-update-status');
 
     // LAPORAN KEGIATAN
-    Route::resource('laporan-kegiatan', LaporanKegiatanController::class)
-        ->names('laporan-kegiatan')
-        ->only(['index', 'show', 'destroy']);
-
-    Route::post('laporan-kegiatan/approve-batch', [LaporanKegiatanController::class, 'approveBatch'])
-        ->name('laporan-kegiatan.approve-batch');
-
-    Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])
-        ->name('laporan-kegiatan.review');
-
-    Route::patch('laporan-kegiatan/{laporan_kegiatan}/approve', [LaporanKegiatanController::class, 'approve'])
-        ->name('laporan-kegiatan.approve');
-
-    Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])
-        ->name('laporan-kegiatan.reject');
+    Route::resource('laporan-kegiatan', LaporanKegiatanController::class)->names('laporan-kegiatan')->only(['index', 'show', 'destroy']);
+    Route::post('laporan-kegiatan/approve-batch', [LaporanKegiatanController::class, 'approveBatch'])->name('laporan-kegiatan.approve-batch');
+    Route::patch('laporan-kegiatan/{laporan_kegiatan}/review', [LaporanKegiatanController::class, 'markReviewed'])->name('laporan-kegiatan.review');
+    Route::patch('laporan-kegiatan/{laporan_kegiatan}/approve', [LaporanKegiatanController::class, 'approve'])->name('laporan-kegiatan.approve');
+    Route::patch('laporan-kegiatan/{laporan_kegiatan}/reject', [LaporanKegiatanController::class, 'reject'])->name('laporan-kegiatan.reject');
 
     // SURVEY
     Route::get('/survey', [SurveyController::class, 'index'])->name('survey.index');
@@ -301,23 +253,18 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::patch('/survey/{survey}/toggle-status', [SurveyController::class, 'toggleStatus'])->name('survey.toggle-status');
     Route::delete('/survey/{survey}', [SurveyController::class, 'destroy'])->name('survey.destroy');
 
-    // ============================================================
-    // ✅ USERS — MIDDLEWARE PERMISSION DI ROUTE
-    // ============================================================
+    // USERS
     Route::middleware('permission:view-users')->group(function () {
         Route::get('users', [UserController::class, 'index'])->name('users.index');
     });
-
     Route::middleware('permission:create-user')->group(function () {
         Route::get('users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('users', [UserController::class, 'store'])->name('users.store');
     });
-
     Route::middleware('permission:edit-user')->group(function () {
         Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
     });
-
     Route::middleware('permission:delete-user')->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
@@ -333,9 +280,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         return redirect()->route('be.roles.index')->with('message', 'Role pkk sudah tidak ada.');
     })->name('roles.cleanup-pkk');
 
-    Route::resource('roles', RoleController::class)
-        ->names('roles')
-        ->except(['show']);
+    Route::resource('roles', RoleController::class)->names('roles')->except(['show']);
 
     // SETTINGS
     Route::prefix('settings')->name('settings.')->group(function () {
@@ -343,23 +288,15 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
             Route::get('/profile', [ConfigController::class, 'profile'])->name('profile');
             Route::patch('/profile', [ConfigController::class, 'updateProfile'])->name('profile.update');
             Route::put('/password', [ConfigController::class, 'updatePassword'])->name('password.update');
-
             Route::get('/app', [ConfigController::class, 'app'])->name('app');
             Route::post('/app', [ConfigController::class, 'updateApp'])->name('app.update');
         });
     });
 
     // STRUKTUR ORGANISASI
-    Route::resource('struktur-organisasi', StrukturOrganisasiController::class)
-        ->names('struktur-organisasi')
-        ->except(['show']);
-
-    Route::post('struktur-organisasi/import', [StrukturOrganisasiController::class, 'import'])
-        ->name('struktur-organisasi.import');
-
-    Route::patch('struktur-organisasi/{id}/toggle-status', [StrukturOrganisasiController::class, 'toggleStatus'])
-        ->name('struktur-organisasi.toggle-status');
-
+    Route::resource('struktur-organisasi', StrukturOrganisasiController::class)->names('struktur-organisasi')->except(['show']);
+    Route::post('struktur-organisasi/import', [StrukturOrganisasiController::class, 'import'])->name('struktur-organisasi.import');
+    Route::patch('struktur-organisasi/{id}/toggle-status', [StrukturOrganisasiController::class, 'toggleStatus'])->name('struktur-organisasi.toggle-status');
 });
 
 // ============================================================
@@ -370,57 +307,71 @@ Route::prefix('kecamatan')
     ->middleware(['auth', 'kecamatan'])
     ->group(function () {
 
-    Route::get('/', [DashboardKecamatanController::class, 'index'])
-        ->name('dashboard');
+        Route::get('/', [DashboardKecamatanController::class, 'index'])->name('dashboard');
 
-    Route::get('laporan', [LaporanKecamatanController::class, 'index'])
-        ->name('laporan.index');
-    Route::get('laporan/{id}', [LaporanKecamatanController::class, 'show'])
-        ->name('laporan.show');
+        Route::get('laporan', [LaporanKecamatanController::class, 'index'])->name('laporan.index');
+        Route::get('laporan/{id}', [LaporanKecamatanController::class, 'show'])->name('laporan.show');
 
-    Route::get('berita', [BeritaKecamatanController::class, 'index'])
-        ->name('berita.index');
-    Route::get('berita/{id}', [BeritaKecamatanController::class, 'show'])
-        ->name('berita.show');
+        Route::get('berita', [BeritaKecamatanController::class, 'index'])->name('berita.index');
+        Route::get('berita/{id}', [BeritaKecamatanController::class, 'show'])->name('berita.show');
 
-    Route::get('rekap/kecamatan', [RekapKecamatanController::class, 'kecamatan'])
-        ->name('rekap.kecamatan');
-    Route::get('rekap/desa', [RekapKecamatanController::class, 'desa'])
-        ->name('rekap.desa');
-    Route::get('rekap/dasa-wisma', [RekapKecamatanController::class, 'dasaWisma'])
-        ->name('rekap.dasa-wisma');
+        Route::get('rekap/kecamatan', [RekapKecamatanController::class, 'kecamatan'])->name('rekap.kecamatan');
+        Route::get('rekap/desa', [RekapKecamatanController::class, 'desa'])->name('rekap.desa');
+        Route::get('rekap/dasa-wisma', [RekapKecamatanController::class, 'dasaWisma'])->name('rekap.dasa-wisma');
 
-    Route::get('export/excel', [ExportKecamatanController::class, 'excel'])
-        ->name('export.excel');
-    Route::get('export/pdf', [ExportKecamatanController::class, 'pdf'])
-        ->name('export.pdf');
+        Route::get('export/excel', [ExportKecamatanController::class, 'excel'])->name('export.excel');
+        Route::get('export/pdf', [ExportKecamatanController::class, 'pdf'])->name('export.pdf');
 
-    Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])
-        ->name('print');
+        Route::get('print/{jenis?}', [PrintKecamatanController::class, 'print'])->name('print');
 
-    // DATA PKK
-    Route::get('data-pkk/umum', [DataUmumKecamatanController::class, 'index'])
-        ->name('data-umum.index');
-    Route::get('data-pkk/umum/{desa}', [DataUmumKecamatanController::class, 'show'])
-        ->name('data-umum.show');
+        // ═══════════════════════════════════════════════════════
+        // DATA PKK — APPROVAL KECAMATAN
+        // ⚠️ URUTAN: STATIC dulu, DYNAMIC terakhir
+        // ═══════════════════════════════════════════════════════
 
-    Route::get('data-pkk/kegiatan', [KegiatanKecamatanController::class, 'index'])
-        ->name('kegiatan.index');
-    Route::get('data-pkk/kegiatan/{desa}', [KegiatanKecamatanController::class, 'show'])
-        ->name('kegiatan.show');
+        // ✅ NEW: Halaman approval kecamatan (STATIC)
+        Route::get('data-pkk/umum/approval', [DataUmumKecamatanController::class, 'approvalIndex'])
+            ->name('data-umum.approval');
 
-    Route::get('data-pkk/bumil', [BumilKecamatanController::class, 'index'])
-        ->name('bumil.index');
-    Route::get('data-pkk/bumil/{desa}', [BumilKecamatanController::class, 'show'])
-        ->name('bumil.show');
+        // ✅ NEW: Bulk approve (STATIC)
+        Route::post('data-pkk/umum/bulk-approve', [DataUmumKecamatanController::class, 'bulkApprove'])
+            ->name('data-umum.bulk-approve');
 
-    Route::get('data-pkk/export/umum', [ExportKecamatanPkkController::class, 'dataUmum'])
-        ->name('export.data-umum');
-    Route::get('data-pkk/export/kegiatan', [ExportKecamatanPkkController::class, 'kegiatan'])
-        ->name('export.kegiatan');
-    Route::get('data-pkk/export/bumil', [ExportKecamatanPkkController::class, 'bumil'])
-        ->name('export.bumil');
-});
+        // ✅ Existing: List per desa (STATIC)
+        Route::get('data-pkk/umum', [DataUmumKecamatanController::class, 'index'])
+            ->name('data-umum.index');
+
+        // ✅ NEW: Approve/Reject per desa (DYNAMIC id)
+        Route::post('data-pkk/umum/{id}/approve', [DataUmumKecamatanController::class, 'approve'])
+            ->whereNumber('id')
+            ->name('data-umum.approve');
+        Route::post('data-pkk/umum/{id}/reject', [DataUmumKecamatanController::class, 'reject'])
+            ->whereNumber('id')
+            ->name('data-umum.reject');
+
+        // ✅ Detail per desa (DYNAMIC desa — TERAKHIR)
+        Route::get('data-pkk/umum/{desa}', [DataUmumKecamatanController::class, 'show'])
+            ->name('data-umum.show');
+
+        // ═══════════════════════════════════════════════════════
+        // KEGIATAN
+        // ═══════════════════════════════════════════════════════
+        Route::get('data-pkk/kegiatan', [KegiatanKecamatanController::class, 'index'])->name('kegiatan.index');
+        Route::get('data-pkk/kegiatan/{desa}', [KegiatanKecamatanController::class, 'show'])->name('kegiatan.show');
+
+        // ═══════════════════════════════════════════════════════
+        // BUMIL
+        // ═══════════════════════════════════════════════════════
+        Route::get('data-pkk/bumil', [BumilKecamatanController::class, 'index'])->name('bumil.index');
+        Route::get('data-pkk/bumil/{desa}', [BumilKecamatanController::class, 'show'])->name('bumil.show');
+
+        // ═══════════════════════════════════════════════════════
+        // EXPORT
+        // ═══════════════════════════════════════════════════════
+        Route::get('data-pkk/export/umum', [ExportKecamatanPkkController::class, 'dataUmum'])->name('export.data-umum');
+        Route::get('data-pkk/export/kegiatan', [ExportKecamatanPkkController::class, 'kegiatan'])->name('export.kegiatan');
+        Route::get('data-pkk/export/bumil', [ExportKecamatanPkkController::class, 'bumil'])->name('export.bumil');
+    });
 
 // ============================================================
 // ROUTES: ADMIN DESA
@@ -430,46 +381,76 @@ Route::prefix('desa')
     ->middleware(['auth', 'role:admin desa', 'scope.desa'])
     ->group(function () {
 
-    Route::get('/', [DashboardDesaController::class, 'index'])
-        ->name('dashboard');
+        Route::get('/', [DashboardDesaController::class, 'index'])->name('dashboard');
 
-    Route::get('/data-umum', [DataUmumDesaController::class, 'index'])
-        ->name('data-umum.index');
-    Route::get('/data-umum/import', [DataUmumDesaController::class, 'import'])
-        ->name('data-umum.import');
-    Route::post('/data-umum/import', [DataUmumDesaController::class, 'store'])
-        ->name('data-umum.store');
-    Route::get('/data-umum/template', [DataUmumDesaController::class, 'downloadTemplate'])
-        ->name('data-umum.template');
+        // ═══════════════════════════════════════════════════════
+        // DAFTAR WARGA — APPROVAL
+        // ═══════════════════════════════════════════════════════
+        Route::get('/daftar-warga', [DaftarWargaApprovalController::class, 'index'])
+            ->name('daftar-warga.index');
+        Route::post('/daftar-warga/{id}/approve', [DaftarWargaApprovalController::class, 'approve'])
+            ->whereNumber('id')
+            ->name('daftar-warga.approve');
+        Route::post('/daftar-warga/{id}/reject', [DaftarWargaApprovalController::class, 'reject'])
+            ->whereNumber('id')
+            ->name('daftar-warga.reject');
 
-    Route::get('/kegiatan', [KegiatanDesaController::class, 'index'])
-        ->name('kegiatan.index');
-    Route::get('/kegiatan/import', [KegiatanDesaController::class, 'import'])
-        ->name('kegiatan.import');
-    Route::post('/kegiatan/import', [KegiatanDesaController::class, 'store'])
-        ->name('kegiatan.store');
-    Route::get('/kegiatan/template', [KegiatanDesaController::class, 'downloadTemplate'])
-        ->name('kegiatan.template');
-    Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])
-        ->name('kegiatan.dusun.destroy');
+        // ═══════════════════════════════════════════════════════
+        // DATA UMUM PKK
+        // ═══════════════════════════════════════════════════════
+        Route::get('/data-umum', [DataUmumDesaController::class, 'index'])
+            ->name('data-umum.index');
 
-    Route::get('/bumil', [BumilDesaController::class, 'index'])
-        ->name('bumil.index');
-    Route::get('/bumil/import', [BumilDesaController::class, 'import'])
-        ->name('bumil.import');
-    Route::post('/bumil/import', [BumilDesaController::class, 'store'])
-        ->name('bumil.store');
-    Route::get('/bumil/template', [BumilDesaController::class, 'downloadTemplate'])
-        ->name('bumil.template');
+        // ✅ Edit agregat desa (1 baris)
+        Route::get('/data-umum/edit-desa', [DataUmumDesaController::class, 'editDesa'])
+            ->name('data-umum.edit-desa');
+        Route::put('/data-umum/update-desa', [DataUmumDesaController::class, 'updateDesa'])
+            ->name('data-umum.update-desa');
 
-    Route::get('/export', [ExportDesaController::class, 'index'])
-        ->name('export.index');
-    Route::get('/export/data-umum', [ExportDesaController::class, 'exportDataUmum'])
-        ->name('export.data-umum');
-    Route::get('/export/kegiatan', [ExportDesaController::class, 'exportKegiatan'])
-        ->name('export.kegiatan');
-    Route::get('/export/bumil', [ExportDesaController::class, 'exportBumil'])
-        ->name('export.bumil');
-});
+        // ✅ Sync agregat desa (manual trigger)
+        Route::post('/data-umum/sync-aggregate', [DataUmumDesaController::class, 'syncAggregate'])
+            ->name('data-umum.sync-aggregate');
 
-require __DIR__.'/dasawisma.php';
+        // ✅ Import & Template
+        Route::get('/data-umum/import', [DataUmumDesaController::class, 'import'])
+            ->name('data-umum.import');
+        Route::post('/data-umum/import', [DataUmumDesaController::class, 'store'])
+            ->name('data-umum.store');
+        Route::get('/data-umum/template', [DataUmumDesaController::class, 'downloadTemplate'])
+            ->name('data-umum.template');
+
+        // ✅ Edit & Update per dusun — harus di bawah route statis
+        Route::get('/data-umum/{id}/edit', [DataUmumDesaController::class, 'edit'])
+            ->whereNumber('id')
+            ->name('data-umum.edit');
+        Route::put('/data-umum/{id}', [DataUmumDesaController::class, 'update'])
+            ->whereNumber('id')
+            ->name('data-umum.update');
+
+        // ═══════════════════════════════════════════════════════
+        // KEGIATAN
+        // ═══════════════════════════════════════════════════════
+        Route::get('/kegiatan', [KegiatanDesaController::class, 'index'])->name('kegiatan.index');
+        Route::get('/kegiatan/import', [KegiatanDesaController::class, 'import'])->name('kegiatan.import');
+        Route::post('/kegiatan/import', [KegiatanDesaController::class, 'store'])->name('kegiatan.store');
+        Route::get('/kegiatan/template', [KegiatanDesaController::class, 'downloadTemplate'])->name('kegiatan.template');
+        Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])->name('kegiatan.dusun.destroy');
+
+        // ═══════════════════════════════════════════════════════
+        // BUMIL
+        // ═══════════════════════════════════════════════════════
+        Route::get('/bumil', [BumilDesaController::class, 'index'])->name('bumil.index');
+        Route::get('/bumil/import', [BumilDesaController::class, 'import'])->name('bumil.import');
+        Route::post('/bumil/import', [BumilDesaController::class, 'store'])->name('bumil.store');
+        Route::get('/bumil/template', [BumilDesaController::class, 'downloadTemplate'])->name('bumil.template');
+
+        // ═══════════════════════════════════════════════════════
+        // EXPORT
+        // ═══════════════════════════════════════════════════════
+        Route::get('/export', [ExportDesaController::class, 'index'])->name('export.index');
+        Route::get('/export/data-umum', [ExportDesaController::class, 'exportDataUmum'])->name('export.data-umum');
+        Route::get('/export/kegiatan', [ExportDesaController::class, 'exportKegiatan'])->name('export.kegiatan');
+        Route::get('/export/bumil', [ExportDesaController::class, 'exportBumil'])->name('export.bumil');
+    });
+
+require __DIR__ . '/dasawisma.php';

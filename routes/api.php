@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AgendaApiController;
 use App\Http\Controllers\Api\DataUmumPkkApiController;
 use App\Http\Controllers\Api\RekapKegiatanWargaApiController;
 use App\Http\Controllers\Api\RekapBumilApiController;
+use App\Http\Controllers\Api\DasawismaDaftarWargaController;
 
 // ============================================
 // PUBLIC ROUTES (TANPA AUTH)
@@ -73,6 +74,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
+
+    Route::get('/dasawisma/daftar-warga', [DasawismaDaftarWargaController::class, 'index']);
+    Route::post('/dasawisma/daftar-warga', [DasawismaDaftarWargaController::class, 'store']);
+    Route::put('/dasawisma/daftar-warga/{id}', [DasawismaDaftarWargaController::class, 'update'])
+        ->whereNumber('id');
+    Route::delete('/dasawisma/daftar-warga/{id}', [DasawismaDaftarWargaController::class, 'destroy'])
+        ->whereNumber('id');
 
     // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────
     // ⚠️ Route SPESIFIK DULU

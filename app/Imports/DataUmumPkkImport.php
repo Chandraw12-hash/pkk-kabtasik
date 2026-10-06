@@ -103,6 +103,9 @@ class DataUmumPkkImport implements
             // === META ===
             'created_by' => auth()->id(),
         ]);
+        if (array_key_exists('jiwa_tidak_terpilah', $row)) {
+            $data['jiwa_tidak_terpilah'] = $this->toInt($row['jiwa_tidak_terpilah']);
+        }
 
         // === UPSERT — update kalau ada, insert kalau belum ===
         return DataUmumPkk::updateOrCreate($uniqueKey, $data);
@@ -121,6 +124,7 @@ class DataUmumPkkImport implements
             'kk' => 'nullable|numeric|min:0',
             'jiwa_l' => 'nullable|numeric|min:0',
             'jiwa_p' => 'nullable|numeric|min:0',
+            'jiwa_tidak_terpilah' => 'nullable|numeric|min:0',
         ];
     }
 

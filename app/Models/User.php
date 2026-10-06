@@ -61,6 +61,7 @@ class User extends Authenticatable
         'pokja2',
         'pokja3',
         'pokja4',
+        'dasawisma',
     ];
 
     public const POKJA_KATEGORI = [
@@ -140,6 +141,8 @@ class User extends Authenticatable
             'status' => $this->status,
             'roles' => $this->roles->pluck('name'),
             'role' => $role,
+            'kecamatan' => $this->kecamatan,
+            'desa' => $this->desa,
             'pokja' => $this->pokjaCode(),
             'allowed_kategori' => $allowed,
         ];

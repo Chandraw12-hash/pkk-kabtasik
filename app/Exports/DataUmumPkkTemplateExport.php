@@ -15,12 +15,12 @@ class DataUmumPkkTemplateExport implements FromArray, WithHeadings, WithStyles, 
         // Baris contoh — biar admin desa tahu formatnya
         return [
             [
-                'Dusun 1', 1, 1, 1, 10, 10, 25, 25, 0, 2,
-                0, 2, 0, 1, 0, 0, 0, 0,
+                'Dusun 1', 1, 1, 1, 10, 10, 25, 25, 0, 0,
+                2, 0, 2, 0, 1, 0, 0, 0, 0, 0,
             ],
             [
-                'Dusun 2', 1, 1, 1, 15, 15, 30, 28, 0, 2,
-                0, 3, 0, 1, 0, 0, 0, 0,
+                'Dusun 2', 1, 1, 1, 15, 15, 30, 28, 0, 0,
+                2, 0, 3, 0, 1, 0, 0, 0, 0, 0,
             ],
         ];
     }
@@ -37,6 +37,7 @@ class DataUmumPkkTemplateExport implements FromArray, WithHeadings, WithStyles, 
             'kk',
             'jiwa_l',
             'jiwa_p',
+            'jiwa_tidak_terpilah',
             'tp_pkk_l',
             'tp_pkk_p',
             'kader_umum_l',

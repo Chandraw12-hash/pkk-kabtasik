@@ -16,6 +16,8 @@ import {
     User,
     Newspaper,
     Package,
+    CheckCircle2,
+    ClipboardCheck,
 } from 'lucide-react';
 
 // 🔥 IMPORT NOTIFIKASI BELL
@@ -52,7 +54,7 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
 
     const [isOpen, setIsOpen] = useState(false);
     const [rekapOpen, setRekapOpen] = useState(true);
-    const [dataPkkOpen, setDataPkkOpen] = useState(true); // ✅ TAMBAH INI
+    const [dataPkkOpen, setDataPkkOpen] = useState(true);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,14 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
             setIsDarkMode(true);
         }
     };
+
+    // ============================================================
+    // AUTO-EXPAND SUBMENU
+    // ============================================================
+    useEffect(() => {
+        if (isActive("/kecamatan/data-pkk")) setDataPkkOpen(true);
+        if (isActive("/kecamatan/rekap")) setRekapOpen(true);
+    }, [currentUrl]);
 
     // ============================================================
     // CLICK OUTSIDE DROPDOWN
@@ -192,6 +202,30 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         <span>Dashboard</span>
                     </Link>
 
+                    {/* ✅ APPROVAL — MENU BARU */}
+                    <Link
+                        href="/kecamatan/data-pkk/umum/approval"
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
+                            isActive("/kecamatan/data-pkk/umum/approval")
+                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                        <ClipboardCheck
+                            size={20}
+                            strokeWidth={2}
+                            className={`shrink-0 ${
+                                isActive("/kecamatan/data-pkk/umum/approval")
+                                    ? "text-teal-600 dark:text-teal-400"
+                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                            }`}
+                        />
+                        <span className="flex-1">Approval Data Umum</span>
+                        <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 text-[10px] font-bold">
+                            !
+                        </span>
+                    </Link>
+
                     <Link
                         href="/kecamatan/laporan"
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
@@ -232,7 +266,7 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         <span>Berita Kecamatan</span>
                     </Link>
 
-                    {/* ✅ DATA PKK DROPDOWN — BARU */}
+                    {/* ✅ DATA PKK DROPDOWN */}
                     <div className="mt-1">
                         <button
                             type="button"

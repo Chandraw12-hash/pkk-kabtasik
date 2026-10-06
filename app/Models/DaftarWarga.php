@@ -15,12 +15,20 @@ class DaftarWarga extends Model
     protected $fillable = [
         'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma',
         'nama_kepala_keluarga', 'nik', 'no_kk', 'alamat', 'jumlah_anggota',
+        'jumlah_kk', 'jumlah_laki_laki', 'jumlah_perempuan',
         'kategori', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'created_by',
     ];
 
     protected function casts(): array
     {
-        return ['approved_at' => 'datetime', 'jumlah_anggota' => 'integer'];
+        return [
+            'approved_at' => 'datetime',
+            'data_umum_synced_at' => 'datetime',
+            'jumlah_anggota' => 'integer',
+            'jumlah_kk' => 'integer',
+            'jumlah_laki_laki' => 'integer',
+            'jumlah_perempuan' => 'integer',
+        ];
     }
 
     public function approvedBy(): BelongsTo

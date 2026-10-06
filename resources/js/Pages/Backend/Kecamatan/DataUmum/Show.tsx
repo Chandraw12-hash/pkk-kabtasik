@@ -68,6 +68,7 @@ export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowPr
                                         <th className="px-4 py-3 text-right">KK</th>
                                         <th className="px-4 py-3 text-right">L</th>
                                         <th className="px-4 py-3 text-right">P</th>
+                                        <th className="px-4 py-3 text-right">Belum terpilah</th>
                                         <th className="px-4 py-3 text-right">Dasa Wisma</th>
                                     </tr>
                                 </thead>
@@ -87,6 +88,7 @@ export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowPr
                                             <td className="px-4 py-3 text-right">{Number(item.jumlah_kk || 0).toLocaleString('id-ID')}</td>
                                             <td className="px-4 py-3 text-right">{Number(item.jiwa_l || 0).toLocaleString('id-ID')}</td>
                                             <td className="px-4 py-3 text-right">{Number(item.jiwa_p || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3 text-right">{Number(item.jiwa_tidak_terpilah || 0).toLocaleString('id-ID')}</td>
                                             <td className="px-4 py-3 text-right">{Number(item.jumlah_dasa_wisma || 0).toLocaleString('id-ID')}</td>
                                         </tr>
                                     ))}

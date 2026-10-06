@@ -31,6 +31,7 @@ interface SekretariatItem {
     jumlah_kk?: number;
     jiwa_l?: number;
     jiwa_p?: number;
+    jiwa_tidak_terpilah?: number;
     tp_pkk_l?: number;
     tp_pkk_p?: number;
     kader_umum_l?: number;
@@ -214,7 +215,11 @@ export default function Sekretariat({ data, filters }: Props) {
     // ==================== METRIC CARDS ====================
     const totalKK = filteredData.reduce((acc, curr) => acc + (Number(curr.jumlah_kk) || 0), 0);
     const totalJiwa = filteredData.reduce(
-        (acc, curr) => acc + (Number(curr.jiwa_l) || 0) + (Number(curr.jiwa_p) || 0),
+        (acc, curr) =>
+            acc +
+            (Number(curr.jiwa_l) || 0) +
+            (Number(curr.jiwa_p) || 0) +
+            (Number(curr.jiwa_tidak_terpilah) || 0),
         0
     );
     const totalKaderUmum = filteredData.reduce(
@@ -231,6 +236,10 @@ export default function Sekretariat({ data, filters }: Props) {
     // dan "KK" dikeluarkan dari grafik gender karena memang tidak punya pecahan L/P.
     const sumJiwaL = items.reduce((acc, curr) => acc + (Number(curr.jiwa_l) || 0), 0);
     const sumJiwaP = items.reduce((acc, curr) => acc + (Number(curr.jiwa_p) || 0), 0);
+    const sumJiwaTidakTerpilah = items.reduce(
+        (acc, curr) => acc + (Number(curr.jiwa_tidak_terpilah) || 0),
+        0
+    );
     const sumKaderUmumL = items.reduce((acc, curr) => acc + (Number(curr.kader_umum_l) || 0), 0);
     const sumKaderUmumP = items.reduce((acc, curr) => acc + (Number(curr.kader_umum_p) || 0), 0);
     const sumKaderKhususL = items.reduce((acc, curr) => acc + (Number(curr.kader_khusus_l) || 0), 0);
@@ -481,8 +490,15 @@ export default function Sekretariat({ data, filters }: Props) {
                                             {sumJiwaP.toLocaleString("id-ID")}
                                         </span>
                                     </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-4 h-4 bg-slate-300 rounded-md"></span>
+                                        <span className="text-slate-600 font-medium">Belum terpilah:</span>
+                                        <span className="font-bold text-slate-900">
+                                            {sumJiwaTidakTerpilah.toLocaleString("id-ID")}
+                                        </span>
+                                    </div>
                                     <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
-                                        <span className="text-xs text-slate-400">Persentase P</span>
+                                        <span className="text-xs text-slate-400">Persentase P (data terpilah)</span>
                                         <span className="font-bold text-[#0072BC]">
                                             {percentP.toFixed(1)}%
                                         </span>
@@ -538,7 +554,7 @@ export default function Sekretariat({ data, filters }: Props) {
                                     </th>
                                     <th
                                         className="p-2 border-r border-slate-200 text-center font-semibold"
-                                        colSpan={2}
+                                        colSpan={3}
                                     >
                                         Jumlah Jiwa
                                     </th>
@@ -569,6 +585,7 @@ export default function Sekretariat({ data, filters }: Props) {
                                     <th className="p-2 border-r border-slate-200 text-center">KK</th>
                                     <th className="p-2 border-r border-slate-200 text-center">L</th>
                                     <th className="p-2 border-r border-slate-200 text-center">P</th>
+                                    <th className="p-2 border-r border-slate-200 text-center">Belum terpilah</th>
                                     <th className="p-2 border-r border-slate-200 text-center">L</th>
                                     <th className="p-2 border-r border-slate-200 text-center">P</th>
                                     <th className="p-2 border-r border-slate-200 text-center">L</th>
@@ -581,7 +598,7 @@ export default function Sekretariat({ data, filters }: Props) {
                                 {filteredData.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={14}
+                                            colSpan={15}
                                             className="text-center py-12 text-slate-400"
                                         >
                                             Belum ada data kecamatan yang tersimpan di database.
@@ -616,6 +633,9 @@ export default function Sekretariat({ data, filters }: Props) {
                                             </td>
                                             <td className="p-3 border-r border-slate-100 text-center">
                                                 {item.jiwa_p || 0}
+                                            </td>
+                                            <td className="p-3 border-r border-slate-100 text-center">
+                                                {item.jiwa_tidak_terpilah || 0}
                                             </td>
                                             <td className="p-3 border-r border-slate-100 text-center">
                                                 {item.tp_pkk_l || 0}
