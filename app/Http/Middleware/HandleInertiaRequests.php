@@ -61,6 +61,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'roles' => $user?->getRoleNames(),
                 'permissions' => $user?->getAllPermissions()->pluck('name'),
+                'is_impersonating' => $request->session()->has('impersonator_id'),
             ],
 
             // ✅ Pending counts untuk admin kabupaten (lonceng notifikasi)

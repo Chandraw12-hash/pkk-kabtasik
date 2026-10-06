@@ -16,6 +16,8 @@ import {
     RefreshCw,
     Server,
     CheckCircle,
+    Upload,
+    RotateCcw,
 } from "lucide-react";
 
 declare function route(name: string, params?: unknown): string;
@@ -29,6 +31,7 @@ interface Backup {
     description: string;
     db_name: string;
     tables_count: number;
+    checksum_sha256?: string | null;
 }
 
 interface TopTable {
@@ -64,8 +67,23 @@ export default function BackupIndex({
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
     const [showTablesModal, setShowTablesModal] = useState(false);
+    const [showRestoreModal, setShowRestoreModal] = useState<string | null>(null);
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [restoreConfirm, setRestoreConfirm] = useState("");
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploadDesc, setUploadDesc] = useState("");
 
     const createForm = useForm({
+        description: "",
+    });
+
+    const restoreForm = useForm({
+        filename: "",
+        confirmation: "",
+    });
+
+    const uploadForm = useForm<{ file: File | null; description: string }>({
+        file: null as unknown as File,
         description: "",
     });
 
@@ -84,6 +102,37 @@ export default function BackupIndex({
     const handleDelete = (filename: string) => {
         deleteForm.delete(route("be.backup.destroy", { filename }), {
             onSuccess: () => setShowDeleteModal(null),
+        });
+    };
+
+    const openRestore = (filename: string) => {
+        setRestoreConfirm("");
+        restoreForm.setData({ filename, confirmation: "" });
+        setShowRestoreModal(filename);
+    };
+
+    const handleRestore = (e: React.FormEvent) => {
+        e.preventDefault();
+        restoreForm.post(route("be.backup.restore"), {
+            onSuccess: () => {
+                setShowRestoreModal(null);
+                setRestoreConfirm("");
+            },
+        });
+    };
+
+    const handleUpload = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!uploadFile) return;
+        uploadForm.setData("file", uploadFile);
+        uploadForm.setData("description", uploadDesc);
+        uploadForm.post(route("be.backup.upload"), {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowUploadModal(false);
+                setUploadFile(null);
+                setUploadDesc("");
+            },
         });
     };
 
@@ -249,6 +298,13 @@ export default function BackupIndex({
                             Refresh
                         </button>
                         <button
+                            onClick={() => setShowUploadModal(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
+                        >
+                            <Upload size={16} />
+                            Upload
+                        </button>
+                        <button
                             onClick={() => setShowCreateModal(true)}
                             className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 rounded-xl shadow-md shadow-teal-500/25 transition-all cursor-pointer"
                         >
@@ -350,6 +406,20 @@ export default function BackupIndex({
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        openRestore(
+                                                            backup.filename
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors cursor-pointer"
+                                                    title="Restore database dari file ini"
+                                                >
+                                                    <RotateCcw size={14} />
+                                                    <span className="hidden sm:inline">
+                                                        Restore
+                                                    </span>
+                                                </button>
                                                 <a
                                                     href={route(
                                                         "be.backup.download",
@@ -544,6 +614,188 @@ export default function BackupIndex({
                                 )}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════ */}
+            {/* MODAL: RESTORE BACKUP */}
+            {/* ═══════════════════════════════════════════════ */}
+            {showRestoreModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        onClick={() => setShowRestoreModal(null)}
+                    />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-2xl w-full max-w-md p-6">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl text-white">
+                                <RotateCcw size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                                    Restore Database
+                                </h3>
+                                <p className="text-xs text-slate-400">
+                                    Data sekarang akan diganti total
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40 rounded-xl p-4 mb-5">
+                            <div className="flex gap-2.5">
+                                <AlertTriangle
+                                    size={16}
+                                    className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5"
+                                />
+                                <div className="text-xs text-rose-700 dark:text-rose-300">
+                                    <p className="font-semibold mb-1">
+                                        Bahaya — baca dulu
+                                    </p>
+                                    <p>
+                                        Restore menimpa seluruh database.
+                                        Sistem otomatis menyimpan backup
+                                        pengaman dulu. Ketik nama file persis
+                                        untuk konfirmasi.
+                                    </p>
+                                    <p className="font-mono mt-2 break-all bg-white/60 dark:bg-slate-900/60 px-2 py-1 rounded">
+                                        {showRestoreModal}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleRestore}>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Ketik ulang nama file
+                            </label>
+                            <input
+                                type="text"
+                                value={restoreConfirm}
+                                onChange={(e) => {
+                                    setRestoreConfirm(e.target.value);
+                                    restoreForm.setData(
+                                        "confirmation",
+                                        e.target.value
+                                    );
+                                }}
+                                placeholder={showRestoreModal}
+                                className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all placeholder:text-slate-400 mb-5"
+                            />
+                            <div className="flex items-center gap-3 justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRestoreModal(null)}
+                                    className="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        restoreForm.processing ||
+                                        restoreConfirm !== showRestoreModal
+                                    }
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl shadow-md shadow-amber-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                    {restoreForm.processing ? (
+                                        <>
+                                            <RefreshCw
+                                                size={16}
+                                                className="animate-spin"
+                                            />
+                                            Merestore...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RotateCcw size={16} />
+                                            Ya, Restore Sekarang
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════ */}
+            {/* MODAL: UPLOAD BACKUP */}
+            {/* ═══════════════════════════════════════════════ */}
+            {showUploadModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        onClick={() => setShowUploadModal(false)}
+                    />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-2xl w-full max-w-md p-6">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="p-2.5 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl text-white">
+                                <Upload size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                                    Upload Backup
+                                </h3>
+                                <p className="text-xs text-slate-400">
+                                    File .sql maksimal 512 MB
+                                </p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleUpload}>
+                            <input
+                                type="file"
+                                accept=".sql,.txt"
+                                onChange={(e) =>
+                                    setUploadFile(
+                                        e.target.files?.[0] ?? null
+                                    )
+                                }
+                                className="w-full text-sm text-slate-600 dark:text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300 mb-4"
+                            />
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Keterangan (opsional)
+                            </label>
+                            <input
+                                type="text"
+                                value={uploadDesc}
+                                onChange={(e) => setUploadDesc(e.target.value)}
+                                placeholder="Contoh: backup dari server lama..."
+                                className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all placeholder:text-slate-400 mb-5"
+                            />
+                            <div className="flex items-center gap-3 justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUploadModal(false)}
+                                    className="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        uploadForm.processing || !uploadFile
+                                    }
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 rounded-xl shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                    {uploadForm.processing ? (
+                                        <>
+                                            <RefreshCw
+                                                size={16}
+                                                className="animate-spin"
+                                            />
+                                            Mengupload...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload size={16} />
+                                            Upload Sekarang
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

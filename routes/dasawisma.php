@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 Route::prefix('dasawisma')
     ->name('dasawisma.')
-    ->middleware(['auth', 'verified', 'scope.desa', 'role:dasawisma|admin desa|kecamatan|admin'])
+    ->middleware(['auth', 'verified', 'scope.desa', 'role:dasawisma|admin desa|kecamatan|admin|super-admin'])
     ->group(function (): void {
         Route::get('/', [DashboardDasawismaController::class, 'index'])->name('dashboard');
 

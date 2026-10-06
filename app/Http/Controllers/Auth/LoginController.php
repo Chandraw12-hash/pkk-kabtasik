@@ -64,6 +64,21 @@ class LoginController extends Controller
             // ============================================================
             $user = Auth::user();
 
+            // Blokir akun nonaktif.
+            if (($user->status ?? 'active') !== 'active') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                throw ValidationException::withMessages([
+                    'username' => 'Akun Anda dinonaktifkan. Hubungi super admin.',
+                ]);
+            }
+
+            // Cap waktu login terakhir.
+            $user->forceFill(['last_login' => now()])->saveQuietly();
+            \App\Services\ActivityLogger::log('auth.login', $user, "Login: {$user->username}");
+
             // Kalau role admin desa → redirect ke /desa
             if ($user->hasRole('admin desa')) {
                 return redirect()->intended('/desa');
@@ -79,8 +94,8 @@ class LoginController extends Controller
                 return redirect()->intended('/kecamatan');
             }
 
-            // Kalau role admin → redirect ke /dashboard
-            if ($user->hasRole('admin')) {
+            // Kalau role admin atau super-admin → redirect ke /dashboard
+            if ($user->hasAnyRole(['admin', 'super-admin'])) {
                 return redirect()->intended(route('be.dashboard'));
             }
 
@@ -100,6 +115,13 @@ class LoginController extends Controller
      */
     public function destroy(Request $request)
     {
+        if (Auth::check()) {
+            \App\Services\ActivityLogger::log('auth.logout', Auth::user(), 'Logout: ' . Auth::user()->username);
+        }
+
+        // Keluar juga dari mode pinjam-masuk jika ada.
+        $request->session()->forget('impersonator_id');
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

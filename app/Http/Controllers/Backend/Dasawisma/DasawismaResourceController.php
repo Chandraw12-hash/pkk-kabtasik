@@ -44,6 +44,11 @@ abstract class DasawismaResourceController extends Controller
     {
         $user = request()->user();
 
+        // Super Admin — lihat semua tanpa filter wilayah/status.
+        if ($user->hasRole('super-admin')) {
+            return $query;
+        }
+
         if ($user->hasRole('admin')) {
             return $query->where('status', 'approved');
         }
@@ -477,6 +482,11 @@ abstract class DasawismaResourceController extends Controller
     {
         $user = request()->user();
         $query = DaftarWarga::query();
+
+        // Super Admin — lihat semua tanpa filter.
+        if ($user->hasRole('super-admin')) {
+            return $query;
+        }
 
         if ($user->hasRole('admin')) {
             return $query->where('status', 'approved');

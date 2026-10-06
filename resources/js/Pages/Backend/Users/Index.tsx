@@ -21,6 +21,10 @@ import {
     CheckCircle,
     XCircle,
     MapPin,  // ✅ TAMBAH
+    Power,
+    KeyRound,
+    Eye,
+    Clock,
 } from "lucide-react";
 import { PaginatedData, User } from "@/types/model";
 import { usePage } from "@inertiajs/react";
@@ -70,19 +74,23 @@ const getRoleBadge = (roleName: string) => {
 };
 
 export default function Index({ users, filters = {} }: IndexProps) {
-    const { permissions } = usePage<any>().props.auth || { permissions: [] };
+    const { permissions, roles } = usePage<any>().props.auth || { permissions: [], roles: [] };
+    const isSuperAdmin = (roles || []).includes("super-admin");
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(Number(filters.per_page) || 10);
     const [roleFilter, setRoleFilter] = useState(filters.role || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [showResetModal, setShowResetModal] = useState<User | null>(null);
+    const [newPassword, setNewPassword] = useState("");
+    const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+
+    const { delete: destroy, processing, patch, post } = useForm({});
 
     const [localUsers, setLocalUsers] = useState<PaginatedData<User>>(users);
     const [isLoading, setIsLoading] = useState(false);
     const isFirstRender = useRef(true);
-
-    const { delete: destroy, processing } = useForm({});
 
     const fetchData = (url: string, params: any = {}) => {
         setIsLoading(true);
@@ -141,6 +149,30 @@ export default function Index({ users, filters = {} }: IndexProps) {
         });
     };
 
+    const handleToggle = (user: User) => {
+        patch(route("be.users.toggle-status", user.id), {
+            onSuccess: () => fetchData(route("be.users.index")),
+        });
+    };
+
+    const handleResetPassword = () => {
+        if (!showResetModal) return;
+        if (newPassword.length < 10 || newPassword !== newPasswordConfirm) return;
+        patch(route("be.users.reset-password", showResetModal.id), {
+            data: { password: newPassword, password_confirmation: newPasswordConfirm },
+            onSuccess: () => {
+                setShowResetModal(null);
+                setNewPassword("");
+                setNewPasswordConfirm("");
+            },
+        });
+    };
+
+    const handleImpersonate = (user: User) => {
+        if (!confirm(`Masuk sebagai ${user.name}? Anda bisa keluar lagi setelahnya.`)) return;
+        post(route("be.users.impersonate", user.id));
+    };
+
     const handleReset = () => {
         setSearch("");
         setPerPage(10);
@@ -150,12 +182,14 @@ export default function Index({ users, filters = {} }: IndexProps) {
 
     const roleOptions = [
         { value: "", label: "Semua Role" },
+        { value: "super-admin", label: "Super Admin" },
         { value: "admin", label: "Admin" },
         { value: "operator", label: "Operator" },
         { value: "kader_dasawisma", label: "Kader" },
         { value: "dasawisma", label: "Dasawisma" },
         { value: "admin-pkk", label: "Admin PKK" },
         { value: "kecamatan", label: "Admin Kecamatan" },
+        { value: "admin desa", label: "Admin Desa" },
     ];
 
     const statusOptions = [
@@ -354,9 +388,43 @@ export default function Index({ users, filters = {} }: IndexProps) {
                             },
                         },
                         {
+                            header: "Terakhir Masuk",
+                            className: "w-40",
+                            render: (user: User) => {
+                                if (!user.last_login) {
+                                    return (
+                                        <span className="inline-flex items-center gap-1 text-xs text-slate-400 italic">
+                                            <Clock size={12} /> belum pernah
+                                        </span>
+                                    );
+                                }
+                                const d = new Date(user.last_login);
+                                const old =
+                                    Date.now() - d.getTime() >
+                                    30 * 24 * 3600 * 1000;
+                                return (
+                                    <span
+                                        className={`inline-flex items-center gap-1 text-xs ${
+                                            old
+                                                ? "text-rose-600 font-semibold"
+                                                : "text-slate-500"
+                                        }`}
+                                        title={d.toLocaleString("id-ID")}
+                                    >
+                                        <Clock size={12} />
+                                        {d.toLocaleDateString("id-ID", {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric",
+                                        })}
+                                    </span>
+                                );
+                            },
+                        },
+                        {
                             header: "Aksi",
-                            headerClassName: "text-center w-28",
-                            className: "text-center w-28",
+                            headerClassName: "text-center w-40",
+                            className: "text-center w-40",
                             render: (user: User) => (
                                 <div className="flex items-center justify-center gap-1">
                                     <Link
@@ -367,8 +435,42 @@ export default function Index({ users, filters = {} }: IndexProps) {
                                         <Edit2 size={15} />
                                     </Link>
                                     <button
+                                        onClick={() => handleToggle(user)}
+                                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all cursor-pointer"
+                                        title={
+                                            (user.status || "active") ===
+                                            "active"
+                                                ? "Nonaktifkan (kunci)"
+                                                : "Aktifkan lagi"
+                                        }
+                                    >
+                                        <Power size={15} />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowResetModal(user);
+                                            setNewPassword("");
+                                            setNewPasswordConfirm("");
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+                                        title="Reset password"
+                                    >
+                                        <KeyRound size={15} />
+                                    </button>
+                                    {isSuperAdmin && (
+                                        <button
+                                            onClick={() =>
+                                                handleImpersonate(user)
+                                            }
+                                            className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all cursor-pointer"
+                                            title="Pinjam-masuk sebagai user ini"
+                                        >
+                                            <Eye size={15} />
+                                        </button>
+                                    )}
+                                    <button
                                         onClick={() => openDeleteModal(user)}
-                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer"
                                         title="Hapus"
                                     >
                                         <Trash2 size={15} />
@@ -449,6 +551,68 @@ export default function Index({ users, filters = {} }: IndexProps) {
                     setSelectedUser(null);
                 }}
             />
+
+            {/* Reset Password Modal */}
+            {showResetModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        onClick={() => setShowResetModal(null)}
+                    />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">
+                            Reset Password
+                        </h3>
+                        <p className="text-sm text-slate-500 mb-4">
+                            Untuk {showResetModal.name} (
+                            {showResetModal.username}). Minimal 10 karakter.
+                        </p>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Password baru"
+                            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm mb-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30"
+                        />
+                        <input
+                            type="password"
+                            value={newPasswordConfirm}
+                            onChange={(e) =>
+                                setNewPasswordConfirm(e.target.value)
+                            }
+                            placeholder="Ulangi password baru"
+                            className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm mb-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/30"
+                        />
+                        {newPassword &&
+                            (newPassword.length < 10 ||
+                                newPassword !== newPasswordConfirm) && (
+                                <p className="text-xs text-rose-500 mb-3">
+                                    Password minimal 10 karakter dan harus sama
+                                    persis.
+                                </p>
+                            )}
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowResetModal(null)}
+                                className="px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={handleResetPassword}
+                                disabled={
+                                    processing ||
+                                    newPassword.length < 10 ||
+                                    newPassword !== newPasswordConfirm
+                                }
+                                className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-xl cursor-pointer disabled:opacity-50"
+                            >
+                                Simpan Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </MainLayout>
     );
 }

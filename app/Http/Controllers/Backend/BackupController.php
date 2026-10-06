@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Process;
@@ -16,6 +18,24 @@ class BackupController extends Controller
      * Directory tempat backup disimpan (relative to storage/app).
      */
     protected string $backupDir = 'backups';
+
+    protected int $retentionDays = 14;
+
+    protected int $maxTotalBytes = 2147483648; // 2 GB
+
+    /**
+     * Validasi nama file agar aman dari path traversal.
+     */
+    protected function resolveFilename(string $filename): string
+    {
+        $base = basename($filename);
+
+        if ($base !== $filename || ! preg_match('/^[A-Za-z0-9_\-\.]+\.sql$/', $base)) {
+            abort(422, 'Nama file backup tidak valid.');
+        }
+
+        return $base;
+    }
 
 
 
@@ -90,6 +110,7 @@ class BackupController extends Controller
                 'filename' => $filename,
                 'description' => $request->input('description', ''),
                 'size' => filesize($filepath),
+                'checksum_sha256' => hash_file('sha256', $filepath),
                 'created_at' => Carbon::now()->toIso8601String(),
                 'created_by' => auth()->user()->name,
                 'db_name' => $dbName,
@@ -100,6 +121,10 @@ class BackupController extends Controller
                 "{$this->backupDir}/{$filename}.json",
                 json_encode($meta, JSON_PRETTY_PRINT)
             );
+
+            $this->pruneOldBackups();
+
+            ActivityLogger::log('backup.create', null, "Backup dibuat: {$filename}");
 
             return redirect()->route('be.backup.index')->with('success', "Backup berhasil dibuat: {$filename}");
         } catch (\Throwable $e) {
@@ -112,11 +137,14 @@ class BackupController extends Controller
      */
     public function download(string $filename)
     {
+        $filename = $this->resolveFilename($filename);
         $path = "{$this->backupDir}/{$filename}";
 
         if (!Storage::disk('local')->exists($path)) {
             return redirect()->route('be.backup.index')->with('error', 'File backup tidak ditemukan.');
         }
+
+        ActivityLogger::log('backup.download', null, "Backup diunduh: {$filename}");
 
         return Storage::disk('local')->download($path, $filename);
     }
@@ -126,6 +154,7 @@ class BackupController extends Controller
      */
     public function destroy(string $filename)
     {
+        $filename = $this->resolveFilename($filename);
         $sqlPath = "{$this->backupDir}/{$filename}";
         $metaPath = "{$this->backupDir}/{$filename}.json";
 
@@ -137,7 +166,191 @@ class BackupController extends Controller
             Storage::disk('local')->delete($metaPath);
         }
 
+        ActivityLogger::log('backup.delete', null, "Backup dihapus: {$filename}");
+
         return redirect()->route('be.backup.index')->with('success', 'Backup berhasil dihapus.');
+    }
+
+    /**
+     * Upload file backup .sql dari luar.
+     */
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimetypes:text/plain,text/sql,application/sql,application/octet-stream|max:524288',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $uploaded = $request->file('file');
+        $original = pathinfo($uploaded->getClientOriginalName(), PATHINFO_FILENAME);
+        $safe = preg_replace('/[^A-Za-z0-9_\-]/', '_', $original);
+        $filename = 'uploaded_' . Carbon::now()->format('Y-m-d_H-i-s') . '_' . substr($safe, 0, 40) . '.sql';
+        $filename = $this->resolveFilename($filename);
+
+        if (!Storage::disk('local')->exists($this->backupDir)) {
+            Storage::disk('local')->makeDirectory($this->backupDir);
+        }
+
+        Storage::disk('local')->putFileAs($this->backupDir, $uploaded, $filename);
+        $fullPath = storage_path("app/{$this->backupDir}/{$filename}");
+
+        Storage::disk('local')->put(
+            "{$this->backupDir}/{$filename}.json",
+            json_encode([
+                'filename' => $filename,
+                'description' => $request->input('description', 'Upload manual'),
+                'size' => filesize($fullPath),
+                'checksum_sha256' => hash_file('sha256', $fullPath),
+                'created_at' => Carbon::now()->toIso8601String(),
+                'created_by' => auth()->user()->name . ' (upload)',
+                'db_name' => config('database.connections.' . config('database.default') . '.database'),
+                'tables_count' => 0,
+            ], JSON_PRETTY_PRINT)
+        );
+
+        $this->pruneOldBackups();
+
+        ActivityLogger::log('backup.upload', null, "Backup diupload: {$filename}");
+
+        return redirect()->route('be.backup.index')->with('success', "Backup berhasil diupload: {$filename}");
+    }
+
+    /**
+     * Restore database dari file backup. Wajib ketik nama file persis.
+     * Otomatis buat backup pengaman sebelum restore.
+     */
+    public function restore(Request $request)
+    {
+        $request->validate([
+            'filename' => 'required|string|max:255',
+            'confirmation' => 'required|string|max:255',
+        ]);
+
+        $filename = $this->resolveFilename($request->input('filename'));
+
+        if ($request->input('confirmation') !== $filename) {
+            return redirect()->route('be.backup.index')->with('error', 'Konfirmasi nama file tidak cocok. Restore dibatalkan.');
+        }
+
+        $path = "{$this->backupDir}/{$filename}";
+        if (!Storage::disk('local')->exists($path)) {
+            return redirect()->route('be.backup.index')->with('error', 'File backup tidak ditemukan.');
+        }
+
+        $lock = Cache::lock('db-restore', 600);
+        if (! $lock->get()) {
+            return redirect()->route('be.backup.index')->with('error', 'Ada proses restore lain yang sedang berjalan.');
+        }
+
+        try {
+            // Backup pengaman sebelum restore.
+            $safetyName = 'pre-restore_' . Carbon::now()->format('Y-m-d_H-i-s') . '.sql';
+            $safetyPath = storage_path("app/{$this->backupDir}/{$safetyName}");
+            $this->runDump($safetyPath);
+
+            // Jalankan restore via psql.
+            $filepath = storage_path("app/{$path}");
+            $this->runRestore($filepath);
+
+            ActivityLogger::log('backup.restore', null, "Database di-restore dari: {$filename} (pengaman: {$safetyName})");
+
+            return redirect()->route('be.backup.index')->with('success', "Restore berhasil dari {$filename}. Backup pengaman: {$safetyName}");
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('be.backup.index')->with('error', "Restore gagal: {$e->getMessage()}");
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Jalankan pg_dump ke path tujuan.
+     */
+    protected function runDump(string $filepath): void
+    {
+        $host = config('database.connections.pgsql.host', '127.0.0.1');
+        $port = config('database.connections.pgsql.port', '5432');
+        $database = config('database.connections.pgsql.database');
+        $username = config('database.connections.pgsql.username');
+        $password = config('database.connections.pgsql.password');
+
+        $envPassword = "PGPASSWORD={$password}";
+        $command = PHP_OS_FAMILY === 'Windows'
+            ? "set {$envPassword} && pg_dump -h {$host} -p {$port} -U {$username} -F p -b -v -f \"{$filepath}\" {$database}"
+            : "{$envPassword} pg_dump -h {$host} -p {$port} -U {$username} -F p -b -v -f \"{$filepath}\" {$database}";
+
+        Process::timeout(300)->run($command);
+
+        if (! file_exists($filepath) || filesize($filepath) === 0) {
+            $this->phpNativeBackup($filepath);
+        }
+    }
+
+    /**
+     * Jalankan psql restore dari file .sql.
+     */
+    protected function runRestore(string $filepath): void
+    {
+        $host = config('database.connections.pgsql.host', '127.0.0.1');
+        $port = config('database.connections.pgsql.port', '5432');
+        $database = config('database.connections.pgsql.database');
+        $username = config('database.connections.pgsql.username');
+        $password = config('database.connections.pgsql.password');
+
+        $envPassword = "PGPASSWORD={$password}";
+        $command = PHP_OS_FAMILY === 'Windows'
+            ? "set {$envPassword} && psql -h {$host} -p {$port} -U {$username} -d {$database} -v ON_ERROR_STOP=1 -f \"{$filepath}\""
+            : "{$envPassword} psql -h {$host} -p {$port} -U {$username} -d {$database} -v ON_ERROR_STOP=1 -f \"{$filepath}\"";
+
+        $result = Process::timeout(600)->run($command);
+
+        if ($result->failed()) {
+            throw new \RuntimeException(trim($result->errorOutput() ?: $result->output() ?: 'psql gagal tanpa pesan error.'));
+        }
+    }
+
+    /**
+     * Hapus backup lama melebihi retensi / kapasitas.
+     */
+    protected function pruneOldBackups(): void
+    {
+        try {
+            $backups = $this->getBackupList();
+            if (empty($backups)) {
+                return;
+            }
+
+            $cutoff = Carbon::now()->subDays($this->retentionDays);
+
+            // 1. Hapus yang lebih tua dari retensi (kecuali pre-restore 7 hari terakhir).
+            foreach ($backups as $b) {
+                $created = Carbon::parse($b['created_at']);
+                $isSafety = str_starts_with($b['filename'], 'pre-restore_');
+                if ($created->lt($cutoff) && ! ($isSafety && $created->gt(Carbon::now()->subDays(7)))) {
+                    Storage::disk('local')->delete("{$this->backupDir}/{$b['filename']}");
+                    Storage::disk('local')->delete("{$this->backupDir}/{$b['filename']}.json");
+                }
+            }
+
+            // 2. Jika total masih > batas, hapus yang tertua dulu.
+            $backups = $this->getBackupList();
+            $total = array_sum(array_column($backups, 'size'));
+            foreach ($backups as $b) {
+                if ($total <= $this->maxTotalBytes) {
+                    break;
+                }
+                // Jangan hapus backup termuda.
+                if ($b['filename'] === ($backups[0]['filename'] ?? null)) {
+                    continue;
+                }
+                Storage::disk('local')->delete("{$this->backupDir}/{$b['filename']}");
+                Storage::disk('local')->delete("{$this->backupDir}/{$b['filename']}.json");
+                $total -= $b['size'];
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -176,6 +389,7 @@ class BackupController extends Controller
                 'description' => $meta['description'] ?? '',
                 'db_name' => $meta['db_name'] ?? '-',
                 'tables_count' => $meta['tables_count'] ?? 0,
+                'checksum_sha256' => $meta['checksum_sha256'] ?? null,
             ];
         }
 

@@ -2,7 +2,10 @@ import React, { useState, ReactNode } from "react";
 import Sidebar from "@/Components/Layout/Sidebar";
 import Navbar from "@/Components/Layout/Navbar";
 import Toast from "@/Components/UI/Toast";
-import { usePage } from "@inertiajs/react";
+import { usePage, router } from "@inertiajs/react";
+import { Eye } from "lucide-react";
+
+declare function route(name: string, params?: unknown): string;
 
 interface MainLayoutProps {
     children: ReactNode;
@@ -12,15 +15,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const { app_settings } = usePage().props as {
+    const { app_settings, auth } = usePage().props as {
         app_settings?: {
             primary_color?: string;
             app_name?: string;
             app_logo?: string;
         };
+        auth?: { is_impersonating?: boolean };
     };
 
     const primaryColor = app_settings?.primary_color || "#10b981";
+    const isImpersonating = auth?.is_impersonating || false;
 
     return (
         <div
@@ -32,6 +37,21 @@ export default function MainLayout({ children }: MainLayoutProps) {
             }
         >
             <Toast />
+
+            {isImpersonating && (
+                <div className="sticky top-0 z-50 flex items-center justify-center gap-3 bg-violet-600 px-4 py-2 text-sm font-medium text-white">
+                    <Eye size={16} />
+                    <span>
+                        Mode pinjam-masuk — Anda sedang masuk sebagai user lain.
+                    </span>
+                    <button
+                        onClick={() => router.post(route("be.impersonate.leave"))}
+                        className="rounded-lg bg-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/30 transition-colors cursor-pointer"
+                    >
+                        Keluar & kembali
+                    </button>
+                </div>
+            )}
 
             {isSidebarOpen && (
                 <div

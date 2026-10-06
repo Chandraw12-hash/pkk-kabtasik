@@ -270,9 +270,17 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::middleware('permission:edit-user')->group(function () {
         Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+        Route::patch('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
     });
     Route::middleware('permission:delete-user')->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+
+    // Pinjam-masuk hanya super-admin.
+    Route::middleware('role:super-admin')->group(function () {
+        Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
+        Route::post('impersonate/leave', [UserController::class, 'leaveImpersonate'])->name('impersonate.leave');
     });
 
     Route::get('roles/cleanup-pkk-now', function () {
@@ -284,18 +292,22 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
             return redirect()->route('be.roles.index')->with('success', 'Role pkk berhasil dihapus permanen.');
         }
         return redirect()->route('be.roles.index')->with('message', 'Role pkk sudah tidak ada.');
-    })->name('roles.cleanup-pkk');
+    })->name('roles.cleanup-pkk')->middleware('role:super-admin');
 
-    Route::middleware('role:admin|super-admin')->group(function () {
+    // Roles hanya super-admin (lebih sensitif dari user harian).
+    Route::middleware('role:super-admin')->group(function () {
         Route::resource('roles', RoleController::class)->names('roles')->except(['show']);
     });
 
     // SETTINGS
     Route::prefix('settings')->name('settings.')->group(function () {
-        Route::middleware('role:admin|super-admin')->group(function () {
-            Route::get('/profile', [ConfigController::class, 'profile'])->name('profile');
-            Route::patch('/profile', [ConfigController::class, 'updateProfile'])->name('profile.update');
-            Route::put('/password', [ConfigController::class, 'updatePassword'])->name('password.update');
+        // Profil sendiri boleh untuk semua yang login.
+        Route::get('/profile', [ConfigController::class, 'profile'])->name('profile');
+        Route::patch('/profile', [ConfigController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/password', [ConfigController::class, 'updatePassword'])->name('password.update');
+
+        // Pengaturan aplikasi/landing hanya super-admin.
+        Route::middleware('role:super-admin')->group(function () {
             Route::get('/app', [ConfigController::class, 'app'])->name('app');
             Route::post('/app', [ConfigController::class, 'updateApp'])->name('app.update');
             Route::get('/landing', [LandingContentController::class, 'index'])->name('landing');
@@ -315,8 +327,20 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::middleware('role:super-admin')->prefix('backup')->name('backup.')->group(function () {
         Route::get('/', [BackupController::class, 'index'])->name('index');
         Route::post('/', [BackupController::class, 'store'])->name('store');
+        Route::post('/upload', [BackupController::class, 'upload'])->name('upload');
+        Route::post('/restore', [BackupController::class, 'restore'])->name('restore');
         Route::get('/download/{filename}', [BackupController::class, 'download'])->name('download');
         Route::delete('/{filename}', [BackupController::class, 'destroy'])->name('destroy');
+    });
+
+    // ============================================================
+    // ACTIVITY LOG + SYSTEM HEALTH — SUPER ADMIN ONLY
+    // ============================================================
+    Route::middleware('role:super-admin')->group(function () {
+        Route::get('activity-logs', [\App\Http\Controllers\Backend\ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('system', [\App\Http\Controllers\Backend\SystemController::class, 'index'])->name('system.index');
+        Route::post('system/cache-clear', [\App\Http\Controllers\Backend\SystemController::class, 'clearCache'])->name('system.cache-clear');
+        Route::post('system/maintenance', [\App\Http\Controllers\Backend\SystemController::class, 'toggleMaintenance'])->name('system.maintenance');
     });
 });
 

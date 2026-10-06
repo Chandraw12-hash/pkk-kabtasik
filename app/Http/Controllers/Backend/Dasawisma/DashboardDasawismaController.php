@@ -37,7 +37,9 @@ class DashboardDasawismaController extends Controller
             $model = $resource['model'];
             $query = $model::query();
 
-            if ($user->hasRole('admin')) {
+            if ($user->hasRole('super-admin')) {
+                // Super Admin — lihat semua status tanpa filter.
+            } elseif ($user->hasRole('admin')) {
                 $query->where('status', 'approved');
             } elseif ($resource['model'] === CatatanKeluarga::class) {
                 $query->whereHas('daftarWarga', function ($parent) use ($user) {
