@@ -177,6 +177,10 @@ class IndexController extends Controller
             ['id' => 4, 'title' => 'Domain Layanan SPBE', 'nilai' => 3.8],
         ]);
 
+        $landingSettings = \Illuminate\Support\Facades\Cache::remember('landing_settings', 3600, function () {
+            return DB::table('settings')->pluck('value', 'key')->all();
+        });
+
         return Inertia::render('Frontend/Beranda', [
             'kebijakan' => $kebijakan,
             'chartData' => $chartData,
@@ -194,6 +198,7 @@ class IndexController extends Controller
             'year' => (int) date('Y'),
             'isSurveyActive' => $isSurveyActive,
             'testimoniSurvey' => $testimoniSurvey,
+            'landingSettings' => $landingSettings,
         ]);
     }
 
