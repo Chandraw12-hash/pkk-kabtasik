@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Backend\Desa;
 
 use App\Http\Controllers\Controller;
 use App\Models\RekapKegiatanWarga;
+use App\Models\User;
+use App\Notifications\DasawismaRecordNotification;
 use App\Imports\RekapKegiatanWargaImport;
 use App\Exports\RekapKegiatanWargaTemplateExport;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,10 +40,27 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * List rekap kegiatan warga — tab level (RT, RW, Dusun, Desa)
+     * Buat pattern pencarian desa yang tahan terhadap variasi format.
+     * User disimpan: "Cikunir" | DB disimpan: "DESA CIKUNIR"
+     */
+    private function desaPattern(string $desa): string
+    {
+        return '%' . strtolower(trim($desa)) . '%';
+    }
+
+    /**
+     * Buat pattern pencarian kecamatan.
+     */
+    private function kecamatanNormalized(string $kecamatan): string
+    {
+        return strtolower(trim($kecamatan));
+    }
+
+    /**
+     * List rekap kegiatan warga — tab level (RT, RW, Dusun, Desa).
      *
-     * Data sumber: level RT (dari import)
-     * Level RW, Dusun, Desa: AGREGASI LIVE via GROUP BY
+     * Level RT: tampil semua status (pending/approved/rejected) → untuk approve
+     * Level RW/Dusun/Desa: roll-up hanya dari data yang sudah APPROVED
      */
     public function index(Request $request)
     {
@@ -49,17 +70,27 @@ class KegiatanDesaController extends Controller
             $level = 'rt';
         }
         $tahun = (int) $request->input('tahun', date('Y'));
+        $status = (string) $request->input('status', 'all');
 
-        // === BASE QUERY — selalu filter level RT (baris input) ===
+        $desaPattern = $this->desaPattern($user->desa);
+        $kecamatanNorm = $this->kecamatanNormalized($user->kecamatan);
+
+        // === BASE QUERY — filter level RT (baris input) ===
         $baseQuery = RekapKegiatanWarga::query()
-            ->where('kecamatan', $user->kecamatan)
-            ->where('desa', $user->desa)
+            ->whereRaw('LOWER(kecamatan) = ?', [$kecamatanNorm])
+            ->whereRaw('LOWER(desa) LIKE ?', [$desaPattern])
             ->where('tahun', $tahun)
             ->where('level', 'rt');
 
+        // === ROLL-UP QUERY — hanya approved ===
+        $rollupQuery = (clone $baseQuery)->where('status', 'approved');
+
         if ($level === 'rt') {
-            // === LEVEL RT — baris apa adanya ===
             $query = clone $baseQuery;
+
+            if (in_array($status, ['pending', 'approved', 'rejected'], true)) {
+                $query->where('status', $status);
+            }
 
             if ($request->filled('dusun')) {
                 $query->where('dusun', $request->dusun);
@@ -67,22 +98,29 @@ class KegiatanDesaController extends Controller
 
             if ($request->filled('search')) {
                 $search = $request->search;
-                $query->where(function ($q) use ($search) {
+                $query->where(function (Builder $q) use ($search) {
                     $q->where('nama_dusun', 'ilike', "%{$search}%")
                       ->orWhere('rw', 'ilike', "%{$search}%")
-                      ->orWhere('rt', 'ilike', "%{$search}%");
+                      ->orWhere('rt', 'ilike', "%{$search}%")
+                      ->orWhere('keterangan', 'ilike', "%{$search}%");
                 });
             }
 
-            $data = $query->orderBy('dusun')
+            $data = $query->with(['approvedBy:id,name', 'creator:id,name'])
+                ->orderBy('dusun')
                 ->orderBy('rw')
                 ->orderBy('rt')
                 ->paginate(15)
-                ->withQueryString();
+                ->withQueryString()
+                ->through(function (RekapKegiatanWarga $record) {
+                    $arr = $record->toArray();
+                    $arr['created_by_name'] = $record->creator?->name;
+                    $arr['approved_by_name'] = $record->approvedBy?->name;
+                    return $arr;
+                });
 
         } elseif ($level === 'rw') {
-            // === LEVEL RW — GROUP BY dusun + rw ===
-            $data = (clone $baseQuery)
+            $data = $rollupQuery
                 ->selectRaw(
                     'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, rw, '
                     . 'COUNT(*) as jumlah_rt, ' . $this->sumSelect()
@@ -94,8 +132,7 @@ class KegiatanDesaController extends Controller
                 ->withQueryString();
 
         } elseif ($level === 'dusun') {
-            // === LEVEL DUSUN — GROUP BY dusun ===
-            $data = (clone $baseQuery)
+            $data = $rollupQuery
                 ->selectRaw(
                     'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, '
                     . 'COUNT(DISTINCT rw) as jumlah_rw, COUNT(*) as jumlah_rt, ' . $this->sumSelect()
@@ -106,8 +143,7 @@ class KegiatanDesaController extends Controller
                 ->withQueryString();
 
         } else {
-            // === LEVEL DESA — GROUP BY dusun (breakdown per dusun di dalam desa) ===
-            $data = (clone $baseQuery)
+            $data = $rollupQuery
                 ->selectRaw(
                     'kecamatan, desa, nama_kecamatan, nama_desa, dusun, nama_dusun, '
                     . 'COUNT(DISTINCT rw) as jumlah_rw, COUNT(*) as jumlah_rt, '
@@ -119,34 +155,42 @@ class KegiatanDesaController extends Controller
                 ->withQueryString();
         }
 
-        // === STATISTIK PER LEVEL (COUNT) ===
+        // === STATISTIK PER LEVEL ===
         $statsPerLevel = [
             'rt' => (clone $baseQuery)->count(),
-            'rw' => (clone $baseQuery)->distinct('rw')->count('rw'),
-            'dusun' => (clone $baseQuery)->distinct('dusun')->count('dusun'),
-            'desa' => (clone $baseQuery)->distinct('dusun')->count('dusun'),
+            'rw' => (clone $rollupQuery)->distinct('rw')->count('rw'),
+            'dusun' => (clone $rollupQuery)->distinct('dusun')->count('dusun'),
+            'desa' => (clone $rollupQuery)->distinct('dusun')->count('dusun'),
         ];
 
         // === STATISTIK TOTAL ===
         $stats = [
-            'total_kk' => (int) (clone $baseQuery)->sum('jumlah_kk'),
-            'total_jiwa' => (int) ((clone $baseQuery)
+            'total_kk' => (int) (clone $rollupQuery)->sum('jumlah_kk'),
+            'total_jiwa' => (int) ((clone $rollupQuery)
                 ->selectRaw('COALESCE(SUM(total_l + total_p), 0) as total')
                 ->value('total') ?? 0),
-            'total_dasa_wisma' => (int) (clone $baseQuery)->sum('jumlah_dasa_wisma'),
+            'total_dasa_wisma' => (int) (clone $rollupQuery)->sum('jumlah_dasa_wisma'),
             'per_level' => $statsPerLevel,
+            'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
+            'approved' => (clone $baseQuery)->where('status', 'approved')->count(),
+            'rejected' => (clone $baseQuery)->where('status', 'rejected')->count(),
         ];
 
         return Inertia::render('Backend/Desa/Kegiatan/Index', [
             'data' => $data,
             'stats' => $stats,
             'activeLevel' => $level,
-            'filters' => $request->only(['tahun', 'dusun', 'search']),
+            'filters' => [
+                'tahun' => $tahun,
+                'dusun' => $request->input('dusun'),
+                'search' => $request->input('search'),
+                'status' => $status,
+            ],
         ]);
     }
 
     /**
-     * Halaman import kegiatan
+     * Halaman import kegiatan.
      */
     public function import()
     {
@@ -154,7 +198,7 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * Handle import Excel — SINGLE SHEET (level RT)
+     * Handle import Excel — SINGLE SHEET (level RT).
      */
     public function store(Request $request)
     {
@@ -172,21 +216,20 @@ class KegiatanDesaController extends Controller
         try {
             DB::beginTransaction();
 
-            // === REPLACE MODE — hapus data lama ===
             if ($replace) {
                 RekapKegiatanWarga::query()
                     ->where('kecamatan', $user->kecamatan)
                     ->where('desa', $user->desa)
                     ->where('tahun', $tahun)
+                    ->where('level', 'rt')
                     ->delete();
             }
 
-            // === IMPORTER — SINGLE SHEET ===
             $import = new RekapKegiatanWargaImport(
                 $user->kecamatan,
                 $user->desa,
                 $tahun,
-                'rt'  // level input: RT
+                'rt'
             );
 
             Excel::import($import, $request->file('file'));
@@ -195,7 +238,6 @@ class KegiatanDesaController extends Controller
             $skip = $import->getSkipCount();
             $importErrors = $import->getErrors();
 
-            // === KALAU GA ADA DATA MASUK ===
             if ($success === 0 && empty($importErrors)) {
                 DB::rollBack();
                 return redirect()->back()->withInput()
@@ -204,7 +246,6 @@ class KegiatanDesaController extends Controller
 
             DB::commit();
 
-            // === LOG ===
             Log::info('Import Rekap Kegiatan berhasil', [
                 'user_id' => auth()->id(),
                 'kecamatan' => $user->kecamatan,
@@ -228,7 +269,7 @@ class KegiatanDesaController extends Controller
             return redirect()
                 ->route('desa.kegiatan.index', ['tahun' => $tahun])
                 ->with('success',
-                    "Import berhasil! {$success} data masuk, {$skip} di-skip. Level RW, Dusun, dan Desa akan dihitung otomatis."
+                    "Import berhasil! {$success} data masuk dengan status PENDING. Silakan tinjau dan setujui."
                 );
 
         } catch (Throwable $e) {
@@ -251,7 +292,7 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * Download template Excel
+     * Download template Excel.
      */
     public function downloadTemplate()
     {
@@ -264,7 +305,7 @@ class KegiatanDesaController extends Controller
     }
 
     /**
-     * Hapus data per dusun (semua RT di dusun tersebut)
+     * Hapus data per dusun — hanya yang belum approved.
      */
     public function destroyDusun(Request $request, string $dusun)
     {
@@ -277,10 +318,141 @@ class KegiatanDesaController extends Controller
             ->where('tahun', $tahun)
             ->where('level', 'rt')
             ->where('dusun', $dusun)
+            ->whereIn('status', ['pending', 'rejected'])
             ->delete();
 
         return redirect()
             ->route('desa.kegiatan.index', ['tahun' => $tahun, 'level' => 'dusun'])
             ->with('success', "Data dusun {$dusun} berhasil dihapus ({$deleted} record RT).");
+    }
+
+    /* ============================================================
+     * APPROVAL — Admin Desa
+     * ============================================================ */
+
+    /**
+     * POST /desa/kegiatan/{id}/approve
+     */
+    public function approve(Request $request, int $id): RedirectResponse
+    {
+        $record = DB::transaction(function () use ($request, $id): RekapKegiatanWarga {
+            $record = $this->pendingRecord($request, $id, lock: true);
+
+            $record->forceFill([
+                'status' => 'approved',
+                'approved_by' => $request->user()->id,
+                'approved_at' => now(),
+                'rejected_reason' => null,
+            ])->save();
+
+            return $record;
+        });
+
+        $this->notifyOwner($record, 'Data rekap kegiatan warga Anda telah disetujui Admin Desa.');
+
+        return back()->with('success', 'Data rekap kegiatan berhasil disetujui.');
+    }
+
+    /**
+     * POST /desa/kegiatan/{id}/reject
+     */
+    public function reject(Request $request, int $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $record = $this->pendingRecord($request, $id);
+
+        $record->forceFill([
+            'status' => 'rejected',
+            'approved_by' => null,
+            'approved_at' => null,
+            'rejected_reason' => $validated['reason'],
+        ])->save();
+
+        $this->notifyOwner(
+            $record,
+            'Data rekap kegiatan warga perlu diperbaiki: ' . $validated['reason'],
+        );
+
+        return back()->with('success', 'Data ditolak dan alasan dikirim ke petugas.');
+    }
+
+    /**
+     * POST /desa/kegiatan/bulk-approve
+     */
+    public function bulkApprove(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $user = $request->user();
+        $desaPattern = $this->desaPattern($user->desa);
+        $kecamatanNorm = $this->kecamatanNormalized($user->kecamatan);
+
+        $count = DB::transaction(function () use ($validated, $user, $desaPattern, $kecamatanNorm): int {
+            $records = RekapKegiatanWarga::query()
+                ->whereRaw('LOWER(kecamatan) = ?', [$kecamatanNorm])
+                ->whereRaw('LOWER(desa) LIKE ?', [$desaPattern])
+                ->where('level', 'rt')
+                ->whereIn('id', $validated['ids'])
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($records as $record) {
+                $record->forceFill([
+                    'status' => 'approved',
+                    'approved_by' => $user->id,
+                    'approved_at' => now(),
+                    'rejected_reason' => null,
+                ])->save();
+
+                $this->notifyOwner($record, 'Data rekap kegiatan warga Anda telah disetujui Admin Desa.');
+            }
+
+            return $records->count();
+        });
+
+        if ($count === 0) {
+            return back()->with('warning', 'Tidak ada data yang bisa disetujui. Pastikan data masih berstatus pending dan berada di wilayah Anda.');
+        }
+
+        return back()->with('success', $count . ' data berhasil disetujui.');
+    }
+
+    /* ============================================================
+     * HELPER
+     * ============================================================ */
+
+    private function pendingRecord(Request $request, int $id, bool $lock = false): RekapKegiatanWarga
+    {
+        $user = $request->user();
+        $desaPattern = $this->desaPattern($user->desa);
+        $kecamatanNorm = $this->kecamatanNormalized($user->kecamatan);
+
+        $query = RekapKegiatanWarga::query()
+            ->whereRaw('LOWER(kecamatan) = ?', [$kecamatanNorm])
+            ->whereRaw('LOWER(desa) LIKE ?', [$desaPattern])
+            ->where('level', 'rt')
+            ->where('status', 'pending')
+            ->whereKey($id);
+
+        return ($lock ? $query->lockForUpdate() : $query)->firstOrFail();
+    }
+
+    private function notifyOwner(RekapKegiatanWarga $record, string $message): void
+    {
+        $owner = User::query()->find($record->created_by);
+        if ($owner) {
+            $owner->notify(new DasawismaRecordNotification(
+                $message,
+                '/desa/kegiatan',
+                $record->id,
+            ));
+        }
     }
 }

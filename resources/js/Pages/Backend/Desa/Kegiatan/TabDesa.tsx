@@ -3,6 +3,8 @@ import { FileText } from 'lucide-react';
 
 interface TabDesaProps {
     data: any[];
+    pagination?: unknown;
+    level?: string;
 }
 
 // Kolom angka yang dijumlahkan dari semua dusun. Urutan mengikuti template Excel.
@@ -41,7 +43,8 @@ const NUMERIC_COLUMNS: { label: string; key: string }[] = [
     { label: 'Kesling', key: 'kegiatan_kesehatan_lingkungan' },
 ];
 
-const formatAngka = (value: any): string => Number(value || 0).toLocaleString('id-ID');
+const formatAngka = (value: unknown): string =>
+    Number(value || 0).toLocaleString('id-ID');
 
 export default function TabDesa({ data }: TabDesaProps) {
     if (!data || data.length === 0) {
@@ -54,7 +57,7 @@ export default function TabDesa({ data }: TabDesaProps) {
                     Belum Ada Data Level Desa
                 </p>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                    Import data dari file Excel
+                    Data muncul otomatis setelah data RT disetujui
                 </p>
             </div>
         );
@@ -64,10 +67,15 @@ export default function TabDesa({ data }: TabDesaProps) {
     // Pakai Number() supaya aman kalau database mengirim angka sebagai string.
     const totals: Record<string, number> = {};
     NUMERIC_COLUMNS.forEach((col) => {
-        totals[col.key] = data.reduce((sum, item) => sum + Number(item[col.key] || 0), 0);
+        totals[col.key] = data.reduce(
+            (sum, item) => sum + Number(item[col.key] || 0),
+            0,
+        );
     });
 
-    const jumlahDusun = new Set(data.map((item) => item.nama_dusun || item.dusun)).size;
+    const jumlahDusun = new Set(
+        data.map((item) => item.nama_dusun || item.dusun),
+    ).size;
     const namaDesa = data[0]?.nama_desa || data[0]?.desa || 'Desa';
 
     return (
@@ -79,7 +87,7 @@ export default function TabDesa({ data }: TabDesaProps) {
                         <th className="px-4 py-3">Desa</th>
                         <th className="px-4 py-3 text-right">Jml Dusun</th>
                         {NUMERIC_COLUMNS.map((col) => (
-                            <th key={col.key} className="px-4 py-3 text-right">
+                            <th key={col.key} className="px-4 py-3 text-right whitespace-nowrap">
                                 {col.label}
                             </th>
                         ))}

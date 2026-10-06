@@ -55,6 +55,7 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
     const [isOpen, setIsOpen] = useState(false);
     const [rekapOpen, setRekapOpen] = useState(true);
     const [dataPkkOpen, setDataPkkOpen] = useState(true);
+    const [approvalOpen, setApprovalOpen] = useState(true);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -104,6 +105,7 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
     useEffect(() => {
         if (isActive("/kecamatan/data-pkk")) setDataPkkOpen(true);
         if (isActive("/kecamatan/rekap")) setRekapOpen(true);
+        if (isActive("/kecamatan/approval")) setApprovalOpen(true);
     }, [currentUrl]);
 
     // ============================================================
@@ -202,29 +204,77 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                         <span>Dashboard</span>
                     </Link>
 
-                    {/* ✅ APPROVAL — MENU BARU */}
-                    <Link
-                        href="/kecamatan/data-pkk/umum/approval"
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
-                            isActive("/kecamatan/data-pkk/umum/approval")
-                                ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        }`}
-                    >
-                        <ClipboardCheck
-                            size={20}
-                            strokeWidth={2}
-                            className={`shrink-0 ${
-                                isActive("/kecamatan/data-pkk/umum/approval")
+                    {/* ✅ APPROVAL — DROPDOWN BARU */}
+                    <div className="mt-1">
+                        <button
+                            type="button"
+                            onClick={() => setApprovalOpen(!approvalOpen)}
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
+                                isActive("/kecamatan/data-pkk/umum/approval") ||
+                                isActive("/kecamatan/data-pkk/kegiatan/approval")
                                     ? "text-teal-600 dark:text-teal-400"
-                                    : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
-                        />
-                        <span className="flex-1">Approval Data Umum</span>
-                        <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 text-[10px] font-bold">
-                            !
-                        </span>
-                    </Link>
+                        >
+                            <div className="flex items-center gap-3">
+                                <ClipboardCheck
+                                    size={20}
+                                    strokeWidth={2}
+                                    className={`shrink-0 ${
+                                        isActive("/kecamatan/data-pkk/umum/approval") ||
+                                        isActive("/kecamatan/data-pkk/kegiatan/approval")
+                                            ? "text-teal-600 dark:text-teal-400"
+                                            : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                    }`}
+                                />
+                                <span>Approval</span>
+                            </div>
+                            <ChevronDown
+                                size={16}
+                                className={`transition-transform duration-300 ${
+                                    approvalOpen ? "rotate-180" : ""
+                                }`}
+                            />
+                        </button>
+
+                        <div
+                            className={`overflow-hidden transition-all duration-300 ${
+                                approvalOpen ? "max-h-96" : "max-h-0"
+                            }`}
+                        >
+                            <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
+                                <Link
+                                    href="/kecamatan/data-pkk/umum/approval"
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isActive("/kecamatan/data-pkk/umum/approval")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <FileText size={16} />
+                                    <span className="flex-1">Approval Data Umum</span>
+                                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 text-[10px] font-bold">
+                                        !
+                                    </span>
+                                </Link>
+
+                                <Link
+                                    href="/kecamatan/data-pkk/kegiatan/approval"
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isActive("/kecamatan/data-pkk/kegiatan/approval")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <CheckCircle2 size={16} />
+                                    <span className="flex-1">Approval Rekap Kegiatan</span>
+                                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 text-[10px] font-bold">
+                                        !
+                                    </span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
 
                     <Link
                         href="/kecamatan/laporan"

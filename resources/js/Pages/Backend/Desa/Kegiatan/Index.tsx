@@ -8,14 +8,48 @@ import TabRW from './TabRW';
 import TabDusun from './TabDusun';
 import TabDesa from './TabDesa';
 
+type StatsType = {
+    total_kk: number;
+    total_jiwa: number;
+    total_dasa_wisma: number;
+    per_level: Record<string, number>;
+    pending: number;
+    approved: number;
+    rejected: number;
+};
+
+type FiltersType = {
+    tahun: number;
+    dusun: string | null;
+    search: string | null;
+    status: string;
+};
+
 interface KegiatanIndexProps {
-    data: any;
-    stats: any;
+    data: {
+        data: unknown[];
+        current_page: number;
+        last_page: number;
+        total: number;
+        links: Array<{ label: string; url: string | null; active: boolean }>;
+    };
+    stats: StatsType;
     activeLevel: string;
-    filters: any;
+    filters: FiltersType;
+    flash?: {
+        success?: string | null;
+        error?: string | null;
+        warning?: string | null;
+    };
 }
 
-export default function Index({ data, stats, activeLevel, filters }: KegiatanIndexProps) {
+export default function Index({
+    data,
+    stats,
+    activeLevel,
+    filters,
+    flash,
+}: KegiatanIndexProps) {
     const levels = [
         { key: 'rt', label: 'RT', component: TabRT },
         { key: 'rw', label: 'RW', component: TabRW },
@@ -38,7 +72,8 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
                             Rekap Kegiatan Warga
                         </h1>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Data diinput per RT, Level RW, Dusun, dan Desa dihitung otomatis
+                            Data diinput per RT. Level RW, Dusun, dan Desa dihitung
+                            otomatis dari data yang <strong>sudah disetujui</strong>.
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -61,13 +96,39 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
                     </div>
                 </div>
 
+                {/* Flash Messages */}
+                {flash?.success && (
+                    <div
+                        role="status"
+                        className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    >
+                        {flash.success}
+                    </div>
+                )}
+                {flash?.error && (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                    >
+                        {flash.error}
+                    </div>
+                )}
+                {flash?.warning && (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+                    >
+                        {flash.warning}
+                    </div>
+                )}
+
                 {/* Tab Level */}
                 <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
                     <div className="border-b border-slate-100 dark:border-slate-700 px-2 sm:px-6 flex items-center gap-1 overflow-x-auto bg-slate-50/50 dark:bg-slate-800/50">
                         {levels.map((lvl) => (
                             <Link
                                 key={lvl.key}
-                                href={`/desa/kegiatan?level=${lvl.key}`}
+                                href={`/desa/kegiatan?level=${lvl.key}&status=${filters.status}&tahun=${filters.tahun}`}
                                 className={`px-4 py-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
                                     activeTab.key === lvl.key
                                         ? 'text-teal-600 dark:text-teal-400 border-teal-600 dark:border-teal-400'
@@ -87,14 +148,56 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
 
                     <div className="p-6">
                         {/* Stat Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
                             <StatCard label="Total KK" value={stats.total_kk || 0} />
                             <StatCard label="Total Jiwa" value={stats.total_jiwa || 0} />
-                            <StatCard label="Dasa Wisma" value={stats.total_dasa_wisma || 0} />
+                            <StatCard
+                                label="Dasa Wisma"
+                                value={stats.total_dasa_wisma || 0}
+                            />
+                            <StatCard
+                                label="Menunggu"
+                                value={stats.pending || 0}
+                                accent="amber"
+                            />
+                            <StatCard
+                                label="Disetujui"
+                                value={stats.approved || 0}
+                                accent="emerald"
+                            />
                         </div>
 
+                        {/* Filter Status — hanya di level RT */}
+                        {activeLevel === 'rt' && (
+                            <div className="mb-4 flex flex-wrap gap-2">
+                                {[
+                                    ['pending', 'Menunggu'],
+                                    ['approved', 'Disetujui'],
+                                    ['rejected', 'Perlu Diperbaiki'],
+                                    ['all', 'Semua'],
+                                ].map(([value, label]) => (
+                                    <Link
+                                        key={value}
+                                        href={`/desa/kegiatan?level=rt&status=${value}&tahun=${filters.tahun}`}
+                                        preserveScroll
+                                        className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+                                            filters.status === value
+                                                ? 'bg-teal-700 text-white'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+                                        }`}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Tab Content */}
-                        <ActiveComponent data={data?.data || []} />
+                        <ActiveComponent
+                            data={data?.data || []}
+                            pagination={data}
+                            level={activeLevel}
+                        />
                     </div>
                 </Card>
             </div>
@@ -102,11 +205,47 @@ export default function Index({ data, stats, activeLevel, filters }: KegiatanInd
     );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({
+    label,
+    value,
+    accent,
+}: {
+    label: string;
+    value: number;
+    accent?: 'amber' | 'emerald' | 'red';
+}) {
+    const styles = {
+        amber:
+            'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900',
+        emerald:
+            'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900',
+        red: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900',
+    };
+
+    const textStyles = {
+        amber: 'text-amber-700 dark:text-amber-300',
+        emerald: 'text-emerald-700 dark:text-emerald-300',
+        red: 'text-red-700 dark:text-red-300',
+    };
+
     return (
-        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+        <div
+            className={`p-4 rounded-xl border ${
+                accent
+                    ? styles[accent]
+                    : 'bg-slate-50 dark:bg-slate-700/50 border-transparent'
+            }`}
+        >
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {label}
+            </p>
+            <p
+                className={`text-xl font-bold mt-1 ${
+                    accent
+                        ? textStyles[accent]
+                        : 'text-slate-900 dark:text-slate-100'
+                }`}
+            >
                 {Number(value).toLocaleString('id-ID')}
             </p>
         </div>

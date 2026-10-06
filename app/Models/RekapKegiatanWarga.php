@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RekapKegiatanWarga extends Model
 {
@@ -12,11 +14,14 @@ class RekapKegiatanWarga extends Model
     protected $table = 'rekap_kegiatan_warga';
 
     protected $fillable = [
+        // Wilayah
         'wilayah_id', 'tahun',
         'kecamatan', 'nama_kecamatan',
         'desa', 'nama_desa',
         'dusun', 'nama_dusun',
         'rw', 'rt', 'level',
+
+        // Statistik
         'jumlah_dusun', 'jumlah_rw', 'jumlah_rt', 'jumlah_dasa_wisma',
         'jumlah_krt', 'jumlah_kk',
         'total_l', 'total_p',
@@ -30,7 +35,17 @@ class RekapKegiatanWarga extends Model
         'makanan_pokok_beras', 'makanan_pokok_non_beras',
         'kegiatan_up2k', 'kegiatan_tanah_pekarangan',
         'kegiatan_industri_rumah_tangga', 'kegiatan_kesehatan_lingkungan',
-        'keterangan', 'created_by', 'updated_by',
+        'keterangan',
+
+        // Approval Desa
+        'status', 'approved_by', 'approved_at', 'rejected_reason',
+
+        // Approval Kecamatan
+        'kecamatan_status', 'kecamatan_approved_by',
+        'kecamatan_approved_at', 'kecamatan_rejected_reason',
+
+        // Meta
+        'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -60,6 +75,10 @@ class RekapKegiatanWarga extends Model
         'kegiatan_tanah_pekarangan' => 'integer',
         'kegiatan_industri_rumah_tangga' => 'integer',
         'kegiatan_kesehatan_lingkungan' => 'integer',
+
+        // Approval
+        'approved_at' => 'datetime',
+        'kecamatan_approved_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -68,6 +87,10 @@ class RekapKegiatanWarga extends Model
         'total_buta',
         'total_air',
     ];
+
+    /* ============================================================
+     * ACCESSOR — Total turunan
+     * ============================================================ */
 
     public function getTotalAnggotaKeluargaAttribute(): int
     {
@@ -88,5 +111,122 @@ class RekapKegiatanWarga extends Model
     {
         return ($this->air_pdam ?? 0) + ($this->air_sumur ?? 0)
             + ($this->air_sungai ?? 0) + ($this->air_dll ?? 0);
+    }
+
+    /* ============================================================
+     * RELASI
+     * ============================================================ */
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function kecamatanApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'kecamatan_approved_by');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /* ============================================================
+     * SCOPE — Filter umum
+     * ============================================================ */
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('status', 'pending');
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('status', 'approved');
+    }
+
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $query->where('status', 'rejected');
+    }
+
+    public function scopeKecamatanPending(Builder $query): Builder
+    {
+        return $query->where('kecamatan_status', 'pending');
+    }
+
+    public function scopeKecamatanApproved(Builder $query): Builder
+    {
+        return $query->where('kecamatan_status', 'approved');
+    }
+
+    public function scopeKecamatanRejected(Builder $query): Builder
+    {
+        return $query->where('kecamatan_status', 'rejected');
+    }
+
+    /* ============================================================
+     * SCOPE — Filter wilayah
+     * ============================================================ */
+
+    public function scopeByDesa(Builder $query, string $kecamatan, string $desa): Builder
+    {
+        return $query->where('kecamatan', $kecamatan)
+            ->where('desa', $desa);
+    }
+
+    public function scopeByKecamatan(Builder $query, string $kecamatan): Builder
+    {
+        return $query->where('kecamatan', $kecamatan);
+    }
+
+    public function scopeByLevel(Builder $query, string $level): Builder
+    {
+        return $query->where('level', $level);
+    }
+
+    public function scopeByTahun(Builder $query, int $tahun): Builder
+    {
+        return $query->where('tahun', $tahun);
+    }
+
+    /* ============================================================
+     * SCOPE — Kabupaten (hanya yang lolos 2 layer)
+     * ============================================================ */
+
+    public function scopeFullyApproved(Builder $query): Builder
+    {
+        return $query->where('status', 'approved')
+            ->where('kecamatan_status', 'approved');
+    }
+
+    /* ============================================================
+     * HELPER
+     * ============================================================ */
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
+
+    public function isKecamatanApproved(): bool
+    {
+        return $this->kecamatan_status === 'approved';
     }
 }

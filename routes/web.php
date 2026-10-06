@@ -329,19 +329,15 @@ Route::prefix('kecamatan')
         // ⚠️ URUTAN: STATIC dulu, DYNAMIC terakhir
         // ═══════════════════════════════════════════════════════
 
-        // ✅ NEW: Halaman approval kecamatan (STATIC)
         Route::get('data-pkk/umum/approval', [DataUmumKecamatanController::class, 'approvalIndex'])
             ->name('data-umum.approval');
 
-        // ✅ NEW: Bulk approve (STATIC)
         Route::post('data-pkk/umum/bulk-approve', [DataUmumKecamatanController::class, 'bulkApprove'])
             ->name('data-umum.bulk-approve');
 
-        // ✅ Existing: List per desa (STATIC)
         Route::get('data-pkk/umum', [DataUmumKecamatanController::class, 'index'])
             ->name('data-umum.index');
 
-        // ✅ NEW: Approve/Reject per desa (DYNAMIC id)
         Route::post('data-pkk/umum/{id}/approve', [DataUmumKecamatanController::class, 'approve'])
             ->whereNumber('id')
             ->name('data-umum.approve');
@@ -349,15 +345,36 @@ Route::prefix('kecamatan')
             ->whereNumber('id')
             ->name('data-umum.reject');
 
-        // ✅ Detail per desa (DYNAMIC desa — TERAKHIR)
         Route::get('data-pkk/umum/{desa}', [DataUmumKecamatanController::class, 'show'])
             ->name('data-umum.show');
 
         // ═══════════════════════════════════════════════════════
-        // KEGIATAN
+        // KEGIATAN — REKAP + APPROVAL
+        // ⚠️ URUTAN: STATIC dulu, DYNAMIC id terakhir
         // ═══════════════════════════════════════════════════════
-        Route::get('data-pkk/kegiatan', [KegiatanKecamatanController::class, 'index'])->name('kegiatan.index');
-        Route::get('data-pkk/kegiatan/{desa}', [KegiatanKecamatanController::class, 'show'])->name('kegiatan.show');
+
+        Route::get('data-pkk/kegiatan', [KegiatanKecamatanController::class, 'index'])
+            ->name('kegiatan.index');
+
+        // Halaman approval (STATIC)
+        Route::get('data-pkk/kegiatan/approval', [KegiatanKecamatanController::class, 'approval'])
+            ->name('kegiatan.approval');
+
+        // Bulk approve (STATIC)
+        Route::post('data-pkk/kegiatan/bulk-approve', [KegiatanKecamatanController::class, 'bulkApprove'])
+            ->name('kegiatan.bulk-approve');
+
+        // Approve/reject per record (DYNAMIC id)
+        Route::post('data-pkk/kegiatan/{id}/approve', [KegiatanKecamatanController::class, 'approve'])
+            ->whereNumber('id')
+            ->name('kegiatan.approve');
+        Route::post('data-pkk/kegiatan/{id}/reject', [KegiatanKecamatanController::class, 'reject'])
+            ->whereNumber('id')
+            ->name('kegiatan.reject');
+
+        // Detail per desa (DYNAMIC desa — TERAKHIR)
+        Route::get('data-pkk/kegiatan/{desa}', [KegiatanKecamatanController::class, 'show'])
+            ->name('kegiatan.show');
 
         // ═══════════════════════════════════════════════════════
         // BUMIL
@@ -401,17 +418,14 @@ Route::prefix('desa')
         Route::get('/data-umum', [DataUmumDesaController::class, 'index'])
             ->name('data-umum.index');
 
-        // ✅ Edit agregat desa (1 baris)
         Route::get('/data-umum/edit-desa', [DataUmumDesaController::class, 'editDesa'])
             ->name('data-umum.edit-desa');
         Route::put('/data-umum/update-desa', [DataUmumDesaController::class, 'updateDesa'])
             ->name('data-umum.update-desa');
 
-        // ✅ Sync agregat desa (manual trigger)
         Route::post('/data-umum/sync-aggregate', [DataUmumDesaController::class, 'syncAggregate'])
             ->name('data-umum.sync-aggregate');
 
-        // ✅ Import & Template
         Route::get('/data-umum/import', [DataUmumDesaController::class, 'import'])
             ->name('data-umum.import');
         Route::post('/data-umum/import', [DataUmumDesaController::class, 'store'])
@@ -419,7 +433,6 @@ Route::prefix('desa')
         Route::get('/data-umum/template', [DataUmumDesaController::class, 'downloadTemplate'])
             ->name('data-umum.template');
 
-        // ✅ Edit & Update per dusun — harus di bawah route statis
         Route::get('/data-umum/{id}/edit', [DataUmumDesaController::class, 'edit'])
             ->whereNumber('id')
             ->name('data-umum.edit');
@@ -428,13 +441,29 @@ Route::prefix('desa')
             ->name('data-umum.update');
 
         // ═══════════════════════════════════════════════════════
-        // KEGIATAN
+        // KEGIATAN — REKAP + APPROVAL
+        // ⚠️ URUTAN: STATIC dulu, DYNAMIC id terakhir
         // ═══════════════════════════════════════════════════════
         Route::get('/kegiatan', [KegiatanDesaController::class, 'index'])->name('kegiatan.index');
         Route::get('/kegiatan/import', [KegiatanDesaController::class, 'import'])->name('kegiatan.import');
         Route::post('/kegiatan/import', [KegiatanDesaController::class, 'store'])->name('kegiatan.store');
         Route::get('/kegiatan/template', [KegiatanDesaController::class, 'downloadTemplate'])->name('kegiatan.template');
-        Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])->name('kegiatan.dusun.destroy');
+
+        // ✅ Approval — bulk (STATIC)
+        Route::post('/kegiatan/bulk-approve', [KegiatanDesaController::class, 'bulkApprove'])
+            ->name('kegiatan.bulk-approve');
+
+        // ✅ Hapus per dusun (STATIC dengan parameter nama)
+        Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])
+            ->name('kegiatan.dusun.destroy');
+
+        // ✅ Approval per record (DYNAMIC id — paling bawah)
+        Route::post('/kegiatan/{id}/approve', [KegiatanDesaController::class, 'approve'])
+            ->whereNumber('id')
+            ->name('kegiatan.approve');
+        Route::post('/kegiatan/{id}/reject', [KegiatanDesaController::class, 'reject'])
+            ->whereNumber('id')
+            ->name('kegiatan.reject');
 
         // ═══════════════════════════════════════════════════════
         // BUMIL

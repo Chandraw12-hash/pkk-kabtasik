@@ -4,6 +4,8 @@ import { router } from '@inertiajs/react';
 
 interface TabDusunProps {
     data: any[];
+    pagination?: unknown;
+    level?: string;
 }
 
 // Header dan isi tabel dibuat dari SATU daftar ini, jadi tidak mungkin bergeser lagi.
@@ -43,7 +45,8 @@ const NUMERIC_COLUMNS: { label: string; key: string }[] = [
     { label: 'Kesling', key: 'kegiatan_kesehatan_lingkungan' },
 ];
 
-const formatAngka = (value: any): string => Number(value || 0).toLocaleString('id-ID');
+const formatAngka = (value: unknown): string =>
+    Number(value || 0).toLocaleString('id-ID');
 
 export default function TabDusun({ data }: TabDusunProps) {
     if (!data || data.length === 0) {
@@ -56,14 +59,18 @@ export default function TabDusun({ data }: TabDusunProps) {
                     Belum Ada Data Level Dusun
                 </p>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                    Import data dari file Excel
+                    Data muncul otomatis setelah data RT disetujui
                 </p>
             </div>
         );
     }
 
     const handleDelete = (dusun: string) => {
-        if (!confirm(`Yakin hapus data dusun "${dusun}"? Semua data RT di dusun ini akan terhapus.`)) {
+        if (
+            !confirm(
+                `Yakin hapus data dusun "${dusun}"? Semua data RT di dusun ini akan terhapus.`,
+            )
+        ) {
             return;
         }
         router.delete(`/desa/kegiatan/dusun/${encodeURIComponent(dusun)}`, {
@@ -79,7 +86,7 @@ export default function TabDusun({ data }: TabDusunProps) {
                         <th className="px-4 py-3">No</th>
                         <th className="px-4 py-3">Dusun</th>
                         {NUMERIC_COLUMNS.map((col) => (
-                            <th key={col.key} className="px-4 py-3 text-right">
+                            <th key={col.key} className="px-4 py-3 text-right whitespace-nowrap">
                                 {col.label}
                             </th>
                         ))}
@@ -89,7 +96,10 @@ export default function TabDusun({ data }: TabDusunProps) {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {data.map((item, idx) => (
-                        <tr key={item.id ?? idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <tr
+                            key={item.id ?? idx}
+                            className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                        >
                             <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
                             <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
                                 {item.nama_dusun || item.dusun || '-'}
@@ -107,7 +117,10 @@ export default function TabDusun({ data }: TabDusunProps) {
                             </td>
                             <td className="px-4 py-3 text-center">
                                 <button
-                                    onClick={() => handleDelete(item.nama_dusun || item.dusun)}
+                                    type="button"
+                                    onClick={() =>
+                                        handleDelete(item.nama_dusun || item.dusun)
+                                    }
                                     className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors p-1"
                                     title="Hapus dusun"
                                 >

@@ -361,7 +361,7 @@ class IndexController extends Controller
 
     // ============================================================
     // ✅ SEKRETARIAT — LANDING PAGE KABUPATEN (ROLL-UP)
-    // ✅ FIX: Cuma tampil desa yang approved kecamatan
+    // ✅ FIX: Cuma tampil data yang sudah 2 layer approved
     // ============================================================
     public function sekretariatPublic(Request $request)
     {
@@ -411,8 +411,11 @@ class IndexController extends Controller
             ->withQueryString();
 
         // === REKAP KEGIATAN WARGA — level RT ===
+        // ✅ FIX: cuma tampil data yang sudah 2 layer approved
         $rekapKegiatanWarga = RekapKegiatanWarga::query()
             ->where('level', 'rt')
+            ->where('status', 'approved')             // ✅ approved desa
+            ->where('kecamatan_status', 'approved')   // ✅ approved kecamatan
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -675,6 +678,8 @@ class IndexController extends Controller
         $perPage = (int) $request->input('per_page', 15);
 
         $data = RekapKegiatanWarga::query()
+            ->where('status', 'approved')             // ✅ FIX: approved desa
+            ->where('kecamatan_status', 'approved')   // ✅ FIX: approved kecamatan
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -875,6 +880,8 @@ class IndexController extends Controller
         $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
         $data = RekapKegiatanWarga::query()
+            ->where('status', 'approved')             // ✅ FIX: approved desa
+            ->where('kecamatan_status', 'approved')   // ✅ FIX: approved kecamatan
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
