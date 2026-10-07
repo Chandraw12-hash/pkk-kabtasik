@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RekapBumil extends Model
 {
@@ -23,7 +24,13 @@ class RekapBumil extends Model
         'akte_ada', 'akte_tidak_ada',
         'bayi_meninggal_l', 'bayi_meninggal_p',
         'balita_meninggal_l', 'balita_meninggal_p',
-        'keterangan', 'created_by', 'updated_by',
+        'keterangan',
+        // Approval desa
+        'status', 'approved_by', 'approved_at', 'rejected_reason',
+        // Approval kecamatan
+        'kecamatan_status', 'kecamatan_approved_by',
+        'kecamatan_approved_at', 'kecamatan_rejected_reason',
+        'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -72,5 +79,30 @@ class RekapBumil extends Model
     public function getTotalIbuMeninggalAttribute(): int
     {
         return $this->ibu_meninggal ?? 0;
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function kecamatanApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'kecamatan_approved_by');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
     }
 }

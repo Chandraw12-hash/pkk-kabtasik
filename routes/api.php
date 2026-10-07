@@ -12,6 +12,11 @@ use App\Http\Controllers\Api\DataUmumPkkApiController;
 use App\Http\Controllers\Api\RekapKegiatanWargaApiController;
 use App\Http\Controllers\Api\RekapBumilApiController;
 use App\Http\Controllers\Api\DasawismaDaftarWargaController;
+use App\Http\Controllers\Api\DasawismaBumilController;
+use App\Http\Controllers\Api\DasawismaCatatanKeluargaController;
+use App\Http\Controllers\Api\DasawismaIndustriRumahTanggaController;
+use App\Http\Controllers\Api\DasawismaKegiatanWargaController;
+use App\Http\Controllers\Api\DasawismaPemanfaatanPekaranganController;
 
 // ============================================
 // PUBLIC ROUTES (TANPA AUTH)
@@ -80,6 +85,56 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/dasawisma/daftar-warga/{id}', [DasawismaDaftarWargaController::class, 'update'])
         ->whereNumber('id');
     Route::delete('/dasawisma/daftar-warga/{id}', [DasawismaDaftarWargaController::class, 'destroy'])
+        ->whereNumber('id');
+
+    // ─── BUMIL PER IBU (DASAWISMA — alur sama seperti daftar-warga) ──
+    Route::get('/dasawisma/bumil', [DasawismaBumilController::class, 'index']);
+    Route::post('/dasawisma/bumil', [DasawismaBumilController::class, 'store']);
+    Route::get('/dasawisma/bumil/{id}', [DasawismaBumilController::class, 'show'])
+        ->whereNumber('id');
+    Route::put('/dasawisma/bumil/{id}', [DasawismaBumilController::class, 'update'])
+        ->whereNumber('id');
+    Route::delete('/dasawisma/bumil/{id}', [DasawismaBumilController::class, 'destroy'])
+        ->whereNumber('id');
+
+    // ─── KEGIATAN WARGA (DASAWISMA — alur sama seperti daftar-warga) ──
+    Route::get('/dasawisma/kegiatan-warga', [DasawismaKegiatanWargaController::class, 'index']);
+    Route::post('/dasawisma/kegiatan-warga', [DasawismaKegiatanWargaController::class, 'store']);
+    Route::get('/dasawisma/kegiatan-warga/{id}', [DasawismaKegiatanWargaController::class, 'show'])
+        ->whereNumber('id');
+    Route::put('/dasawisma/kegiatan-warga/{id}', [DasawismaKegiatanWargaController::class, 'update'])
+        ->whereNumber('id');
+    Route::delete('/dasawisma/kegiatan-warga/{id}', [DasawismaKegiatanWargaController::class, 'destroy'])
+        ->whereNumber('id');
+
+    // ─── CATATAN KELUARGA (DASAWISMA — alur sama seperti daftar-warga) ──
+    Route::get('/dasawisma/catatan-keluarga', [DasawismaCatatanKeluargaController::class, 'index']);
+    Route::post('/dasawisma/catatan-keluarga', [DasawismaCatatanKeluargaController::class, 'store']);
+    Route::get('/dasawisma/catatan-keluarga/{id}', [DasawismaCatatanKeluargaController::class, 'show'])
+        ->whereNumber('id');
+    Route::put('/dasawisma/catatan-keluarga/{id}', [DasawismaCatatanKeluargaController::class, 'update'])
+        ->whereNumber('id');
+    Route::delete('/dasawisma/catatan-keluarga/{id}', [DasawismaCatatanKeluargaController::class, 'destroy'])
+        ->whereNumber('id');
+
+    // ─── PEMANFAATAN PEKARANGAN (DASAWISMA — alur sama seperti daftar-warga) ──
+    Route::get('/dasawisma/pemanfaatan-pekarangan', [DasawismaPemanfaatanPekaranganController::class, 'index']);
+    Route::post('/dasawisma/pemanfaatan-pekarangan', [DasawismaPemanfaatanPekaranganController::class, 'store']);
+    Route::get('/dasawisma/pemanfaatan-pekarangan/{id}', [DasawismaPemanfaatanPekaranganController::class, 'show'])
+        ->whereNumber('id');
+    Route::put('/dasawisma/pemanfaatan-pekarangan/{id}', [DasawismaPemanfaatanPekaranganController::class, 'update'])
+        ->whereNumber('id');
+    Route::delete('/dasawisma/pemanfaatan-pekarangan/{id}', [DasawismaPemanfaatanPekaranganController::class, 'destroy'])
+        ->whereNumber('id');
+
+    // ─── INDUSTRI RUMAH TANGGA (DASAWISMA — alur sama seperti daftar-warga) ──
+    Route::get('/dasawisma/industri-rumah-tangga', [DasawismaIndustriRumahTanggaController::class, 'index']);
+    Route::post('/dasawisma/industri-rumah-tangga', [DasawismaIndustriRumahTanggaController::class, 'store']);
+    Route::get('/dasawisma/industri-rumah-tangga/{id}', [DasawismaIndustriRumahTanggaController::class, 'show'])
+        ->whereNumber('id');
+    Route::put('/dasawisma/industri-rumah-tangga/{id}', [DasawismaIndustriRumahTanggaController::class, 'update'])
+        ->whereNumber('id');
+    Route::delete('/dasawisma/industri-rumah-tangga/{id}', [DasawismaIndustriRumahTanggaController::class, 'destroy'])
         ->whereNumber('id');
 
     // ─── LAPORAN KEGIATAN (CRUD) ──────────────────────────────

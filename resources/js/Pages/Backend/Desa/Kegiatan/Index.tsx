@@ -1,8 +1,8 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminDesaLayout from '@/Components/Layout/AdminDesaLayout';
 import Card from '@/Components/UI/Card';
-import { Users, Upload, Download } from 'lucide-react';
+import { Users, Upload, Download, RefreshCw } from 'lucide-react';
 import TabRT from './TabRT';
 import TabRW from './TabRW';
 import TabDusun from './TabDusun';
@@ -60,6 +60,19 @@ export default function Index({
     const activeTab = levels.find((l) => l.key === activeLevel) || levels[0];
     const ActiveComponent = activeTab.component;
 
+    const generateOtomatis = () => {
+        if (
+            !window.confirm(
+                `Buat rekap ${filters.tahun} otomatis dari data yang sudah disetujui? Baris yang sudah disetujui tidak akan diubah.`
+            )
+        ) {
+            return;
+        }
+        router.post('/desa/kegiatan/generate-rekap', {
+            tahun: filters.tahun,
+        });
+    };
+
     return (
         <AdminDesaLayout>
             <Head title="Rekap Kegiatan Warga" />
@@ -77,6 +90,14 @@ export default function Index({
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={generateOtomatis}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+                        >
+                            <RefreshCw size={16} />
+                            <span>Generate Otomatis</span>
+                        </button>
                         <Link
                             href="/desa/kegiatan/import"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors"

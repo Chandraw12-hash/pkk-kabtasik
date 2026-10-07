@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\Dasawisma;
 
 use App\Exports\DasawismaResourceExport;
 use App\Exports\DasawismaKegiatanExcelExport;
+use App\Http\Controllers\Concerns\RefreshesRekap;
 use App\Http\Controllers\Controller;
 use App\Imports\DasawismaRowsImport;
 use App\Imports\DasawismaActivityRowsImport;
@@ -24,6 +25,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 abstract class DasawismaResourceController extends Controller
 {
+    use RefreshesRekap;
+
     abstract protected function resourceKey(): string;
 
     abstract protected function definition(): array;
@@ -91,6 +94,15 @@ abstract class DasawismaResourceController extends Controller
     protected function findRecord(int $id): Model
     {
         return $this->query()->findOrFail($id);
+    }
+
+    /**
+     * Rollup otomatis pasca approve/reject (delegasi ke trait agar bisa
+     * dipakai ulang controller approval desa).
+     */
+    protected function refreshRekapOtomatis(Model $record): void
+    {
+        $this->refreshRekapUntuk($record);
     }
 
     protected function authorizeEditable(Model $record): void
@@ -276,6 +288,7 @@ abstract class DasawismaResourceController extends Controller
             'rejected_reason' => null,
         ])->save();
         $this->notifyOwner($record, 'Data Dasa Wisma Anda telah disetujui.');
+        $this->refreshRekapOtomatis($record);
 
         return $this->redirectWithSuccess('Data disetujui.');
     }
@@ -293,6 +306,7 @@ abstract class DasawismaResourceController extends Controller
             'rejected_reason' => $request->string('reason')->toString(),
         ])->save();
         $this->notifyOwner($record, 'Data Dasa Wisma Anda perlu diperbaiki: '.$request->string('reason')->toString());
+        $this->refreshRekapOtomatis($record);
 
         return $this->redirectWithSuccess('Data ditolak dan dapat diperbaiki oleh desa.');
     }
@@ -317,6 +331,11 @@ abstract class DasawismaResourceController extends Controller
             ])->save();
             $this->notifyOwner($record, 'Data Dasa Wisma Anda telah disetujui.');
         });
+
+        // Regenerasi rekap (sekali per baris; generator idempoten).
+        foreach ($records as $record) {
+            $this->refreshRekapUntuk($record);
+        }
 
         return $this->redirectWithSuccess($records->count().' data disetujui.');
     }

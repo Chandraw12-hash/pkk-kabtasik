@@ -1,30 +1,56 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminDesaLayout from '@/Components/Layout/AdminDesaLayout';
 import Card from '@/Components/UI/Card';
-import { Baby, Upload, Download } from 'lucide-react';
+import { Baby, Upload, Download, RefreshCw } from 'lucide-react';
 import TabRT from './TabRT';
 import TabRW from './TabRW';
 import TabDusun from './TabDusun';
 import TabDesa from './TabDesa';
+import TabIbu from './TabIbu';
 
 interface BumilIndexProps {
     data: any;
     stats: any;
     activeLevel: string;
     filters: any;
+    flash?: {
+        success?: string | null;
+        error?: string | null;
+    };
 }
 
-export default function Index({ data, stats, activeLevel, filters }: BumilIndexProps) {
+export default function Index({ data, stats, activeLevel, filters, flash }: BumilIndexProps) {
     const levels = [
         { key: 'rt', label: 'RT', component: TabRT },
         { key: 'rw', label: 'RW', component: TabRW },
         { key: 'dusun', label: 'Dusun', component: TabDusun },
         { key: 'desa', label: 'Desa', component: TabDesa },
+        { key: 'ibu', label: 'Data Ibu', component: TabIbu },
     ];
 
     const activeTab = levels.find((l) => l.key === activeLevel) || levels[0];
     const ActiveComponent = activeTab.component;
+
+    const tahunAktif = filters.tahun || new Date().getFullYear();
+
+    const generateOtomatis = () => {
+        if (
+            !window.confirm(
+                `Buat rekap bumil ${tahunAktif} otomatis dari catatan ibu yang sudah disetujui? Baris yang sudah disetujui tidak akan diubah.`
+            )
+        ) {
+            return;
+        }
+        router.post('/desa/bumil/generate-rekap', {
+            tahun: tahunAktif,
+            bulan: filters.bulan || undefined,
+        });
+    };
+
+    const statusHref = (status: string) =>
+        `/desa/bumil?level=${activeLevel}&status=${status}&tahun=${tahunAktif}` +
+        (filters.bulan ? `&bulan=${filters.bulan}` : '');
 
     return (
         <AdminDesaLayout>
@@ -42,6 +68,14 @@ export default function Index({ data, stats, activeLevel, filters }: BumilIndexP
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={generateOtomatis}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+                        >
+                            <RefreshCw size={16} />
+                            <span>Generate Otomatis</span>
+                        </button>
                         <Link
                             href="/desa/bumil/import"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold transition-colors"
@@ -60,6 +94,24 @@ export default function Index({ data, stats, activeLevel, filters }: BumilIndexP
                         </a>
                     </div>
                 </div>
+
+                {/* Flash Messages */}
+                {flash?.success && (
+                    <div
+                        role="status"
+                        className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    >
+                        {flash.success}
+                    </div>
+                )}
+                {flash?.error && (
+                    <div
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                    >
+                        {flash.error}
+                    </div>
+                )}
 
                 {/* Tab Level */}
                 <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
@@ -87,12 +139,39 @@ export default function Index({ data, stats, activeLevel, filters }: BumilIndexP
 
                     <div className="p-6">
                         {/* Stat Cards */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-6">
                             <StatCard label="Ibu Hamil" value={stats.total_ibu_hamil || 0} color="pink" />
                             <StatCard label="Melahirkan" value={stats.total_ibu_melahirkan || 0} color="blue" />
                             <StatCard label="Bayi Lahir" value={stats.total_bayi_lahir || 0} color="purple" />
                             <StatCard label="Ibu Meninggal" value={stats.total_ibu_meninggal || 0} color="red" />
+                            <StatCard label="Menunggu" value={stats.pending || 0} color="amber" />
+                            <StatCard label="Disetujui" value={stats.approved || 0} color="emerald" />
                         </div>
+
+                        {/* Filter Status — level RT & Data Ibu */}
+                        {(activeLevel === 'rt' || activeLevel === 'ibu') && (
+                            <div className="mb-4 flex flex-wrap gap-2">
+                                {[
+                                    ['pending', 'Menunggu'],
+                                    ['approved', 'Disetujui'],
+                                    ['rejected', 'Perlu Diperbaiki'],
+                                    ['all', 'Semua'],
+                                ].map(([value, label]) => (
+                                    <Link
+                                        key={value}
+                                        href={statusHref(value)}
+                                        preserveScroll
+                                        className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+                                            filters.status === value
+                                                ? 'bg-pink-700 text-white'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+                                        }`}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Tab Content — komponen per level */}
                         <ActiveComponent data={data?.data || []} />
@@ -109,6 +188,8 @@ function StatCard({ label, value, color }: { label: string; value: number; color
         blue: 'text-blue-600 dark:text-blue-400',
         purple: 'text-purple-600 dark:text-purple-400',
         red: 'text-red-600 dark:text-red-400',
+        amber: 'text-amber-600 dark:text-amber-400',
+        emerald: 'text-emerald-600 dark:text-emerald-400',
     };
     return (
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50">

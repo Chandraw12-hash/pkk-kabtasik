@@ -1,8 +1,8 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminKecamatanLayout from '@/Components/Layout/AdminKecamatanLayout';
 import Card from '@/Components/UI/Card';
-import { ArrowLeft, Baby, Heart, Users, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Baby, Heart, Users, BarChart3, Check, X } from 'lucide-react';
 
 interface ShowProps {
     kecamatan: string;
@@ -11,9 +11,37 @@ interface ShowProps {
     data: any;
     stats: any;
     filters: any;
+    flash?: {
+        success?: string | null;
+        error?: string | null;
+    };
 }
 
-export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowProps) {
+const kecStatusStyle: Record<string, string> = {
+    pending:
+        'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+    approved:
+        'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
+    rejected: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+};
+
+const kecStatusLabel: Record<string, string> = {
+    pending: 'Menunggu',
+    approved: 'Disetujui',
+    rejected: 'Perlu Diperbaiki',
+};
+
+export default function Show({ kecamatan, desa, nama_desa, data, stats, flash }: ShowProps) {
+    const approve = (id: number) => {
+        if (!window.confirm('Setujui baris rekap ini untuk kecamatan?')) return;
+        router.post(`/kecamatan/data-pkk/bumil/${id}/approve`);
+    };
+
+    const reject = (id: number) => {
+        const reason = window.prompt('Alasan penolakan:');
+        if (reason === null || reason.trim() === '') return;
+        router.post(`/kecamatan/data-pkk/bumil/${id}/reject`, { reason });
+    };
     return (
         <AdminKecamatanLayout>
             <Head title={`Detail Bumil ${nama_desa} - ${kecamatan}`} />
@@ -87,13 +115,22 @@ export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowPr
                 <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
                     <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Data per bulan
+                            Data per bulan — hanya baris yang sudah disetujui desa
                         </p>
                         <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                             <BarChart3 className="w-3.5 h-3.5" />
                             {data.data?.length || 0} rekaman
                         </p>
                     </div>
+
+                    {flash?.success && (
+                        <div
+                            role="status"
+                            className="mx-4 mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                        >
+                            {flash.success}
+                        </div>
+                    )}
 
                     {data.data && data.data.length > 0 ? (
                         <div className="overflow-x-auto">
@@ -108,6 +145,8 @@ export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowPr
                                         <th className="px-4 py-3 text-right">Nifas</th>
                                         <th className="px-4 py-3 text-right">Bayi L</th>
                                         <th className="px-4 py-3 text-right">Bayi P</th>
+                                        <th className="px-4 py-3">Status Kec.</th>
+                                        <th className="px-4 py-3 text-right">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -123,6 +162,41 @@ export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowPr
                                             <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.ibu_nifas || 0).toLocaleString('id-ID')}</td>
                                             <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.bayi_lahir_l || 0).toLocaleString('id-ID')}</td>
                                             <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{Number(item.bayi_lahir_p || 0).toLocaleString('id-ID')}</td>
+                                            <td className="px-4 py-3">
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${
+                                                        kecStatusStyle[item.kecamatan_status] ||
+                                                        kecStatusStyle.pending
+                                                    }`}
+                                                >
+                                                    {kecStatusLabel[item.kecamatan_status] ||
+                                                        item.kecamatan_status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {item.kecamatan_status === 'pending' ? (
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => approve(item.id)}
+                                                            title="Setujui"
+                                                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+                                                        >
+                                                            <Check className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => reject(item.id)}
+                                                            title="Tolak"
+                                                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400">-</span>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -137,7 +211,7 @@ export default function Show({ kecamatan, desa, nama_desa, data, stats }: ShowPr
                                 Belum Ada Data
                             </p>
                             <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                                Belum ada data bumil &amp; bayi yang tercatat
+                                Data muncul setelah Admin Desa menyetujui rekap desa ini
                             </p>
                         </div>
                     )}

@@ -380,7 +380,12 @@ Route::prefix('kecamatan')
         // BUMIL
         // ═══════════════════════════════════════════════════════
         Route::get('data-pkk/bumil', [BumilKecamatanController::class, 'index'])->name('bumil.index');
+        // Halaman approval (STATIC — sebelum {desa} dinamis)
+        Route::get('data-pkk/bumil/approval', [BumilKecamatanController::class, 'approval'])->name('bumil.approval');
         Route::get('data-pkk/bumil/{desa}', [BumilKecamatanController::class, 'show'])->name('bumil.show');
+        Route::post('data-pkk/bumil/bulk-approve', [BumilKecamatanController::class, 'bulkApprove'])->name('bumil.bulk-approve');
+        Route::post('data-pkk/bumil/{id}/approve', [BumilKecamatanController::class, 'approve'])->whereNumber('id')->name('bumil.approve');
+        Route::post('data-pkk/bumil/{id}/reject', [BumilKecamatanController::class, 'reject'])->whereNumber('id')->name('bumil.reject');
 
         // ═══════════════════════════════════════════════════════
         // EXPORT
@@ -404,8 +409,7 @@ Route::prefix('desa')
         // DAFTAR WARGA — APPROVAL
         // ═══════════════════════════════════════════════════════
         Route::get('/daftar-warga', [DaftarWargaApprovalController::class, 'index'])
-            ->name('daftar-warga.index');
-        Route::post('/daftar-warga/{id}/approve', [DaftarWargaApprovalController::class, 'approve'])
+            ->name('daftar-warga.index');        Route::post('/daftar-warga/{id}/approve', [DaftarWargaApprovalController::class, 'approve'])
             ->whereNumber('id')
             ->name('daftar-warga.approve');
         Route::post('/daftar-warga/{id}/reject', [DaftarWargaApprovalController::class, 'reject'])
@@ -453,6 +457,10 @@ Route::prefix('desa')
         Route::post('/kegiatan/bulk-approve', [KegiatanDesaController::class, 'bulkApprove'])
             ->name('kegiatan.bulk-approve');
 
+        // ✅ Generate rekap otomatis dari data yang sudah disetujui (STATIC)
+        Route::post('/kegiatan/generate-rekap', [KegiatanDesaController::class, 'generateRekap'])
+            ->name('kegiatan.generate-rekap');
+
         // ✅ Hapus per dusun (STATIC dengan parameter nama)
         Route::delete('/kegiatan/dusun/{dusun}', [KegiatanDesaController::class, 'destroyDusun'])
             ->name('kegiatan.dusun.destroy');
@@ -472,6 +480,12 @@ Route::prefix('desa')
         Route::get('/bumil/import', [BumilDesaController::class, 'import'])->name('bumil.import');
         Route::post('/bumil/import', [BumilDesaController::class, 'store'])->name('bumil.store');
         Route::get('/bumil/template', [BumilDesaController::class, 'downloadTemplate'])->name('bumil.template');
+        Route::post('/bumil/generate-rekap', [BumilDesaController::class, 'generateRekap'])->name('bumil.generate-rekap');
+        Route::post('/bumil/bulk-approve', [BumilDesaController::class, 'bulkApprove'])->name('bumil.bulk-approve');
+        Route::post('/bumil/ibu/{id}/approve', [BumilDesaController::class, 'ibuApprove'])->whereNumber('id')->name('bumil.ibu.approve');
+        Route::post('/bumil/ibu/{id}/reject', [BumilDesaController::class, 'ibuReject'])->whereNumber('id')->name('bumil.ibu.reject');
+        Route::post('/bumil/{id}/approve', [BumilDesaController::class, 'approve'])->whereNumber('id')->name('bumil.approve');
+        Route::post('/bumil/{id}/reject', [BumilDesaController::class, 'reject'])->whereNumber('id')->name('bumil.reject');
 
         // ═══════════════════════════════════════════════════════
         // EXPORT

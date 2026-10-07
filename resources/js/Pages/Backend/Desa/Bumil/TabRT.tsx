@@ -1,11 +1,37 @@
 import React from 'react';
-import { Baby } from 'lucide-react';
+import { Baby, Check, X } from 'lucide-react';
+import { router } from '@inertiajs/react';
 
 interface TabRTProps {
     data: any[];
 }
 
+const statusStyle: Record<string, string> = {
+    pending:
+        'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+    approved:
+        'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
+    rejected: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+};
+
+const statusLabel: Record<string, string> = {
+    pending: 'Menunggu',
+    approved: 'Disetujui',
+    rejected: 'Perlu Diperbaiki',
+};
+
 export default function TabRT({ data }: TabRTProps) {
+    const approve = (id: number) => {
+        if (!window.confirm('Setujui baris rekap ini?')) return;
+        router.post(`/desa/bumil/${id}/approve`);
+    };
+
+    const reject = (id: number) => {
+        const reason = window.prompt('Alasan penolakan:');
+        if (reason === null || reason.trim() === '') return;
+        router.post(`/desa/bumil/${id}/reject`, { reason });
+    };
+
     if (!data || data.length === 0) {
         return (
             <div className="p-16 text-center">
@@ -16,7 +42,7 @@ export default function TabRT({ data }: TabRTProps) {
                     Belum Ada Data Level RT
                 </p>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                    Import data dari file Excel
+                    Import data dari file Excel atau Generate Otomatis
                 </p>
             </div>
         );
@@ -43,6 +69,8 @@ export default function TabRT({ data }: TabRTProps) {
                         <th className="px-4 py-3 text-right">Akta Tidak</th>
                         <th className="px-4 py-3 text-right">Bayi Meninggal L</th>
                         <th className="px-4 py-3 text-right">Bayi Meninggal P</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -64,6 +92,39 @@ export default function TabRT({ data }: TabRTProps) {
                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.akte_tidak_ada || 0}</td>
                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.bayi_meninggal_l || 0}</td>
                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{item.bayi_meninggal_p || 0}</td>
+                            <td className="px-4 py-3">
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${
+                                        statusStyle[item.status] || statusStyle.pending
+                                    }`}
+                                >
+                                    {statusLabel[item.status] || item.status}
+                                </span>
+                            </td>
+                            <td className="px-4 py-3">
+                                {item.status === 'pending' ? (
+                                    <div className="flex items-center justify-end gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => approve(item.id)}
+                                            title="Setujui"
+                                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+                                        >
+                                            <Check className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => reject(item.id)}
+                                            title="Tolak"
+                                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-slate-400">-</span>
+                                )}
+                            </td>
                         </tr>
                     ))}
                 </tbody>

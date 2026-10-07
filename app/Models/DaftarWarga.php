@@ -16,6 +16,14 @@ class DaftarWarga extends Model
         'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma',
         'nama_kepala_keluarga', 'nik', 'no_kk', 'alamat', 'jumlah_anggota',
         'jumlah_kk', 'jumlah_laki_laki', 'jumlah_perempuan',
+        'jumlah_balita_l', 'jumlah_balita_p',
+        'jumlah_pus', 'jumlah_wus',
+        'jumlah_ibu_hamil', 'jumlah_ibu_menyusui',
+        'jumlah_lansia', 'jumlah_buta_l', 'jumlah_buta_p',
+        'kriteria_rumah', 'sumber_air',
+        'memiliki_tempat_sampah', 'memiliki_spal', 'memiliki_stiker_p4k',
+        'mempunyai_mck', 'jumlah_mck',
+        'makanan_pokok', 'ikut_up2k', 'ikut_kesling',
         'kategori', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'created_by',
     ];
 
@@ -28,6 +36,22 @@ class DaftarWarga extends Model
             'jumlah_kk' => 'integer',
             'jumlah_laki_laki' => 'integer',
             'jumlah_perempuan' => 'integer',
+            'jumlah_balita_l' => 'integer',
+            'jumlah_balita_p' => 'integer',
+            'jumlah_pus' => 'integer',
+            'jumlah_wus' => 'integer',
+            'jumlah_ibu_hamil' => 'integer',
+            'jumlah_ibu_menyusui' => 'integer',
+            'jumlah_lansia' => 'integer',
+            'jumlah_buta_l' => 'integer',
+            'jumlah_buta_p' => 'integer',
+            'memiliki_tempat_sampah' => 'boolean',
+            'memiliki_spal' => 'boolean',
+            'memiliki_stiker_p4k' => 'boolean',
+            'mempunyai_mck' => 'boolean',
+            'jumlah_mck' => 'integer',
+            'ikut_up2k' => 'boolean',
+            'ikut_kesling' => 'boolean',
         ];
     }
 

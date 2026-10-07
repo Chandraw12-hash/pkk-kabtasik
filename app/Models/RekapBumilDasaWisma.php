@@ -12,17 +12,27 @@ class RekapBumilDasaWisma extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'tahun', 'nama', 'umur', 'hamile',
+        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'tahun', 'nama', 'suami_nama', 'umur', 'hamile',
         'anak_ke', 'jarak_hamil', 'tinggi_badan', 'berat_badan', 'lingkar_lengan',
         'hb', 'tekanan_darah', 'imunisasi', 'fe', 'keterangan', 'status', 'approved_by',
         'approved_at', 'rejected_reason', 'created_by',
+        // Pelacakan bulanan per ibu
+        'bulan', 'status_ibu',
+        'bayi_nama', 'bayi_jenis_kelamin', 'bayi_tanggal_lahir', 'bayi_akta',
+        'kematian_kategori', 'kematian_umur_bulan', 'kematian_nama', 'kematian_jenis_kelamin',
+        'kematian_tanggal', 'kematian_sebab',
     ];
 
     protected function casts(): array
     {
         return [
             'tahun' => 'integer',
+            'bulan' => 'integer',
+            'bayi_tanggal_lahir' => 'date',
+            'bayi_akta' => 'boolean',
+            'kematian_tanggal' => 'date',
             'approved_at' => 'datetime',
+            'kecamatan_approved_at' => 'datetime',
             'umur' => 'integer',
             'hamile' => 'integer',
             'anak_ke' => 'integer',

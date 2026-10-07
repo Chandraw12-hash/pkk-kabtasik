@@ -64,6 +64,26 @@ class DasawismaDaftarWargaController extends Controller
             'jumlah_laki_laki' => ['nullable', 'integer', 'min:0'],
             'jumlah_perempuan' => ['nullable', 'integer', 'min:0'],
             'kategori' => ['required', Rule::in(['warga', 'kader', 'pengurus'])],
+            // Demografi + rumah tangga (sumber rekap otomatis)
+            'jumlah_balita_l' => ['nullable', 'integer', 'min:0'],
+            'jumlah_balita_p' => ['nullable', 'integer', 'min:0'],
+            'jumlah_pus' => ['nullable', 'integer', 'min:0'],
+            'jumlah_wus' => ['nullable', 'integer', 'min:0'],
+            'jumlah_ibu_hamil' => ['nullable', 'integer', 'min:0'],
+            'jumlah_ibu_menyusui' => ['nullable', 'integer', 'min:0'],
+            'jumlah_lansia' => ['nullable', 'integer', 'min:0'],
+            'jumlah_buta_l' => ['nullable', 'integer', 'min:0'],
+            'jumlah_buta_p' => ['nullable', 'integer', 'min:0'],
+            'kriteria_rumah' => ['nullable', Rule::in(['Sehat', 'Kurang Sehat'])],
+            'sumber_air' => ['nullable', Rule::in(['PDAM', 'Sumur', 'Sungai', 'Lainnya'])],
+            'memiliki_tempat_sampah' => ['nullable', 'boolean'],
+            'memiliki_spal' => ['nullable', 'boolean'],
+            'memiliki_stiker_p4k' => ['nullable', 'boolean'],
+            'mempunyai_mck' => ['nullable', 'boolean'],
+            'jumlah_mck' => ['nullable', 'integer', 'min:0'],
+            'makanan_pokok' => ['nullable', Rule::in(['Beras', 'Non Beras'])],
+            'ikut_up2k' => ['nullable', 'boolean'],
+            'ikut_kesling' => ['nullable', 'boolean'],
         ]);
         $this->validateGenderCounts($validated);
 
@@ -102,6 +122,26 @@ class DasawismaDaftarWargaController extends Controller
             'jumlah_laki_laki' => ['nullable', 'integer', 'min:0'],
             'jumlah_perempuan' => ['nullable', 'integer', 'min:0'],
             'kategori' => ['required', Rule::in(['warga', 'kader', 'pengurus'])],
+            // Demografi + rumah tangga (sumber rekap otomatis)
+            'jumlah_balita_l' => ['nullable', 'integer', 'min:0'],
+            'jumlah_balita_p' => ['nullable', 'integer', 'min:0'],
+            'jumlah_pus' => ['nullable', 'integer', 'min:0'],
+            'jumlah_wus' => ['nullable', 'integer', 'min:0'],
+            'jumlah_ibu_hamil' => ['nullable', 'integer', 'min:0'],
+            'jumlah_ibu_menyusui' => ['nullable', 'integer', 'min:0'],
+            'jumlah_lansia' => ['nullable', 'integer', 'min:0'],
+            'jumlah_buta_l' => ['nullable', 'integer', 'min:0'],
+            'jumlah_buta_p' => ['nullable', 'integer', 'min:0'],
+            'kriteria_rumah' => ['nullable', Rule::in(['Sehat', 'Kurang Sehat'])],
+            'sumber_air' => ['nullable', Rule::in(['PDAM', 'Sumur', 'Sungai', 'Lainnya'])],
+            'memiliki_tempat_sampah' => ['nullable', 'boolean'],
+            'memiliki_spal' => ['nullable', 'boolean'],
+            'memiliki_stiker_p4k' => ['nullable', 'boolean'],
+            'mempunyai_mck' => ['nullable', 'boolean'],
+            'jumlah_mck' => ['nullable', 'integer', 'min:0'],
+            'makanan_pokok' => ['nullable', Rule::in(['Beras', 'Non Beras'])],
+            'ikut_up2k' => ['nullable', 'boolean'],
+            'ikut_kesling' => ['nullable', 'boolean'],
         ]);
         $this->validateGenderCounts($validated);
 

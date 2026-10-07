@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\DasawismaRecordNotification;
 use App\Imports\RekapKegiatanWargaImport;
 use App\Exports\RekapKegiatanWargaTemplateExport;
+use App\Services\RekapKegiatanGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -351,6 +352,34 @@ class KegiatanDesaController extends Controller
         $this->notifyOwner($record, 'Data rekap kegiatan warga Anda telah disetujui Admin Desa.');
 
         return back()->with('success', 'Data rekap kegiatan berhasil disetujui.');
+    }
+
+    /**
+     * POST /desa/kegiatan/generate-rekap
+     * Buat/perbarui baris rekap RT otomatis dari data yang sudah disetujui
+     * (KK + detail). Baris yang sudah disetujui tidak dioverwrite.
+     */
+    public function generateRekap(Request $request, RekapKegiatanGenerator $generator): RedirectResponse
+    {
+        $user = $request->user();
+        $tahun = (int) $request->input('tahun', date('Y'));
+
+        $summary = $generator->generateDesa(
+            (string) $user->kecamatan,
+            (string) $user->desa,
+            $tahun,
+            (int) $user->id,
+        );
+
+        $total = $summary['created'] + $summary['updated'];
+
+        return back()->with(
+            'success',
+            "Rekap $tahun dibuat dari data yang sudah disetujui: "
+            ."{$summary['created']} baris baru, {$summary['updated']} diperbarui, "
+            ."{$summary['skipped_locked']} terkunci (sudah disetujui), "
+            ."{$summary['skipped_empty']} kosong. Total $total baris siap approve."
+        );
     }
 
     /**

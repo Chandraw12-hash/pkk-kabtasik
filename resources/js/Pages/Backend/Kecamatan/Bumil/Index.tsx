@@ -195,7 +195,7 @@ export default function Index({ kecamatan, data, stats, filters }: IndexProps) {
                                 Belum Ada Data
                             </p>
                             <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                                Belum ada data bumil &amp; bayi yang tercatat
+                                Data muncul setelah Admin Desa menyetujui rekap bumil
                             </p>
                         </div>
                     )}

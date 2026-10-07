@@ -211,7 +211,8 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                             onClick={() => setApprovalOpen(!approvalOpen)}
                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-[15px] transition-all group ${
                                 isActive("/kecamatan/data-pkk/umum/approval") ||
-                                isActive("/kecamatan/data-pkk/kegiatan/approval")
+                                isActive("/kecamatan/data-pkk/kegiatan/approval") ||
+                                isActive("/kecamatan/data-pkk/bumil/approval")
                                     ? "text-teal-600 dark:text-teal-400"
                                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
@@ -222,7 +223,8 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                                     strokeWidth={2}
                                     className={`shrink-0 ${
                                         isActive("/kecamatan/data-pkk/umum/approval") ||
-                                        isActive("/kecamatan/data-pkk/kegiatan/approval")
+                                        isActive("/kecamatan/data-pkk/kegiatan/approval") ||
+                                        isActive("/kecamatan/data-pkk/bumil/approval")
                                             ? "text-teal-600 dark:text-teal-400"
                                             : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
                                     }`}
@@ -268,6 +270,21 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                                 >
                                     <CheckCircle2 size={16} />
                                     <span className="flex-1">Approval Rekap Kegiatan</span>
+                                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 text-[10px] font-bold">
+                                        !
+                                    </span>
+                                </Link>
+
+                                <Link
+                                    href="/kecamatan/data-pkk/bumil/approval"
+                                    className={`flex items-center gap-2.5 py-2 px-3 text-sm rounded-lg transition-colors ${
+                                        isActive("/kecamatan/data-pkk/bumil/approval")
+                                            ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                    }`}
+                                >
+                                    <CheckCircle2 size={16} />
+                                    <span className="flex-1">Approval Rekap Bumil</span>
                                     <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 text-[10px] font-bold">
                                         !
                                     </span>

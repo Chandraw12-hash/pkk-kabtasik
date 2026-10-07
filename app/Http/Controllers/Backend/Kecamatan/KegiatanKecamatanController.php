@@ -113,7 +113,7 @@ class KegiatanKecamatanController extends Controller
         $user = auth()->user();
         $kecamatan = $user->kecamatan;
         $tahun = (int) $request->input('tahun', date('Y'));
-        $status = (string) $request->input('status', 'pending');
+        $status = (string) $request->input('status', 'all');
         $kecNorm = $this->kecamatanNormalized($kecamatan);
 
         // === BASE QUERY — approved desa ===

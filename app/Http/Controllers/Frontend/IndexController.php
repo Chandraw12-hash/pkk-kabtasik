@@ -718,6 +718,9 @@ class IndexController extends Controller
             })
             ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->when($bulan, fn($q) => $q->where('bulan', $bulan))
+            // Publik: hanya data lolos 2 lapis persetujuan
+            ->where('status', 'approved')
+            ->where('kecamatan_status', 'approved')
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'asc')
             ->orderBy('kecamatan', 'asc')
@@ -908,6 +911,9 @@ class IndexController extends Controller
             })
             ->when($tahun, fn($q) => $q->where('tahun', $tahun))
             ->when($bulan, fn($q) => $q->where('bulan', $bulan))
+            // API publik: hanya data lolos 2 lapis persetujuan
+            ->where('status', 'approved')
+            ->where('kecamatan_status', 'approved')
             ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }

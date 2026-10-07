@@ -65,13 +65,21 @@ export default function TabRekapBumil({
     const items = Array.isArray(data) ? data : (data?.data || []);
 
     // ========================================================
-    // MERGE ITEMS — group by kecamatan + bulan
+    // NORMALISASI WILAYAH — "DURIAN RUNTUH" == "Durian Runtuh",
+    // "01" == "1", agar tidak dihitung ganda.
+    // ========================================================
+    const normWil = (v: unknown): string => {
+        const t = String(v ?? "").trim().toLowerCase();
+        if (/^\d+$/.test(t)) return String(parseInt(t, 10));
+        return t;
+    };
+
+    // ========================================================
+    // MERGE ITEMS — group by kecamatan + bulan.
+    // Aturan: kolom wilayah = DISTINCT (tidak peduli kapital/nol depan),
+    // kolom angka lain = SUM. Sama dengan agregat backend kegiatan.
     // ========================================================
     const numericFields: (keyof RekapBumilItem)[] = [
-        "jumlah_dusun",
-        "jumlah_rw",
-        "jumlah_rt",
-        "jumlah_dasa_wisma",
         "ibu_hamil",
         "ibu_melahirkan",
         "ibu_nifas",
@@ -87,32 +95,58 @@ export default function TabRekapBumil({
     ];
 
     const mergedItems = useMemo(() => {
-        return Array.from(
-            items
-                .reduce((groups, item) => {
-                    const name = (
-                        item.nama_kecamatan ||
-                        item.kecamatan ||
-                        "Tidak diketahui"
-                    ).trim();
-                    const key = `${name.toLocaleLowerCase()}-${item.bulan ?? 0}`;
-                    const current = groups.get(key);
-
-                    if (!current) {
-                        groups.set(key, { ...item, nama_kecamatan: name });
-                        return groups;
-                    }
-
-                    numericFields.forEach((field) => {
-                        current[field] =
-                            (Number(current[field]) || 0) +
-                            (Number(item[field]) || 0);
-                    });
-                    groups.set(key, current);
-                    return groups;
-                }, new Map<string, RekapBumilItem>())
-                .values()
-        );
+        const groups = new Map<
+            string,
+            {
+                base: RekapBumilItem;
+                dusun: Set<string>;
+                rw: Set<string>;
+                rt: Set<string>;
+                dw: Set<string>;
+            }
+        >();
+        for (const item of items) {
+            const name = (
+                item.nama_kecamatan ||
+                item.kecamatan ||
+                "Tidak diketahui"
+            ).trim();
+            const key = `${name.toLocaleLowerCase()}-${item.bulan ?? 0}`;
+            let g = groups.get(key);
+            if (!g) {
+                g = {
+                    base: { ...item, nama_kecamatan: name },
+                    dusun: new Set(),
+                    rw: new Set(),
+                    rt: new Set(),
+                    dw: new Set(),
+                };
+                groups.set(key, g);
+            } else {
+                numericFields.forEach((field) => {
+                    (g!.base[field] as number) =
+                        (Number(g!.base[field]) || 0) +
+                        (Number(item[field]) || 0);
+                });
+            }
+            const desa = normWil(item.nama_desa || item.desa);
+            const dusun = normWil(item.nama_dusun || item.dusun);
+            const rw = normWil(item.rw);
+            const rt = normWil(item.rt);
+            const dw = normWil(item.nama_dasawisma);
+            if (desa || dusun) g.dusun.add(`${desa}|${dusun}`);
+            if (desa || dusun || rw) g.rw.add(`${desa}|${dusun}|${rw}`);
+            if (desa || dusun || rw || rt)
+                g.rt.add(`${desa}|${dusun}|${rw}|${rt}`);
+            if (dw) g.dw.add(`${desa}|${dusun}|${dw}`);
+        }
+        return Array.from(groups.values()).map((g) => ({
+            ...g.base,
+            jumlah_dusun: g.dusun.size,
+            jumlah_rw: g.rw.size,
+            jumlah_rt: g.rt.size,
+            jumlah_dasa_wisma: g.dw.size,
+        }));
     }, [items]);
 
     const uniqueKecamatan = useMemo(
@@ -149,6 +183,43 @@ export default function TabRekapBumil({
     // ========================================================
     const sum = (key: keyof RekapBumilItem) =>
         filteredData.reduce((a, c) => a + (Number(c[key]) || 0), 0);
+
+    // Baris JUMLAH: wilayah = DISTINCT lintas bulan (dusun yang sama di
+    // 2 bulan dihitung 1) dihitung dari baris mentah, bukan hasil merge.
+    const filteredItems = useMemo(
+        () =>
+            items.filter((item) => {
+                const nama = (
+                    item.nama_kecamatan ||
+                    item.kecamatan ||
+                    ""
+                ).toLowerCase();
+                const matchesSearch = nama.includes(search.toLowerCase());
+                const matchesKecamatan = selectedKecamatan
+                    ? (item.nama_kecamatan || item.kecamatan) ===
+                      selectedKecamatan
+                    : true;
+                return matchesSearch && matchesKecamatan;
+            }),
+        [items, search, selectedKecamatan]
+    );
+
+    const distinctWil = (tingkat: number): number => {
+        const keys = new Set<string>();
+        for (const c of filteredItems) {
+            const parts = [
+                normWil(c.nama_desa || (c as any).desa),
+                normWil(c.nama_dusun || (c as any).dusun),
+                normWil((c as any).rw),
+                normWil((c as any).rt),
+                normWil((c as any).nama_dasawisma),
+            ].slice(0, tingkat + 1);
+            if (parts.some((p) => p !== '')) {
+                keys.add(parts.join('|'));
+            }
+        }
+        return keys.size;
+    };
 
     const totalIbuHamil = sum("ibu_hamil");
     const totalIbuMelahirkan = sum("ibu_melahirkan");
@@ -612,16 +683,16 @@ export default function TabRekapBumil({
                                         JUMLAH
                                     </td>
                                     <td className="p-2 border-r border-slate-200 text-center">
-                                        {sum("jumlah_dusun").toLocaleString("id-ID")}
+                                        {distinctWil(2).toLocaleString("id-ID")}
                                     </td>
                                     <td className="p-2 border-r border-slate-200 text-center">
-                                        {sum("jumlah_rw").toLocaleString("id-ID")}
+                                        {distinctWil(3).toLocaleString("id-ID")}
                                     </td>
                                     <td className="p-2 border-r border-slate-200 text-center">
-                                        {sum("jumlah_rt").toLocaleString("id-ID")}
+                                        {distinctWil(4).toLocaleString("id-ID")}
                                     </td>
                                     <td className="p-2 border-r border-slate-200 text-center">
-                                        {sum("jumlah_dasa_wisma").toLocaleString("id-ID")}
+                                        {distinctWil(5).toLocaleString("id-ID")}
                                     </td>
                                     <td className="p-2 border-r border-slate-200 text-center">
                                         {totalIbuHamil.toLocaleString("id-ID")}

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Backend\Desa;
 
+use App\Http\Controllers\Concerns\RefreshesRekap;
 use App\Http\Controllers\Controller;
 use App\Models\DaftarWarga;
 use App\Models\User;
 use App\Notifications\DasawismaRecordNotification;
 use App\Services\DaftarWargaDataUmumSyncService;
+use App\Services\RekapKegiatanGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +18,8 @@ use Inertia\Response;
 
 class DaftarWargaApprovalController extends Controller
 {
+    use RefreshesRekap;
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -100,6 +104,7 @@ class DaftarWargaApprovalController extends Controller
         });
 
         $this->notifyOwner($record, 'Data KK Anda telah disetujui Admin Desa.');
+        $this->refreshRekapOtomatis($record, (int) $request->user()->id);
 
         return back()->with('success', 'Data KK berhasil disetujui.');
     }
@@ -121,6 +126,7 @@ class DaftarWargaApprovalController extends Controller
             $record,
             'Data KK perlu diperbaiki: '.$validated['reason'],
         );
+        $this->refreshRekapOtomatis($record, (int) $request->user()->id);
 
         return back()->with('success', 'Data KK ditolak dan alasan dikirim ke petugas Dasawisma.');
     }
@@ -154,5 +160,14 @@ class DaftarWargaApprovalController extends Controller
                 $record->id,
             ),
         );
+    }
+
+    /**
+     * Rollup otomatis ke baris rekap RT setelah approve/reject KK.
+     * Dibungkus aman: rekap tidak boleh menggagalkan approval.
+     */
+    private function refreshRekapOtomatis(DaftarWarga $record, int $actorId): void
+    {
+        $this->refreshRekapUntuk($record);
     }
 }

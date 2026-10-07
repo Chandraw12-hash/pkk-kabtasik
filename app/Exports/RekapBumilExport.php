@@ -22,23 +22,28 @@ class RekapBumilExport implements
     protected int $tahun;
     protected ?string $level;
     protected ?int $bulan;
+    protected bool $hanyaDisetujui;
 
     public function __construct(
         string $kecamatan,
         ?string $desa,
         int $tahun,
         ?string $level = null,
-        ?int $bulan = null
+        ?int $bulan = null,
+        bool $hanyaDisetujui = true
     ) {
         $this->kecamatan = $kecamatan;
         $this->desa = $desa;
         $this->tahun = $tahun;
         $this->level = $level;
         $this->bulan = $bulan;
+        $this->hanyaDisetujui = $hanyaDisetujui;
     }
 
     /**
-     * Data yang di-export — filter by kecamatan, desa (nullable), tahun, level, bulan
+     * Data yang di-export — filter by kecamatan, desa (nullable), tahun, level, bulan.
+     * Secara default HANYA baris yang sudah disetujui (publish): desa untuk
+     * export desa, desa+kecamatan untuk export kecamatan/kabupaten.
      */
     public function collection()
     {
@@ -48,6 +53,11 @@ class RekapBumilExport implements
             ->where('tahun', $this->tahun)
             ->when($this->level, fn($q) => $q->where('level', $this->level))
             ->when($this->bulan, fn($q) => $q->where('bulan', $this->bulan))
+            ->when($this->hanyaDisetujui && $this->desa, fn($q) => $q->where('status', 'approved'))
+            ->when(
+                $this->hanyaDisetujui && ! $this->desa,
+                fn($q) => $q->where('status', 'approved')->where('kecamatan_status', 'approved')
+            )
             ->orderBy('desa')
             ->orderBy('bulan')
             ->orderBy('dusun')
