@@ -292,10 +292,10 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
             return redirect()->route('be.roles.index')->with('success', 'Role pkk berhasil dihapus permanen.');
         }
         return redirect()->route('be.roles.index')->with('message', 'Role pkk sudah tidak ada.');
-    })->name('roles.cleanup-pkk')->middleware('role:super-admin');
+    })->name('roles.cleanup-pkk')->middleware('role:admin|super-admin');
 
-    // Roles hanya super-admin (lebih sensitif dari user harian).
-    Route::middleware('role:super-admin')->group(function () {
+    // Roles boleh dibuka admin kabupaten & super-admin.
+    Route::middleware('role:admin|super-admin')->group(function () {
         Route::resource('roles', RoleController::class)->names('roles')->except(['show']);
     });
 
