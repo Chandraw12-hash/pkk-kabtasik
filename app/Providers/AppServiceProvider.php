@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Super admin lolos semua Gate/Policy.
+        Gate::before(function ($user, $ability) {
+            if (method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+                return true;
+            }
+
+            return null;
+        });
+
+        // Kebijakan password minimal yang wajar.
+        Password::defaults(function () {
+            return Password::min(10)->mixedCase()->numbers();
+        });
     }
 }

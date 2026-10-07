@@ -24,6 +24,11 @@ export interface User {
     roles: Role[] | string[];
     permissions?: string[];
     profile_photo_path?: string;
+    no_hp?: string | null;
+    status?: string;
+    kecamatan?: string | null;
+    desa?: string | null;
+    last_login?: string | null;
     created_at?: string;
     updated_at?: string;
 }

@@ -26,7 +26,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if ($user->hasRole('admin')) {
+        if ($user->hasAnyRole(['admin', 'super-admin'])) {
             // ─── DATA KADER (REAL) ──────────────────────────────────────────────
             $totalKader = Kader::count();
             $kaderAktif = Kader::where('status_aktif', true)->count();

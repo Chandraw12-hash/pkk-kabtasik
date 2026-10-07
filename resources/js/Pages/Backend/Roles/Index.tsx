@@ -48,7 +48,7 @@ const getRoleColor = (roleName: string) => {
     const colorMap: Record<string, string> = {
         admin: "bg-red-50 text-red-600 border-red-100",
         operator: "bg-blue-50 text-blue-600 border-blue-100",
-        'admin-pkk': "bg-purple-50 text-purple-600 border-purple-100",
+        'admin-pkk': "bg-teal-50 text-teal-600 border-teal-100",
         kader_dasawisma: "bg-teal-50 text-teal-600 border-teal-100",
         dasawisma: "bg-emerald-50 text-emerald-600 border-emerald-100",
         kecamatan: "bg-cyan-50 text-cyan-600 border-cyan-100",
@@ -245,13 +245,14 @@ export default function Index({ roles, filters = {} }: IndexProps) {
                                 return (
                                     <div className="flex flex-wrap gap-1.5 justify-center">
                                         {permissions.slice(0, 3).map((perm: any) => (
-                                            <span
+                                            <Badge
                                                 key={perm.id}
-                                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100"
+                                                type="info"
+                                                className="text-[10px] normal-case gap-0.5"
                                             >
-                                                <Lock size={10} className="mr-0.5" />
+                                                <Lock size={10} />
                                                 {perm.name}
-                                            </span>
+                                            </Badge>
                                         ))}
                                         {permissions.length > 3 && (
                                             <span className="text-xs text-teal-600 font-medium">
@@ -266,12 +267,14 @@ export default function Index({ roles, filters = {} }: IndexProps) {
                             header: "Total Pengguna",
                             className: "w-32",
                             headerClassName: "text-center",
-                            render: (role: Role) => (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                                    <Users size={12} />
-                                    {role.users_count || 0}
-                                </span>
-                            ),
+                                render: (role: Role) => (
+                                    <div className="flex justify-center">
+                                        <Badge type="default" className="gap-1">
+                                            <Users size={12} />
+                                            {role.users_count || 0}
+                                        </Badge>
+                                    </div>
+                                ),
                         },
                         {
                             header: "Aksi",

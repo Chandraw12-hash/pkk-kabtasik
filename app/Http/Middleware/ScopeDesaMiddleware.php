@@ -42,8 +42,8 @@ class ScopeDesaMiddleware
             ]);
         }
 
-        // Admin — no scope
-        if ($user->hasRole('admin')) {
+        // Admin & Super Admin — no scope (lihat semua, level kabupaten)
+        if ($user->hasAnyRole(['admin', 'super-admin'])) {
             session([
                 'scope_kecamatan' => null,
                 'scope_desa' => null,

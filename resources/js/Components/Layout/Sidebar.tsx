@@ -30,6 +30,8 @@ import {
     Image,
     Star,
     Clock,
+    Database,
+    ScrollText,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -100,6 +102,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const hasSurvey = routeExists("be.survey.index");
     const hasBeritaPending = routeExists("be.berita.pending");
     const hasStrukturOrganisasi = routeExists("be.struktur-organisasi.index");
+    const hasBackup = routeExists("be.backup.index");
+    const hasActivityLogs = routeExists("be.activity-logs.index");
+    const hasSystem = routeExists("be.system.index");
 
     const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
         pokjaManagement:
@@ -123,6 +128,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const user = auth?.user;
     const roles = auth?.roles || [];
     const permissions = auth?.permissions || [];
+    const isSuperAdmin = roles.includes("super-admin");
+    const isAdminLike = roles.includes("admin") || isSuperAdmin;
     const appName = app_settings?.app_name || "PKK TASIKMALAYA";
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -610,24 +617,25 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 >
                                     User
                                 </Link>
-                                {permissions.includes("manage-roles") && (
-                                    <Link
-                                        href={route("be.roles.index")}
-                                        className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            isCurrentRoute("be.roles.*")
-                                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
-                                        }`}
-                                    >
-                                        Role
-                                    </Link>
-                                )}
+                {permissions.includes("manage-roles") ||
+                isSuperAdmin ? (
+                    <Link
+                        href={route("be.roles.index")}
+                        className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
+                            isCurrentRoute("be.roles.*")
+                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                        }`}
+                    >
+                        Role
+                    </Link>
+                ) : null}
                             </div>
                         </div>
                     </div>
                 )}
 
-                {roles.includes("admin") && (
+                {isAdminLike && (
                     <>
                         <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
                             Sistem
@@ -708,6 +716,55 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     )}
                                 </div>
                             </div>
+                        </div>
+                    </>
+                )}
+
+                {isSuperAdmin && (
+                    <>
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
+                            Super Admin
+                        </p>
+                        <div className="space-y-1">
+                            {hasBackup && (
+                                <Link
+                                    href={route("be.backup.index")}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                        isCurrentRoute("be.backup.*")
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <Database size={18} />
+                                    <span>Backup Database</span>
+                                </Link>
+                            )}
+                            {hasActivityLogs && (
+                                <Link
+                                    href={route("be.activity-logs.index")}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                        isCurrentRoute("be.activity-logs.*")
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <ScrollText size={18} />
+                                    <span>Log Aktivitas</span>
+                                </Link>
+                            )}
+                            {hasSystem && (
+                                <Link
+                                    href={route("be.system.index")}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                        isCurrentRoute("be.system.*")
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <Activity size={18} />
+                                    <span>Kesehatan Sistem</span>
+                                </Link>
+                            )}
                         </div>
                     </>
                 )}

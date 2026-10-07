@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\RoleRequest;
+use App\Services\ActivityLogger;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -12,10 +13,8 @@ use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:admin');
-    }
+    // Proteksi via routes/web.php (role:super-admin). Constructor
+    // $this->middleware() dihapus karena tidak didukung Laravel 12.
 
     /**
      * Display a listing of the roles.
@@ -32,19 +31,10 @@ class RoleController extends Controller
             $pkkRole->delete();
         }
 
-        // Buat role 'dasawisma' (web) & akun default jika belum ada
-        $dasawismaRole = Role::firstOrCreate(['name' => 'dasawisma', 'guard_name' => 'web']);
-        $existingDasawisma = \App\Models\User::where('username', 'dasawisma')->first();
-        if (!$existingDasawisma) {
-            $userDasawisma = \App\Models\User::create([
-                'name' => 'Kader Dasawisma',
-                'username' => 'dasawisma',
-                'email' => 'dasawisma@pkk.test',
-                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
-                'status' => 'active',
-            ]);
-            $userDasawisma->syncRoles([$dasawismaRole]);
-        }
+        // Pastikan role esensial ada (tanpa membuat akun default berpassword
+        // lemah — akun dibuat hanya via seeder).
+        Role::firstOrCreate(['name' => 'dasawisma', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 
         $roles = Role::with('permissions')
             ->withCount('users')
@@ -81,6 +71,8 @@ class RoleController extends Controller
         if ($request->filled('permissions')) {
             $role->syncPermissions($request->permissions);
         }
+        ActivityLogger::log('role.create', null, "Role dibuat: {$role->name}");
+
         return redirect()->route('be.roles.index')
             ->with('success', 'Role berhasil dibuat');
     }
@@ -103,8 +95,15 @@ class RoleController extends Controller
      */
     public function update(RoleRequest $request, Role $role): RedirectResponse
     {
+        if (in_array($role->name, ['super-admin', 'admin'], true) && $request->name !== $role->name) {
+            return redirect()->route('be.roles.index')
+                ->with('error', 'Role sistem tidak boleh diganti namanya.');
+        }
+
         $role->update(['name' => $request->name]);
         $role->syncPermissions($request->permissions ?? []);
+        ActivityLogger::log('role.update', null, "Role diubah: {$role->name}");
+
         return redirect()->route('be.roles.index')
             ->with('success', 'Role berhasil diubah');
     }
@@ -114,14 +113,15 @@ class RoleController extends Controller
      */
     public function destroy(Role $role): RedirectResponse
     {
-        if ($role->name === 'admin') {
+        if (in_array($role->name, ['admin', 'super-admin'], true)) {
             return redirect()->route('be.roles.index')
-                ->with('error', 'Role admin tidak dapat dihapus');
+                ->with('error', 'Role ' . $role->name . ' tidak dapat dihapus');
         }
 
         $role->syncPermissions([]);
         $role->users()->detach();
         $role->delete();
+        ActivityLogger::log('role.delete', null, "Role dihapus: {$role->name}");
 
         return redirect()->route('be.roles.index')
             ->with('success', 'Role berhasil dihapus');

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             IndikatorSeeder::class,
             RoleKecamatanSeeder::class,
             AdminDesaSeeder::class,  // ← TAMBAH INI
+            SuperAdminSeeder::class,
         ]);
     }
 }

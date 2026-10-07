@@ -117,6 +117,7 @@ class LaporanKegiatanController extends Controller
             'reviewed_at' => now(),
             'reviewed_by' => $request->user()->id,
         ]);
+        \App\Services\ActivityLogger::log('laporan.approve', $laporan_kegiatan, "Laporan disetujui: #{$laporan_kegiatan->id}");
 
         if ($statistikTerupdate) {
             return redirect()->back()->with('success', '✅ Laporan berhasil disetujui dan data masuk ke statistik Pokja.');
@@ -132,6 +133,7 @@ class LaporanKegiatanController extends Controller
             'reviewed_at' => now(),
             'reviewed_by' => $request->user()->id,
         ]);
+        \App\Services\ActivityLogger::log('laporan.reject', $laporan_kegiatan, "Laporan ditolak: #{$laporan_kegiatan->id}");
 
         return redirect()->back()->with('error', '❌ Laporan ditolak.');
     }

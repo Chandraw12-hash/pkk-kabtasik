@@ -170,7 +170,7 @@ class BeritaController extends Controller
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
         }
 
-        $isAdmin = auth()->user()->hasRole('admin');
+        $isAdmin = auth()->user()->hasAnyRole(['admin', 'super-admin']);
 
         // ✅ FIX: Admin hormati pilihan dari form, Kader otomatis pending
         if ($isAdmin) {
@@ -255,7 +255,7 @@ class BeritaController extends Controller
         }
 
         // === HANDLE STATUS ===
-        $isAdmin = auth()->user()->hasRole('admin');
+        $isAdmin = auth()->user()->hasAnyRole(['admin', 'super-admin']);
 
         // ✅ FIX: Admin hormati pilihan, Kader tetap pending
         if ($isAdmin) {
@@ -395,6 +395,7 @@ class BeritaController extends Controller
         }
 
         $berita->update($updateData);
+        \App\Services\ActivityLogger::log('berita.approve', $berita, "Berita disetujui: {$berita->judul}");
 
         return redirect()
             ->route('be.berita.pending')
@@ -419,6 +420,7 @@ class BeritaController extends Controller
             'reject_reason' => $validated['reason'] ?? 'Tidak memenuhi kriteria publikasi.',
             'approved_by' => auth()->id(),
         ]);
+        \App\Services\ActivityLogger::log('berita.reject', $berita, "Berita ditolak: {$berita->judul}");
 
         return redirect()
             ->route('be.berita.pending')
