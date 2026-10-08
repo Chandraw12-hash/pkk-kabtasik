@@ -20,7 +20,9 @@ class DaftarWargaDataUmumSyncService
         }
 
         $year = (int) ($record->approved_at?->year ?? now()->year);
-        $dusun = trim((string) $record->dusun);
+        // Normalisasi: samakan ejaan yang beda kapital/spasi ("DURIAN RUNTUH"
+        // vs "Durian Runtuh") agar tidak pecah jadi 2 baris dusun.
+        $dusun = preg_replace('/\s+/', ' ', trim((string) $record->dusun));
         $query = DataUmumPkk::query()
             ->where('kecamatan', $record->kecamatan)
             ->where('desa', $record->desa)
@@ -33,7 +35,8 @@ class DaftarWargaDataUmumSyncService
             });
             $dusun = 'Tanpa dusun';
         } else {
-            $query->where('dusun', $dusun);
+            // Pencocokan tak peduli kapital (konsisten di MySQL & Postgres).
+            $query->whereRaw('LOWER(dusun) = ?', [mb_strtolower($dusun)]);
         }
 
         $summary = $query->lockForUpdate()->first();

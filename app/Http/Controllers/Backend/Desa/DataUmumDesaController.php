@@ -217,6 +217,9 @@ class DataUmumDesaController extends Controller
     {
         // ══════════════════════════════════════════════════════
         // A. COUNT DISTINCT dari KK (DaftarWarga)
+        // distinct dihitung tak peduli kapital agar konsisten
+        // di MySQL (ci) maupun Postgres — dan selaras dengan
+        // lookup sync yang pakai LOWER(dusun).
         // ══════════════════════════════════════════════════════
         $kkQuery = DaftarWarga::where('kecamatan', $user->kecamatan)
             ->where('desa', $user->desa)
@@ -224,23 +227,27 @@ class DataUmumDesaController extends Controller
 
         $jumlahDusun = (clone $kkQuery)
             ->whereNotNull('dusun')
+            ->whereRaw("TRIM(dusun) <> ''")
             ->distinct()
-            ->count('dusun');
+            ->count(DB::raw('LOWER(dusun)'));
 
         $jumlahPkkRw = (clone $kkQuery)
             ->whereNotNull('rw')
+            ->whereRaw("TRIM(rw) <> ''")
             ->distinct()
-            ->count('rw');
+            ->count(DB::raw('LOWER(rw)'));
 
         $jumlahPkkRt = (clone $kkQuery)
             ->whereNotNull('rt')
+            ->whereRaw("TRIM(rt) <> ''")
             ->distinct()
-            ->count('rt');
+            ->count(DB::raw('LOWER(rt)'));
 
         $jumlahDasaWisma = (clone $kkQuery)
             ->whereNotNull('dasawisma')
+            ->whereRaw("TRIM(dasawisma) <> ''")
             ->distinct()
-            ->count('dasawisma');
+            ->count(DB::raw('LOWER(dasawisma)'));
 
         // ══════════════════════════════════════════════════════
         // B. SUM dari DataUmumPkk per dusun
