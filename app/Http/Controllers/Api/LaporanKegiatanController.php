@@ -385,6 +385,35 @@ class LaporanKegiatanController extends Controller
             $filteredData[$field] = $dataAngka[$field] ?? 0;
         }
 
+        // ✅ Pokja III: terjemahkan alias key baru dari aplikasi Android
+        // (jumlah_kader_pangan, pangan_beras, pangan_peternakan, ...) ke nama
+        // kolom DB. Tanpa ini, whitelist di atas membuang semua key baru
+        // sehingga laporan tersimpan 0 walau di HP sudah diisi.
+        if ($validated['kategori_pokja'] === 'III') {
+            $aliasMap = [
+                'jumlah_kader' => ['jumlah_kader_pangan', 'jumlah_kader'],
+                'jumlah_kader_p' => ['jumlah_kader_sandang', 'jumlah_kader_p'],
+                'makanan_pokok' => ['pangan_beras', 'makanan_pokok'],
+                'makanan_non_beras' => ['pangan_non_beras', 'makanan_non_beras'],
+                'kader_tata_laksana' => ['jumlah_kader_tata_laksana', 'kader_tata_laksana'],
+                'peternakan' => ['pangan_peternakan', 'peternakan'],
+                'perikanan' => ['pangan_perikanan', 'perikanan'],
+                'warung_hidup' => ['pangan_warung_hidup', 'warung_hidup'],
+                'lumbung_hidup' => ['pangan_lumbung_hidup', 'lumbung_hidup'],
+                'toga' => ['pangan_toga', 'toga'],
+                'tanaman_keras' => ['pangan_tanaman_keras', 'tanaman_keras'],
+                'tanaman_lainnya' => ['pangan_tanaman_lainnya', 'tanaman_lainnya'],
+            ];
+            foreach ($aliasMap as $kolom => $aliases) {
+                foreach ($aliases as $alias) {
+                    if (isset($dataAngka[$alias]) && is_numeric($dataAngka[$alias]) && (int) $dataAngka[$alias] !== 0) {
+                        $filteredData[$kolom] = (int) $dataAngka[$alias];
+                        break;
+                    }
+                }
+            }
+        }
+
         $isValid = false;
         foreach ($filteredData as $value) {
             if ($value > 0) {
@@ -720,30 +749,49 @@ class LaporanKegiatanController extends Controller
     {
         $pokja = Pokja3::firstOrNew(['kecamatan' => $kecamatan]);
 
-        $pokja->rumah_sehat = ($pokja->rumah_sehat ?? 0) + ($data['rumah_sehat'] ?? 0);
-        $pokja->rumah_tidak_sehat = ($pokja->rumah_tidak_sehat ?? 0) + ($data['rumah_tidak_sehat'] ?? 0);
-        $pokja->pemanfaatan_pekarangan = ($pokja->pemanfaatan_pekarangan ?? 0) + ($data['pemanfaatan_pekarangan'] ?? 0);
-        $pokja->industri_rumah_tangga = ($pokja->industri_rumah_tangga ?? 0) + ($data['industri_rumah_tangga'] ?? 0);
+        // Helper: ambil angka dari salah satu alias key (format baru Android
+        // memakai prefix jumlah_kader_* / pangan_*, format lama tanpa prefix).
+        // Prioritas ke key baru, fallback ke key lama.
+        $val = function (string ...$keys) use ($data): int {
+            foreach ($keys as $key) {
+                if (isset($data[$key]) && is_numeric($data[$key]) && (int) $data[$key] !== 0) {
+                    return (int) $data[$key];
+                }
+            }
+            foreach ($keys as $key) {
+                if (array_key_exists($key, $data) && is_numeric($data[$key])) {
+                    return (int) $data[$key];
+                }
+            }
+            return 0;
+        };
 
-        $pokja->jumlah_kader = ($pokja->jumlah_kader ?? 0) + ($data['jumlah_kader'] ?? 0);
-        $pokja->jumlah_kader_p = ($pokja->jumlah_kader_p ?? 0) + ($data['jumlah_kader_p'] ?? 0);
-        $pokja->makanan_pokok = ($pokja->makanan_pokok ?? 0) + ($data['makanan_pokok'] ?? 0);
-        $pokja->hatinya_pkk = ($pokja->hatinya_pkk ?? 0) + ($data['hatinya_pkk'] ?? 0);
-        $pokja->jumlah_rumah = ($pokja->jumlah_rumah ?? 0) + ($data['jumlah_rumah'] ?? 0);
+        $pokja->rumah_sehat = ($pokja->rumah_sehat ?? 0) + $val('rumah_sehat');
+        $pokja->rumah_tidak_sehat = ($pokja->rumah_tidak_sehat ?? 0) + $val('rumah_tidak_sehat');
+        $pokja->pemanfaatan_pekarangan = ($pokja->pemanfaatan_pekarangan ?? 0) + $val('pemanfaatan_pekarangan');
+        $pokja->industri_rumah_tangga = ($pokja->industri_rumah_tangga ?? 0) + $val('industri_rumah_tangga');
 
-        // ✅ Rincian format resmi 20 kolom (web + Android)
-        $pokja->kader_tata_laksana = ($pokja->kader_tata_laksana ?? 0) + ($data['kader_tata_laksana'] ?? 0);
-        $pokja->makanan_non_beras = ($pokja->makanan_non_beras ?? 0) + ($data['makanan_non_beras'] ?? 0);
-        $pokja->peternakan = ($pokja->peternakan ?? 0) + ($data['peternakan'] ?? 0);
-        $pokja->perikanan = ($pokja->perikanan ?? 0) + ($data['perikanan'] ?? 0);
-        $pokja->warung_hidup = ($pokja->warung_hidup ?? 0) + ($data['warung_hidup'] ?? 0);
-        $pokja->lumbung_hidup = ($pokja->lumbung_hidup ?? 0) + ($data['lumbung_hidup'] ?? 0);
-        $pokja->toga = ($pokja->toga ?? 0) + ($data['toga'] ?? 0);
-        $pokja->tanaman_keras = ($pokja->tanaman_keras ?? 0) + ($data['tanaman_keras'] ?? 0);
-        $pokja->tanaman_lainnya = ($pokja->tanaman_lainnya ?? 0) + ($data['tanaman_lainnya'] ?? 0);
-        $pokja->industri_pangan = ($pokja->industri_pangan ?? 0) + ($data['industri_pangan'] ?? 0);
-        $pokja->industri_sandang = ($pokja->industri_sandang ?? 0) + ($data['industri_sandang'] ?? 0);
-        $pokja->industri_jasa = ($pokja->industri_jasa ?? 0) + ($data['industri_jasa'] ?? 0);
+        // Jumlah kader: baru (jumlah_kader_pangan/sandang) + lama (jumlah_kader/jumlah_kader_p)
+        $pokja->jumlah_kader = ($pokja->jumlah_kader ?? 0) + $val('jumlah_kader_pangan', 'jumlah_kader');
+        $pokja->jumlah_kader_p = ($pokja->jumlah_kader_p ?? 0) + $val('jumlah_kader_sandang', 'jumlah_kader_p');
+        // Makanan pokok: baru (pangan_beras) + lama (makanan_pokok)
+        $pokja->makanan_pokok = ($pokja->makanan_pokok ?? 0) + $val('pangan_beras', 'makanan_pokok');
+        $pokja->hatinya_pkk = ($pokja->hatinya_pkk ?? 0) + $val('hatinya_pkk');
+        $pokja->jumlah_rumah = ($pokja->jumlah_rumah ?? 0) + $val('jumlah_rumah');
+
+        // ✅ Rincian format resmi 20 kolom (web + Android baru + lama)
+        $pokja->kader_tata_laksana = ($pokja->kader_tata_laksana ?? 0) + $val('jumlah_kader_tata_laksana', 'kader_tata_laksana');
+        $pokja->makanan_non_beras = ($pokja->makanan_non_beras ?? 0) + $val('pangan_non_beras', 'makanan_non_beras');
+        $pokja->peternakan = ($pokja->peternakan ?? 0) + $val('pangan_peternakan', 'peternakan');
+        $pokja->perikanan = ($pokja->perikanan ?? 0) + $val('pangan_perikanan', 'perikanan');
+        $pokja->warung_hidup = ($pokja->warung_hidup ?? 0) + $val('pangan_warung_hidup', 'warung_hidup');
+        $pokja->lumbung_hidup = ($pokja->lumbung_hidup ?? 0) + $val('pangan_lumbung_hidup', 'lumbung_hidup');
+        $pokja->toga = ($pokja->toga ?? 0) + $val('pangan_toga', 'toga');
+        $pokja->tanaman_keras = ($pokja->tanaman_keras ?? 0) + $val('pangan_tanaman_keras', 'tanaman_keras');
+        $pokja->tanaman_lainnya = ($pokja->tanaman_lainnya ?? 0) + $val('pangan_tanaman_lainnya', 'tanaman_lainnya');
+        $pokja->industri_pangan = ($pokja->industri_pangan ?? 0) + $val('industri_pangan');
+        $pokja->industri_sandang = ($pokja->industri_sandang ?? 0) + $val('industri_sandang');
+        $pokja->industri_jasa = ($pokja->industri_jasa ?? 0) + $val('industri_jasa');
 
         if (isset($data['keterangan']) && !empty($data['keterangan'])) {
             $pokja->keterangan = $data['keterangan'];
