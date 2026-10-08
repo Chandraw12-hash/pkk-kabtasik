@@ -138,8 +138,9 @@ export default function Index({
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
     const currentYear = new Date().getFullYear();
+    const currentSemester = new Date().getMonth() < 6 ? "I" : "II";
     const [tahun, setTahun] = useState(filters.tahun || currentYear);
-    const [semester, setSemester] = useState("I");
+    const [semester, setSemester] = useState(currentSemester);
     const [activeTab, setActiveTab] = useState<Pokja4TabId>(
         filters.active_tab || "pokja4"
     );

@@ -4,6 +4,8 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
+    BarChart3,
+    PieChart as PieChartIcon,
 } from "lucide-react";
 import Navbar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
@@ -154,11 +156,11 @@ export default function Pokja3({ data, filters = {} }: Props) {
     // RENDER
     // ========================================================
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800 pt-14 sm:pt-16">
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pt-14 sm:pt-16">
             <Head title="Data Pokja III - TP PKK Kab. Tasikmalaya" />
             <Navbar />
 
-            <main className="flex-1 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 w-full">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
                 {/* BREADCRUMB */}
                 <nav className="flex items-center gap-2 text-sm text-slate-500">
                     <Link href="/" className="hover:text-[#0072BC] transition-colors">
@@ -168,27 +170,22 @@ export default function Pokja3({ data, filters = {} }: Props) {
                     <span className="text-slate-900 font-medium">Pokja III</span>
                 </nav>
 
-                {/* HEADER JUDUL REKAP RESMI */}
-                <div className="bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
-                    <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-slate-900">
-                        DATA KEGIATAN PKK
+                {/* JUDUL */}
+                <div>
+                    <p className="text-[#0072BC] text-xs font-semibold tracking-wide uppercase mb-1">
+                        Pokja III
+                    </p>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                        Rekapitulasi Data Pokja III Tingkat Kecamatan
                     </h2>
-                    <h3 className="text-base md:text-lg font-bold uppercase tracking-wider text-slate-800">
-                        TP. PKK KABUPATEN TASIKMALAYA
-                    </h3>
-                    <p className="text-sm font-semibold uppercase tracking-wider text-slate-600 mt-1">
-                        PROVINSI JAWA BARAT TAHUN {new Date().getFullYear()}
+                    <p className="text-slate-500 text-sm mt-1">
+                        Pangan, Sandang dan Tata Laksana Rumah Tangga.
                     </p>
                 </div>
 
                 {/* FILTER */}
                 <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row flex-wrap gap-3 items-start md:items-center justify-between">
                     <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-700 uppercase tracking-wider text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                                POKJA III
-                            </span>
-                        </div>
                         <div className="relative flex-1 min-w-[180px]">
                             <Search
                                 size={15}
@@ -259,7 +256,8 @@ export default function Pokja3({ data, filters = {} }: Props) {
                             {/* Bar Chart — Distribusi Data */}
                             <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
                                 <div className="mb-4 border-b border-slate-100 pb-4">
-                                    <h3 className="text-base font-bold text-slate-900">
+                                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                        <BarChart3 size={16} className="text-[#0072BC]" />
                                         Distribusi Data Pokja III
                                     </h3>
                                     <p className="mt-1 text-xs text-slate-500">
@@ -308,7 +306,7 @@ export default function Pokja3({ data, filters = {} }: Props) {
                                                     dataKey="value"
                                                     fill="#0072BC"
                                                     radius={[5, 5, 0, 0]}
-                                                    maxBarSize={36}
+                                                    maxBarSize={48}
                                                 >
                                                     <LabelList
                                                         dataKey="value"
@@ -317,7 +315,7 @@ export default function Pokja3({ data, filters = {} }: Props) {
                                                             Number(value).toLocaleString("id-ID")
                                                         }
                                                         fill="#005A94"
-                                                        fontSize={9}
+                                                        fontSize={10}
                                                     />
                                                 </Bar>
                                             </BarChart>
@@ -333,7 +331,8 @@ export default function Pokja3({ data, filters = {} }: Props) {
                             {/* Pie Chart — Rasio Kondisi Rumah */}
                             <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
                                 <div className="mb-4 border-b border-slate-100 pb-4">
-                                    <h3 className="text-base font-bold text-slate-900">
+                                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                        <PieChartIcon size={16} className="text-[#0072BC]" />
                                         Rasio Kondisi Rumah
                                     </h3>
                                     <p className="mt-1 text-xs text-slate-500">
@@ -411,7 +410,7 @@ export default function Pokja3({ data, filters = {} }: Props) {
                             <thead>
                                 {/* Baris 1: Main Header Categories */}
                                 <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 uppercase tracking-tight">
-                                    <th rowSpan={3} className="p-2 border border-slate-300 w-12 sticky left-0 bg-slate-100 z-10">
+                                    <th rowSpan={3} className="p-2 border border-slate-300 w-12 min-w-[48px] max-w-[48px] sticky left-0 bg-slate-100 z-10">
                                         NO
                                     </th>
                                     <th rowSpan={3} className="p-2 border border-slate-300 min-w-[160px] sticky left-12 bg-slate-100 z-10">
@@ -483,7 +482,7 @@ export default function Pokja3({ data, filters = {} }: Props) {
 
                                 {/* Baris 4: Nomor Kolom (1 sampai 20) */}
                                 <tr className="bg-slate-200/80 text-slate-600 font-semibold border-b border-slate-300 italic text-[11px]">
-                                    <th className="py-1 px-2 border border-slate-300 sticky left-0 bg-slate-200/90 z-10">1</th>
+                                    <th className="py-1 px-2 border border-slate-300 min-w-[48px] max-w-[48px] sticky left-0 bg-slate-200/90 z-10">1</th>
                                     <th className="py-1 px-2 border border-slate-300 sticky left-12 bg-slate-200/90 z-10">2</th>
                                     <th className="py-1 px-2 border border-slate-300">3</th>
                                     <th className="py-1 px-2 border border-slate-300">4</th>
@@ -525,7 +524,7 @@ export default function Pokja3({ data, filters = {} }: Props) {
                                                 className="hover:bg-blue-50/40 transition-colors group"
                                             >
                                                 {/* 1: NO */}
-                                                <td className="p-2 border border-slate-200 font-medium sticky left-0 bg-white group-hover:bg-blue-50/40 z-10">
+                                                <td className="p-2 border border-slate-200 font-medium min-w-[48px] max-w-[48px] sticky left-0 bg-white group-hover:bg-blue-50/40 z-10">
                                                     {rowNum}
                                                 </td>
                                                 {/* 2: KECAMATAN */}

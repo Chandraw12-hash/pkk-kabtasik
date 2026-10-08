@@ -68,10 +68,10 @@ class User extends Authenticatable
         'pokja1' => ['I'],
         'pokja2' => ['II'],
         'pokja3' => ['III'],
-        'pokja4' => ['IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP'],
+        'pokja4' => ['IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP', 'IV-DATADUKUNG', 'IV-DATAPROGRAM'],
     ];
 
-    public const ALL_POKJA_KATEGORI = ['I', 'II', 'III', 'IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP'];
+    public const ALL_POKJA_KATEGORI = ['I', 'II', 'III', 'IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP', 'IV-DATADUKUNG', 'IV-DATAPROGRAM'];
 
     public function canAccessMobile(): bool
     {

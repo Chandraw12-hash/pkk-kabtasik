@@ -445,7 +445,7 @@ export default function DataDukung({
     const tdNum =
         "border border-slate-200 px-2 py-1.5 text-center text-xs tabular-nums text-slate-600 dark:border-slate-700 dark:text-slate-300";
     const tdVal =
-        "border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums text-slate-700 dark:border-slate-700 dark:text-slate-200";
+        "border border-slate-200 px-2 py-1.5 text-center text-sm tabular-nums min-w-[64px] text-slate-700 dark:border-slate-700 dark:text-slate-200";
 
     const fokusDukung = dukungFiltered.filter(
         (r) => Number(r.tahun) === year && String(r.semester) === semester
@@ -515,11 +515,12 @@ export default function DataDukung({
                                 (r) => kecamatanDisplayName(r) === kec
                             );
                         return (
-                            <div
+                            <details
                                 key={kec}
-                                className="border-b border-slate-100 last:border-b-0 dark:border-slate-700"
+                                open={dukungKec.length <= 3}
+                                className="group border-b border-slate-100 last:border-b-0 dark:border-slate-700"
                             >
-                                <div className="flex items-center gap-3 px-5 py-3 sm:px-6">
+                                <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 sm:px-6 [&::-webkit-details-marker]:hidden">
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-700 dark:text-slate-300">
                                         {ki + 1}
                                     </span>
@@ -531,14 +532,20 @@ export default function DataDukung({
                                             Semester {semester} Tahun {year}
                                         </p>
                                     </div>
-                                </div>
+                                    <span className="ml-auto shrink-0 text-xs font-medium text-slate-500 group-open:hidden dark:text-slate-400">
+                                        Lihat tabel
+                                    </span>
+                                    <span className="ml-auto hidden shrink-0 text-xs font-medium text-slate-500 group-open:inline dark:text-slate-400">
+                                        Tutup
+                                    </span>
+                                </summary>
                                 <div className="overflow-x-auto px-5 pb-4 sm:px-6">
                                     <table className="w-full min-w-[1100px] border-collapse">
                                         <thead>
                                             <tr>
                                                 <th
                                                     rowSpan={2}
-                                                    className={`${thBase} sticky left-0 w-10 min-w-10 bg-slate-100 dark:bg-slate-700`}
+                                                    className={`${thBase} sticky left-0 w-10 min-w-10 max-w-10 bg-slate-100 dark:bg-slate-700`}
                                                 >
                                                     NO
                                                 </th>
@@ -605,7 +612,7 @@ export default function DataDukung({
                                                     }
                                                 >
                                                     <td
-                                                        className={`${tdNum} sticky left-0 w-10 min-w-10 bg-white dark:bg-slate-800`}
+                                                        className={`${tdNum} sticky left-0 w-10 min-w-10 max-w-10 bg-white dark:bg-slate-800`}
                                                     >
                                                         {i + 1}.
                                                     </td>
@@ -664,7 +671,7 @@ export default function DataDukung({
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </details>
                         );
                     })
                 ) : (
@@ -713,11 +720,12 @@ export default function DataDukung({
                             );
                         let rowNo = 0;
                         return (
-                            <div
+                            <details
                                 key={kec}
-                                className="border-b border-slate-100 last:border-b-0 dark:border-slate-700"
+                                open={programKec.length <= 3}
+                                className="group border-b border-slate-100 last:border-b-0 dark:border-slate-700"
                             >
-                                <div className="flex items-center gap-3 px-5 py-3 sm:px-6">
+                                <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 sm:px-6 [&::-webkit-details-marker]:hidden">
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold tabular-nums text-slate-500 dark:bg-slate-700 dark:text-slate-300">
                                         {ki + 1}
                                     </span>
@@ -729,20 +737,26 @@ export default function DataDukung({
                                             Semester {semester} Tahun {year}
                                         </p>
                                     </div>
-                                </div>
-                                <div className="overflow-x-auto px-5 pb-4 sm:px-6">
-                                    <table className="w-full min-w-[1100px] border-collapse">
+                                    <span className="ml-auto shrink-0 text-xs font-medium text-slate-500 group-open:hidden dark:text-slate-400">
+                                        Lihat tabel
+                                    </span>
+                                    <span className="ml-auto hidden shrink-0 text-xs font-medium text-slate-500 group-open:inline dark:text-slate-400">
+                                        Tutup
+                                    </span>
+                                </summary>
+                                <div className="px-5 pb-4 sm:px-6">
+                                    <table className="w-full border-collapse">
                                         <thead>
                                             <tr>
                                                 <th
                                                     rowSpan={2}
-                                                    className={`${thBase} sticky left-0 w-10 min-w-10 bg-slate-100 dark:bg-slate-700`}
+                                                    className={`${thBase} w-10 min-w-10 max-w-10 bg-slate-100 dark:bg-slate-700`}
                                                 >
                                                     NO
                                                 </th>
                                                 <th
                                                     rowSpan={2}
-                                                    className={`${thBase} sticky left-10 min-w-[240px] bg-slate-100 text-left dark:bg-slate-700`}
+                                                    className={`${thBase} min-w-[180px] bg-slate-100 text-left dark:bg-slate-700`}
                                                 >
                                                     DATA UTAMA YANG DI MONITOR
                                                 </th>
@@ -793,7 +807,7 @@ export default function DataDukung({
                                                 >
                                                     <tr>
                                                         <td
-                                                            className={`${tdNum} sticky left-0 bg-slate-100 font-bold dark:bg-slate-700`}
+                                                            className={`${tdNum} w-10 min-w-10 max-w-10 bg-slate-100 font-bold dark:bg-slate-700`}
                                                         >
                                                             {["I","II","III","IV","V","VI","VII","VIII","IX"][gi]}
                                                         </td>
@@ -803,7 +817,7 @@ export default function DataDukung({
                                                                     2 +
                                                                 2
                                                             }
-                                                            className="sticky left-10 border border-slate-200 bg-slate-100 px-2 py-1.5 text-left text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                                                            className="whitespace-normal break-words border border-slate-200 bg-slate-100 px-2 py-1.5 text-left text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-200"
                                                         >
                                                             {group.title}
                                                         </td>
@@ -825,7 +839,7 @@ export default function DataDukung({
                                                                     }
                                                                 >
                                                                     <td
-                                                                        className={`${tdNum} sticky left-0 w-10 min-w-10 bg-white dark:bg-slate-800`}
+                                                                        className={`${tdNum} w-10 min-w-10 max-w-10 bg-white dark:bg-slate-800`}
                                                                     >
                                                                         {
                                                                             group.fields.indexOf(
@@ -833,7 +847,7 @@ export default function DataDukung({
                                                                             ) + 1
                                                                         }
                                                                     </td>
-                                                                    <td className="sticky left-10 border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                                    <td className="min-w-[180px] whitespace-normal break-words border border-slate-200 bg-white px-2 py-1.5 text-left text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                                                         {
                                                                             f.label
                                                                         }
@@ -871,7 +885,7 @@ export default function DataDukung({
                                                                             rowSpan={
                                                                                 programRowCount
                                                                             }
-                                                                            className="border border-slate-200 px-2 py-1.5 align-top text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                                                                            className="min-w-[100px] max-w-[180px] whitespace-normal break-words border border-slate-200 px-2 py-1.5 align-top text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
                                                                         >
                                                                             {str(
                                                                                 focus?.evaluasi
@@ -887,7 +901,7 @@ export default function DataDukung({
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </details>
                         );
                     })
                 ) : (

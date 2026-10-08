@@ -501,7 +501,7 @@ export default function Welcome({
                             />
 
                             <div
-                                className="absolute inset-0 bg-slate-900/50"
+                                className="absolute inset-0 bg-gradient-to-b from-[#00283D]/30 via-transparent to-[#00283D]/40"
                                 aria-hidden="true"
                             />
                         </div>
@@ -509,17 +509,17 @@ export default function Welcome({
                 </div>
 
                 <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 text-center pt-20 pb-16 sm:pt-24 sm:pb-20">
-                    <span className="inline-block text-teal-100 text-[10px] sm:text-xs font-medium tracking-[0.16em] uppercase mb-3 sm:mb-4">
+                    <span className="inline-block text-white text-[10px] sm:text-xs font-bold tracking-[0.16em] uppercase mb-3 sm:mb-4 px-4 py-1.5 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                         Tim Penggerak PKK Kabupaten Tasikmalaya
                     </span>
 
-                    <h1 className="text-[1.65rem] leading-[1.2] sm:text-4xl md:text-5xl font-semibold text-white mb-3 sm:mb-5 tracking-tight">
+                    <h1 className="text-[1.65rem] leading-[1.2] sm:text-4xl md:text-5xl font-semibold text-white mb-3 sm:mb-5 tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]">
                         Membangun Keluarga<br />
                         Sejahtera &amp; Mandiri<br />
                         bersama TP PKK
                     </h1>
 
-                    <p className="text-slate-100 text-sm sm:text-base leading-relaxed max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-7">
+                    <p className="text-slate-100 text-sm sm:text-base leading-relaxed max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-7 drop-shadow-[0_1px_8px_rgba(0,0,0,0.6)]">
                         Media informasi resmi Tim Penggerak PKK Kabupaten Tasikmalaya dalam mewujudkan pemberdayaan dan kesejahteraan keluarga.
                     </p>
 
@@ -844,12 +844,12 @@ export default function Welcome({
 
                                 <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-4">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-[#0072BC]" />
-                                        <span className="text-[9px] text-slate-500">Ada kegiatan</span>
+                                        <span className="w-4 h-4 rounded-full bg-[#0072BC] text-white text-[7px] font-bold flex items-center justify-center">•</span>
+                                        <span className="text-[9px] text-slate-500">Hari ini</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                                        <span className="text-[9px] text-slate-500">Hari berjalan</span>
+                                        <span className="w-2 h-2 rounded-full bg-[#0072BC]" />
+                                        <span className="text-[9px] text-slate-500">Ada kegiatan</span>
                                     </div>
                                 </div>
                             </div>

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Imports\Pokja4Import;
 use App\Models\Pokja4;
+use App\Models\Pokja4DataDukung;
+use App\Models\Pokja4DataProgram;
 use App\Models\Pokja4KegiatanPosyandu;
 use App\Models\Pokja4KunjunganPyd;
 use App\Models\Pokja4Rekapitulasi;
@@ -50,6 +52,17 @@ class Pokja4Controller extends Controller
             ->orderBy('kecamatan')
             ->get();
 
+        // Laporan Data Dukung Pokja IV dari aplikasi mobile (read-only di admin).
+        $dataDukung = Pokja4DataDukung::query()
+            ->where('tahun', $tahun)
+            ->orderBy('kecamatan')
+            ->get();
+
+        $dataProgram = Pokja4DataProgram::query()
+            ->where('tahun', $tahun)
+            ->orderBy('kecamatan')
+            ->get();
+
         $tahunList = Pokja4::query()
             ->select('tahun')
             ->whereNotNull('tahun')
@@ -76,6 +89,20 @@ class Pokja4Controller extends Controller
                     ->distinct()
                     ->pluck('tahun')
             )
+            ->merge(
+                Pokja4DataDukung::query()
+                    ->select('tahun')
+                    ->whereNotNull('tahun')
+                    ->distinct()
+                    ->pluck('tahun')
+            )
+            ->merge(
+                Pokja4DataProgram::query()
+                    ->select('tahun')
+                    ->whereNotNull('tahun')
+                    ->distinct()
+                    ->pluck('tahun')
+            )
             ->unique()
             ->sortDesc()
             ->values();
@@ -90,6 +117,9 @@ class Pokja4Controller extends Controller
                 'kunjungan_pyd' => $kunjunganPyd,
                 'kegiatan_posyandu' => $kegiatanPosyandu,
                 'rekapitulasi' => $rekapitulasi,
+                'data_dukung' => $dataDukung,
+                'data_program' => $dataProgram,
+                'laporan_loaded' => true,
                 'tahunList' => $tahunList,
             ]);
         }
@@ -99,6 +129,9 @@ class Pokja4Controller extends Controller
             'kunjungan_pyd' => $kunjunganPyd,
             'kegiatan_posyandu' => $kegiatanPosyandu,
             'rekapitulasi' => $rekapitulasi,
+            'data_dukung' => $dataDukung,
+            'data_program' => $dataProgram,
+            'laporan_loaded' => true,
             'filters' => $request->only(['search', 'per_page', 'tahun', 'active_tab']),
             'tahunList' => $tahunList,
         ]);

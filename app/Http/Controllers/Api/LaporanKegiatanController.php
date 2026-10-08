@@ -11,6 +11,7 @@ use App\Models\Pokja4;
 use App\Models\Pokja4KunjunganPyd;
 use App\Models\Pokja4KegiatanPosyandu;
 use App\Models\Pokja4Rekapitulasi;
+use App\Services\Pokja4DataDukungSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -128,12 +129,23 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'kategori_pokja' => 'required|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP',
+            'kategori_pokja' => 'required|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP,IV-DATADUKUNG,IV-DATAPROGRAM',
             'data_angka' => 'nullable|array',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'kecamatan' => 'nullable|string|max:255',
             'desa_kelurahan' => 'nullable|string|max:255',
             'nama_dasawisma' => 'nullable|string|max:255',
+            'provinsi' => 'nullable|string|max:100',
+            'kabupaten_kota' => 'nullable|string|max:100',
+            'program' => 'nullable|string|max:255',
+            'pj_desa' => 'nullable|string|max:100',
+            'pj_desa_hp' => 'nullable|string|max:30',
+            'pj_kecamatan' => 'nullable|string|max:100',
+            'pj_kecamatan_hp' => 'nullable|string|max:30',
+            'pj_kabupaten' => 'nullable|string|max:100',
+            'pj_kabupaten_hp' => 'nullable|string|max:30',
+            'pj_provinsi' => 'nullable|string|max:100',
+            'pj_provinsi_hp' => 'nullable|string|max:30',
         ]);
 
         $fotoPath = null;
@@ -377,6 +389,103 @@ class LaporanKegiatanController extends Controller
                 'balita_meninggal_p',
                 'keterangan',
             ],
+            'IV-DATADUKUNG' => [
+                'jumlah_penduduk',
+                'jumlah_kk',
+                'jumlah_rumah',
+                'jumlah_laki',
+                'jumlah_perempuan',
+                'jumlah_usia_produktif',
+                'jumlah_pus',
+                'jumlah_ibu_hamil',
+                'jumlah_bayi_0_2',
+                'jumlah_bayi_asi',
+                'jumlah_balita',
+                'jumlah_anak',
+                'jumlah_lansia',
+                'jumlah_kb_aktif',
+                'jumlah_ibu_menyusui',
+                'jumlah_keluarga_sejahtera',
+                'jumlah_keluarga_pra_sejahtera',
+                'jumlah_mbr',
+                'jumlah_kader_pkk_rt_rw',
+                'jumlah_kader_pkk_kesehatan',
+                'jumlah_dasa_wisma',
+                'jumlah_kader_dasa_wisma',
+                'jumlah_posyandu_aktif',
+                'jumlah_bidan_desa',
+                'jumlah_bank_sampah',
+                'jumlah_posko_bencana',
+                'evaluasi',
+                'keterangan',
+            ],
+            'IV-DATAPROGRAM' => [
+                'bayi_prematur',
+                'bayi_bblr',
+                'balita_kurang_gizi',
+                'balita_stunting',
+                'bayi_balita_periksa',
+                'ibu_lahir_jarak_dekat',
+                'hamil_tidak_direncanakan',
+                'penduduk_tbc',
+                'rumah_jamban_sehat',
+                'rumah_bak_air',
+                'kasus_diare',
+                'keluarga_sadar_gizi',
+                'rumah_tanpa_asap_rokok',
+                'penduduk_babs',
+                'ibu_hamil_periksa',
+                'ayah_merokok',
+                'kematian_ibu_nifas',
+                'kanker_serviks',
+                'bayi_balita_imunisasi',
+                'bayi_balita_sakit',
+                'kematian_bayi_balita',
+                'kebakaran_rumah_tangga',
+                'rumah_listrik_standar',
+                'rumah_alat_pemadam',
+                'rumah_semi_permanen',
+                'rumah_kotak_p3k',
+                'rumah_info_mitigasi_kebakaran',
+                'kader_edukasi_kebakaran',
+                'relawan_bencana_alam',
+                'rumah_info_mitigasi_alam',
+                'kader_edukasi_alam',
+                'fasilitas_posko_bencana',
+                'relawan_bencana_alam_2',
+                'rumah_tas_siaga',
+                'kerusakan_fasilitas_umum',
+                'keluarga_bak_sampah',
+                'keluarga_anggota_bank_sampah',
+                'keluarga_spal',
+                'kasus_banjir',
+                'bak_sampah_desa',
+                'rumah_sehat',
+                'kasus_klb',
+                'keluarga_2_anak',
+                'penduduk_berobat',
+                'penyakit_menular',
+                'penyakit_tidak_menular',
+                'bayi_lahir_sehat',
+                'bayi_cukup_bulan',
+                'keluarga_gangguan_jiwa',
+                'keluarga_asuransi',
+                'kk_pengangguran',
+                'kk_tidak_tetap',
+                'kk_penghasilan_tetap',
+                'ibu_hamil_tabulin',
+                'keluarga_tabungan',
+                'keluarga_aset_investasi',
+                'ibu_melahirkan_bayi_sehat',
+                'wanita_peserta_kb',
+                'pria_peserta_kb',
+                'pus_masalah_reproduksi',
+                'pus_nikah_di_bawah_19',
+                'wus_hamil_beresiko',
+                'pus_penyakit_seksual',
+                'evaluasi',
+                'keterangan',
+            ],
         ];
 
         $expectedFields = $pokjaFields[$validated['kategori_pokja']] ?? [];
@@ -441,6 +550,17 @@ class LaporanKegiatanController extends Controller
             'kecamatan' => $kecamatan,
             'desa_kelurahan' => $desaKelurahan,
             'nama_dasawisma' => $namaDasawisma,
+            'provinsi' => $validated['provinsi'] ?? null,
+            'kabupaten_kota' => $validated['kabupaten_kota'] ?? null,
+            'program' => $validated['program'] ?? null,
+            'pj_desa' => $validated['pj_desa'] ?? null,
+            'pj_desa_hp' => $validated['pj_desa_hp'] ?? null,
+            'pj_kecamatan' => $validated['pj_kecamatan'] ?? null,
+            'pj_kecamatan_hp' => $validated['pj_kecamatan_hp'] ?? null,
+            'pj_kabupaten' => $validated['pj_kabupaten'] ?? null,
+            'pj_kabupaten_hp' => $validated['pj_kabupaten_hp'] ?? null,
+            'pj_provinsi' => $validated['pj_provinsi'] ?? null,
+            'pj_provinsi_hp' => $validated['pj_provinsi_hp'] ?? null,
             'status' => 'pending',
         ]);
 
@@ -460,7 +580,7 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'sometimes|string|max:255',
             'deskripsi' => 'nullable|string',
-            'kategori_pokja' => 'sometimes|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP',
+            'kategori_pokja' => 'sometimes|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP,IV-DATADUKUNG,IV-DATAPROGRAM',
             'data_angka' => 'nullable|array',
             'kecamatan' => 'nullable|string|max:255',
             'desa_kelurahan' => 'nullable|string|max:255',
@@ -636,6 +756,16 @@ class LaporanKegiatanController extends Controller
                 break;
             case 'IV-REKAP':
                 $this->sinkronkanRekapitulasi($kecamatan, $dataAngka);
+                break;
+            case 'IV-DATADUKUNG':
+                // Form Flutter "Laporan Data Dukung" mengirim A+B sekaligus
+                // (lihat dataDukungKeys + dataProgramKeys), jadi sinkron keduanya.
+                Pokja4DataDukungSyncService::syncDataDukung($laporan);
+                Pokja4DataDukungSyncService::syncDataProgram($laporan);
+                break;
+            case 'IV-DATAPROGRAM':
+                Pokja4DataDukungSyncService::syncDataDukung($laporan);
+                Pokja4DataDukungSyncService::syncDataProgram($laporan);
                 break;
             default:
                 Log::warning('Kategori Pokja tidak dikenal: ' . $laporan->kategori_pokja);
