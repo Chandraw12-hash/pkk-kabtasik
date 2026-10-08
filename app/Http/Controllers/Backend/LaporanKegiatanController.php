@@ -395,20 +395,51 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        $fields = [
-            'rumah_sehat',
-            'rumah_tidak_sehat',
-            'pemanfaatan_pekarangan',
-            'industri_rumah_tangga',
-            'jumlah_kader',
-            'jumlah_kader_p',
-            'makanan_pokok',
-            'hatinya_pkk',
-            'jumlah_rumah',
+        // Mapping kolom DB => alias key yang diterima (baru Android + lama).
+        // Tanpa ini, laporan yang sudah di-ACC tetap 0 di tabel rekap
+        // karena key baru (jumlah_kader_pangan, pangan_beras, pangan_*, ...)
+        // tidak cocok dengan nama kolom DB.
+        $fieldAliases = [
+            'rumah_sehat' => ['rumah_sehat'],
+            'rumah_tidak_sehat' => ['rumah_tidak_sehat'],
+            'pemanfaatan_pekarangan' => ['pemanfaatan_pekarangan'],
+            'industri_rumah_tangga' => ['industri_rumah_tangga'],
+            'jumlah_kader' => ['jumlah_kader_pangan', 'jumlah_kader'],
+            'jumlah_kader_p' => ['jumlah_kader_sandang', 'jumlah_kader_p'],
+            'makanan_pokok' => ['pangan_beras', 'makanan_pokok'],
+            'hatinya_pkk' => ['hatinya_pkk'],
+            'jumlah_rumah' => ['jumlah_rumah'],
+            // ✅ Rincian format resmi 20 kolom (sebelumnya TIDAK ikut ke-rekap saat ACC)
+            'kader_tata_laksana' => ['jumlah_kader_tata_laksana', 'kader_tata_laksana'],
+            'makanan_non_beras' => ['pangan_non_beras', 'makanan_non_beras'],
+            'peternakan' => ['pangan_peternakan', 'peternakan'],
+            'perikanan' => ['pangan_perikanan', 'perikanan'],
+            'warung_hidup' => ['pangan_warung_hidup', 'warung_hidup'],
+            'lumbung_hidup' => ['pangan_lumbung_hidup', 'lumbung_hidup'],
+            'toga' => ['pangan_toga', 'toga'],
+            'tanaman_keras' => ['pangan_tanaman_keras', 'tanaman_keras'],
+            'tanaman_lainnya' => ['pangan_tanaman_lainnya', 'tanaman_lainnya'],
+            'industri_pangan' => ['industri_pangan'],
+            'industri_sandang' => ['industri_sandang'],
+            'industri_jasa' => ['industri_jasa'],
         ];
 
-        foreach ($fields as $field) {
-            $value = (int) ($dataAngka[$field] ?? 0);
+        foreach ($fieldAliases as $field => $aliases) {
+            $value = 0;
+            foreach ($aliases as $alias) {
+                if (isset($dataAngka[$alias]) && is_numeric($dataAngka[$alias]) && (int) $dataAngka[$alias] !== 0) {
+                    $value = (int) $dataAngka[$alias];
+                    break;
+                }
+            }
+            if ($value === 0) {
+                foreach ($aliases as $alias) {
+                    if (array_key_exists($alias, $dataAngka) && is_numeric($dataAngka[$alias])) {
+                        $value = (int) $dataAngka[$alias];
+                        break;
+                    }
+                }
+            }
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }
