@@ -58,3 +58,33 @@ export function formatValue(value: unknown): string {
         ? "0"
         : String(value);
 }
+
+export function kecamatanDisplayName(row: Pokja4DataRow): string {
+    return String(row.kecamatan || "Kecamatan belum ditentukan");
+}
+
+// Daftar kecamatan unik (urut abjad) dari baris multi-tahun/multi-semester.
+export function uniqueKecamatan(rows: Pokja4DataRow[]): string[] {
+    const seen = new Set<string>();
+    rows.forEach((row) => seen.add(kecamatanDisplayName(row)));
+    return Array.from(seen).sort((a, b) => a.localeCompare(b, "id"));
+}
+
+// Lookup cepat 1 sel tabel: (kecamatan, tahun, semester) -> baris data.
+export function buildPivot(rows: Pokja4DataRow[]) {
+    const map = new Map<string, Pokja4DataRow>();
+    rows.forEach((row) => {
+        map.set(
+            `${kecamatanDisplayName(row)}|${String(
+                row.tahun ?? ""
+            )}|${String(row.semester ?? "")}`,
+            row
+        );
+    });
+    return (
+        kecamatan: string,
+        tahun: number,
+        semester: string
+    ): Pokja4DataRow | undefined =>
+        map.get(`${kecamatan}|${String(tahun)}|${semester}`);
+}

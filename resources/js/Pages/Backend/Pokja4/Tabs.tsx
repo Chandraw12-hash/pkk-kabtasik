@@ -2,6 +2,7 @@ import React from "react";
 import {
     Activity,
     ClipboardList,
+    Database,
     FileText,
     Users,
 } from "lucide-react";
@@ -10,7 +11,8 @@ export type Pokja4TabId =
     | "pokja4"
     | "kunjungan"
     | "posyandu"
-    | "rekapitulasi";
+    | "rekapitulasi"
+    | "data_dukung";
 
 interface Props {
     activeTab: Pokja4TabId;
@@ -22,6 +24,7 @@ const tabs = [
     { id: "kunjungan", label: "Kunjungan PYD", icon: Users },
     { id: "posyandu", label: "Kegiatan Posyandu", icon: Activity },
     { id: "rekapitulasi", label: "Rekapitulasi", icon: ClipboardList },
+    { id: "data_dukung", label: "Data Dukung", icon: Database },
 ] as const;
 
 export default function Tabs({ activeTab, onTabChange }: Props) {

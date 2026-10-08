@@ -9,6 +9,8 @@ import Tabs, { Pokja4TabId } from "./Tabs";
 import KunjunganPyd from "./KunjunganPyd";
 import KegiatanPosyandu from "./KegiatanPosyandu";
 import Rekapitulasi from "./Rekapitulasi";
+import DataDukung from "./DataDukung";
+import { dummyDataDukung, dummyDataProgram } from "./Pokja4LaporanDummy";
 import { Pokja4DataRow } from "./Pokja4TabUtils";
 import DataDisclosure from "./DataDisclosure";
 import {
@@ -41,6 +43,13 @@ interface PageProps {
     kunjungan_pyd?: Pokja4DataRow[];
     kegiatan_posyandu?: Pokja4DataRow[];
     rekapitulasi?: Pokja4DataRow[];
+    // TODO(backend): diisi oleh teman backend via Inertia + JSON fetchData.
+    // Sengaja optional agar UI tetap jalan sebelum backend tersambung.
+    // `laporan_loaded: true` = backend sudah mengirim (walau datanya kosong),
+    // sehingga preview dummy dimatikan dan tampil empty-state asli.
+    data_dukung?: Pokja4DataRow[];
+    data_program?: Pokja4DataRow[];
+    laporan_loaded?: boolean;
 }
 
 interface Pokja4Item {
@@ -122,17 +131,37 @@ export default function Index({
     kunjungan_pyd = [],
     kegiatan_posyandu = [],
     rekapitulasi = [],
+    data_dukung = [],
+    data_program = [],
+    laporan_loaded = false,
 }: PageProps) {
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
     const currentYear = new Date().getFullYear();
     const [tahun, setTahun] = useState(filters.tahun || currentYear);
+    const [semester, setSemester] = useState("I");
     const [activeTab, setActiveTab] = useState<Pokja4TabId>(
         filters.active_tab || "pokja4"
     );
     const [kunjunganData, setKunjunganData] = useState(kunjungan_pyd);
     const [posyanduData, setPosyanduData] = useState(kegiatan_posyandu);
     const [rekapitulasiData, setRekapitulasiData] = useState(rekapitulasi);
+    // TODO(backend): hapus fallback dummy + flag ini setelah API mengirim
+    // `data_dukung` / `data_program` asli. Selama backend belum mengirim
+    // (props kosong dan tidak ada flag), tampil preview dummy agar layout
+    // bisa direview. Begitu backend mengirim key-nya (walau array kosong),
+    // dummy dimatikan dan tampil data/empty-state asli.
+    const initialLaporanLoaded =
+        data_dukung.length > 0 ||
+        data_program.length > 0 ||
+        laporan_loaded === true;
+    const [laporanLoaded, setLaporanLoaded] = useState(initialLaporanLoaded);
+    const [dataDukungData, setDataDukungData] = useState<Pokja4DataRow[]>(
+        initialLaporanLoaded ? data_dukung : dummyDataDukung
+    );
+    const [dataProgramData, setDataProgramData] = useState<Pokja4DataRow[]>(
+        initialLaporanLoaded ? data_program : dummyDataProgram
+    );
     const [availableYears, setAvailableYears] = useState(tahunList);
 
     const [localData, setLocalData] = useState({
@@ -158,6 +187,19 @@ export default function Index({
                     setKunjunganData(res.data.kunjungan_pyd || []);
                     setPosyanduData(res.data.kegiatan_posyandu || []);
                     setRekapitulasiData(res.data.rekapitulasi || []);
+                    // Backend sudah mengirim key-nya (walau array kosong):
+                    // matikan preview dummy, tampil data/empty-state asli.
+                    if (res.data.data_dukung !== undefined) {
+                        setDataDukungData(res.data.data_dukung || []);
+                        setLaporanLoaded(true);
+                    }
+                    if (res.data.data_program !== undefined) {
+                        setDataProgramData(res.data.data_program || []);
+                        setLaporanLoaded(true);
+                    }
+                    if (res.data.laporan_loaded === true) {
+                        setLaporanLoaded(true);
+                    }
                     setAvailableYears(res.data.tahunList || []);
                 }
             })
@@ -178,10 +220,11 @@ export default function Index({
                 search,
                 per_page: perPage,
                 tahun,
+                semester,
             });
         }, 300);
         return () => clearTimeout(timeout);
-    }, [search, perPage, tahun]);
+    }, [search, perPage, tahun, semester]);
 
     // ========================================================
     // SYNC PROP
@@ -196,8 +239,17 @@ export default function Index({
         setKunjunganData(kunjungan_pyd);
         setPosyanduData(kegiatan_posyandu);
         setRekapitulasiData(rekapitulasi);
+        if (
+            data_dukung.length > 0 ||
+            data_program.length > 0 ||
+            laporan_loaded === true
+        ) {
+            setDataDukungData(data_dukung);
+            setDataProgramData(data_program);
+            setLaporanLoaded(true);
+        }
         setAvailableYears(tahunList);
-    }, [pokjas, kunjungan_pyd, kegiatan_posyandu, rekapitulasi, tahunList]);
+    }, [pokjas, kunjungan_pyd, kegiatan_posyandu, rekapitulasi, data_dukung, data_program, laporan_loaded, tahunList]);
 
     // ========================================================
     // RESET FILTER
@@ -206,15 +258,22 @@ export default function Index({
         setSearch("");
         setPerPage(10);
         setTahun(currentYear);
+        setSemester("I");
     };
 
     const hasActiveFilter =
-        Boolean(search) || perPage !== 10 || tahun !== currentYear;
+        Boolean(search) ||
+        perPage !== 10 ||
+        tahun !== currentYear ||
+        semester !== "I";
     const exportUrls: Record<Pokja4TabId, string> = {
         pokja4: `/pokja-4/export?tahun=${tahun}`,
         kunjungan: `/pokja-4/export-pyd?tahun=${tahun}`,
         posyandu: `/pokja-4/export-posyandu?tahun=${tahun}`,
         rekapitulasi: `/pokja-4/export-rekap?tahun=${tahun}`,
+        // TODO(backend): ganti ke export 1 sheet gabungan
+        // (A. Data Dukung + B. Data Program) setelah backend jadi.
+        data_dukung: "#",
     };
     // ========================================================
     // RENDER
@@ -514,6 +573,27 @@ export default function Index({
                         year={tahun}
                         years={availableYears}
                         onYearChange={setTahun}
+                    />
+                </section>
+            )}
+
+            {activeTab === "data_dukung" && (
+                <section
+                    id="pokja4-panel-data_dukung"
+                    role="tabpanel"
+                    aria-labelledby="pokja4-tab-data_dukung"
+                    className="bg-white dark:bg-slate-800"
+                >
+                    <DataDukung
+                        dukung={dataDukungData}
+                        program={dataProgramData}
+                        year={tahun}
+                        years={availableYears}
+                        onYearChange={setTahun}
+                        semester={semester}
+                        semesters={["I", "II"]}
+                        onSemesterChange={setSemester}
+                        isPreview={!laporanLoaded}
                     />
                 </section>
             )}
