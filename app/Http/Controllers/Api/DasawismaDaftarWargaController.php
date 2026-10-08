@@ -49,6 +49,7 @@ class DasawismaDaftarWargaController extends Controller
         $user = $request->user();
         abort_unless($user->hasRole('dasawisma'), 403);
         $this->ensureUserRegion($user);
+        $this->normalizeWilayahInput($request);
 
         $validated = $request->validate([
             'nama_kepala_keluarga' => ['required', 'string', 'max:255'],
@@ -106,6 +107,7 @@ class DasawismaDaftarWargaController extends Controller
         $user = $request->user();
         abort_unless($user->hasRole('dasawisma'), 403);
         $this->ensureUserRegion($user);
+        $this->normalizeWilayahInput($request);
 
         $record = $this->ownedPendingRecord($user, $id);
         $validated = $request->validate([
@@ -178,6 +180,21 @@ class DasawismaDaftarWargaController extends Controller
             403,
             'Akun Dasawisma belum memiliki kecamatan dan desa. Hubungi Admin Desa.',
         );
+    }
+
+    /**
+     * Rapikan spasi nama wilayah agar "Dusun 1 " dan "Dusun  1"
+     * tidak tercatat sebagai dusun berbeda.
+     */
+    private function normalizeWilayahInput(Request $request): void
+    {
+        foreach (['dusun', 'rt', 'rw', 'dasawisma'] as $field) {
+            if ($request->filled($field) && is_string($request->input($field))) {
+                $request->merge([
+                    $field => preg_replace('/\s+/', ' ', trim($request->input($field))),
+                ]);
+            }
+        }
     }
 
     private function validateGenderCounts(array $validated): void

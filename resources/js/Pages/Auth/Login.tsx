@@ -11,7 +11,14 @@ import {
     AlertCircle,
     Building2,
     ArrowLeft,
+    RefreshCw,
+    Shield,
 } from "lucide-react";
+
+const randomSoal = () => ({
+    a: 1 + Math.floor(Math.random() * 9),
+    b: 1 + Math.floor(Math.random() * 9),
+});
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
@@ -21,6 +28,9 @@ export default function Login() {
     });
 
     const [showPassword, setShowPassword] = useState(false);
+    const [soal, setSoal] = useState(randomSoal);
+    const [jawaban, setJawaban] = useState("");
+    const [captchaError, setCaptchaError] = useState("");
 
     // ✅ FIX: Paksa html & body gak bisa scroll
     useEffect(() => {
@@ -44,6 +54,13 @@ export default function Login() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (parseInt(jawaban, 10) !== soal.a + soal.b) {
+            setCaptchaError("Kode keamanan salah. Silakan hitung ulang.");
+            setSoal(randomSoal());
+            setJawaban("");
+            return;
+        }
+        setCaptchaError("");
         post(route("login"));
     };
 
@@ -352,6 +369,65 @@ export default function Login() {
                                     >
                                         Ingat saya di perangkat ini
                                     </label>
+                                </div>
+
+                                {/* Kode Keamanan (captcha hitung, sama seperti aplikasi Android) */}
+                                <div>
+                                    <label
+                                        htmlFor="captcha"
+                                        className="block text-[10px] font-bold text-slate-800 mb-1"
+                                    >
+                                        Kode Keamanan
+                                    </label>
+                                    <div className="flex items-stretch gap-2">
+                                        <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg flex-shrink-0">
+                                            <span className="text-[13px] font-extrabold text-slate-900 tracking-widest">
+                                                {soal.a} + {soal.b} = ?
+                                            </span>
+                                            <button
+                                                type="button"
+                                                tabIndex={-1}
+                                                onClick={() => {
+                                                    setSoal(randomSoal());
+                                                    setJawaban("");
+                                                    setCaptchaError("");
+                                                }}
+                                                className="text-teal-600 hover:text-teal-700 transition-colors focus:outline-none"
+                                                aria-label="Soal baru"
+                                            >
+                                                <RefreshCw size={13} />
+                                            </button>
+                                        </div>
+                                        <div className="relative flex-1">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <Shield size={15} className="text-slate-400" />
+                                            </div>
+                                            <input
+                                                id="captcha"
+                                                type="text"
+                                                inputMode="numeric"
+                                                autoComplete="off"
+                                                className={`block w-full pl-9 pr-3 py-2 bg-slate-50 border rounded-lg text-[12px] text-slate-900 font-medium placeholder:text-slate-400 placeholder:font-normal focus:ring-2 focus:ring-teal-500/20 focus:bg-white focus:border-teal-500 transition-colors outline-none ${
+                                                    captchaError
+                                                        ? "border-red-300 bg-red-50/50"
+                                                        : "border-slate-200"
+                                                }`}
+                                                placeholder="Jawaban"
+                                                value={jawaban}
+                                                onChange={(e) => {
+                                                    setJawaban(e.target.value.replace(/\D/g, "").slice(0, 3));
+                                                    if (captchaError) setCaptchaError("");
+                                                }}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    {captchaError && (
+                                        <div className="flex items-center gap-1 mt-1 text-red-600 text-[10px] font-medium">
+                                            <AlertCircle size={10} />
+                                            {captchaError}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Submit */}
