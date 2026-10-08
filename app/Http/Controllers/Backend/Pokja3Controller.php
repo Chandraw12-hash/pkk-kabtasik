@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Exports\Pokja3Export;
 use App\Imports\Pokja3Import;
 use App\Models\Pokja3;
 use Illuminate\Http\Request;
@@ -46,6 +47,23 @@ class Pokja3Controller extends Controller
             'rumah_tidak_sehat'       => 'nullable|numeric|min:0',
             'pemanfaatan_pekarangan'  => 'nullable|numeric|min:0',
             'industri_rumah_tangga'   => 'nullable|numeric|min:0',
+            'jumlah_kader'            => 'nullable|numeric|min:0',
+            'jumlah_kader_p'          => 'nullable|numeric|min:0',
+            'makanan_pokok'           => 'nullable|numeric|min:0',
+            'hatinya_pkk'             => 'nullable|numeric|min:0',
+            'jumlah_rumah'            => 'nullable|numeric|min:0',
+            'kader_tata_laksana'      => 'nullable|numeric|min:0',
+            'makanan_non_beras'       => 'nullable|numeric|min:0',
+            'peternakan'              => 'nullable|numeric|min:0',
+            'perikanan'               => 'nullable|numeric|min:0',
+            'warung_hidup'            => 'nullable|numeric|min:0',
+            'lumbung_hidup'           => 'nullable|numeric|min:0',
+            'toga'                    => 'nullable|numeric|min:0',
+            'tanaman_keras'           => 'nullable|numeric|min:0',
+            'tanaman_lainnya'         => 'nullable|numeric|min:0',
+            'industri_pangan'         => 'nullable|numeric|min:0',
+            'industri_sandang'        => 'nullable|numeric|min:0',
+            'industri_jasa'           => 'nullable|numeric|min:0',
         ]);
 
         $validated['kategori'] = $validated['kategori'] ?? 'Umum';
@@ -70,6 +88,23 @@ class Pokja3Controller extends Controller
             'rumah_tidak_sehat'       => 'nullable|numeric|min:0',
             'pemanfaatan_pekarangan'  => 'nullable|numeric|min:0',
             'industri_rumah_tangga'   => 'nullable|numeric|min:0',
+            'jumlah_kader'            => 'nullable|numeric|min:0',
+            'jumlah_kader_p'          => 'nullable|numeric|min:0',
+            'makanan_pokok'           => 'nullable|numeric|min:0',
+            'hatinya_pkk'             => 'nullable|numeric|min:0',
+            'jumlah_rumah'            => 'nullable|numeric|min:0',
+            'kader_tata_laksana'      => 'nullable|numeric|min:0',
+            'makanan_non_beras'       => 'nullable|numeric|min:0',
+            'peternakan'              => 'nullable|numeric|min:0',
+            'perikanan'               => 'nullable|numeric|min:0',
+            'warung_hidup'            => 'nullable|numeric|min:0',
+            'lumbung_hidup'           => 'nullable|numeric|min:0',
+            'toga'                    => 'nullable|numeric|min:0',
+            'tanaman_keras'           => 'nullable|numeric|min:0',
+            'tanaman_lainnya'         => 'nullable|numeric|min:0',
+            'industri_pangan'         => 'nullable|numeric|min:0',
+            'industri_sandang'        => 'nullable|numeric|min:0',
+            'industri_jasa'           => 'nullable|numeric|min:0',
         ]);
 
         $validated['kategori'] = $validated['kategori'] ?? 'Umum';
@@ -84,6 +119,17 @@ class Pokja3Controller extends Controller
         $pokja3->delete();
 
         return redirect()->route('be.pokja3.index')->with('success', 'Data Pokja III berhasil dihapus.');
+    }
+
+    /**
+     * Export data Pokja III ke Excel.
+     * Dipanggil oleh route be.pokja3.export
+     */
+    public function export(Request $request)
+    {
+        $filename = 'data-pokja-3-' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(new Pokja3Export($request->input('search')), $filename);
     }
 
     /**

@@ -16,6 +16,7 @@ import {
     RotateCcw,
     Download,
     FileText,
+    Plus,
 } from "lucide-react";
 import axios from "axios";
 
@@ -244,6 +245,14 @@ export default function Index({
                     >
                         <Download size={16} />
                         <span>Export Excel</span>
+                    </Button>
+                    <Button
+                        variant="primary"
+                        href={route("be.pokja4.create")}
+                        className="shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2"
+                    >
+                        <Plus size={16} />
+                        <span>Tambah Data</span>
                     </Button>
                 </div>
             </div>
