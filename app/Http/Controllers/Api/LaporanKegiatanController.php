@@ -245,6 +245,21 @@ class LaporanKegiatanController extends Controller
                 'makanan_pokok',
                 'hatinya_pkk',
                 'jumlah_rumah',
+
+                // ✅ Rincian format resmi 20 kolom (web + Android)
+                'kader_tata_laksana',
+                'makanan_non_beras',
+                'peternakan',
+                'perikanan',
+                'warung_hidup',
+                'lumbung_hidup',
+                'toga',
+                'tanaman_keras',
+                'tanaman_lainnya',
+                'industri_pangan',
+                'industri_sandang',
+                'industri_jasa',
+
                 'keterangan',
             ],
             'IV' => [
@@ -715,6 +730,20 @@ class LaporanKegiatanController extends Controller
         $pokja->makanan_pokok = ($pokja->makanan_pokok ?? 0) + ($data['makanan_pokok'] ?? 0);
         $pokja->hatinya_pkk = ($pokja->hatinya_pkk ?? 0) + ($data['hatinya_pkk'] ?? 0);
         $pokja->jumlah_rumah = ($pokja->jumlah_rumah ?? 0) + ($data['jumlah_rumah'] ?? 0);
+
+        // ✅ Rincian format resmi 20 kolom (web + Android)
+        $pokja->kader_tata_laksana = ($pokja->kader_tata_laksana ?? 0) + ($data['kader_tata_laksana'] ?? 0);
+        $pokja->makanan_non_beras = ($pokja->makanan_non_beras ?? 0) + ($data['makanan_non_beras'] ?? 0);
+        $pokja->peternakan = ($pokja->peternakan ?? 0) + ($data['peternakan'] ?? 0);
+        $pokja->perikanan = ($pokja->perikanan ?? 0) + ($data['perikanan'] ?? 0);
+        $pokja->warung_hidup = ($pokja->warung_hidup ?? 0) + ($data['warung_hidup'] ?? 0);
+        $pokja->lumbung_hidup = ($pokja->lumbung_hidup ?? 0) + ($data['lumbung_hidup'] ?? 0);
+        $pokja->toga = ($pokja->toga ?? 0) + ($data['toga'] ?? 0);
+        $pokja->tanaman_keras = ($pokja->tanaman_keras ?? 0) + ($data['tanaman_keras'] ?? 0);
+        $pokja->tanaman_lainnya = ($pokja->tanaman_lainnya ?? 0) + ($data['tanaman_lainnya'] ?? 0);
+        $pokja->industri_pangan = ($pokja->industri_pangan ?? 0) + ($data['industri_pangan'] ?? 0);
+        $pokja->industri_sandang = ($pokja->industri_sandang ?? 0) + ($data['industri_sandang'] ?? 0);
+        $pokja->industri_jasa = ($pokja->industri_jasa ?? 0) + ($data['industri_jasa'] ?? 0);
 
         if (isset($data['keterangan']) && !empty($data['keterangan'])) {
             $pokja->keterangan = $data['keterangan'];

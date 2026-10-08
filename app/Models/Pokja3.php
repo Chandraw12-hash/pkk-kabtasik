@@ -30,6 +30,20 @@ class Pokja3 extends Model
         'makanan_pokok',
         'hatinya_pkk',
         'jumlah_rumah',
+
+        // ✅ Rincian format resmi 20 kolom (web + Android)
+        'kader_tata_laksana',
+        'makanan_non_beras',
+        'peternakan',
+        'perikanan',
+        'warung_hidup',
+        'lumbung_hidup',
+        'toga',
+        'tanaman_keras',
+        'tanaman_lainnya',
+        'industri_pangan',
+        'industri_sandang',
+        'industri_jasa',
     ];
 
     protected $casts = [
@@ -45,6 +59,20 @@ class Pokja3 extends Model
         'makanan_pokok' => 'integer',
         'hatinya_pkk' => 'integer',
         'jumlah_rumah' => 'integer',
+
+        // ✅ Rincian format resmi 20 kolom (web + Android)
+        'kader_tata_laksana' => 'integer',
+        'makanan_non_beras' => 'integer',
+        'peternakan' => 'integer',
+        'perikanan' => 'integer',
+        'warung_hidup' => 'integer',
+        'lumbung_hidup' => 'integer',
+        'toga' => 'integer',
+        'tanaman_keras' => 'integer',
+        'tanaman_lainnya' => 'integer',
+        'industri_pangan' => 'integer',
+        'industri_sandang' => 'integer',
+        'industri_jasa' => 'integer',
     ];
 
     protected $appends = [
