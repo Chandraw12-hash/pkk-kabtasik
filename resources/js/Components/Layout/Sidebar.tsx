@@ -570,7 +570,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </Link>
                 )}
 
-                {permissions.includes("view-users") && (
+                {isSuperAdmin && (
                     <div className="mt-4">
                         <button
                             type="button"
@@ -617,8 +617,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 >
                                     User
                                 </Link>
-                {permissions.includes("manage-roles") ||
-                isSuperAdmin ? (
+                {isSuperAdmin ? (
                     <Link
                         href={route("be.roles.index")}
                         className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
@@ -641,6 +640,31 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             Sistem
                         </p>
 
+                        {/* Struktur Organisasi — menu sendiri untuk kabupaten */}
+                        {hasStrukturOrganisasi && (
+                            <Link
+                                href={safeRoute("be.struktur-organisasi.index")}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
+                                    isCurrentRoute("be.struktur-organisasi.*")
+                                        ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                }`}
+                            >
+                                <FileText
+                                    size={20}
+                                    strokeWidth={2}
+                                    className={`shrink-0 ${
+                                        isCurrentRoute("be.struktur-organisasi.*")
+                                            ? "text-teal-600 dark:text-teal-400"
+                                            : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                    }`}
+                                />
+                                <span>Struktur Organisasi</span>
+                            </Link>
+                        )}
+
+                        {/* Pengaturan — khusus super-admin (kabupaten tidak punya isi lagi) */}
+                        {isSuperAdmin && (
                         <div>
                             <button
                                 type="button"
@@ -677,46 +701,47 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 }`}
                             >
                                 <div className="ml-9 border-l border-slate-100 dark:border-slate-800 mt-1 pl-2 space-y-1">
-                                    <Link
-                                        href={route("be.settings.profile")}
-                                        className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            isCurrentRoute("be.settings.profile")
-                                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
-                                        }`}
-                                    >
-                                        Profil Saya
-                                    </Link>
-                                    <Link
-                                        href={route("be.settings.app")}
-                                        className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                            isCurrentRoute("be.settings.app")
-                                                ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
-                                        }`}
-                                    >
-                                        Aplikasi
-                                    </Link>
-
-                                    {/* 🔥🔥🔥 STRUKTUR ORGANISASI DI DALAM PENGATURAN */}
-                                    {hasStrukturOrganisasi && (
+                                    {/* Profil & Aplikasi khusus super-admin. */}
+                                    {isSuperAdmin && (
                                         <Link
-                                            href={safeRoute("be.struktur-organisasi.index")}
+                                            href={route("be.settings.profile")}
                                             className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
-                                                isCurrentRoute("be.struktur-organisasi.*")
+                                                isCurrentRoute("be.settings.profile")
                                                     ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
                                                     : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
                                             }`}
                                         >
-                                            <span className="flex items-center gap-2.5">
-                                                <FileText size={16} />
-                                                Struktur Organisasi
-                                            </span>
+                                            Profil Saya
+                                        </Link>
+                                    )}
+                                    {isSuperAdmin && (
+                                        <Link
+                                            href={route("be.settings.app")}
+                                            className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
+                                                isCurrentRoute("be.settings.app")
+                                                    ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                                    : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                            }`}
+                                        >
+                                            Aplikasi
+                                        </Link>
+                                    )}
+                                    {isSuperAdmin && routeExists("be.settings.landing") && (
+                                        <Link
+                                            href={route("be.settings.landing")}
+                                            className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
+                                                isCurrentRoute("be.settings.landing")
+                                                    ? "text-teal-600 dark:text-teal-400 font-semibold bg-teal-50/50 dark:bg-slate-800/50"
+                                                    : "text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
+                                            }`}
+                                        >
+                                            Landing Page
                                         </Link>
                                     )}
                                 </div>
                             </div>
                         </div>
+                        )}
                     </>
                 )}
 

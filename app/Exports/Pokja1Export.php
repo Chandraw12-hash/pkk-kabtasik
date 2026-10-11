@@ -8,11 +8,27 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class Pokja1Export implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class Pokja1Export implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnWidths, WithTitle
 {
     protected ?string $search;
+
+    protected const PROGRAMS = ['kisah', 'kilas', 'krisan', 'kiat', 'kisak', 'pkbn'];
+
+    protected const PROGRAM_LABELS = [
+        'kisah' => 'KISAH',
+        'kilas' => 'KILAS',
+        'krisan' => 'KRISAN',
+        'kiat' => 'KIAT',
+        'kisak' => 'KISAK',
+        'pkbn' => 'PKBN',
+    ];
 
     public function __construct(?string $search = null)
     {
@@ -25,36 +41,34 @@ class Pokja1Export implements FromCollection, WithHeadings, WithMapping, WithSty
             ->when($this->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('judul_kegiatan', 'like', "%{$search}%")
-                      ->orWhere('deskripsi', 'like', "%{$search}%")
-                      ->orWhere('kecamatan', 'like', "%{$search}%");
+                        ->orWhere('deskripsi', 'like', "%{$search}%")
+                        ->orWhere('kecamatan', 'like', "%{$search}%");
                 });
             })
-            ->latest()
+            ->orderBy('kecamatan', 'asc')
             ->get();
     }
 
     public function headings(): array
     {
-        return [
-            'No',
-            'Kecamatan',
-            'Judul Kegiatan',
-            'Kategori',
-            'Tahun',
-            'PKBN (L)',
-            'PKBN (P)',
-            'PKDRT (L)',
-            'PKDRT (P)',
-            'Pola Asuh (L)',
-            'Pola Asuh (P)',
-            'Lansia (L)',
-            'Lansia (P)',
-            'Kader Pokja 1 (L)',
-            'Kader Pokja 1 (P)',
-            'Kader Umum',
-            'Kader Khusus',
-            'Deskripsi',
-        ];
+        $row1 = array_merge(
+            ['DATA KEGIATAN POKJA I'],
+            array_fill(0, 29, '')
+        );
+        $row2 = array_merge(
+            ['TP. PKK KABUPATEN TASIKMALAYA'],
+            array_fill(0, 29, '')
+        );
+        $row3 = ['NO', 'KECAMATAN', 'TAHUN', 'KADER UMUM', 'KADER KHUSUS'];
+        foreach (self::PROGRAMS as $p) {
+            $row3[] = self::PROGRAM_LABELS[$p] . ' (KEGIATAN)';
+            $row3[] = self::PROGRAM_LABELS[$p] . ' (VOLUME)';
+            $row3[] = self::PROGRAM_LABELS[$p] . ' (METODE)';
+            $row3[] = self::PROGRAM_LABELS[$p] . ' (SASARAN)';
+        }
+        $row3[] = 'KETERANGAN';
+
+        return [$row1, $row2, $row3];
     }
 
     public function map($row): array
@@ -62,45 +76,59 @@ class Pokja1Export implements FromCollection, WithHeadings, WithMapping, WithSty
         static $no = 0;
         $no++;
 
-        return [
+        $out = [
             $no,
             $row->nama_kecamatan ?? $row->kecamatan ?? '-',
-            $row->judul_kegiatan ?? '-',
-            $row->kategori ?? '-',
             $row->tahun ?? '-',
-            $row->pkbn_l ?? 0,
-            $row->pkbn_p ?? 0,
-            $row->pkdrt_l ?? 0,
-            $row->pkdrt_p ?? 0,
-            $row->pola_asuh_l ?? 0,
-            $row->pola_asuh_p ?? 0,
-            $row->lansia_l ?? 0,
-            $row->lansia_p ?? 0,
-            $row->kader_pokja1_l ?? 0,
-            $row->kader_pokja1_p ?? 0,
             $row->kader_umum ?? 0,
             $row->kader_khusus ?? 0,
-            $row->deskripsi ?? '-',
         ];
+        foreach (self::PROGRAMS as $p) {
+            $out[] = $row->{$p . '_kegiatan'} ?? '-';
+            $out[] = $row->{$p . '_volume'} ?? 0;
+            $out[] = $row->{$p . '_metode'} ?? '-';
+            $out[] = $row->{$p . '_sasaran'} ?? 0;
+        }
+        $out[] = $row->keterangan ?? '-';
+
+        return $out;
     }
 
     public function styles(Worksheet $sheet)
     {
-        return [
-            1 => [
-                'font' => [
-                    'bold' => true,
-                    'color' => ['rgb' => 'FFFFFF'],
-                ],
-                'fill' => [
-                    'fillType' => 'solid',
-                    'startColor' => ['rgb' => '0D9488'],
-                ],
-                'alignment' => [
-                    'horizontal' => 'center',
-                    'vertical' => 'center',
-                ],
-            ],
-        ];
+        $last = $sheet->getHighestColumn();
+        $sheet->mergeCells("A1:{$last}1");
+        $sheet->mergeCells("A2:{$last}2");
+
+        $sheet->getStyle('A1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+        ]);
+        $sheet->getStyle('A2')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+        ]);
+        $sheet->getStyle("A3:{$last}3")->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0072BC']],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+        ]);
+        $sheet->getStyle("A4:{$last}" . $sheet->getHighestRow())->applyFromArray([
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+        ]);
+
+        return [];
+    }
+
+    public function columnWidths(): array
+    {
+        return ['A' => 5, 'B' => 20];
+    }
+
+    public function title(): string
+    {
+        return 'Pokja I';
     }
 }

@@ -43,6 +43,7 @@ use App\Exports\Pokja4Export;
 use App\Exports\Pokja4KunjunganPydExport;
 use App\Exports\Pokja4KegiatanPosyanduExport;
 use App\Exports\Pokja4RekapitulasiExport;
+use App\Exports\Pokja4DataDukungExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 // ============================================
@@ -144,6 +145,13 @@ Route::as('fe.')->group(function () {
         $filename = 'data-rekapitulasi-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4RekapitulasiExport($tahun), $filename);
     })->name('pokja4.export-rekap');
+
+    Route::get('/pokja-4/export-data-dukung', function () {
+        $tahun = request('tahun', date('Y'));
+        $semester = request('semester', ((int) date('n') <= 6 ? 'I' : 'II'));
+        $filename = 'data-dukung-pokja-4-' . $tahun . '-smt' . $semester . '-' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new Pokja4DataDukungExport($tahun, $semester), $filename);
+    })->name('pokja4.export-data-dukung');
 });
 
 // ============================================
@@ -211,6 +219,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::post('pokja1/import', [Pokja1Controller::class, 'import'])->name('pokja1.import');
 
     Route::get('pokja2/export', [Pokja2Controller::class, 'export'])->name('pokja2.export');
+    Route::get('pokja2/export-rincian', [Pokja2Controller::class, 'exportRincian'])->name('pokja2.export-rincian')->middleware('role:super-admin');
     Route::resource('pokja2', Pokja2Controller::class)->names('pokja2')->except(['show']);
     Route::post('pokja2/import', [Pokja2Controller::class, 'import'])->name('pokja2.import');
 
@@ -259,7 +268,8 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::patch('/survey/{survey}/toggle-status', [SurveyController::class, 'toggleStatus'])->name('survey.toggle-status');
     Route::delete('/survey/{survey}', [SurveyController::class, 'destroy'])->name('survey.destroy');
 
-    // USERS
+    // USERS — khusus super-admin (kabupaten tidak lagi akses).
+    Route::middleware('role:super-admin')->group(function () {
     Route::middleware('permission:view-users')->group(function () {
         Route::get('users', [UserController::class, 'index'])->name('users.index');
     });
@@ -275,6 +285,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     });
     Route::middleware('permission:delete-user')->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
     });
 
     // Pinjam-masuk hanya super-admin.
@@ -294,8 +305,8 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         return redirect()->route('be.roles.index')->with('message', 'Role pkk sudah tidak ada.');
     })->name('roles.cleanup-pkk')->middleware('role:admin|super-admin');
 
-    // Roles boleh dibuka admin kabupaten & super-admin.
-    Route::middleware('role:admin|super-admin')->group(function () {
+    // Roles & permission khusus super-admin.
+    Route::middleware('role:super-admin')->group(function () {
         Route::resource('roles', RoleController::class)->names('roles')->except(['show']);
     });
 
@@ -305,6 +316,10 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         Route::get('/profile', [ConfigController::class, 'profile'])->name('profile');
         Route::patch('/profile', [ConfigController::class, 'updateProfile'])->name('profile.update');
         Route::put('/password', [ConfigController::class, 'updatePassword'])->name('password.update');
+        // Perangkat milik sendiri: logout semua + cabut akses per perangkat.
+        Route::post('/logout-all', [ConfigController::class, 'logoutAllDevices'])->name('logout-all');
+        Route::delete('/tokens/{id}', [ConfigController::class, 'revokeToken'])->name('tokens.destroy');
+        Route::delete('/sessions/{id}', [ConfigController::class, 'revokeSession'])->name('sessions.destroy');
 
         // Pengaturan aplikasi/landing hanya super-admin.
         Route::middleware('role:super-admin')->group(function () {

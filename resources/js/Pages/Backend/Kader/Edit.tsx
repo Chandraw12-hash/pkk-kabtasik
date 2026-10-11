@@ -22,6 +22,8 @@ interface Kader {
 
 interface EditProps {
     kader: Kader;
+    kecamatanList?: string[];
+    desaByKecamatan?: Record<string, string[]>;
 }
 
 const JABATAN_OPTIONS = [
@@ -48,7 +50,7 @@ const toDateInput = (value: string | null): string => {
     }
 };
 
-export default function Edit({ kader }: EditProps) {
+export default function Edit({ kader, kecamatanList = [], desaByKecamatan = {} }: EditProps) {
     const { data, setData, put, processing, errors } = useForm({
         nama: kader.nama || "",
         nik: kader.nik || "",
@@ -61,6 +63,20 @@ export default function Edit({ kader }: EditProps) {
         status_aktif: Boolean(kader.status_aktif),
         tanggal_bergabung: toDateInput(kader.tanggal_bergabung),
     });
+
+    const desaOptions =
+        data.kecamatan && desaByKecamatan[data.kecamatan]
+            ? desaByKecamatan[data.kecamatan]
+            : [];
+    // Nilai lama (di luar master) tetap ditampilkan agar tak hilang.
+    const kecamatanOptions =
+        data.kecamatan && !kecamatanList.includes(data.kecamatan)
+            ? [data.kecamatan, ...kecamatanList]
+            : kecamatanList;
+    const desaOptionsFull =
+        data.desa_kelurahan && !desaOptions.includes(data.desa_kelurahan)
+            ? [data.desa_kelurahan, ...desaOptions]
+            : desaOptions;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -237,14 +253,21 @@ export default function Edit({ kader }: EditProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label className={labelClass}>Kecamatan</label>
-                                <TextInput
-                                    placeholder="Contoh: Cipatujah"
+                                <select
                                     value={data.kecamatan}
-                                    onChange={(e) =>
-                                        setData("kecamatan", e.target.value)
-                                    }
-                                    className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                                />
+                                    onChange={(e) => {
+                                        setData("kecamatan", e.target.value);
+                                        setData("desa_kelurahan", "");
+                                    }}
+                                    className={fieldClass + " cursor-pointer"}
+                                >
+                                    <option value="">-- Pilih Kecamatan --</option>
+                                    {kecamatanOptions.map((kec) => (
+                                        <option key={kec} value={kec}>
+                                            {kec}
+                                        </option>
+                                    ))}
+                                </select>
                                 {errors.kecamatan && (
                                     <p className="text-rose-500 text-xs mt-1">
                                         {errors.kecamatan}
@@ -256,8 +279,7 @@ export default function Edit({ kader }: EditProps) {
                                 <label className={labelClass}>
                                     Desa / kelurahan
                                 </label>
-                                <TextInput
-                                    placeholder="Nama desa atau kelurahan"
+                                <select
                                     value={data.desa_kelurahan}
                                     onChange={(e) =>
                                         setData(
@@ -265,13 +287,28 @@ export default function Edit({ kader }: EditProps) {
                                             e.target.value
                                         )
                                     }
-                                    className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                                />
+                                    disabled={!data.kecamatan || desaOptionsFull.length === 0}
+                                    className={fieldClass + " cursor-pointer disabled:opacity-60"}
+                                >
+                                    <option value="">
+                                        {data.kecamatan
+                                            ? "-- Pilih Desa --"
+                                            : "-- Pilih Kecamatan Dahulu --"}
+                                    </option>
+                                    {desaOptionsFull.map((desa) => (
+                                        <option key={desa} value={desa}>
+                                            {desa}
+                                        </option>
+                                    ))}
+                                </select>
                                 {errors.desa_kelurahan && (
                                     <p className="text-rose-500 text-xs mt-1">
                                         {errors.desa_kelurahan}
                                     </p>
                                 )}
+                                <p className="text-[11px] text-slate-400 mt-1">
+                                    Daftar desa mengikuti kecamatan yang dipilih.
+                                </p>
                             </div>
 
                             <div>

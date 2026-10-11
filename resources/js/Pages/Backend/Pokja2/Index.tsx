@@ -5,11 +5,13 @@ import Button from "@/Components/UI/Button";
 import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X, ChevronDown } from "lucide-react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, Download, X, ChevronDown } from "lucide-react";
 import axios from "axios";
 
 export default function Index({ pokjas, filters = {} }) {
+    const { roles } = (usePage<any>().props.auth as any) || { roles: [] };
+    const isSuperAdmin = (roles || []).includes("super-admin");
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.per_page || 10);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -101,6 +103,29 @@ export default function Index({ pokjas, filters = {} }) {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* Export: super-admin cukup 1 tombol (rincian), lainnya agregat */}
+                    {isSuperAdmin ? (
+                        <Button
+                            variant="secondary"
+                            href={route("be.pokja2.export-rincian", search ? { search } : {})}
+                            target="_blank"
+                            className="flex items-center gap-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                        >
+                            <Download size={16} />
+                            <span>Export Rincian</span>
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="secondary"
+                            href={route("be.pokja2.export", search ? { search } : {})}
+                            target="_blank"
+                            className="flex items-center gap-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                        >
+                            <Download size={16} />
+                            <span>Export Excel</span>
+                        </Button>
+                    )}
+
                     {/* Tombol Trigger Modal Import Excel */}
                     <Button
                         variant="secondary"

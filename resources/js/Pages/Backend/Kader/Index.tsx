@@ -13,9 +13,9 @@ import {
     Edit2,
     Trash2,
     RotateCcw,
-    Plus,
     Users,
     Phone,
+    UserPlus,
 } from "lucide-react";
 import { PaginatedData } from "@/types/model";
 import axios from "axios";
@@ -30,6 +30,8 @@ interface Kader {
     desa_kelurahan: string | null;
     no_hp: string | null;
     status_aktif: boolean;
+    user_id?: number | null;
+    user?: { id: number; username: string } | null;
 }
 
 interface IndexProps {
@@ -60,8 +62,9 @@ const emptyPagination: PaginatedData<Kader> = {
 export default function Index({ kaders, filters = {} }: IndexProps) {
     const { auth } = usePage<any>().props;
     const permissions: string[] = auth?.permissions || [];
+    const roles: string[] = auth?.roles || [];
+    const isSuperAdmin = roles.includes("super-admin");
 
-    const canCreate = permissions.includes("create-kader");
     const canEdit = permissions.includes("edit-kader");
     const canDelete = permissions.includes("delete-kader");
 
@@ -152,20 +155,10 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                         Data Kader PKK
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                        Kelola data kader TP PKK Kabupaten Tasikmalaya
+                        Terisi otomatis dari akun pengguna — kader lapor ke
+                        super-admin untuk dibuatkan akun
                     </p>
                 </div>
-
-                {canCreate && (
-                    <Button
-                        variant="primary"
-                        href={route("be.kader.create")}
-                        className="inline-flex items-center gap-2 shadow-sm"
-                    >
-                        <Plus size={16} />
-                        Tambah Kader
-                    </Button>
-                )}
             </div>
 
             <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
@@ -305,11 +298,46 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                             ),
                         },
                         {
+                            header: "Akun",
+                            className: "text-center w-32",
+                            headerClassName: "text-center w-32",
+                            render: (kader: Kader) => (
+                                <div className="flex flex-col items-center gap-1">
+                                    {kader.user_id ? (
+                                        <Badge type="info">
+                                            {kader.user?.username || "Ada akun"}
+                                        </Badge>
+                                    ) : (
+                                        <span className="text-xs text-slate-400">
+                                            Belum ada
+                                        </span>
+                                    )}
+                                    {!kader.nik && (
+                                        <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                                            NIK kosong
+                                        </span>
+                                    )}
+                                </div>
+                            ),
+                        },
+                        {
                             header: "Aksi",
                             headerClassName: "text-center w-28",
                             className: "text-center w-28",
                             render: (kader: Kader) => (
                                 <div className="flex items-center justify-center gap-1">
+                                    {isSuperAdmin && !kader.user_id && (
+                                        <Link
+                                            href={route(
+                                                "be.users.create",
+                                                { kader_id: kader.id }
+                                            )}
+                                            className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-colors"
+                                            title="Buatkan Akun"
+                                        >
+                                            <UserPlus size={15} />
+                                        </Link>
+                                    )}
                                     {canEdit && (
                                         <Link
                                             href={route(
@@ -350,17 +378,8 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                         <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                             {search
                                 ? "Tidak ada kader yang cocok."
-                                : "Belum ada data kader."}
+                                : "Belum ada data kader. Buat akun di User Management, baris kader terisi otomatis."}
                         </p>
-                        {canCreate && !search && (
-                            <Link
-                                href={route("be.kader.create")}
-                                className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-teal-700 hover:text-teal-800"
-                            >
-                                <Plus size={15} />
-                                Tambah kader pertama
-                            </Link>
-                        )}
                     </div>
                 )}
 

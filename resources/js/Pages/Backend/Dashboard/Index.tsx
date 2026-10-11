@@ -6,7 +6,7 @@ import ChartLine from "@/Components/Data/Charts/ChartLine";
 import ChartBar from "@/Components/Data/Charts/ChartBar";
 import ChartPie from "@/Components/Data/Charts/ChartPie";
 import NotificationBell from "../NotificationBell";// ✅ TAMBAH
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import {
     FileText,
     Clock,
@@ -21,6 +21,12 @@ import {
     TrendingUp,
     PieChart,
     Users,
+    KeyRound,
+    MapPin,
+    Database,
+    ScrollText,
+    Settings,
+    FileDown,
 } from "lucide-react";
 
 interface Stats {
@@ -42,12 +48,37 @@ interface Stats {
     verifikasiPersentase: number;
 }
 
+interface GovUser {
+    name: string;
+    username: string;
+    role: string;
+    kecamatan: string;
+    time: string;
+}
+
+interface GovData {
+    totalUsers: number;
+    activeUsers: number;
+    totalRoles: number;
+    roles: Array<{ name: string; total: number }>;
+    kecamatanTotal: number;
+    kecamatanCovered: number;
+    kecamatanMissing: string[];
+    laporanPending: number;
+    recentUsers: GovUser[];
+    dbSize: string | null;
+}
+
 interface DashboardProps {
     stats: Stats;
     lineData: Array<{ name: string; uploaded: number; verified: number }>;
     barData: Array<{ name: string; doc: number }>;
     pieData: Array<{ name: string; value: number; color: string }>;
     activities: Array<{ pokja: string; action: string; time: string }>;
+    isSuperAdmin?: boolean;
+    dashboardTitle?: string;
+    dashboardDesc?: string;
+    gov?: GovData | null;
 }
 
 export default function Dashboard({
@@ -56,9 +87,280 @@ export default function Dashboard({
     barData = [],
     pieData = [],
     activities = [],
+    isSuperAdmin = false,
+    dashboardTitle = "Dashboard Administrator",
+    dashboardDesc = "Monitoring program kerja dan rekapitulasi data PKK Kabupaten Tasikmalaya.",
+    gov = null,
 }: DashboardProps) {
     const totalVerifikasi = stats.laporanApproved + stats.laporanPending + stats.laporanRejected + stats.laporanReviewed;
     const validPercentage = totalVerifikasi > 0 ? Math.round((stats.laporanApproved / totalVerifikasi) * 100) : 0;
+
+    if (isSuperAdmin && gov) {
+        return (
+            <MainLayout>
+                <Head title="Dashboard Super Admin" />
+
+                {/* ─── HEADER SUPER ADMIN ─── */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-violet-100 text-violet-800">
+                                Super Admin
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-xs text-slate-500 font-medium">
+                                Kabupaten Tasikmalaya
+                            </span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                            {dashboardTitle}
+                        </h1>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                            {dashboardDesc}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-600">
+                            <Calendar size={15} className="text-slate-400" />
+                            <span>Tahun 2026</span>
+                        </div>
+                        <NotificationBell />
+                        <Link
+                            href={route("be.backup.index")}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        >
+                            <Database size={16} />
+                            Backup
+                        </Link>
+                    </div>
+                </div>
+
+                {/* ─── STATISTIK GOVERNANCE ─── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <StatCard
+                        title="Total Pengguna"
+                        value={gov.totalUsers.toLocaleString()}
+                        icon={Users}
+                        color="bg-indigo-600"
+                        className="border-l-4 border-indigo-600"
+                        textColor="white"
+                        description={`${gov.activeUsers} aktif`}
+                        period="Semua peran"
+                    />
+                    <StatCard
+                        title="Peran Akses"
+                        value={gov.totalRoles.toLocaleString()}
+                        icon={KeyRound}
+                        color="bg-violet-600"
+                        className="border-l-4 border-violet-600"
+                        textColor="white"
+                        description="Role & permission"
+                        period="Spatie"
+                    />
+                    <StatCard
+                        title="Cakupan Kecamatan"
+                        value={`${gov.kecamatanCovered}/${gov.kecamatanTotal || 39}`}
+                        icon={MapPin}
+                        color="bg-teal-600"
+                        className="border-l-4 border-teal-600"
+                        textColor="white"
+                        description="Sudah ada data rekap"
+                        period="Kabupaten"
+                    />
+                    <StatCard
+                        title="Antrian Verifikasi"
+                        value={gov.laporanPending.toLocaleString()}
+                        icon={Clock}
+                        color="bg-amber-500"
+                        className="border-l-4 border-amber-500"
+                        textColor="white"
+                        description="Menunggu admin"
+                        period="Perlu perhatian"
+                    />
+                </div>
+
+                {/* ─── CAKUPAN + PERAN ─── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <Card className="lg:col-span-2">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-bold text-slate-800 text-base">
+                                        Cakupan Data Kecamatan
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Kecamatan yang sudah mengirim data vs belum
+                                    </p>
+                                </div>
+                                <span className="text-sm font-bold text-teal-600">
+                                    {gov.kecamatanTotal > 0
+                                        ? Math.round((gov.kecamatanCovered / gov.kecamatanTotal) * 100)
+                                        : 0}%
+                                </span>
+                            </div>
+                            <div className="mt-3 w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-teal-500 rounded-full transition-all duration-500"
+                                    style={{
+                                        width: `${gov.kecamatanTotal > 0
+                                            ? Math.round((gov.kecamatanCovered / gov.kecamatanTotal) * 100)
+                                            : 0}%`,
+                                    }}
+                                />
+                            </div>
+                            <p className="text-xs text-slate-500 mt-3">
+                                {gov.kecamatanCovered} dari {gov.kecamatanTotal} kecamatan sudah ada data.
+                                {gov.dbSize ? ` Ukuran database ${gov.dbSize}.` : ""}
+                            </p>
+                            {gov.kecamatanMissing.length > 0 ? (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {gov.kecamatanMissing.slice(0, 12).map((kec) => (
+                                        <span
+                                            key={kec}
+                                            className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/60"
+                                        >
+                                            {kec}
+                                        </span>
+                                    ))}
+                                    {gov.kecamatanMissing.length > 12 && (
+                                        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500">
+                                            +{gov.kecamatanMissing.length - 12} lainnya
+                                        </span>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="mt-3 text-xs font-medium text-emerald-600">
+                                    Semua kecamatan sudah terisi.
+                                </p>
+                            )}
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <div className="p-6">
+                            <h3 className="font-bold text-slate-800 text-base">
+                                Pengguna per Peran
+                            </h3>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                Distribusi akses sistem
+                            </p>
+                            <div className="mt-4 space-y-3">
+                                {gov.roles.length > 0 ? (
+                                    gov.roles.map((role) => (
+                                        <div key={role.name}>
+                                            <div className="flex items-center justify-between text-xs mb-1">
+                                                <span className="font-medium text-slate-600 capitalize">
+                                                    {role.name}
+                                                </span>
+                                                <span className="font-bold tabular-nums text-slate-700">
+                                                    {role.total}
+                                                </span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-violet-500 rounded-full"
+                                                    style={{
+                                                        width: `${gov.totalUsers > 0
+                                                            ? Math.round((role.total / gov.totalUsers) * 100)
+                                                            : 0}%`,
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-xs text-slate-400 text-center py-4">
+                                        Belum ada data peran.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* ─── JALAN PINTAS + PENGGUNA BARU ─── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2">
+                        <div className="p-6">
+                            <h3 className="font-bold text-slate-800 text-base">
+                                Jalan Pintas Super Admin
+                            </h3>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                Tugas tata kelola yang hanya bisa dilakukan di sini
+                            </p>
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {[
+                                    { label: "Kelola Pengguna", desc: "Akun & status", icon: Users, href: route("be.users.index") },
+                                    { label: "Roles & Permission", desc: "Hak akses", icon: KeyRound, href: route("be.roles.index") },
+                                    { label: "Backup Database", desc: "Cadangkan & pulihkan", icon: Database, href: route("be.backup.index") },
+                                    { label: "Activity Log", desc: "Jejak aktivitas", icon: ScrollText, href: route("be.activity-logs.index") },
+                                    { label: "System Health", desc: "Kesehatan server", icon: Activity, href: route("be.system.index") },
+                                    { label: "Pengaturan Aplikasi", desc: "Konfigurasi", icon: Settings, href: route("be.settings.app") },
+                                    { label: "Antrian Laporan", desc: `${gov.laporanPending} menunggu`, icon: FileText, href: route("be.laporan-kegiatan.index") },
+                                    { label: "Export Rincian Pokja II", desc: "L/P untuk Kominfo", icon: FileDown, href: route("be.pokja2.export-rincian") },
+                                ].map((item) => (
+                                    <Link
+                                        key={item.label}
+                                        href={item.href}
+                                        className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50/50 transition-colors group"
+                                    >
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700 group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                                            <item.icon size={17} />
+                                        </span>
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-sm font-semibold text-slate-800">
+                                                {item.label}
+                                            </span>
+                                            <span className="block truncate text-xs text-slate-400">
+                                                {item.desc}
+                                            </span>
+                                        </span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <div className="p-6">
+                            <h3 className="font-bold text-slate-800 text-base">
+                                Pengguna Terbaru
+                            </h3>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                5 akun terakhir dibuat
+                            </p>
+                            <div className="mt-4 space-y-4">
+                                {gov.recentUsers.length > 0 ? (
+                                    gov.recentUsers.map((u, i) => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                                                {(u.name || "?").trim().charAt(0).toUpperCase()}
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-xs font-bold text-slate-700">
+                                                    {u.name}
+                                                </p>
+                                                <p className="truncate text-[11px] text-slate-400">
+                                                    {u.role} • {u.kecamatan}
+                                                </p>
+                                            </div>
+                                            <span className="shrink-0 text-[10px] text-slate-400">
+                                                {u.time}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-xs text-slate-400 text-center py-6">
+                                        Belum ada pengguna.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </MainLayout>
+        );
+    }
 
     return (
         <MainLayout>
@@ -77,10 +379,10 @@ export default function Dashboard({
                         </span>
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                        Dashboard Administrator
+                        {dashboardTitle}
                     </h1>
                     <p className="text-sm text-slate-500 mt-0.5">
-                        Monitoring program kerja dan rekapitulasi data PKK Kabupaten Tasikmalaya.
+                        {dashboardDesc}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">

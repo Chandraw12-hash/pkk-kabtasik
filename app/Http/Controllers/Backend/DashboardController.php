@@ -19,6 +19,8 @@ use App\Models\Agenda;
 use App\Models\Infografis;
 use App\Models\LaporanKegiatan;
 use App\Models\Survey;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -153,7 +155,10 @@ class DashboardController extends Controller
                 ];
             })->toArray();
 
-            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
+            return Inertia::render('Backend/Dashboard/Index', array_merge(
+                compact('stats', 'lineData', 'barData', 'pieData', 'activities'),
+                $this->dashboardShell($user)
+            ));
 
         } else {
             // ─── USER BIASA ──────────────────────────────────────────────────────
@@ -197,7 +202,115 @@ class DashboardController extends Controller
                 ];
             })->toArray();
 
-            return Inertia::render('Backend/Dashboard/Index', compact('stats', 'lineData', 'barData', 'pieData', 'activities'));
+            return Inertia::render('Backend/Dashboard/Index', array_merge(
+                compact('stats', 'lineData', 'barData', 'pieData', 'activities'),
+                $this->dashboardShell($user)
+            ));
         }
+    }
+
+    /**
+     * Cangkang tampilan per peran: judul + data governance khusus super-admin.
+     * Admin kabupaten & peran lain tidak menerima props gov.
+     */
+    protected function dashboardShell($user): array
+    {
+        if ($user->hasRole('super-admin')) {
+            return [
+                'isSuperAdmin' => true,
+                'dashboardTitle' => 'Dashboard Super Admin',
+                'dashboardDesc' => 'Kesehatan sistem, kelola akses, dan cakupan data 39 kecamatan.',
+                'gov' => $this->governanceData(),
+            ];
+        }
+
+        if ($user->hasRole('admin')) {
+            return [
+                'isSuperAdmin' => false,
+                'dashboardTitle' => 'Dashboard Admin Kabupaten',
+                'dashboardDesc' => 'Verifikasi laporan masuk dan rekapitulasi data PKK Kabupaten Tasikmalaya.',
+                'gov' => null,
+            ];
+        }
+
+        return [
+            'isSuperAdmin' => false,
+            'dashboardTitle' => 'Dashboard',
+            'dashboardDesc' => 'Ringkasan aktivitas dan laporan Anda.',
+            'gov' => null,
+        ];
+    }
+
+    /**
+     * Data governance: pengguna, peran, cakupan kecamatan, database.
+     */
+    protected function governanceData(): array
+    {
+        $totalUsers = User::count();
+        $activeUsers = Schema::hasColumn('users', 'status')
+            ? User::where('status', 'active')->count()
+            : $totalUsers;
+
+        $roles = \Spatie\Permission\Models\Role::withCount('users')
+            ->orderByDesc('users_count')
+            ->take(8)
+            ->get()
+            ->map(fn ($r) => ['name' => $r->name, 'total' => $r->users_count])
+            ->values()
+            ->toArray();
+
+        // Cakupan: kecamatan yang sudah punya data rekap/laporan approved.
+        $master = [];
+        if (class_exists(\Database\Seeders\AdminDesaSeeder::class)) {
+            $master = array_keys(\Database\Seeders\AdminDesaSeeder::DATA_DESA);
+        }
+        $covered = collect();
+        foreach ([Pokja1::class, Pokja2::class, Pokja3::class, Pokja4::class] as $model) {
+            $covered = $covered->merge($model::query()->select('kecamatan')->distinct()->pluck('kecamatan')->all());
+        }
+        if (Schema::hasTable('laporan_kegiatans')) {
+            $covered = $covered->merge(
+                LaporanKegiatan::where('status', 'approved')->select('kecamatan')->distinct()->pluck('kecamatan')->all()
+            );
+        }
+        $covered = $covered->filter()->unique()->values()->all();
+        $missing = array_values(array_diff($master, $covered));
+
+        $recentUsers = User::latest()->take(5)->get()->map(function ($u) {
+            return [
+                'name' => $u->name,
+                'username' => $u->username ?? '-',
+                'role' => $u->getRoleNames()->first() ?? '-',
+                'kecamatan' => $u->kecamatan ?? '-',
+                'time' => $u->created_at ? $u->created_at->diffForHumans() : '-',
+            ];
+        })->values()->toArray();
+
+        $dbSize = null;
+        try {
+            $dbName = DB::connection()->getDatabaseName();
+            $row = DB::selectOne("SELECT pg_database_size(?) AS bytes", [$dbName]);
+            if ($row && isset($row->bytes)) {
+                $mb = (float) $row->bytes / 1048576;
+                $dbSize = $mb >= 1024
+                    ? round($mb / 1024, 2) . ' GB'
+                    : round($mb, 1) . ' MB';
+            }
+        } catch (\Throwable $e) {
+            $dbSize = null;
+        }
+
+        return [
+            'totalUsers' => $totalUsers,
+            'activeUsers' => $activeUsers,
+            'totalRoles' => \Spatie\Permission\Models\Role::count(),
+            'roles' => $roles,
+            'kecamatanTotal' => count($master),
+            'kecamatanCovered' => count($covered),
+            'kecamatanMissing' => $missing,
+            'laporanPending' => LaporanKegiatan::where('status', 'pending')->count(),
+            'recentUsers' => $recentUsers,
+            'dbSize' => $dbSize,
+        ];
     }
 }

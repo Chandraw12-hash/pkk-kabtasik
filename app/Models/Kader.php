@@ -12,6 +12,7 @@ class Kader extends Model
     protected $table = 'kader'; // Nama tabel sesuai migration
 
     protected $fillable = [
+        'user_id',
         'nama',
         'nik',
         'jabatan',
@@ -58,6 +59,12 @@ class Kader extends Model
     public function scopeAktif($query)
     {
         return $query->where('status_aktif', true);
+    }
+
+    // Akun user yang tertaut (null = kader manual / belum punya akun).
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function scopeNonaktif($query)

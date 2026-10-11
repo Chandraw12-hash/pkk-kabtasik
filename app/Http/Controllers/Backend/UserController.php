@@ -71,19 +71,41 @@ class UserController extends Controller
     }
 
     /**
-     * CREATE — Form tambah user
+     * CREATE — Form tambah user (bisa prefill dari baris kader).
      */
-    public function create()
+    public function create(Request $request)
     {
         $roles = \Spatie\Permission\Models\Role::all();
         if (! auth()->user()->hasRole('super-admin')) {
             $roles = $roles->where('name', '!=', 'super-admin')->values();
         }
 
+        $prefill = [];
+        if ($request->filled('kader_id')) {
+            $kader = \App\Models\Kader::find($request->input('kader_id'));
+            if ($kader && empty($kader->user_id)) {
+                $roleGuess = match ($kader->pokja) {
+                    'I' => 'pokja1',
+                    'II' => 'pokja2',
+                    'III' => 'pokja3',
+                    'IV' => 'pokja4',
+                    default => 'dasawisma',
+                };
+                $prefill = [
+                    'kader_id' => $kader->id,
+                    'name' => $kader->nama,
+                    'kecamatan' => $kader->kecamatan,
+                    'desa' => $kader->desa_kelurahan,
+                    'roles' => $roles->pluck('name')->contains($roleGuess) ? [$roleGuess] : [],
+                ];
+            }
+        }
+
         return Inertia::render('Backend/Users/Create', [
             'roles' => $roles,
             'kecamatanList' => self::KECAMATAN_LIST,
             'desaByKecamatan' => $this->desaByKecamatan(),
+            'prefill' => $prefill,
         ]);
     }
 
@@ -102,6 +124,7 @@ class UserController extends Controller
             'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(self::KECAMATAN_LIST)],
             'desa' => ['nullable', 'string', 'max:255'],
             'nama_desa' => 'nullable|string|max:255',
+            'kader_id' => 'nullable|integer|exists:kader,id',
         ]);
 
         $this->validateUserRegion($request, $validated['roles']);
@@ -119,6 +142,14 @@ class UserController extends Controller
         ]);
 
         $user->assignRole($validated['roles']);
+
+        // Tautkan baris kader (prefill) lalu cerminkan akun -> kader.
+        if (! empty($validated['kader_id'])) {
+            \App\Models\Kader::where('id', $validated['kader_id'])
+                ->whereNull('user_id')
+                ->update(['user_id' => $user->id]);
+        }
+        \App\Services\KaderAccountSync::syncFromUser($user->fresh());
 
         ActivityLogger::log('user.create', $user, "User dibuat: {$user->username} (" . implode(',', $validated['roles']) . ')');
 
@@ -181,6 +212,7 @@ class UserController extends Controller
 
         $user->update($data);
         $user->syncRoles($validated['roles']);
+        \App\Services\KaderAccountSync::syncFromUser($user->fresh());
 
         ActivityLogger::log('user.update', $user, "User diubah: {$user->username}");
 

@@ -523,6 +523,57 @@ class LaporanKegiatanController extends Controller
             }
         }
 
+        // ✅ Pokja II: lipat key baru L/P aplikasi ke kolom agregat whitelist.
+        // Tanpa ini key _l/_p dibuang whitelist di atas sehingga laporan
+        // tersimpan 0 walau di HP sudah diisi (kasus: warga_belajar, paud,
+        // taman_bacaan, peserta, tutor, kader, up2k peserta, anggota, lp3...).
+        if ($validated['kategori_pokja'] === 'II') {
+            $agregatII = [
+                'warga_belajar_paket_a' => ['warga_belajar_paket_a_l', 'warga_belajar_paket_a_p'],
+                'warga_belajar_paket_b' => ['warga_belajar_paket_b_l', 'warga_belajar_paket_b_p'],
+                'warga_belajar_paket_c' => ['warga_belajar_paket_c_l', 'warga_belajar_paket_c_p'],
+                'warga_belajar_kf' => ['warga_belajar_kf_l', 'warga_belajar_kf_p'],
+                'paud' => ['kelompok_paud', 'paud_l', 'paud_p'],
+                'taman_bacaan' => ['kelompok_taman_bacaan', 'taman_bacaan_l', 'taman_bacaan_p'],
+                'peserta_bkb' => ['peserta_bkb_l', 'peserta_bkb_p'],
+                'kelompok_simulasi_bkb' => ['kelompok_simulasi_bkb_l', 'kelompok_simulasi_bkb_p'],
+                'tutor_kf' => ['tutor_kf_l', 'tutor_kf_p'],
+                'tutor_paud' => ['tutor_paud_l', 'tutor_paud_p'],
+                'kader_bkb' => ['kader_bkb_l', 'kader_bkb_p'],
+                'kelompok_kader_koperasi' => ['kader_koperasi', 'kader_koperasi_l', 'kader_koperasi_p'],
+                'kader_keterampilan' => ['kader_keterampilan_l', 'kader_keterampilan_p'],
+                'up2k_pemula_peserta' => ['up2k_pemula_peserta_l', 'up2k_pemula_peserta_p'],
+                'up2k_madya_peserta' => ['up2k_madya_peserta_l', 'up2k_madya_peserta_p'],
+                'up2k_utama_peserta' => ['up2k_utama_peserta_l', 'up2k_utama_peserta_p'],
+                'up2k_mandiri_peserta' => ['up2k_mandiri_peserta_l', 'up2k_mandiri_peserta_p'],
+                'anggota_koperasi' => ['anggota_koperasi_l', 'anggota_koperasi_p'],
+                'lp3_pkk' => ['lp3_pkk_l', 'lp3_pkk_p'],
+                'tp3_pkk' => ['tp3_pkk_l', 'tp3_pkk_p'],
+                'damas_pkk' => ['damas_pkk_l', 'damas_pkk_p'],
+            ];
+            foreach ($agregatII as $kolom => $keys) {
+                $tambah = 0;
+                foreach ($keys as $k) {
+                    $tambah += (int) ($dataAngka[$k] ?? 0);
+                }
+                $filteredData[$kolom] = ($filteredData[$kolom] ?? 0) + $tambah;
+            }
+            // Simpan juga rincian L/P asli (untuk export Kominfo per gender).
+            // Tanpa ini _l/_p hilang saat store dan tak bisa dilaporkan lagi.
+            foreach ($agregatII as $keys) {
+                foreach ($keys as $k) {
+                    if (preg_match('/(_l|_p)$/', $k) && isset($dataAngka[$k]) && is_numeric($dataAngka[$k]) && (int) $dataAngka[$k] !== 0) {
+                        $filteredData[$k] = (int) $dataAngka[$k];
+                    }
+                }
+            }
+            foreach (['kelompok_paud', 'kelompok_taman_bacaan', 'kader_koperasi'] as $k) {
+                if (isset($dataAngka[$k]) && is_numeric($dataAngka[$k]) && (int) $dataAngka[$k] !== 0) {
+                    $filteredData[$k] = (int) $dataAngka[$k];
+                }
+            }
+        }
+
         $isValid = false;
         foreach ($filteredData as $value) {
             if ($value > 0) {
@@ -817,49 +868,60 @@ class LaporanKegiatanController extends Controller
     {
         $pokja = Pokja2::firstOrNew(['kecamatan' => $kecamatan]);
 
-        // Field Lama
-        $pokja->warga_buta_l = ($pokja->warga_buta_l ?? 0) + ($data['warga_buta_l'] ?? 0);
-        $pokja->warga_buta_p = ($pokja->warga_buta_p ?? 0) + ($data['warga_buta_p'] ?? 0);
-        $pokja->kelompok_belajar_paket_a = ($pokja->kelompok_belajar_paket_a ?? 0) + ($data['kelompok_belajar_paket_a'] ?? 0);
-        $pokja->kelompok_belajar_paket_b = ($pokja->kelompok_belajar_paket_b ?? 0) + ($data['kelompok_belajar_paket_b'] ?? 0);
-        $pokja->kelompok_belajar_paket_c = ($pokja->kelompok_belajar_paket_c ?? 0) + ($data['kelompok_belajar_paket_c'] ?? 0);
-        $pokja->kf = ($pokja->kf ?? 0) + ($data['kf'] ?? 0);
-        $pokja->paud = ($pokja->paud ?? 0) + ($data['paud'] ?? 0);
-        $pokja->koperasi_berbadan_hukum = ($pokja->koperasi_berbadan_hukum ?? 0) + ($data['koperasi_berbadan_hukum'] ?? 0);
+        $num = function ($key) use ($data) {
+            return (int) ($data[$key] ?? 0);
+        };
+        // Kolom DB => key data_angka (lama + baru L/P aplikasi).
+        // Tanpa ini nilai L/P dari aplikasi hilang (kolom rekap tetap 0)
+        // karena key baru ber-suffix _l/_p tidak cocok dengan nama kolom.
+        $agregat = [
+            'warga_buta_l' => ['warga_buta_l'],
+            'warga_buta_p' => ['warga_buta_p'],
+            'kelompok_belajar_paket_a' => ['kelompok_belajar_paket_a'],
+            'kelompok_belajar_paket_b' => ['kelompok_belajar_paket_b'],
+            'kelompok_belajar_paket_c' => ['kelompok_belajar_paket_c'],
+            'kf' => ['kf'],
+            'paud' => ['paud', 'kelompok_paud', 'paud_l', 'paud_p'],
+            'koperasi_berbadan_hukum' => ['koperasi_berbadan_hukum'],
+            'warga_belajar_paket_a' => ['warga_belajar_paket_a', 'warga_belajar_paket_a_l', 'warga_belajar_paket_a_p'],
+            'warga_belajar_paket_b' => ['warga_belajar_paket_b', 'warga_belajar_paket_b_l', 'warga_belajar_paket_b_p'],
+            'warga_belajar_paket_c' => ['warga_belajar_paket_c', 'warga_belajar_paket_c_l', 'warga_belajar_paket_c_p'],
+            'warga_belajar_kf' => ['warga_belajar_kf', 'warga_belajar_kf_l', 'warga_belajar_kf_p'],
+            'taman_bacaan' => ['taman_bacaan', 'kelompok_taman_bacaan', 'taman_bacaan_l', 'taman_bacaan_p'],
+            'kelompok_bkb' => ['kelompok_bkb'],
+            'peserta_bkb' => ['peserta_bkb', 'peserta_bkb_l', 'peserta_bkb_p'],
+            'ape_bkb' => ['ape_bkb'],
+            'kelompok_simulasi_bkb' => ['kelompok_simulasi_bkb', 'kelompok_simulasi_bkb_l', 'kelompok_simulasi_bkb_p'],
+            'tutor_kf' => ['tutor_kf', 'tutor_kf_l', 'tutor_kf_p'],
+            'tutor_paud' => ['tutor_paud', 'tutor_paud_l', 'tutor_paud_p'],
+            'kader_bkb' => ['kader_bkb', 'kader_bkb_l', 'kader_bkb_p'],
+            'kelompok_kader_koperasi' => ['kelompok_kader_koperasi', 'kader_koperasi', 'kader_koperasi_l', 'kader_koperasi_p'],
+            'kader_keterampilan' => ['kader_keterampilan', 'kader_keterampilan_l', 'kader_keterampilan_p'],
+            'kader_dilatih_pengelolaan' => ['kader_dilatih_pengelolaan'],
+            'kader_dilatih_tp_pkk' => ['kader_dilatih_tp_pkk'],
+            'kader_dilatih_damas' => ['kader_dilatih_damas'],
+            'up2k_pemula_kelompok' => ['up2k_pemula_kelompok'],
+            'up2k_pemula_peserta' => ['up2k_pemula_peserta', 'up2k_pemula_peserta_l', 'up2k_pemula_peserta_p'],
+            'up2k_madya_kelompok' => ['up2k_madya_kelompok'],
+            'up2k_madya_peserta' => ['up2k_madya_peserta', 'up2k_madya_peserta_l', 'up2k_madya_peserta_p'],
+            'up2k_utama_kelompok' => ['up2k_utama_kelompok'],
+            'up2k_utama_peserta' => ['up2k_utama_peserta', 'up2k_utama_peserta_l', 'up2k_utama_peserta_p'],
+            'up2k_mandiri_kelompok' => ['up2k_mandiri_kelompok'],
+            'up2k_mandiri_peserta' => ['up2k_mandiri_peserta', 'up2k_mandiri_peserta_l', 'up2k_mandiri_peserta_p'],
+            'anggota_koperasi' => ['anggota_koperasi', 'anggota_koperasi_l', 'anggota_koperasi_p'],
+            'ibu_set_bkb' => ['ibu_set_bkb'],
+            'lp3_pkk' => ['lp3_pkk', 'lp3_pkk_l', 'lp3_pkk_p'],
+            'tp3_pkk' => ['tp3_pkk', 'tp3_pkk_l', 'tp3_pkk_p'],
+            'damas_pkk' => ['damas_pkk', 'damas_pkk_l', 'damas_pkk_p'],
+        ];
 
-        // Field Baru
-        $pokja->warga_belajar_paket_a = ($pokja->warga_belajar_paket_a ?? 0) + ($data['warga_belajar_paket_a'] ?? 0);
-        $pokja->warga_belajar_paket_b = ($pokja->warga_belajar_paket_b ?? 0) + ($data['warga_belajar_paket_b'] ?? 0);
-        $pokja->warga_belajar_paket_c = ($pokja->warga_belajar_paket_c ?? 0) + ($data['warga_belajar_paket_c'] ?? 0);
-        $pokja->warga_belajar_kf = ($pokja->warga_belajar_kf ?? 0) + ($data['warga_belajar_kf'] ?? 0);
-        $pokja->taman_bacaan = ($pokja->taman_bacaan ?? 0) + ($data['taman_bacaan'] ?? 0);
-        $pokja->kelompok_bkb = ($pokja->kelompok_bkb ?? 0) + ($data['kelompok_bkb'] ?? 0);
-        $pokja->peserta_bkb = ($pokja->peserta_bkb ?? 0) + ($data['peserta_bkb'] ?? 0);
-        $pokja->ape_bkb = ($pokja->ape_bkb ?? 0) + ($data['ape_bkb'] ?? 0);
-        $pokja->kelompok_simulasi_bkb = ($pokja->kelompok_simulasi_bkb ?? 0) + ($data['kelompok_simulasi_bkb'] ?? 0);
-        $pokja->tutor_kf = ($pokja->tutor_kf ?? 0) + ($data['tutor_kf'] ?? 0);
-        $pokja->tutor_paud = ($pokja->tutor_paud ?? 0) + ($data['tutor_paud'] ?? 0);
-        $pokja->kader_bkb = ($pokja->kader_bkb ?? 0) + ($data['kader_bkb'] ?? 0);
-        $pokja->kelompok_kader_koperasi = ($pokja->kelompok_kader_koperasi ?? 0) + ($data['kelompok_kader_koperasi'] ?? 0);
-        $pokja->kader_keterampilan = ($pokja->kader_keterampilan ?? 0) + ($data['kader_keterampilan'] ?? 0);
-        $pokja->kader_dilatih_pengelolaan = ($pokja->kader_dilatih_pengelolaan ?? 0) + ($data['kader_dilatih_pengelolaan'] ?? 0);
-        $pokja->kader_dilatih_tp_pkk = ($pokja->kader_dilatih_tp_pkk ?? 0) + ($data['kader_dilatih_tp_pkk'] ?? 0);
-        $pokja->kader_dilatih_damas = ($pokja->kader_dilatih_damas ?? 0) + ($data['kader_dilatih_damas'] ?? 0);
-        $pokja->up2k_pemula_kelompok = ($pokja->up2k_pemula_kelompok ?? 0) + ($data['up2k_pemula_kelompok'] ?? 0);
-        $pokja->up2k_pemula_peserta = ($pokja->up2k_pemula_peserta ?? 0) + ($data['up2k_pemula_peserta'] ?? 0);
-        $pokja->up2k_madya_kelompok = ($pokja->up2k_madya_kelompok ?? 0) + ($data['up2k_madya_kelompok'] ?? 0);
-        $pokja->up2k_madya_peserta = ($pokja->up2k_madya_peserta ?? 0) + ($data['up2k_madya_peserta'] ?? 0);
-        $pokja->up2k_utama_kelompok = ($pokja->up2k_utama_kelompok ?? 0) + ($data['up2k_utama_kelompok'] ?? 0);
-        $pokja->up2k_utama_peserta = ($pokja->up2k_utama_peserta ?? 0) + ($data['up2k_utama_peserta'] ?? 0);
-        $pokja->up2k_mandiri_kelompok = ($pokja->up2k_mandiri_kelompok ?? 0) + ($data['up2k_mandiri_kelompok'] ?? 0);
-        $pokja->up2k_mandiri_peserta = ($pokja->up2k_mandiri_peserta ?? 0) + ($data['up2k_mandiri_peserta'] ?? 0);
-        $pokja->anggota_koperasi = ($pokja->anggota_koperasi ?? 0) + ($data['anggota_koperasi'] ?? 0);
-
-        // ✅ 5 FIELD BARU
-        $pokja->ibu_set_bkb = ($pokja->ibu_set_bkb ?? 0) + ($data['ibu_set_bkb'] ?? 0);
-        $pokja->lp3_pkk = ($pokja->lp3_pkk ?? 0) + ($data['lp3_pkk'] ?? 0);
-        $pokja->tp3_pkk = ($pokja->tp3_pkk ?? 0) + ($data['tp3_pkk'] ?? 0);
-        $pokja->damas_pkk = ($pokja->damas_pkk ?? 0) + ($data['damas_pkk'] ?? 0);
+        foreach ($agregat as $kolom => $keys) {
+            $total = 0;
+            foreach ($keys as $k) {
+                $total += $num($k);
+            }
+            $pokja->{$kolom} = ($pokja->{$kolom} ?? 0) + $total;
+        }
 
         if (isset($data['keterangan']) && !empty($data['keterangan'])) {
             $pokja->keterangan = $data['keterangan'];

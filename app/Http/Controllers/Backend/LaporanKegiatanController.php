@@ -330,51 +330,57 @@ class LaporanKegiatanController extends Controller
             ]
         );
 
-        $fields = [
-            'warga_buta_l',
-            'warga_buta_p',
-            'kelompok_belajar_paket_a',
-            'kelompok_belajar_paket_b',
-            'kelompok_belajar_paket_c',
-            'kf',
-            'paud',
-            'koperasi_berbadan_hukum',
-            'warga_belajar_paket_a',
-            'warga_belajar_paket_b',
-            'warga_belajar_paket_c',
-            'warga_belajar_kf',
-            'taman_bacaan',
-            'kelompok_bkb',
-            'peserta_bkb',
-            'ape_bkb',
-            'kelompok_simulasi_bkb',
-            'tutor_kf',
-            'tutor_paud',
-            'kader_bkb',
-            'kelompok_kader_koperasi',
-            'kader_keterampilan',
-            'kader_dilatih_pengelolaan',
-            'kader_dilatih_tp_pkk',
-            'kader_dilatih_damas',
-            'up2k_pemula_kelompok',
-            'up2k_pemula_peserta',
-            'up2k_madya_kelompok',
-            'up2k_madya_peserta',
-            'up2k_utama_kelompok',
-            'up2k_utama_peserta',
-            'up2k_mandiri_kelompok',
-            'up2k_mandiri_peserta',
-            'anggota_koperasi',
+        // Kolom DB => alias key data_angka (lama + baru L/P aplikasi).
+        // Tanpa ini nilai L/P hilang (kolom rekap tetap 0) karena key baru
+        // ber-suffix _l/_p tidak cocok dengan nama kolom.
+        $fieldAliases = [
+            'warga_buta_l' => ['warga_buta_l'],
+            'warga_buta_p' => ['warga_buta_p'],
+            'kelompok_belajar_paket_a' => ['kelompok_belajar_paket_a'],
+            'kelompok_belajar_paket_b' => ['kelompok_belajar_paket_b'],
+            'kelompok_belajar_paket_c' => ['kelompok_belajar_paket_c'],
+            'kf' => ['kf'],
+            'paud' => ['paud', 'kelompok_paud', 'paud_l', 'paud_p'],
+            'koperasi_berbadan_hukum' => ['koperasi_berbadan_hukum'],
+            'warga_belajar_paket_a' => ['warga_belajar_paket_a', 'warga_belajar_paket_a_l', 'warga_belajar_paket_a_p'],
+            'warga_belajar_paket_b' => ['warga_belajar_paket_b', 'warga_belajar_paket_b_l', 'warga_belajar_paket_b_p'],
+            'warga_belajar_paket_c' => ['warga_belajar_paket_c', 'warga_belajar_paket_c_l', 'warga_belajar_paket_c_p'],
+            'warga_belajar_kf' => ['warga_belajar_kf', 'warga_belajar_kf_l', 'warga_belajar_kf_p'],
+            'taman_bacaan' => ['taman_bacaan', 'kelompok_taman_bacaan', 'taman_bacaan_l', 'taman_bacaan_p'],
+            'kelompok_bkb' => ['kelompok_bkb'],
+            'peserta_bkb' => ['peserta_bkb', 'peserta_bkb_l', 'peserta_bkb_p'],
+            'ape_bkb' => ['ape_bkb'],
+            'kelompok_simulasi_bkb' => ['kelompok_simulasi_bkb', 'kelompok_simulasi_bkb_l', 'kelompok_simulasi_bkb_p'],
+            'tutor_kf' => ['tutor_kf', 'tutor_kf_l', 'tutor_kf_p'],
+            'tutor_paud' => ['tutor_paud', 'tutor_paud_l', 'tutor_paud_p'],
+            'kader_bkb' => ['kader_bkb', 'kader_bkb_l', 'kader_bkb_p'],
+            'kelompok_kader_koperasi' => ['kelompok_kader_koperasi', 'kader_koperasi', 'kader_koperasi_l', 'kader_koperasi_p'],
+            'kader_keterampilan' => ['kader_keterampilan', 'kader_keterampilan_l', 'kader_keterampilan_p'],
+            'kader_dilatih_pengelolaan' => ['kader_dilatih_pengelolaan'],
+            'kader_dilatih_tp_pkk' => ['kader_dilatih_tp_pkk'],
+            'kader_dilatih_damas' => ['kader_dilatih_damas'],
+            'up2k_pemula_kelompok' => ['up2k_pemula_kelompok'],
+            'up2k_pemula_peserta' => ['up2k_pemula_peserta', 'up2k_pemula_peserta_l', 'up2k_pemula_peserta_p'],
+            'up2k_madya_kelompok' => ['up2k_madya_kelompok'],
+            'up2k_madya_peserta' => ['up2k_madya_peserta', 'up2k_madya_peserta_l', 'up2k_madya_peserta_p'],
+            'up2k_utama_kelompok' => ['up2k_utama_kelompok'],
+            'up2k_utama_peserta' => ['up2k_utama_peserta', 'up2k_utama_peserta_l', 'up2k_utama_peserta_p'],
+            'up2k_mandiri_kelompok' => ['up2k_mandiri_kelompok'],
+            'up2k_mandiri_peserta' => ['up2k_mandiri_peserta', 'up2k_mandiri_peserta_l', 'up2k_mandiri_peserta_p'],
+            'anggota_koperasi' => ['anggota_koperasi', 'anggota_koperasi_l', 'anggota_koperasi_p'],
 
             // ✅ 5 FIELD BARU
-            'ibu_set_bkb',
-            'lp3_pkk',
-            'tp3_pkk',
-            'damas_pkk',
+            'ibu_set_bkb' => ['ibu_set_bkb'],
+            'lp3_pkk' => ['lp3_pkk', 'lp3_pkk_l', 'lp3_pkk_p'],
+            'tp3_pkk' => ['tp3_pkk', 'tp3_pkk_l', 'tp3_pkk_p'],
+            'damas_pkk' => ['damas_pkk', 'damas_pkk_l', 'damas_pkk_p'],
         ];
 
-        foreach ($fields as $field) {
-            $value = (int) ($dataAngka[$field] ?? 0);
+        foreach ($fieldAliases as $field => $aliases) {
+            $value = 0;
+            foreach ($aliases as $alias) {
+                $value += (int) ($dataAngka[$alias] ?? 0);
+            }
             if ($value > 0) {
                 $pokja->increment($field, $value);
             }

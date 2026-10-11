@@ -17,6 +17,11 @@ use App\Http\Controllers\Api\DasawismaCatatanKeluargaController;
 use App\Http\Controllers\Api\DasawismaIndustriRumahTanggaController;
 use App\Http\Controllers\Api\DasawismaKegiatanWargaController;
 use App\Http\Controllers\Api\DasawismaPemanfaatanPekaranganController;
+use App\Http\Controllers\Api\WilayahController;
+
+// ─── WILAYAH (PUBLIC — master dropdown kecamatan → desa mobile) ───
+Route::get('/wilayah/kecamatan', [WilayahController::class, 'kecamatan']);
+Route::get('/wilayah/desa', [WilayahController::class, 'desa']);
 
 // ============================================
 // PUBLIC ROUTES (TANPA AUTH)

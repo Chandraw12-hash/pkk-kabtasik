@@ -24,6 +24,13 @@ interface CreateProps {
     roles: Role[];
     kecamatanList: string[];
     desaByKecamatan: Record<string, string[]>;
+    prefill?: {
+        kader_id?: number;
+        name?: string;
+        kecamatan?: string;
+        desa?: string;
+        roles?: string[];
+    };
 }
 
 const KECAMATAN_FALLBACK = [
@@ -68,21 +75,22 @@ const KECAMATAN_FALLBACK = [
     "Taraju",
 ];
 
-export default function Create({ roles, kecamatanList, desaByKecamatan }: CreateProps) {
+export default function Create({ roles, kecamatanList, desaByKecamatan, prefill }: CreateProps) {
     const kecamatans = kecamatanList?.length
         ? kecamatanList
         : KECAMATAN_FALLBACK;
 
     const { data, setData, post, processing, errors } = useForm({
-        name: "",
+        kader_id: prefill?.kader_id ?? null as number | null,
+        name: prefill?.name ?? "",
         username: "",
         email: "",
         password: "",
         password_confirmation: "",
-        roles: [] as string[],
-        kecamatan: "",
-        desa: "",
-        nama_desa: "",
+        roles: prefill?.roles ?? ([] as string[]),
+        kecamatan: prefill?.kecamatan ?? "",
+        desa: prefill?.desa ?? "",
+        nama_desa: prefill?.desa ?? "",
     });
 
     const handleSubmit: FormEventHandler = (e) => {
@@ -122,8 +130,13 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
     const isAdminDesaRole = data.roles.includes("admin desa");
     const isDasawismaRole = data.roles.includes("dasawisma");
 
-    const showKecamatan = isKecamatanRole || isAdminDesaRole || isDasawismaRole;
-    const showDesa = isAdminDesaRole || isDasawismaRole;
+    const showKecamatan =
+        isKecamatanRole ||
+        isAdminDesaRole ||
+        isDasawismaRole ||
+        data.kecamatan !== "";
+    const showDesa =
+        isAdminDesaRole || isDasawismaRole || data.desa !== "";
     const desaOptions = data.kecamatan ? (desaByKecamatan[data.kecamatan] ?? []) : [];
 
     const roleDescriptions: Record<string, string> = {
@@ -189,6 +202,14 @@ export default function Create({ roles, kecamatanList, desaByKecamatan }: Create
                     </p>
                 </div>
             </div>
+
+            {prefill?.kader_id ? (
+                <div className="mb-6 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-200">
+                    Membuat akun dari Data Kader{prefill.name ? ` (${prefill.name})` : ""} — nama, wilayah,
+                    dan peran sudah terisi otomatis. Akun yang dibuat otomatis
+                    tertaut ke baris kader tersebut.
+                </div>
+            ) : null}
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

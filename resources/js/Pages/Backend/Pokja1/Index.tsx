@@ -6,7 +6,7 @@ import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X, FileSpreadsheet, CheckCircle2, ChevronDown } from "lucide-react";
+import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, Download, X, FileSpreadsheet, CheckCircle2, ChevronDown } from "lucide-react";
 import axios from "axios";
 
 export default function Index({ pokjas, filters = {} }) {
@@ -117,6 +117,16 @@ export default function Index({ pokjas, filters = {} }) {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button
+                        variant="secondary"
+                        href={route("be.pokja1.export", search ? { search } : {})}
+                        target="_blank"
+                        className="flex items-center gap-2 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                    >
+                        <Download size={16} />
+                        <span>Export Excel</span>
+                    </Button>
+
                     <Button
                         variant="secondary"
                         onClick={() => setShowImportModal(true)}

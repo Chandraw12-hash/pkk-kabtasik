@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Pokja2;
 use App\Imports\Pokja2Import; // <-- Pastikan file ini ada di app/Imports/
+use App\Exports\Pokja2Export;
+use App\Exports\Pokja2RincianExport;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel; // <-- Facade untuk Excel
 use Inertia\Inertia;
@@ -72,6 +74,27 @@ class Pokja2Controller extends Controller
         $pokja2->delete();
 
         return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil dihapus.');
+    }
+
+    /**
+     * Export agregat Pokja II ke Excel (cermin tabel output website).
+     * Dipanggil oleh route be.pokja2.export (tombol Export kabupaten).
+     */
+    public function export(Request $request)
+    {
+        $filename = 'data-pokja-2-' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(new Pokja2Export($request->input('search')), $filename);
+    }
+
+    /**
+     * Export rincian L/P Pokja II ke Excel — khusus super-admin (Kominfo).
+     */
+    public function exportRincian(Request $request)
+    {
+        $filename = 'data-pokja-2-rincian-' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(new Pokja2RincianExport($request->input('search')), $filename);
     }
 
     /**

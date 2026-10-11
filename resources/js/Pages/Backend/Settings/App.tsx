@@ -3,20 +3,40 @@ import MainLayout from "@/Layouts/MainLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
-import { Head, useForm } from "@inertiajs/react";
-import { AppWindow, Save, Key, ShieldCheck, Smartphone, History, LogOut, Eye, EyeOff } from "lucide-react";
+import { Head, useForm, router } from "@inertiajs/react";
+import { AppWindow, Save, Key, ShieldCheck, Smartphone, History, LogOut, Eye, EyeOff, Trash2, ImagePlus } from "lucide-react";
 import { AppSettings } from "@/types/model";
+
+interface DeviceToken {
+    id: number;
+    name: string;
+    last_used: string;
+    created: string;
+}
+
+interface DeviceSession {
+    id: string;
+    ip: string;
+    device: string;
+    last_used: string;
+}
 
 interface AppProps {
     settings: AppSettings;
+    tokens?: DeviceToken[];
+    sessions?: DeviceSession[];
 }
 
-export default function App({ settings }: AppProps) {
-    // ===== FORM NAMA APLIKASI =====
+export default function App({ settings, tokens = [], sessions = [] }: AppProps) {
+    // ===== FORM NAMA + LOGO + WARNA APLIKASI =====
     const { data, setData, post, processing, errors } = useForm<{
         app_name: string;
+        app_logo: File | null;
+        primary_color: string;
     }>({
-        app_name: settings.app_name || "SIM PKK Kabupaten Tasikmalaya",
+        app_name: (settings.app_name as string) || "SIM PKK Kabupaten Tasikmalaya",
+        app_logo: null,
+        primary_color: (settings.primary_color as string) || "#10b981",
     });
 
     const submit: FormEventHandler = (e) => {
@@ -133,6 +153,58 @@ export default function App({ settings }: AppProps) {
                                     )}
                                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                                         Nama ini akan muncul di tab browser dan sidebar.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        Logo Aplikasi
+                                    </label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                                            {settings.app_logo ? (
+                                                <img
+                                                    src={`/storage/${settings.app_logo}`}
+                                                    alt="Logo aplikasi"
+                                                    className="h-full w-full object-contain"
+                                                />
+                                            ) : (
+                                                <ImagePlus size={20} className="text-slate-400" />
+                                            )}
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) =>
+                                                setData("app_logo", e.target.files?.[0] ?? null)
+                                            }
+                                            className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                                        JPG/PNG maks 2 MB. Kosongkan bila tidak diganti.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        Warna Primer
+                                    </label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            value={data.primary_color}
+                                            onChange={(e) =>
+                                                setData("primary_color", e.target.value)
+                                            }
+                                            className="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1"
+                                        />
+                                        <span className="text-sm font-mono text-slate-500 dark:text-slate-400">
+                                            {data.primary_color}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                                        Dipakai sebagai warna aksen (contoh: navigasi).
                                     </p>
                                 </div>
 
@@ -399,58 +471,78 @@ export default function App({ settings }: AppProps) {
                             </h2>
                         </div>
                         <Card className="p-6">
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                Redmi Note 10
-                                            </p>
-                                            <p className="text-xs text-slate-400 dark:text-slate-500">
-                                                Aktif • 2 jam lalu • IP: 192.168.1.100
-                                            </p>
+                            {tokens.length === 0 && sessions.length === 0 ? (
+                                <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">
+                                    Tidak ada perangkat lain yang terdaftar selain sesi ini.
+                                </p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {sessions.map((s) => (
+                                        <div
+                                            key={`s-${s.id}`}
+                                            className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-2 h-2 rounded-full bg-green-500 shrink-0"></div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                                                        {s.device}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                                                        Web • {s.ip} • {s.last_used}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (confirm("Cabut sesi perangkat ini?")) {
+                                                        router.delete(route("be.settings.sessions.destroy", s.id), {
+                                                            preserveScroll: true,
+                                                        });
+                                                    }
+                                                }}
+                                                className="text-xs text-rose-500 hover:text-rose-700 font-medium shrink-0 inline-flex items-center gap-1"
+                                            >
+                                                <Trash2 size={14} />
+                                                Cabut Akses
+                                            </button>
                                         </div>
-                                    </div>
-                                    <button className="text-xs text-rose-500 hover:text-rose-700 font-medium">
-                                        Cabut Akses
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg opacity-60">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                Samsung Galaxy A52
-                                            </p>
-                                            <p className="text-xs text-slate-400 dark:text-slate-500">
-                                                Tidak Aktif • 5 hari lalu • IP: 192.168.1.105
-                                            </p>
+                                    ))}
+                                    {tokens.map((t) => (
+                                        <div
+                                            key={`t-${t.id}`}
+                                            className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-2 h-2 rounded-full bg-green-500 shrink-0"></div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                                                        {t.name}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                                                        Mobile/API • dipakai {t.last_used} • dibuat {t.created}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (confirm("Cabut akses perangkat ini? Aplikasi di perangkat itu akan logout.")) {
+                                                        router.delete(route("be.settings.tokens.destroy", t.id), {
+                                                            preserveScroll: true,
+                                                        });
+                                                    }
+                                                }}
+                                                className="text-xs text-rose-500 hover:text-rose-700 font-medium shrink-0 inline-flex items-center gap-1"
+                                            >
+                                                <Trash2 size={14} />
+                                                Cabut Akses
+                                            </button>
                                         </div>
-                                    </div>
-                                    <button className="text-xs text-rose-500 hover:text-rose-700 font-medium">
-                                        Cabut Akses
-                                    </button>
+                                    ))}
                                 </div>
-
-                                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg opacity-60">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                iPhone 13
-                                            </p>
-                                            <p className="text-xs text-slate-400 dark:text-slate-500">
-                                                Tidak Aktif • 10 hari lalu • IP: 192.168.1.110
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button className="text-xs text-rose-500 hover:text-rose-700 font-medium">
-                                        Cabut Akses
-                                    </button>
-                                </div>
-                            </div>
+                            )}
                         </Card>
                     </div>
                 </div>

@@ -272,9 +272,7 @@ export default function Index({
         kunjungan: `/pokja-4/export-pyd?tahun=${tahun}`,
         posyandu: `/pokja-4/export-posyandu?tahun=${tahun}`,
         rekapitulasi: `/pokja-4/export-rekap?tahun=${tahun}`,
-        // TODO(backend): ganti ke export 1 sheet gabungan
-        // (A. Data Dukung + B. Data Program) setelah backend jadi.
-        data_dukung: "#",
+        data_dukung: `/pokja-4/export-data-dukung?tahun=${tahun}&semester=${semester}`,
     };
     // ========================================================
     // RENDER

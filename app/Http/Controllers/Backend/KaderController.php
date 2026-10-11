@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kader;
+use Database\Seeders\AdminDesaSeeder;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class KaderController extends Controller
@@ -15,6 +17,7 @@ class KaderController extends Controller
         $perPage = (int) $request->input('per_page', 10);
 
         $kaders = Kader::query()
+            ->with(['user:id,username'])
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('nama', 'like', "%{$search}%")
@@ -44,32 +47,15 @@ class KaderController extends Controller
 
     public function create()
     {
-        return Inertia::render('Backend/Kader/Create');
+        // Input manual dimatikan: baris kader terisi otomatis dari akun
+        // (observer + sinkron). NIK/jabatan dilengkapi lewat Edit.
+        abort(404);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama'              => 'required|string|max:255',
-            'nik'               => 'nullable|string|max:20|unique:kader,nik',
-            'jabatan'           => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
-            'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat',
-            'kecamatan'         => 'nullable|string|max:255',
-            'desa_kelurahan'    => 'nullable|string|max:255',
-            'no_hp'             => 'nullable|string|max:20',
-            'alamat'            => 'nullable|string',
-            'foto'              => 'nullable|string|max:255',
-            'status_aktif'      => 'boolean',
-            'tanggal_bergabung' => 'nullable|date',
-        ]);
-
-        $validated['status_aktif'] = $request->boolean('status_aktif', true);
-
-        Kader::create($validated);
-
-        return redirect()
-            ->route('be.kader.index')
-            ->with('success', 'Data kader berhasil ditambahkan!');
+        // Input manual dimatikan: baris kader terisi otomatis dari akun.
+        abort(404);
     }
 
     public function show(string $id)
@@ -87,6 +73,8 @@ class KaderController extends Controller
 
         return Inertia::render('Backend/Kader/Edit', [
             'kader' => $kader,
+            'kecamatanList' => array_keys(AdminDesaSeeder::DATA_DESA),
+            'desaByKecamatan' => AdminDesaSeeder::DATA_DESA,
         ]);
     }
 
@@ -99,7 +87,7 @@ class KaderController extends Controller
             'nik'               => 'nullable|string|max:20|unique:kader,nik,' . $id,
             'jabatan'           => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
             'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat',
-            'kecamatan'         => 'nullable|string|max:255',
+            'kecamatan'         => ['nullable', 'string', 'max:255', Rule::in(array_keys(AdminDesaSeeder::DATA_DESA))],
             'desa_kelurahan'    => 'nullable|string|max:255',
             'no_hp'             => 'nullable|string|max:20',
             'alamat'            => 'nullable|string',

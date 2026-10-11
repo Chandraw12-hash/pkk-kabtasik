@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Pokja1;
 use App\Imports\Pokja1Import;
+use App\Exports\Pokja1Export;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Inertia\Inertia;
@@ -125,6 +126,17 @@ class Pokja1Controller extends Controller
         $pokja1->delete();
 
         return redirect()->route('be.pokja1.index')->with('success', 'Data Pokja I berhasil dihapus.');
+    }
+
+    /**
+     * Export data Pokja I ke Excel.
+     * Dipanggil oleh route be.pokja1.export (route sudah ada, method belum).
+     */
+    public function export(Request $request)
+    {
+        $filename = 'data-pokja-1-' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(new Pokja1Export($request->input('search')), $filename);
     }
 
     public function import(Request $request)

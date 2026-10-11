@@ -672,7 +672,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                         Jml. KLP
                                     </th>
                                     <th className="p-1.5 border-r border-slate-200 text-center font-medium bg-slate-100 min-w-[60px]">
-                                        Beberapa Warga
+                                        Belajar
                                     </th>
 
                                     {/* PAKET B */}
@@ -680,7 +680,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                         Jml. KLP
                                     </th>
                                     <th className="p-1.5 border-r border-slate-200 text-center font-medium bg-slate-100 min-w-[60px]">
-                                        Beberapa Warga
+                                        Belajar
                                     </th>
 
                                     {/* PAKET C */}
@@ -688,7 +688,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                         Jml. KLP
                                     </th>
                                     <th className="p-1.5 border-r border-slate-200 text-center font-medium bg-slate-100 min-w-[60px]">
-                                        Beberapa Warga
+                                        Belajar
                                     </th>
 
                                     {/* KF */}
@@ -696,7 +696,7 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                         Jml. KLP
                                     </th>
                                     <th className="p-1.5 border-r border-slate-200 text-center font-medium bg-slate-100 min-w-[60px]">
-                                        Beberapa Warga
+                                        Belajar
                                     </th>
 
                                     {/* BKB */}
@@ -754,6 +754,20 @@ export default function Pokja2({ data, filters = {} }: Props) {
                                     </th>
                                     <th className="p-1.5 border-r border-slate-200 text-center font-medium bg-slate-100 min-w-[60px]">
                                         Jml. Anggota
+                                    </th>
+                                </tr>
+
+                                {/* BARIS 4 — NOMOR KOLOM (format client 1–36) */}
+                                <tr className="bg-slate-100 text-slate-500 border-b border-slate-200">
+                                    {Array.from({ length: 36 }, (_, i) => (
+                                        <th
+                                            key={i}
+                                            className="p-1 border-r border-slate-200 text-center font-semibold tabular-nums"
+                                        >
+                                            {i + 1}
+                                        </th>
+                                    ))}
+                                    <th className="p-1 border-r border-slate-200 text-center font-semibold">
                                     </th>
                                 </tr>
                             </thead>

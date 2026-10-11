@@ -14,8 +14,11 @@ class AdminDesaSeeder extends Seeder
      * 39 Kecamatan Kabupaten Tasikmalaya + daftar desa.
      * Format: 'Nama Kecamatan' => ['Desa 1', 'Desa 2', ...]
      * Total: 39 kecamatan, 351 desa
+     *
+     * Dipakai juga oleh Api\WilayahController sebagai master
+     * dropdown kecamatan → desa di aplikasi mobile.
      */
-    private const DATA_DESA = [
+    public const DATA_DESA = [
         'Cipatujah' => [
             'Ciheras', 'Cipatujah', 'Sindangkerta', 'Cikawungading',
             'Bantarkalong', 'Darawati', 'Nagrog', 'Pameutingan',
