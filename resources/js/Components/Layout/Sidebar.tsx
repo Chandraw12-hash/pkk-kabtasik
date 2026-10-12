@@ -27,6 +27,7 @@ import {
     Activity,
     CalendarDays,
     ClipboardList,
+    Map as MapIcon,
     Image,
     Star,
     Clock,
@@ -662,6 +663,27 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <span>Struktur Organisasi</span>
                             </Link>
                         )}
+
+                        {/* Peta Sebaran Rumah — kabupaten/super-admin */}
+                        <Link
+                            href={safeRoute("be.peta-sebaran.index")}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-[15px] group ${
+                                isCurrentRoute("be.peta-sebaran.*")
+                                    ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            }`}
+                        >
+                            <MapIcon
+                                size={20}
+                                strokeWidth={2}
+                                className={`shrink-0 ${
+                                    isCurrentRoute("be.peta-sebaran.*")
+                                        ? "text-teal-600 dark:text-teal-400"
+                                        : "text-slate-400 dark:text-slate-500 group-hover:text-teal-500"
+                                }`}
+                            />
+                            <span>Peta Sebaran</span>
+                        </Link>
 
                         {/* Pengaturan — khusus super-admin (kabupaten tidak punya isi lagi) */}
                         {isSuperAdmin && (

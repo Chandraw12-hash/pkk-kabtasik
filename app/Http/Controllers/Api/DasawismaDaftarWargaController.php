@@ -60,6 +60,9 @@ class DasawismaDaftarWargaController extends Controller
             'rw' => ['nullable', 'string', 'max:20'],
             'dasawisma' => ['nullable', 'string', 'max:255'],
             'alamat' => ['nullable', 'string', 'max:2000'],
+            // Titik GPS rumah (opsional, untuk Peta Sebaran)
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'jumlah_anggota' => ['required', 'integer', 'min:1'],
             'jumlah_kk' => ['sometimes', 'integer', 'min:1'],
             'jumlah_laki_laki' => ['nullable', 'integer', 'min:0'],
@@ -119,6 +122,9 @@ class DasawismaDaftarWargaController extends Controller
             'rw' => ['nullable', 'string', 'max:20'],
             'dasawisma' => ['nullable', 'string', 'max:255'],
             'alamat' => ['nullable', 'string', 'max:2000'],
+            // Titik GPS rumah (opsional, untuk Peta Sebaran)
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'jumlah_anggota' => ['required', 'integer', 'min:1'],
             'jumlah_kk' => ['sometimes', 'integer', 'min:1'],
             'jumlah_laki_laki' => ['nullable', 'integer', 'min:0'],

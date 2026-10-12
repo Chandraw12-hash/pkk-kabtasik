@@ -14,7 +14,7 @@ class DaftarWarga extends Model
 
     protected $fillable = [
         'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma',
-        'nama_kepala_keluarga', 'nik', 'no_kk', 'alamat', 'jumlah_anggota',
+        'nama_kepala_keluarga', 'nik', 'no_kk', 'alamat', 'latitude', 'longitude', 'jumlah_anggota',
         'jumlah_kk', 'jumlah_laki_laki', 'jumlah_perempuan',
         'jumlah_balita_l', 'jumlah_balita_p',
         'jumlah_pus', 'jumlah_wus',
@@ -31,6 +31,8 @@ class DaftarWarga extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'latitude' => 'float',
+            'longitude' => 'float',
             'data_umum_synced_at' => 'datetime',
             'jumlah_anggota' => 'integer',
             'jumlah_kk' => 'integer',

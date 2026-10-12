@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\DasawismaIndustriRumahTanggaController;
 use App\Http\Controllers\Api\DasawismaKegiatanWargaController;
 use App\Http\Controllers\Api\DasawismaPemanfaatanPekaranganController;
 use App\Http\Controllers\Api\WilayahController;
+use App\Http\Controllers\Api\NotifikasiController;
 
 // ─── WILAYAH (PUBLIC — master dropdown kecamatan → desa mobile) ───
 Route::get('/wilayah/kecamatan', [WilayahController::class, 'kecamatan']);
@@ -153,6 +154,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/laporan-kegiatan/{id}/reject', [LaporanKegiatanController::class, 'reject']);
     Route::put('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'update']);
     Route::delete('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'destroy']);
+
+    // ─── NOTIFIKASI (LONCENG HP — agenda baru dari kabupaten) ───
+    Route::get('/notifikasi', [NotifikasiController::class, 'index']);
+    Route::get('/notifikasi/unread-count', [NotifikasiController::class, 'unreadCount']);
+    Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua']);
+    Route::post('/notifikasi/{id}/baca', [NotifikasiController::class, 'tandaiBaca']);
 
     // ─── BERITA (MOBILE) ──────────────────────────────────────
     Route::post('/berita', [BeritaController::class, 'store']);

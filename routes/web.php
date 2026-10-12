@@ -24,6 +24,7 @@ use App\Http\Controllers\Backend\Pokja4Controller;
 // Agenda & Laporan Kegiatan (mobile)
 use App\Http\Controllers\Backend\AgendaController;
 use App\Http\Controllers\Backend\LaporanKegiatanController;
+use App\Http\Controllers\Backend\PetaSebaranController;
 
 // Infografis
 use App\Http\Controllers\Backend\InfografisController;
@@ -201,6 +202,11 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::resource('kader', KaderController::class)
         ->names('kader')
         ->except(['show']);
+
+    // PETA SEBARAN RUMAH (khusus kabupaten/super-admin)
+    Route::get('peta-sebaran', [PetaSebaranController::class, 'index'])
+        ->name('peta-sebaran.index')
+        ->middleware('role:admin|super-admin');
 
     // ============================================================
     // SEKRETARIAT — 3 TAB

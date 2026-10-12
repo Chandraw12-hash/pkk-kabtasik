@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agenda;
+use App\Models\User;
+use App\Notifications\AgendaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -94,7 +97,22 @@ class AgendaController extends Controller
             $validated['status'] = 'upcoming';
         }
 
-        Agenda::create($validated);
+        $agenda = Agenda::create($validated);
+
+        // Notif dalam aplikasi ke akun mobile (pokja 1-4 + dasawisma):
+        // admin tambah agenda → lonceng HP berdering (badge) saat dibuka.
+        $pesan = 'Agenda baru: ' . $agenda->judul;
+        User::role(['pokja1', 'pokja2', 'pokja3', 'pokja4', 'dasawisma'])
+            ->where('status', 'active')
+            ->chunkById(200, function ($users) use ($pesan, $agenda) {
+                Notification::send($users, new AgendaNotification(
+                    $pesan,
+                    $agenda->id,
+                    $agenda->judul,
+                    $agenda->tanggal,
+                    $agenda->lokasi,
+                ));
+            });
 
         return redirect()
             ->route('be.agenda.index')
