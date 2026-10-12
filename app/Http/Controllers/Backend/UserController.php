@@ -64,6 +64,14 @@ class UserController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // JSON hanya untuk axios (filter/paginasi tanpa reload) — pola sama KaderController.
+        if (
+            !$request->header('X-Inertia') &&
+            ($request->wantsJson() || $request->ajax())
+        ) {
+            return response()->json($users);
+        }
+
         return Inertia::render('Backend/Users/Index', [
             'users' => $users,
             'filters' => $request->only(['search', 'per_page', 'role', 'status', 'inactive_30d'])
@@ -355,13 +363,9 @@ class UserController extends Controller
 
     private function desaByKecamatan(): array
     {
-        return User::role('admin desa')
-            ->whereNotNull('kecamatan')
-            ->whereNotNull('desa')
-            ->get(['kecamatan', 'desa'])
-            ->groupBy('kecamatan')
-            ->map(fn ($users) => $users->pluck('desa')->unique()->sort()->values()->all())
-            ->all();
+        // Master lengkap 351 desa (seeder), bukan turunan akun admin desa
+        // yang bisa bolong — agar validasi desa dasawisma selalu punya acuan.
+        return \Database\Seeders\AdminDesaSeeder::DATA_DESA;
     }
 
     private function validateUserRegion(Request $request, array $roles): void

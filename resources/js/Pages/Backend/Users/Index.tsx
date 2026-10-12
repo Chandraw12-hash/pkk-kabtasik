@@ -64,12 +64,13 @@ const getRoleBadge = (roleName: string) => {
     const roleMap: Record<string, { label: string; type: "success" | "default" | "danger" | "warning" | "info" }> = {
         'super-admin': { label: "Super Admin", type: "danger" },
         admin: { label: "Admin", type: "warning" },
-        operator: { label: "Operator", type: "info" },
-        kader_dasawisma: { label: "Kader", type: "success" },
+        kecamatan: { label: "Kecamatan", type: "info" },
+        pokja1: { label: "Pokja I", type: "info" },
+        pokja2: { label: "Pokja II", type: "success" },
+        pokja3: { label: "Pokja III", type: "warning" },
+        pokja4: { label: "Pokja IV", type: "default" },
         dasawisma: { label: "Dasawisma", type: "success" },
         'admin desa': { label: "Admin Desa", type: "info" },
-        'admin-pkk': { label: "Admin PKK", type: "info" },
-        kecamatan: { label: "Kecamatan", type: "info" },
     };
     return roleMap[roleName] || { label: roleName, type: "default" as const };
 };
@@ -185,11 +186,12 @@ export default function Index({ users, filters = {} }: IndexProps) {
         { value: "", label: "Semua Role" },
         { value: "super-admin", label: "Super Admin" },
         { value: "admin", label: "Admin" },
-        { value: "operator", label: "Operator" },
-        { value: "kader_dasawisma", label: "Kader" },
-        { value: "dasawisma", label: "Dasawisma" },
-        { value: "admin-pkk", label: "Admin PKK" },
         { value: "kecamatan", label: "Admin Kecamatan" },
+        { value: "pokja1", label: "Pokja I" },
+        { value: "pokja2", label: "Pokja II" },
+        { value: "pokja3", label: "Pokja III" },
+        { value: "pokja4", label: "Pokja IV" },
+        { value: "dasawisma", label: "Dasawisma" },
         { value: "admin desa", label: "Admin Desa" },
     ];
 
@@ -292,100 +294,94 @@ export default function Index({ users, filters = {} }: IndexProps) {
                         },
                         {
                             header: "Pengguna",
-                            className: "min-w-[200px]",
+                            className: "min-w-[220px]",
                             render: (user: User | any) => (
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xs border border-teal-100 uppercase dark:bg-teal-900/20 dark:border-teal-800 dark:text-teal-400">
+                                    <div className="w-9 h-9 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xs border border-teal-100 uppercase dark:bg-teal-900/20 dark:border-teal-800 dark:text-teal-400 shrink-0">
                                         {user.name?.substring(0, 2) || "U"}
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                            {user.name}
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                                            {user.name}{" "}
+                                            <span className="font-mono font-normal text-xs text-slate-400">
+                                                @{user.username || "-"}
+                                            </span>
                                         </p>
-                                        <div className="flex items-center gap-2 text-xs text-slate-400">
-                                            <Mail size={12} />
-                                            <span>{user.email}</span>
+                                        <div className="flex items-center gap-1.5 text-xs text-slate-400 truncate">
+                                            <Mail size={12} className="shrink-0" />
+                                            <span className="truncate">{user.email}</span>
                                         </div>
                                     </div>
                                 </div>
                             ),
                         },
                         {
-                            header: "Username",
-                            className: "w-32",
-                            render: (user: User) => (
-                                <span className="text-sm text-slate-600 dark:text-slate-300 font-mono">
-                                    {user.username || "-"}
-                                </span>
-                            ),
-                        },
-                        {
-                            header: "No. HP",
-                            className: "w-32",
-                            render: (user: User) => (
-                                <span className="text-sm text-slate-500 dark:text-slate-400">
-                                    {user.no_hp || "-"}
-                                </span>
-                            ),
-                        },
-                        // ✅ TAMBAH: Kolom Kecamatan
-                        {
-                            header: "Kecamatan",
-                            className: "w-32",
-                            render: (user: User | any) => (
-                                <span className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
-                                    {user.kecamatan ? (
-                                        <>
-                                            <MapPin size={12} className="text-cyan-600" />
-                                            {user.kecamatan}
-                                        </>
-                                    ) : (
-                                        <span className="text-slate-300 italic">-</span>
-                                    )}
-                                </span>
-                            ),
-                        },
-                        {
-                            header: "Role",
-                            className: "w-36",
-                            headerClassName: "text-center",
-                            render: (user: User) => {
-                                const roles = user.roles || [];
-                                if (roles.length === 0) {
-                                    return (
-                                        <span className="text-xs text-slate-400 italic">Tidak ada role</span>
-                                    );
-                                }
+                            header: "Wilayah & Kontak",
+                            className: "min-w-[160px]",
+                            render: (user: User | any) => {
+                                const isDasawisma = (user.roles || []).some(
+                                    (r: any) => r.name === "dasawisma"
+                                );
                                 return (
-                                    <div className="flex flex-wrap gap-1.5 justify-center">
-                                        {roles.map((role: any) => {
-                                            const roleBadge = getRoleBadge(role.name);
-                                            return (
-                                                <Badge
-                                                    key={role.id}
-                                                    type={roleBadge.type}
-                                                    className="gap-1"
-                                                >
-                                                    <Shield size={11} />
-                                                    {roleBadge.label}
-                                                </Badge>
-                                            );
-                                        })}
+                                    <div className="space-y-1">
+                                        <span className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
+                                            {user.kecamatan ? (
+                                                <>
+                                                    <MapPin size={12} className="text-cyan-600 shrink-0" />
+                                                    <span className="truncate">{user.kecamatan}</span>
+                                                </>
+                                            ) : (
+                                                <span className="text-slate-300 italic">Tanpa wilayah</span>
+                                            )}
+                                        </span>
+                                        {isDasawisma && (
+                                            <p className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
+                                                {user.desa || user.nama_desa || (
+                                                    <span className="text-amber-600 dark:text-amber-400">
+                                                        Desa belum diisi
+                                                    </span>
+                                                )}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-slate-400">
+                                            {user.no_hp || "HP -"}
+                                        </p>
                                     </div>
                                 );
                             },
                         },
                         {
-                            header: "Status",
-                            className: "w-28",
-                            headerClassName: "text-center",
+                            header: "Akses",
+                            className: "min-w-[150px]",
                             render: (user: User) => {
+                                const roles = user.roles || [];
                                 const status = getStatusBadge(user.status || "active");
                                 return (
-                                    <Badge type={status.type} className="gap-1">
-                                        {status.icon}
-                                        {status.label}
-                                    </Badge>
+                                    <div className="space-y-1.5">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {roles.length === 0 ? (
+                                                <span className="text-xs text-slate-400 italic">Tidak ada role</span>
+                                            ) : (
+                                                roles.map((role: any) => {
+                                                    const roleBadge = getRoleBadge(role.name);
+                                                    return (
+                                                        <Badge
+                                                            key={role.id}
+                                                            type={roleBadge.type}
+                                                            className="gap-1"
+                                                        >
+                                                            <Shield size={11} />
+                                                            {roleBadge.label}
+                                                        </Badge>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                        <Badge type={status.type} className="gap-1">
+                                            {status.icon}
+                                            {status.label}
+                                        </Badge>
+                                    </div>
                                 );
                             },
                         },
@@ -470,6 +466,7 @@ export default function Index({ users, filters = {} }: IndexProps) {
                                             <Eye size={15} />
                                         </button>
                                     )}
+                                    <span className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
                                     <button
                                         onClick={() => openDeleteModal(user)}
                                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer"
