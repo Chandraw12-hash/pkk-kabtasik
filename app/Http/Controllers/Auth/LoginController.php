@@ -75,32 +75,35 @@ class LoginController extends Controller
                 ]);
             }
 
+            // Akun mobile (pokja & dasawisma) khusus aplikasi Android —
+            // jangan biarkan masuk web (dulu lolos lalu nyasar ke dashboard
+            // kabupaten atau area dasawisma web).
+            if ($user->hasAnyRole(['pokja1', 'pokja2', 'pokja3', 'pokja4', 'dasawisma'])) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                throw ValidationException::withMessages([
+                    'username' => 'Akun ini khusus aplikasi Android. Silakan login lewat HP.',
+                ]);
+            }
+
             // Cap waktu login terakhir.
             $user->forceFill(['last_login' => now()])->saveQuietly();
             \App\Services\ActivityLogger::log('auth.login', $user, "Login: {$user->username}");
 
-            // Kalau role admin desa → redirect ke /desa
-            if ($user->hasRole('admin desa')) {
-                return redirect()->intended('/desa');
+            $home = $this->roleHome($user);
+
+            // Jangan biarkan url.intended lama menimpa redirect peran
+            // (mis. kecamatan buka /dashboard sebelum login lalu malah
+            // mendarat di dashboard kabupaten). Intended hanya dipakai
+            // bila masih di dalam area peran + halaman profil sendiri.
+            $intendedPath = parse_url((string) $request->session()->get('url.intended'), PHP_URL_PATH) ?: '/';
+            if (! $this->intendedAllowed($intendedPath, $home)) {
+                $request->session()->forget('url.intended');
             }
 
-            // Kalau role dasawisma → redirect ke /dasawisma
-            if ($user->hasRole('dasawisma')) {
-                return redirect()->intended('/dasawisma');
-            }
-
-            // Kalau role kecamatan → redirect ke /kecamatan
-            if ($user->hasRole('kecamatan')) {
-                return redirect()->intended('/kecamatan');
-            }
-
-            // Kalau role admin atau super-admin → redirect ke /dashboard
-            if ($user->hasAnyRole(['admin', 'super-admin'])) {
-                return redirect()->intended(route('be.dashboard'));
-            }
-
-            // Fallback: redirect ke dashboard
-            return redirect()->intended(route('be.dashboard'));
+            return redirect()->intended($home);
         }
 
         RateLimiter::hit($throttleKey);
@@ -108,6 +111,37 @@ class LoginController extends Controller
         throw ValidationException::withMessages([
             'username' => trans('auth.failed'),
         ]);
+    }
+
+    /**
+     * Halaman utama per peran (dipakai sebagai default redirect login).
+     */
+    private function roleHome($user): string
+    {
+        if ($user->hasRole('admin desa')) {
+            return '/desa';
+        }
+
+        if ($user->hasRole('kecamatan')) {
+            return '/kecamatan';
+        }
+
+        return route('be.dashboard');
+    }
+
+    /**
+     * Intended URL boleh dipakai hanya bila masih di area peran
+     * (home + turunannya), halaman depan, atau halaman profil sendiri.
+     */
+    private function intendedAllowed(string $path, string $home): bool
+    {
+        $homePath = parse_url($home, PHP_URL_PATH) ?: '/';
+        $prefix = rtrim($homePath, '/') . '/';
+
+        return $path === $homePath
+            || str_starts_with($path . '/', $prefix)
+            || $path === '/'
+            || str_starts_with($path, '/dashboard/settings');
     }
 
     /**

@@ -16,6 +16,7 @@ import {
     Users,
     Phone,
     UserPlus,
+    Download,
 } from "lucide-react";
 import { PaginatedData } from "@/types/model";
 import axios from "axios";
@@ -34,6 +35,12 @@ interface Kader {
     user?: { id: number; username: string } | null;
 }
 
+interface KaderStats {
+    total: number;
+    aktif: number;
+    per_pokja: Record<string, number>;
+}
+
 interface IndexProps {
     kaders: PaginatedData<Kader>;
     filters?: {
@@ -41,7 +48,17 @@ interface IndexProps {
         pokja?: string;
         per_page?: number | string;
     };
+    stats?: KaderStats;
 }
+
+const POKJA_FILTERS = [
+    { value: "", label: "Semua Pokja" },
+    { value: "I", label: "Pokja I" },
+    { value: "II", label: "Pokja II" },
+    { value: "III", label: "Pokja III" },
+    { value: "IV", label: "Pokja IV" },
+    { value: "DASAWISMA", label: "Dasawisma" },
+];
 
 const emptyPagination: PaginatedData<Kader> = {
     data: [],
@@ -59,7 +76,7 @@ const emptyPagination: PaginatedData<Kader> = {
     last_page: 1,
 };
 
-export default function Index({ kaders, filters = {} }: IndexProps) {
+export default function Index({ kaders, filters = {}, stats }: IndexProps) {
     const { auth } = usePage<any>().props;
     const permissions: string[] = auth?.permissions || [];
     const roles: string[] = auth?.roles || [];
@@ -69,6 +86,7 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
     const canDelete = permissions.includes("delete-kader");
 
     const [search, setSearch] = useState(filters.search || "");
+    const [pokja, setPokja] = useState(filters.pokja || "");
     const [perPage, setPerPage] = useState<number>(
         Number(filters.per_page) || 10
     );
@@ -110,11 +128,12 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
         const timeout = setTimeout(() => {
             fetchData(route("be.kader.index"), {
                 search: search || undefined,
+                pokja: pokja || undefined,
                 per_page: perPage,
             });
         }, 350);
         return () => clearTimeout(timeout);
-    }, [search, perPage]);
+    }, [search, perPage, pokja]);
 
     const openDeleteModal = (kader: Kader) => {
         setSelectedKader(kader);
@@ -130,6 +149,7 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                 setSelectedKader(null);
                 fetchData(route("be.kader.index"), {
                     search: search || undefined,
+                    pokja: pokja || undefined,
                     per_page: perPage,
                 });
             },
@@ -138,11 +158,23 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
 
     const handleReset = () => {
         setSearch("");
+        setPokja("");
         setPerPage(10);
     };
 
     const rows = localKaders.data || [];
-    const hasFilter = Boolean(search) || perPage !== 10;
+    const hasFilter = Boolean(search) || Boolean(pokja) || perPage !== 10;
+
+    const summary: KaderStats = stats || { total: 0, aktif: 0, per_pokja: {} };
+    const perPokja = summary.per_pokja || {};
+    const statCards = [
+        { key: "", label: "Total Kader", count: summary.total, sub: `${summary.aktif} aktif` },
+        { key: "DASAWISMA", label: "Dasawisma", count: Number(perPokja["DASAWISMA"]) || 0 },
+        { key: "I", label: "Pokja I", count: Number(perPokja["I"]) || 0 },
+        { key: "II", label: "Pokja II", count: Number(perPokja["II"]) || 0 },
+        { key: "III", label: "Pokja III", count: Number(perPokja["III"]) || 0 },
+        { key: "IV", label: "Pokja IV", count: Number(perPokja["IV"]) || 0 },
+    ];
 
     return (
         <MainLayout>
@@ -161,6 +193,37 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                 </div>
             </div>
 
+            {/* Ringkasan + filter cepat per pokja (klik kartu = filter) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+                {statCards.map((c) => {
+                    const active = pokja === c.key;
+                    return (
+                        <button
+                            key={c.key || "total"}
+                            type="button"
+                            onClick={() => setPokja(c.key)}
+                            className={`text-left rounded-xl border p-3 transition-colors ${
+                                active
+                                    ? "border-teal-500 ring-1 ring-teal-500 bg-teal-50/60 dark:bg-teal-900/20"
+                                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700"
+                            }`}
+                        >
+                            <p className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                                {c.count}
+                            </p>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                                {c.label}
+                            </p>
+                            {c.sub && (
+                                <p className="text-[11px] text-teal-600 dark:text-teal-400">
+                                    {c.sub}
+                                </p>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
             <Card className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
                 {/* Toolbar */}
                 <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -174,6 +237,29 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
+
+                    <select
+                        value={pokja}
+                        onChange={(e) => setPokja(e.target.value)}
+                        className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm rounded-lg py-2 px-3 outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 shrink-0"
+                    >
+                        {POKJA_FILTERS.map((o) => (
+                            <option key={o.value || "all"} value={o.value}>
+                                {o.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <a
+                        href={route("be.kader.export", {
+                            search: search || undefined,
+                            pokja: pokja || undefined,
+                        })}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-colors shrink-0"
+                    >
+                        <Download size={15} />
+                        Export
+                    </a>
 
                     {hasFilter && (
                         <Button
@@ -232,8 +318,16 @@ export default function Index({ kaders, filters = {} }: IndexProps) {
                             render: (kader: Kader) => (
                                 <div className="flex justify-center">
                                     {kader.pokja ? (
-                                        <Badge type="info">
-                                            Pokja {kader.pokja}
+                                        <Badge
+                                            type={
+                                                kader.pokja === "DASAWISMA"
+                                                    ? "success"
+                                                    : "info"
+                                            }
+                                        >
+                                            {kader.pokja === "DASAWISMA"
+                                                ? "Dasawisma"
+                                                : `Pokja ${kader.pokja}`}
                                         </Badge>
                                     ) : (
                                         <span className="text-xs text-slate-400">

@@ -38,7 +38,7 @@ const JABATAN_OPTIONS = [
     "Anggota",
 ];
 
-const POKJA_OPTIONS = ["I", "II", "III", "IV", "Sekretariat"];
+const POKJA_OPTIONS = ["I", "II", "III", "IV", "Sekretariat", "DASAWISMA"];
 
 /** Format tanggal ke YYYY-MM-DD untuk input type="date" */
 const toDateInput = (value: string | null): string => {
@@ -204,9 +204,11 @@ export default function Edit({ kader, kecamatanList = [], desaByKecamatan = {} }
                                     <option value="">Tidak ada</option>
                                     {POKJA_OPTIONS.map((p) => (
                                         <option key={p} value={p}>
-                                            {p === "Sekretariat"
-                                                ? p
-                                                : `Pokja ${p}`}
+                                            {p === "DASAWISMA"
+                                                ? "Dasawisma"
+                                                : p === "Sekretariat"
+                                                  ? p
+                                                  : `Pokja ${p}`}
                                         </option>
                                     ))}
                                 </select>

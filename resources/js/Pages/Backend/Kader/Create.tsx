@@ -18,7 +18,7 @@ const JABATAN_OPTIONS = [
     "Anggota",
 ];
 
-const POKJA_OPTIONS = ["I", "II", "III", "IV", "Sekretariat"];
+const POKJA_OPTIONS = ["I", "II", "III", "IV", "Sekretariat", "DASAWISMA"];
 
 interface CreateProps {
     kecamatanList?: string[];
@@ -172,9 +172,11 @@ export default function Create({ kecamatanList = [], desaByKecamatan = {} }: Cre
                                     <option value="">Tidak ada</option>
                                     {POKJA_OPTIONS.map((p) => (
                                         <option key={p} value={p}>
-                                            {p === "Sekretariat"
-                                                ? p
-                                                : `Pokja ${p}`}
+                                            {p === "DASAWISMA"
+                                                ? "Dasawisma"
+                                                : p === "Sekretariat"
+                                                  ? p
+                                                  : `Pokja ${p}`}
                                         </option>
                                     ))}
                                 </select>

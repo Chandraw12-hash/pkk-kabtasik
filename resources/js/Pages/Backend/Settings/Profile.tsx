@@ -1,5 +1,7 @@
 import React, { useRef, ChangeEvent, FormEventHandler } from "react";
 import MainLayout from "@/Layouts/MainLayout";
+import AdminDesaLayout from "@/Components/Layout/AdminDesaLayout";
+import AdminKecamatanLayout from "@/Components/Layout/AdminKecamatanLayout";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
@@ -17,7 +19,7 @@ interface ProfileProps {
 export default function Profile({ status, auth }: ProfileProps) {
     const { user } = usePage<SharedProps>().props.auth;
     // Get App Settings and Auth from Inertia Shared Props
-    const { roles, permissions } = user;
+    const { roles } = user;
 
     const { data, setData, post, processing, errors, progress } = useForm<{
         _method: string;
@@ -69,8 +71,16 @@ export default function Profile({ status, auth }: ProfileProps) {
         }
     };
 
+    // Layout mengikuti peran agar admin desa/kecamatan tetap di
+    // sidebar-nya sendiri saat buka Profil (bukan sidebar kabupaten).
+    const Layout = roles?.includes("admin desa")
+        ? AdminDesaLayout
+        : roles?.includes("kecamatan")
+          ? AdminKecamatanLayout
+          : MainLayout;
+
     return (
-        <MainLayout>
+        <Layout>
             <Head title="Profil Saya" />
 
             <div className="mb-8">
@@ -219,9 +229,11 @@ export default function Profile({ status, auth }: ProfileProps) {
                     </Card>
                 </div>
 
-                {/* Password Update */}
-
-                {permissions?.includes("edit-profile") && (
+                {/* Password Update — untuk semua yang login (route backend
+                    memang auth-only tanpa kunci role). Gate permission
+                    "edit-profile" dihapus karena permission itu tak pernah
+                    ada di DB sehingga form tersembunyi untuk SEMUA user. */}
+                {
                     <div>
                         <div className="flex items-center gap-2 mb-4">
                             <Lock
@@ -322,8 +334,8 @@ export default function Profile({ status, auth }: ProfileProps) {
                             </form>
                         </Card>
                     </div>
-                )}
+                }
             </div>
-        </MainLayout>
+        </Layout>
     );
 }

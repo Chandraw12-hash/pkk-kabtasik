@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kader;
+use App\Exports\KaderExport;
 use Database\Seeders\AdminDesaSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KaderController extends Controller
 {
     public function index(Request $request)
     {
         $search  = $request->input('search');
+        $pokja   = $request->input('pokja');
         $perPage = (int) $request->input('per_page', 10);
 
         $kaders = Kader::query()
@@ -27,6 +30,9 @@ class KaderController extends Controller
                         ->orWhere('jabatan', 'like', "%{$search}%");
                 });
             })
+            ->when($pokja, function ($q) use ($pokja) {
+                $q->where('pokja', $pokja);
+            })
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -39,9 +45,19 @@ class KaderController extends Controller
             return response()->json($kaders);
         }
 
+        $stats = [
+            'total' => Kader::count(),
+            'aktif' => Kader::where('status_aktif', true)->count(),
+            'per_pokja' => Kader::selectRaw('pokja, COUNT(*) as jml')
+                ->groupBy('pokja')
+                ->pluck('jml', 'pokja')
+                ->all(),
+        ];
+
         return Inertia::render('Backend/Kader/Index', [
             'kaders'  => $kaders,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'pokja']),
+            'stats'   => $stats,
         ]);
     }
 
@@ -86,7 +102,7 @@ class KaderController extends Controller
             'nama'              => 'required|string|max:255',
             'nik'               => 'nullable|string|max:20|unique:kader,nik,' . $id,
             'jabatan'           => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
-            'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat',
+            'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat,DASAWISMA',
             'kecamatan'         => ['nullable', 'string', 'max:255', Rule::in(array_keys(AdminDesaSeeder::DATA_DESA))],
             'desa_kelurahan'    => 'nullable|string|max:255',
             'no_hp'             => 'nullable|string|max:20',
@@ -113,5 +129,18 @@ class KaderController extends Controller
         return redirect()
             ->route('be.kader.index')
             ->with('success', 'Data kader berhasil dihapus!');
+    }
+
+    /**
+     * EXPORT — Excel mengikuti filter search + pokja yang aktif.
+     */
+    public function export(Request $request)
+    {
+        $filename = 'data-kader-pkk-' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(
+            new KaderExport($request->input('search'), $request->input('pokja')),
+            $filename
+        );
     }
 }

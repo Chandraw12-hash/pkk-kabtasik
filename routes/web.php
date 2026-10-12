@@ -197,6 +197,7 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('kader/export', [KaderController::class, 'export'])->name('kader.export');
     Route::resource('kader', KaderController::class)
         ->names('kader')
         ->except(['show']);

@@ -559,6 +559,14 @@ export default function AdminKecamatanLayout({ children }: AdminKecamatanLayoutP
                                     Halaman Depan
                                 </Link>
 
+                                <Link
+                                    href="/dashboard/settings/profile"
+                                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                                >
+                                    <User size={16} />
+                                    Profil Saya
+                                </Link>
+
                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
 
                                 <Link

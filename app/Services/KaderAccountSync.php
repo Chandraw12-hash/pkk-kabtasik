@@ -16,12 +16,13 @@ class KaderAccountSync
     /** Role yang otomatis punya baris kader. */
     public const KADER_ROLES = ['pokja1', 'pokja2', 'pokja3', 'pokja4', 'dasawisma'];
 
-    /** Role -> kolom pokja kader (I/II/III/IV/null). */
+    /** Role -> kolom pokja kader (I/II/III/IV/DASAWISMA/null). */
     public const ROLE_POKJA = [
         'pokja1' => 'I',
         'pokja2' => 'II',
         'pokja3' => 'III',
         'pokja4' => 'IV',
+        'dasawisma' => 'DASAWISMA',
     ];
 
     /**
