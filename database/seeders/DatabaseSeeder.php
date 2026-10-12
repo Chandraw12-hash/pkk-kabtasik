@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             IndikatorSeeder::class,
             RoleKecamatanSeeder::class,
             AdminDesaSeeder::class,  // ← TAMBAH INI
+            DasawismaSeeder::class, // 1 akun dasawisma per desa (351)
             SuperAdminSeeder::class,
         ]);
     }
