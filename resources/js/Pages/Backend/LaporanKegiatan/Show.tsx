@@ -18,6 +18,14 @@ import {
 
 // Interface disamakan persis dengan Laporan di Index.tsx, supaya
 // tidak ada field yang "hilang" antara list dan detail.
+interface BukuKegiatanRow {
+    nama: string;
+    jabatan?: string | null;
+    tanggal?: string | null;
+    tempat?: string | null;
+    uraian?: string | null;
+}
+
 interface Laporan {
     id: number;
     judul: string;
@@ -32,6 +40,12 @@ interface Laporan {
     user?: { id: number; name: string } | null;
     reviewer?: { id: number; name: string } | null;
     reviewed_at?: string | null;
+    data_angka?: {
+        jenis_formulir?: string | null;
+        buku_kegiatan?: BukuKegiatanRow[] | null;
+        buku_kegiatan_count?: number | null;
+        [key: string]: unknown;
+    } | null;
 }
 
 interface Props {
@@ -80,6 +94,122 @@ const getStatusBadge = (status: string) => {
     };
     return statusMap[status] || { label: status, type: "default" };
 };
+
+// Tanggal YYYY-MM-DD dari baris Buku Kegiatan — parse manual agar tidak
+// mundur sehari (new Date("2026-10-10") dibaca UTC tengah malam).
+const formatTanggalBuku = (d?: string | null) => {
+    if (!d) return "—";
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d.trim());
+    try {
+        const dt = m
+            ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+            : new Date(d);
+        return dt.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
+    } catch {
+        return d;
+    }
+};
+
+const isBukuKegiatan = (laporan: Laporan): boolean =>
+    laporan.kategori_pokja === "I" &&
+    laporan.data_angka?.jenis_formulir === "buku_kegiatan_lampiran_413" &&
+    Array.isArray(laporan.data_angka?.buku_kegiatan);
+
+// Sheet Buku Kegiatan Pokja I — Lampiran 4.13 (Kemendagri & PKK Pusat).
+// Kolom: 1 NO | 2 NAMA | 3 JABATAN | 4 TANGGAL | 5 TEMPAT | 6 URAIAN | 7 TTD.
+// Kolom tanda tangan sengaja dikosongkan (diisi basah saat cetak).
+function BukuKegiatanTable({ laporan }: { laporan: Laporan }) {
+    const rows = (laporan.data_angka?.buku_kegiatan ?? []).filter(
+        (r) => r && (r.nama || r.uraian)
+    );
+    if (rows.length === 0) return null;
+
+    const th =
+        "border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 text-center";
+    const td =
+        "border border-slate-300 px-3 py-2 text-sm text-slate-700 align-top";
+
+    return (
+        <Card className="p-6 dark:bg-slate-800 dark:border-slate-700">
+            <div className="flex items-start justify-between gap-4 mb-1">
+                <div className="flex-1 text-center">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 tracking-wide">
+                        BUKU KEGIATAN
+                    </h2>
+                </div>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                    LAMPIRAN 4.13
+                </p>
+            </div>
+
+            <div className="overflow-x-auto -mx-1 px-1">
+                <table className="w-full border-collapse min-w-[760px]">
+                    <thead>
+                        <tr>
+                            <th className={th} rowSpan={2}>
+                                NO
+                            </th>
+                            <th className={th} rowSpan={2}>
+                                NAMA
+                            </th>
+                            <th className={th} rowSpan={2}>
+                                JABATAN
+                            </th>
+                            <th className={th} colSpan={3}>
+                                KEGIATAN
+                            </th>
+                            <th className={th} rowSpan={2}>
+                                TANDA TANGAN
+                            </th>
+                        </tr>
+                        <tr>
+                            <th className={th}>TANGGAL</th>
+                            <th className={th}>TEMPAT</th>
+                            <th className={th}>URAIAN</th>
+                        </tr>
+                        <tr>
+                            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                                <th
+                                    key={n}
+                                    className={`${th} font-semibold text-slate-400`}
+                                >
+                                    {n}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.map((r, i) => (
+                            <tr key={i}>
+                                <td className={`${td} text-center`}>{i + 1}</td>
+                                <td className={`${td} font-medium`}>
+                                    {r.nama || "—"}
+                                </td>
+                                <td className={td}>{r.jabatan || "—"}</td>
+                                <td className={`${td} whitespace-nowrap`}>
+                                    {formatTanggalBuku(r.tanggal)}
+                                </td>
+                                <td className={td}>{r.tempat || "—"}</td>
+                                <td className={`${td} whitespace-pre-wrap`}>
+                                    {r.uraian || "—"}
+                                </td>
+                                <td className={td}>&nbsp;</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <p className="mt-4 text-center text-xs italic text-slate-400">
+                Kementerian Dalam Negeri &amp; Tim Penggerak PKK Pusat
+            </p>
+        </Card>
+    );
+}
 
 // Baris info kecil dipakai berulang (wilayah, pengirim, tanggal, dll)
 function InfoRow({
@@ -156,6 +286,9 @@ export default function Show({ laporan }: Props) {
                     <Card className="p-6 dark:bg-slate-800 dark:border-slate-700">
                         <div className="flex flex-wrap items-center gap-2 mb-3">
                             <Badge type="info">Pokja {laporan.kategori_pokja}</Badge>
+                            {isBukuKegiatan(laporan) && (
+                                <Badge type="info">Buku Kegiatan • Lamp. 4.13</Badge>
+                            )}
                             <Badge type={statusInfo.type}>{statusInfo.label}</Badge>
                         </div>
 
@@ -172,6 +305,10 @@ export default function Show({ laporan }: Props) {
                             </p>
                         </div>
                     </Card>
+
+                    {isBukuKegiatan(laporan) && (
+                        <BukuKegiatanTable laporan={laporan} />
+                    )}
 
                     <Card className="p-6 dark:bg-slate-800 dark:border-slate-700">
                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">

@@ -11,6 +11,8 @@ use App\Models\Pokja4;
 use App\Models\Pokja4KunjunganPyd;
 use App\Models\Pokja4KegiatanPosyandu;
 use App\Models\Pokja4Rekapitulasi;
+use App\Models\Pokja4DataDukung;
+use App\Models\Pokja4DataProgram;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -119,7 +121,13 @@ class LaporanKegiatanController extends Controller
         ]);
         \App\Services\ActivityLogger::log('laporan.approve', $laporan_kegiatan, "Laporan disetujui: #{$laporan_kegiatan->id}");
 
+        $isBukuKegiatan = is_array($dataAngka)
+            && ($dataAngka['jenis_formulir'] ?? null) === 'buku_kegiatan_lampiran_413';
+
         if ($statistikTerupdate) {
+            if ($isBukuKegiatan) {
+                return redirect()->back()->with('success', '✅ Laporan berhasil disetujui dan masuk ke sheet Laporan Kegiatan Pokja I (Buku Kegiatan Lamp. 4.13).');
+            }
             return redirect()->back()->with('success', '✅ Laporan berhasil disetujui dan data masuk ke statistik Pokja.');
         }
 
@@ -243,6 +251,7 @@ class LaporanKegiatanController extends Controller
             case 'IV-POSYANDU':
                 $this->updateKegiatanPosyandu($kecamatan, $dataAngka);
                 break;
+<<<<<<< HEAD
             case 'IV-REKAP':
                 $this->updateRekapitulasi($kecamatan, $dataAngka);
                 break;
@@ -256,6 +265,18 @@ class LaporanKegiatanController extends Controller
                 \App\Services\Pokja4DataDukungSyncService::syncDataProgram($laporan);
                 break;
             default:
+=======
+        case 'IV-REKAP':
+            $this->updateRekapitulasi($kecamatan, $dataAngka);
+            break;
+        case 'IV-DATA-DUKUNG':
+            $this->updateDataDukung($kecamatan, $dataAngka);
+            break;
+        case 'IV-DATA-PROGRAM':
+            $this->updateDataProgram($kecamatan, $dataAngka);
+            break;
+        default:
+>>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
                 Log::warning('⚠️ Kategori Pokja tidak dikenal: ' . $pokja);
         }
     }
@@ -263,6 +284,17 @@ class LaporanKegiatanController extends Controller
     // ─── POKJA 1 ─────────────────────────────────────────────────
     private function updatePokja1($kecamatan, $dataAngka, int $tahun)
     {
+        // Buku Kegiatan Lamp. 4.13 = rincian baris nama/uraian, bukan angka
+        // agregat. Jangan bikin baris rekap kosong (0,0,-) — cukup approve
+        // laporannya; rincian tampil di sheet Laporan Kegiatan Pokja I.
+        if (
+            ($dataAngka['jenis_formulir'] ?? null) === 'buku_kegiatan_lampiran_413'
+            && is_array($dataAngka['buku_kegiatan'] ?? null)
+        ) {
+            Log::info('📖 Pokja I Buku Kegiatan — skip rekap agregat untuk: ' . $kecamatan);
+            return;
+        }
+
         $pokja = Pokja1::firstOrCreate(
             ['kecamatan' => $kecamatan],
             [
@@ -678,5 +710,69 @@ class LaporanKegiatanController extends Controller
         $record->save();
 
         Log::info('✅ Rekapitulasi updated untuk: ' . $kecamatan);
+    }
+
+    // ─── DATA DUKUNG (overwrite per kecamatan+tahun+semester) ────────────────
+    private function updateDataDukung($kecamatan, $dataAngka)
+    {
+        $tahun = $dataAngka['tahun'] ?? date('Y');
+        $semester = strtoupper($dataAngka['semester'] ?? 'I');
+        if (!in_array($semester, ['I', 'II'], true)) {
+            $semester = 'I';
+        }
+
+        $record = Pokja4DataDukung::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'tahun' => $tahun,
+            'semester' => $semester,
+        ]);
+
+        $teks = [
+            'provinsi', 'kabupaten_kota', 'desa_kelurahan', 'program',
+            'pj_desa', 'pj_desa_hp', 'pj_kecamatan', 'pj_kecamatan_hp',
+            'pj_kabupaten', 'pj_kabupaten_hp', 'pj_provinsi', 'pj_provinsi_hp',
+            'evaluasi', 'keterangan',
+        ];
+        foreach ((new Pokja4DataDukung)->getFillable() as $field) {
+            if (in_array($field, ['kecamatan', 'tahun', 'semester'], true)) {
+                continue;
+            }
+            $record->$field = in_array($field, $teks, true)
+                ? ($dataAngka[$field] ?? null)
+                : ($dataAngka[$field] ?? 0);
+        }
+
+        $record->save();
+
+        Log::info('✅ Data Dukung updated untuk: ' . $kecamatan . ' semester ' . $semester . ' tahun ' . $tahun);
+    }
+
+    // ─── DATA PROGRAM (overwrite per kecamatan+tahun+semester) ───────────────
+    private function updateDataProgram($kecamatan, $dataAngka)
+    {
+        $tahun = $dataAngka['tahun'] ?? date('Y');
+        $semester = strtoupper($dataAngka['semester'] ?? 'I');
+        if (!in_array($semester, ['I', 'II'], true)) {
+            $semester = 'I';
+        }
+
+        $record = Pokja4DataProgram::firstOrNew([
+            'kecamatan' => $kecamatan,
+            'tahun' => $tahun,
+            'semester' => $semester,
+        ]);
+
+        foreach ((new Pokja4DataProgram)->getFillable() as $field) {
+            if (in_array($field, ['kecamatan', 'tahun', 'semester'], true)) {
+                continue;
+            }
+            $record->$field = $field === 'evaluasi'
+                ? ($dataAngka[$field] ?? null)
+                : ($dataAngka[$field] ?? 0);
+        }
+
+        $record->save();
+
+        Log::info('✅ Data Program updated untuk: ' . $kecamatan . ' semester ' . $semester . ' tahun ' . $tahun);
     }
 }

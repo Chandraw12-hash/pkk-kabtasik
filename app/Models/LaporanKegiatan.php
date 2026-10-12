@@ -98,6 +98,8 @@ class LaporanKegiatan extends Model
             'IV-PYD'       => 'Pokja IV - Kunjungan PYD',
             'IV-POSYANDU'  => 'Pokja IV - Kegiatan Posyandu',
             'IV-REKAP'     => 'Pokja IV - Rekapitulasi',
+            'IV-DATA-DUKUNG'  => 'Pokja IV - Data Dukung',
+            'IV-DATA-PROGRAM' => 'Pokja IV - Data Program',
             'SEKRETARIAT'  => 'Sekretariat',
             default        => $this->kategori_pokja ?? 'Unknown',
         };

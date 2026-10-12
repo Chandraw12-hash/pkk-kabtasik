@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Pokja1;
+use App\Models\LaporanKegiatan;
 use App\Imports\Pokja1Import;
 use App\Exports\Pokja1Export;
 use Illuminate\Support\Facades\Storage;
@@ -29,9 +30,64 @@ class Pokja1Controller extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // ─── Sheet baru: Laporan Kegiatan Pokja I (kabupaten) ───
+        // Menampilkan laporan mobile kategori I (numerik + Buku Kegiatan Lamp. 4.13)
+        // agar admin kabupaten bisa melihat rincian kegiatan per kecamatan.
+        $laporanSearch = $request->input('laporan_search');
+        $laporanStatus = $request->input('laporan_status');
+        $laporanPerPage = (int) $request->input('laporan_per_page', 10);
+
+        $laporanQuery = LaporanKegiatan::query()
+            ->with(['user:id,name'])
+            ->where('kategori_pokja', 'I')
+            ->when($laporanSearch, function ($q) use ($laporanSearch) {
+                $q->where(function ($q) use ($laporanSearch) {
+                    $q->where('judul', 'like', "%{$laporanSearch}%")
+                      ->orWhere('kecamatan', 'like', "%{$laporanSearch}%")
+                      ->orWhere('desa_kelurahan', 'like', "%{$laporanSearch}%")
+                      ->orWhere('nama_dasawisma', 'like', "%{$laporanSearch}%");
+                });
+            })
+            ->when($laporanStatus, fn ($q) => $q->where('status', $laporanStatus))
+            ->latest();
+
+        $laporanKegiatan = $laporanQuery->paginate($laporanPerPage, ['*'], 'laporan_page')
+            ->withQueryString();
+
+        // Hitung ringkasan baris Buku Kegiatan (Lamp. 4.13) yang sudah disetujui
+        $bukuKegiatanCount = (clone $laporanQuery)
+            ->where('status', 'approved')
+            ->get()
+            ->reduce(function ($carry, $laporan) {
+                $data = $laporan->data_angka;
+                if (is_string($data)) {
+                    $data = json_decode($data, true);
+                }
+                if (
+                    is_array($data)
+                    && ($data['jenis_formulir'] ?? null) === 'buku_kegiatan_lampiran_413'
+                    && is_array($data['buku_kegiatan'] ?? null)
+                ) {
+                    return $carry + count($data['buku_kegiatan']);
+                }
+                return $carry;
+            }, 0);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'pokjas' => $pokjaData,
+                'laporan_kegiatan' => $laporanKegiatan,
+                'buku_kegiatan_count' => $bukuKegiatanCount,
+                'laporan_loaded' => true,
+            ]);
+        }
+
         return Inertia::render('Backend/Pokja1/Index', [
             'pokjas' => $pokjaData,
-            'filters' => $request->only(['search', 'per_page']),
+            'laporan_kegiatan' => $laporanKegiatan,
+            'buku_kegiatan_count' => $bukuKegiatanCount,
+            'laporan_loaded' => true,
+            'filters' => $request->only(['search', 'per_page', 'laporan_search', 'laporan_status', 'laporan_per_page', 'active_tab']),
         ]);
     }
 

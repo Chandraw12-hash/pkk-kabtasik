@@ -68,10 +68,17 @@ class User extends Authenticatable
         'pokja1' => ['I'],
         'pokja2' => ['II'],
         'pokja3' => ['III'],
+<<<<<<< HEAD
         'pokja4' => ['IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP', 'IV-DATADUKUNG', 'IV-DATAPROGRAM'],
     ];
 
     public const ALL_POKJA_KATEGORI = ['I', 'II', 'III', 'IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP', 'IV-DATADUKUNG', 'IV-DATAPROGRAM'];
+=======
+        'pokja4' => ['IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP', 'IV-DATA-DUKUNG', 'IV-DATA-PROGRAM'],
+    ];
+
+    public const ALL_POKJA_KATEGORI = ['I', 'II', 'III', 'IV', 'IV-PYD', 'IV-POSYANDU', 'IV-REKAP', 'IV-DATA-DUKUNG', 'IV-DATA-PROGRAM'];
+>>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
 
     public function canAccessMobile(): bool
     {

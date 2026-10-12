@@ -33,7 +33,17 @@ interface Laporan {
     user?: { id: number; name: string } | null;
     reviewer?: { id: number; name: string } | null;
     reviewed_at?: string | null;
+    data_angka?: {
+        jenis_formulir?: string | null;
+        buku_kegiatan?: unknown[] | null;
+        [key: string]: unknown;
+    } | null;
 }
+
+const isBukuKegiatan = (item: Laporan): boolean =>
+    item.kategori_pokja === "I" &&
+    item.data_angka?.jenis_formulir === "buku_kegiatan_lampiran_413" &&
+    Array.isArray(item.data_angka?.buku_kegiatan);
 
 interface Paginated<T> {
     data: T[];
@@ -417,6 +427,13 @@ export default function Index({
                                             "—"}{" "}
                                         · {formatTanggal(item.created_at)}
                                     </p>
+                                    {isBukuKegiatan(item) && (
+                                        <p className="mt-1">
+                                            <Badge type="info">
+                                                Buku Kegiatan • Lamp. 4.13
+                                            </Badge>
+                                        </p>
+                                    )}
                                 </div>
                             ),
                         },
