@@ -328,10 +328,13 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         Route::delete('/tokens/{id}', [ConfigController::class, 'revokeToken'])->name('tokens.destroy');
         Route::delete('/sessions/{id}', [ConfigController::class, 'revokeSession'])->name('sessions.destroy');
 
-        // Pengaturan aplikasi/landing hanya super-admin.
+        // Pengaturan aplikasi hanya super-admin.
+        // Landing page boleh diubah admin kabupaten juga.
         Route::middleware('role:super-admin')->group(function () {
             Route::get('/app', [ConfigController::class, 'app'])->name('app');
             Route::post('/app', [ConfigController::class, 'updateApp'])->name('app.update');
+        });
+        Route::middleware('role:admin|super-admin')->group(function () {
             Route::get('/landing', [LandingContentController::class, 'index'])->name('landing');
             Route::post('/landing', [LandingContentController::class, 'update'])->name('landing.update');
             Route::delete('/landing/remove-image', [LandingContentController::class, 'removeImage'])->name('landing.remove-image');

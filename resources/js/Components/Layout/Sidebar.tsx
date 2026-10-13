@@ -685,8 +685,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             <span>Peta Sebaran</span>
                         </Link>
 
-                        {/* Pengaturan — khusus super-admin (kabupaten tidak punya isi lagi) */}
-                        {isSuperAdmin && (
+                        {/* Pengaturan — admin kabupaten & super-admin (landing page), sisanya super-admin */}
+                        {isAdminLike && (
                         <div>
                             <button
                                 type="button"
@@ -748,7 +748,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                             Aplikasi
                                         </Link>
                                     )}
-                                    {isSuperAdmin && routeExists("be.settings.landing") && (
+                                    {isAdminLike && routeExists("be.settings.landing") && (
                                         <Link
                                             href={route("be.settings.landing")}
                                             className={`block py-2 px-4 text-sm rounded-lg transition-colors ${
