@@ -72,6 +72,11 @@ class BeritaController extends Controller
         'foto.image' => 'File harus berupa gambar.',
         'foto.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP.',
         'foto.max' => 'Ukuran gambar maksimal 5MB.',
+        'galeri.array' => 'Galeri harus berupa daftar gambar.',
+        'galeri.max' => 'Maksimal 5 file galeri per kirim.',
+        'galeri.*.image' => 'Semua file galeri harus berupa gambar.',
+        'galeri.*.mimes' => 'Format galeri harus JPG, JPEG, PNG, atau WEBP.',
+        'galeri.*.max' => 'Ukuran tiap gambar galeri maksimal 5MB.',
         'status.in' => 'Status tidak valid.',
         'reason.max' => 'Alasan penolakan maksimal 500 karakter.',
     ];
@@ -148,7 +153,7 @@ class BeritaController extends Controller
     }
 
     /**
-     * STORE — Simpan berita baru
+     * STORE — Simpan berita baru (cover + galeri maks total 5 foto)
      * ✅ FIX: Admin hormati pilihan checkbox, Kader otomatis pending
      */
     public function store(Request $request)
@@ -160,6 +165,8 @@ class BeritaController extends Controller
                 'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
                 'kecamatan' => 'nullable|string|max:255',
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'galeri' => 'nullable|array|max:5',
+                'galeri.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
                 'status_publikasi' => 'nullable|boolean',
             ],
             self::VALIDATION_MESSAGES
@@ -169,6 +176,14 @@ class BeritaController extends Controller
         if ($request->hasFile('foto')) {
             $fotoPath = $request->file('foto')->store('berita-photos', 'public');
         }
+
+        // Galeri: file tambahan, total (cover + galeri) maks 5.
+        // Kalau tak ada cover, foto galeri pertama jadi cover.
+        $galeriFiles = collect($request->file('galeri', []))->filter()->values();
+        if (!$fotoPath && $galeriFiles->isNotEmpty()) {
+            $fotoPath = $galeriFiles->shift()->store('berita-photos', 'public');
+        }
+        $galeriFiles = $galeriFiles->take($fotoPath ? 4 : 5);
 
         $isAdmin = auth()->user()->hasAnyRole(['admin', 'super-admin']);
 
@@ -181,7 +196,7 @@ class BeritaController extends Controller
             $status = 'pending';
         }
 
-        Berita::create([
+        $berita = Berita::create([
             'judul' => $validated['judul'],
             'slug' => Str::slug($validated['judul']) . '-' . time(),
             'konten' => $validated['konten'],
@@ -193,6 +208,13 @@ class BeritaController extends Controller
             'created_by' => auth()->id(),
             'user_id' => auth()->id(),
         ]);
+
+        foreach ($galeriFiles as $i => $file) {
+            $berita->fotos()->create([
+                'foto' => $file->store('berita-photos', 'public'),
+                'urutan' => $i,
+            ]);
+        }
 
         $message = $isAdmin
             ? ($statusPublikasi
@@ -208,20 +230,20 @@ class BeritaController extends Controller
     public function show(Berita $berita)
     {
         return Inertia::render('Backend/Berita/Show', [
-            'berita' => $berita,
+            'berita' => $berita->load('fotos'),
         ]);
     }
 
     public function edit(Berita $berita)
     {
         return Inertia::render('Backend/Berita/Edit', [
-            'berita' => $berita,
+            'berita' => $berita->load('fotos'),
             'kecamatanList' => self::KECAMATAN_LIST,
         ]);
     }
 
     /**
-     * UPDATE — Perbarui berita
+     * UPDATE — Perbarui berita (cover + galeri maks total 5 foto)
      * ✅ FIX: Admin hormati pilihan checkbox
      */
     public function update(Request $request, Berita $berita)
@@ -233,11 +255,27 @@ class BeritaController extends Controller
                 'kategori' => 'required|string|in:Artikel,Pemberitaan Desa,Pengumuman,Kegiatan',
                 'kecamatan' => 'nullable|string|max:255',
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'galeri' => 'nullable|array|max:5',
+                'galeri.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+                'hapus_galeri' => 'nullable|array',
+                'hapus_galeri.*' => 'integer|exists:berita_fotos,id',
                 'remove_image' => 'nullable|boolean',
                 'status_publikasi' => 'nullable|boolean',
             ],
             self::VALIDATION_MESSAGES
         );
+
+        // === HAPUS GALERI TERPILIH ===
+        $hapusIds = collect($request->input('hapus_galeri', []))->filter()->values();
+        if ($hapusIds->isNotEmpty()) {
+            $rows = $berita->fotos()->whereIn('id', $hapusIds)->get();
+            foreach ($rows as $row) {
+                if ($row->foto && Storage::disk('public')->exists($row->foto)) {
+                    Storage::disk('public')->delete($row->foto);
+                }
+                $row->delete();
+            }
+        }
 
         // === HANDLE FOTO ===
         $fotoPath = $berita->foto;
@@ -252,6 +290,29 @@ class BeritaController extends Controller
                 Storage::disk('public')->delete($fotoPath);
             }
             $fotoPath = null;
+        }
+
+        // === TAMBAH GALERI BARU (total baris galeri maks 4) ===
+        $sisaSlot = max(0, 4 - $berita->fotos()->count());
+        $baru = collect($request->file('galeri', []))->filter()->values()->take($sisaSlot);
+        if ($baru->isNotEmpty()) {
+            $mulai = (int) ($berita->fotos()->max('urutan') ?? -1) + 1;
+            foreach ($baru as $i => $file) {
+                $berita->fotos()->create([
+                    'foto' => $file->store('berita-photos', 'public'),
+                    'urutan' => $mulai + $i,
+                ]);
+            }
+        }
+
+        // Cover dihapus + tak ada pengganti + galeri tersisa:
+        // promosikan foto galeri pertama jadi cover (biar tak yatim).
+        if (!$fotoPath) {
+            $pertama = $berita->fotos()->orderBy('urutan')->first();
+            if ($pertama) {
+                $fotoPath = $pertama->foto;
+                $pertama->delete();
+            }
         }
 
         // === HANDLE STATUS ===
@@ -294,6 +355,12 @@ class BeritaController extends Controller
 
         if ($berita->foto && Storage::disk('public')->exists($berita->foto)) {
             Storage::disk('public')->delete($berita->foto);
+        }
+
+        foreach ($berita->fotos as $row) {
+            if ($row->foto && Storage::disk('public')->exists($row->foto)) {
+                Storage::disk('public')->delete($row->foto);
+            }
         }
 
         $berita->delete();

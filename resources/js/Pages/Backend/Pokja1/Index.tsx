@@ -7,11 +7,7 @@ import ConfirmationModal from "@/Components/UI/ConfirmationModal";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
 import { Head, Link, useForm } from "@inertiajs/react";
-<<<<<<< HEAD
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, Download, X, FileSpreadsheet, CheckCircle2, ChevronDown } from "lucide-react";
-=======
-import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, X, FileSpreadsheet, CheckCircle2, ChevronDown, ClipboardList, BookOpenText, FileText } from "lucide-react";
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
+import { Search, Edit2, Trash2, RotateCcw, Plus, Upload, Download, X, FileSpreadsheet, CheckCircle2, ChevronDown, ClipboardList, BookOpenText, FileText } from "lucide-react";
 import axios from "axios";
 
 type TabId = "rekap" | "laporan";

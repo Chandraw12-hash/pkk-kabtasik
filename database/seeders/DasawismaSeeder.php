@@ -2,21 +2,15 @@
 
 namespace Database\Seeders;
 
-<<<<<<< HEAD
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-=======
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
 
 class DasawismaSeeder extends Seeder
 {
     /**
-<<<<<<< HEAD
      * 1 akun Dasawisma per desa (351 akun) berbasis
      * AdminDesaSeeder::DATA_DESA (39 kecamatan).
      *
@@ -109,12 +103,5 @@ class DasawismaSeeder extends Seeder
         $this->command->info('  - singaparna.singaparna');
         $this->command->info('  - cikunir.singaparna');
         $this->command->info('========================================');
-=======
-     * Run the database seeds.
-     */
-    public function run(): void
-    {
-        //
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
     }
 }

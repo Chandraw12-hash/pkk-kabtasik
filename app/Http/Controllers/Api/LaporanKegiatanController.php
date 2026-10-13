@@ -11,12 +11,7 @@ use App\Models\Pokja4;
 use App\Models\Pokja4KunjunganPyd;
 use App\Models\Pokja4KegiatanPosyandu;
 use App\Models\Pokja4Rekapitulasi;
-<<<<<<< HEAD
 use App\Services\Pokja4DataDukungSyncService;
-=======
-use App\Models\Pokja4DataDukung;
-use App\Models\Pokja4DataProgram;
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -134,11 +129,7 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-<<<<<<< HEAD
             'kategori_pokja' => 'required|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP,IV-DATADUKUNG,IV-DATAPROGRAM',
-=======
-            'kategori_pokja' => 'required|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP,IV-DATA-DUKUNG,IV-DATA-PROGRAM',
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
             'data_angka' => 'nullable|array',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'kecamatan' => 'nullable|string|max:255',
@@ -398,7 +389,6 @@ class LaporanKegiatanController extends Controller
                 'balita_meninggal_p',
                 'keterangan',
             ],
-<<<<<<< HEAD
             'IV-DATADUKUNG' => [
                 'jumlah_penduduk',
                 'jumlah_kk',
@@ -414,48 +404,13 @@ class LaporanKegiatanController extends Controller
                 'jumlah_anak',
                 'jumlah_lansia',
                 'jumlah_kb_aktif',
-=======
-            'IV-DATA-DUKUNG' => [
-                'tahun',
-                'semester',
-                'provinsi',
-                'kabupaten_kota',
-                'desa_kelurahan',
-                'program',
-                'pj_desa',
-                'pj_desa_hp',
-                'pj_kecamatan',
-                'pj_kecamatan_hp',
-                'pj_kabupaten',
-                'pj_kabupaten_hp',
-                'pj_provinsi',
-                'pj_provinsi_hp',
-                'jumlah_penduduk',
-                'jumlah_kepala_keluarga',
-                'jumlah_rumah',
-                'jumlah_laki_laki',
-                'jumlah_perempuan',
-                'jumlah_usia_produktif',
-                'jumlah_pasangan_usia_subur',
-                'jumlah_ibu_hamil',
-                'jumlah_bayi_0_2',
-                'jumlah_bayi_asi_eksklusif',
-                'jumlah_balita_2_5',
-                'jumlah_anak_6_14',
-                'jumlah_lansia',
-                'jumlah_peserta_kb_aktif',
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
                 'jumlah_ibu_menyusui',
                 'jumlah_keluarga_sejahtera',
                 'jumlah_keluarga_pra_sejahtera',
                 'jumlah_mbr',
                 'jumlah_kader_pkk_rt_rw',
                 'jumlah_kader_pkk_kesehatan',
-<<<<<<< HEAD
                 'jumlah_dasa_wisma',
-=======
-                'jumlah_kelompok_dasa_wisma',
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
                 'jumlah_kader_dasa_wisma',
                 'jumlah_posyandu_aktif',
                 'jumlah_bidan_desa',
@@ -464,7 +419,6 @@ class LaporanKegiatanController extends Controller
                 'evaluasi',
                 'keterangan',
             ],
-<<<<<<< HEAD
             'IV-DATAPROGRAM' => [
                 'bayi_prematur',
                 'bayi_bblr',
@@ -531,75 +485,6 @@ class LaporanKegiatanController extends Controller
                 'pus_penyakit_seksual',
                 'evaluasi',
                 'keterangan',
-=======
-            'IV-DATA-PROGRAM' => [
-                'tahun',
-                'semester',
-                'stunting_bayi_prematur',
-                'stunting_bblr',
-                'stunting_balita_kurang_gizi',
-                'stunting_balita_stunting',
-                'stunting_rutin_timbang',
-                'stunting_jarak_dekat',
-                'stunting_tidak_direncanakan',
-                'phbs_tbc',
-                'phbs_jamban_sehat',
-                'phbs_air_bersih',
-                'phbs_diare',
-                'phbs_sadar_gizi',
-                'phbs_tanpa_rokok',
-                'phbs_babs',
-                'kesga_bumil_rutin',
-                'kesga_ayah_merokok',
-                'kesga_kematian_nifas',
-                'kesga_kanker_serviks',
-                'kesga_imunisasi_lengkap',
-                'kesga_sakit_terdata',
-                'kesga_kematian_bayi_balita',
-                'kebakaran_kasus',
-                'kebakaran_listrik_standar',
-                'kebakaran_apar',
-                'kebakaran_semi_permanen',
-                'kebakaran_p3k',
-                'kebakaran_edukasi_rt',
-                'kebakaran_edukasi_kader',
-                'bencana_relawan',
-                'bencana_edukasi_rt',
-                'bencana_edukasi_kader',
-                'bencana_posko_alternatif',
-                'bencana_relawan_terdata',
-                'bencana_tas_siaga',
-                'bencana_fasum_rusak',
-                'lingkungan_bak_sampah',
-                'lingkungan_bank_sampah',
-                'lingkungan_spal',
-                'lingkungan_banjir',
-                'lingkungan_bak_desa',
-                'lingkungan_rumah_sehat',
-                'lingkungan_klb',
-                'berkualitas_2_anak',
-                'berkualitas_berobat',
-                'berkualitas_menular',
-                'berkualitas_tidak_menular',
-                'berkualitas_lahir_sehat',
-                'berkualitas_cukup_bulan',
-                'berkualitas_gangguan_jiwa',
-                'keuangan_asuransi',
-                'keuangan_tanpa_kerja',
-                'keuangan_tanpa_kerja_tetap',
-                'keuangan_penghasilan_tetap',
-                'keuangan_tabulin',
-                'keuangan_tabungan',
-                'keuangan_aset',
-                'pus_lahir_sehat',
-                'pus_wanita_kb',
-                'pus_pria_kb',
-                'pus_reproduksi',
-                'pus_nikah_dini',
-                'pus_hamil_beresiko',
-                'pus_ims',
-                'evaluasi',
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
             ],
         ];
 
@@ -658,7 +543,6 @@ class LaporanKegiatanController extends Controller
             }
         }
 
-<<<<<<< HEAD
         // ✅ Pokja II: lipat key baru L/P aplikasi ke kolom agregat whitelist.
         // Tanpa ini key _l/_p dibuang whitelist di atas sehingga laporan
         // tersimpan 0 walau di HP sudah diisi (kasus: warga_belajar, paud,
@@ -708,7 +592,7 @@ class LaporanKegiatanController extends Controller
                     $filteredData[$k] = (int) $dataAngka[$k];
                 }
             }
-=======
+        }
         // ✅ Buku Kegiatan Pokja I (Lampiran 4.13, dari aplikasi Android):
         // payload berupa daftar baris nama/jabatan/tanggal/tempat/uraian
         // (bukan angka agregat). Pertahankan barisnya & lewati cek minimal
@@ -744,7 +628,6 @@ class LaporanKegiatanController extends Controller
             $filteredData['jenis_formulir'] = 'buku_kegiatan_lampiran_413';
             $filteredData['buku_kegiatan'] = array_values($barisBersih);
             $filteredData['buku_kegiatan_count'] = count($barisBersih);
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
         }
 
         $isValid = false;
@@ -816,11 +699,7 @@ class LaporanKegiatanController extends Controller
         $validated = $request->validate([
             'judul' => 'sometimes|string|max:255',
             'deskripsi' => 'nullable|string',
-<<<<<<< HEAD
             'kategori_pokja' => 'sometimes|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP,IV-DATADUKUNG,IV-DATAPROGRAM',
-=======
-            'kategori_pokja' => 'sometimes|in:I,II,III,IV,IV-PYD,IV-POSYANDU,IV-REKAP,IV-DATA-DUKUNG,IV-DATA-PROGRAM',
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
             'data_angka' => 'nullable|array',
             'kecamatan' => 'nullable|string|max:255',
             'desa_kelurahan' => 'nullable|string|max:255',
@@ -997,7 +876,6 @@ class LaporanKegiatanController extends Controller
             case 'IV-REKAP':
                 $this->sinkronkanRekapitulasi($kecamatan, $dataAngka);
                 break;
-<<<<<<< HEAD
             case 'IV-DATADUKUNG':
                 // Form Flutter "Laporan Data Dukung" mengirim A+B sekaligus
                 // (lihat dataDukungKeys + dataProgramKeys), jadi sinkron keduanya.
@@ -1007,13 +885,6 @@ class LaporanKegiatanController extends Controller
             case 'IV-DATAPROGRAM':
                 Pokja4DataDukungSyncService::syncDataDukung($laporan);
                 Pokja4DataDukungSyncService::syncDataProgram($laporan);
-=======
-            case 'IV-DATA-DUKUNG':
-                $this->sinkronkanDataDukung($kecamatan, $dataAngka);
-                break;
-            case 'IV-DATA-PROGRAM':
-                $this->sinkronkanDataProgram($kecamatan, $dataAngka);
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
                 break;
             default:
                 Log::warning('Kategori Pokja tidak dikenal: ' . $laporan->kategori_pokja);

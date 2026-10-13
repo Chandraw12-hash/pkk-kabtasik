@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import MainLayout from "@/Layouts/MainLayout";
 import Card from "@/Components/UI/Card";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, X, Images } from "lucide-react";
 
 const KATEGORI_OPTIONS = [
     "Kegiatan",
@@ -68,12 +68,35 @@ export default function CreateBerita({ kecamatanList = [] }: CreateBeritaProps) 
         kecamatan: "",
         konten: "",
         foto: null as File | null,
+        galeri: [] as File[],
         status_publikasi: true as boolean,
     });
+
+    const [galeriPreview, setGaleriPreview] = useState<string[]>([]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post(route("be.berita.store"));
+    };
+
+    // Galeri: maks 4 tambahan (total 5 sama cover). Kalau tak ada cover,
+    // foto galeri pertama otomatis jadi cover di server.
+    const maksGaleri = 4;
+
+    const handleGaleriChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []).filter((f) =>
+            f.type.startsWith("image/")
+        );
+        const gabung = [...data.galeri, ...files].slice(0, maksGaleri);
+        setData("galeri", gabung);
+        setGaleriPreview(gabung.map((f) => URL.createObjectURL(f)));
+        e.target.value = "";
+    };
+
+    const hapusGaleri = (idx: number) => {
+        const gabung = data.galeri.filter((_, i) => i !== idx);
+        setData("galeri", gabung);
+        setGaleriPreview(gabung.map((f) => URL.createObjectURL(f)));
     };
 
     const selectClass =
@@ -162,6 +185,54 @@ export default function CreateBerita({ kecamatanList = [] }: CreateBeritaProps) 
                                 className={selectClass}
                             />
                             {errors.foto && <div className="text-rose-500 text-xs mt-1">{errors.foto}</div>}
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Foto Galeri (maks {maksGaleri} tambahan — total 5 sama cover)
+                            </label>
+                            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30 p-4">
+                                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
+                                    <Images size={16} />
+                                    <span>
+                                        {data.galeri.length}/{maksGaleri} foto dipilih
+                                        {data.foto
+                                            ? " (+ 1 cover)"
+                                            : " (foto pertama jadi cover otomatis)"}
+                                    </span>
+                                </div>
+                                {galeriPreview.length > 0 && (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                                        {galeriPreview.map((src, i) => (
+                                            <div key={i} className="relative group">
+                                                <img
+                                                    src={src}
+                                                    alt={`Galeri ${i + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border border-slate-200"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => hapusGaleri(i)}
+                                                    className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
+                                                    title="Hapus foto ini"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {data.galeri.length < maksGaleri && (
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleGaleriChange}
+                                        className={`${selectClass} file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all cursor-pointer`}
+                                    />
+                                )}
+                            </div>
+                            {errors.galeri && <div className="text-rose-500 text-xs mt-1">{errors.galeri}</div>}
                         </div>
 
                         <div className="md:col-span-2">

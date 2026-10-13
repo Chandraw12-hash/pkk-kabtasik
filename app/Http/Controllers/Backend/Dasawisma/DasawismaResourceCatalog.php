@@ -42,6 +42,7 @@ final class DasawismaResourceCatalog
                     self::field('dasawisma', 'Nama Dasa Wisma', 'text', ['nullable', 'string', 'max:255']),
                     self::field('alamat', 'Alamat', 'textarea', ['nullable', 'string', 'max:2000']),
                     self::field('jumlah_anggota', 'Jumlah Anggota', 'number', ['required', 'integer', 'min:1']),
+                    self::field('jumlah_balita_stunting', 'Balita Stunting', 'number', ['nullable', 'integer', 'min:0']),
                     self::field('kategori', 'Kategori', 'select', ['required', 'in:warga,kader,pengurus'], [
                         ['value' => 'warga', 'label' => 'Warga'],
                         ['value' => 'kader', 'label' => 'Kader'],

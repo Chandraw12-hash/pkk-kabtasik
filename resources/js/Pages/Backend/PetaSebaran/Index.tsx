@@ -41,9 +41,16 @@ interface IndexProps {
     desaByKecamatan: Record<string, string[]>;
 }
 
+// ─── Warna — pakai nilai DB "Sehat" / "Kurang Sehat" ──────
 const WARNA: Record<string, string> = {
     Sehat: "#16A34A",
     "Kurang Sehat": "#DC2626",
+};
+
+// ─── Label tampilan — ubah dari "Sehat" ke "Rumah Layak Huni" ───
+const LABEL: Record<string, string> = {
+    Sehat: "Rumah Layak Huni",
+    "Kurang Sehat": "Rumah Tidak Layak Huni",
 };
 
 const dotIcon = (kriteria: string | null) =>
@@ -74,24 +81,29 @@ function ClusterLayer({ points }: { points: Pin[] }) {
         });
         points.forEach((p) => {
             const m = L.marker([p.lat, p.lng], { icon: dotIcon(p.kriteria) });
+            const labelKriteria = p.kriteria
+                ? LABEL[p.kriteria] || p.kriteria
+                : "Belum diisi";
+            const warnaKriteria = WARNA[p.kriteria ?? ""] || "#64748B";
             m.bindPopup(
-                `<div style="min-width:200px;font-family:inherit">` +
+                `<div style="min-width:220px;font-family:inherit">` +
                     `<p style="font-weight:800;font-size:13px;margin:0 0 2px">${
                         esc(p.nama) || "Tanpa nama"
                     }</p>` +
-                    `<p style="font-size:11px;color:#64748B;margin:0 0 6px">${
+                    `<p style="font-size:11px;color:#64748B;margin:0 0 8px">${
                         esc(p.desa)
                     } &bull; Kec. ${esc(p.kecamatan)}</p>` +
                     (p.alamat
-                        ? `<p style="font-size:11px;margin:0 0 6px">${esc(
-                              p.alamat
+                        ? `<p style="font-size:11px;margin:0 0 8px">${esc(
+                              p.alamat,
                           )}</p>`
                         : "") +
-                    `<p style="font-size:11px;margin:0 0 8px">Kriteria: <b>${
-                        esc(p.kriteria) || "Belum diisi"
-                    }</b></p>` +
-                    `<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:#0072BC">Buka di Google Maps</a>` +
-                    `</div>`
+                    `<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:${warnaKriteria}15;border:1px solid ${warnaKriteria}40;border-radius:6px;margin:0 0 10px">` +
+                    `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${warnaKriteria}"></span>` +
+                    `<span style="font-size:11px;font-weight:700;color:${warnaKriteria}">${labelKriteria}</span>` +
+                    `</div>` +
+                    `<div><a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:#0072BC;text-decoration:none">Buka di Google Maps →</a></div>` +
+                    `</div>`,
             );
             group.addLayer(m);
         });
@@ -155,7 +167,7 @@ export default function Index({
                     }
                 })
                 .catch((err) =>
-                    console.error("Gagal memuat pin peta:", err)
+                    console.error("Gagal memuat pin peta:", err),
                 )
                 .finally(() => setIsLoading(false));
         }, 350);
@@ -168,13 +180,20 @@ export default function Index({
         setKriteria("");
     };
 
-    const hasFilter = Boolean(kecamatan) || Boolean(desa) || Boolean(kriteria);
+    const hasFilter =
+        Boolean(kecamatan) || Boolean(desa) || Boolean(kriteria);
 
+    // ─── Stats pakai key asli dari controller (sehat, kurang_sehat) ─
+    //     Cuma LABEL yang diubah — data tetap dari backend.
     const cards = [
         { label: "Total Pin", count: stats?.total ?? 0, dot: "#0072BC" },
-        { label: "Rumah Sehat", count: stats?.sehat ?? 0, dot: "#16A34A" },
         {
-            label: "Kurang Sehat",
+            label: "Rumah Layak Huni",
+            count: stats?.sehat ?? 0,
+            dot: "#16A34A",
+        },
+        {
+            label: "Rumah Tidak Layak Huni",
             count: stats?.kurang_sehat ?? 0,
             dot: "#DC2626",
         },
@@ -191,7 +210,7 @@ export default function Index({
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                         Titik GPS rumah dari pendataan dasawisma — hijau
-                        sehat, merah kurang sehat
+                        Rumah Layak Huni, merah Rumah Tidak Layak Huni
                     </p>
                 </div>
             </div>
@@ -241,7 +260,9 @@ export default function Index({
                         className={`${selectClass} w-full lg:w-56 disabled:opacity-50`}
                     >
                         <option value="">
-                            {kecamatan ? "Semua Desa" : "Pilih kecamatan dulu"}
+                            {kecamatan
+                                ? "Semua Desa"
+                                : "Pilih kecamatan dulu"}
                         </option>
                         {desaOptions.map((d) => (
                             <option key={d} value={d}>
@@ -253,11 +274,14 @@ export default function Index({
                     <select
                         value={kriteria}
                         onChange={(e) => setKriteria(e.target.value)}
-                        className={`${selectClass} w-full lg:w-48`}
+                        className={`${selectClass} w-full lg:w-56`}
                     >
                         <option value="">Semua Kriteria</option>
-                        <option value="Sehat">Sehat</option>
-                        <option value="Kurang Sehat">Kurang Sehat</option>
+                        {/* value = nilai DB, label = tampilan */}
+                        <option value="Sehat">Rumah Layak Huni</option>
+                        <option value="Kurang Sehat">
+                            Rumah Tidak Layak Huni
+                        </option>
                     </select>
 
                     {hasFilter && (
@@ -307,14 +331,15 @@ export default function Index({
                     )}
                 </div>
 
+                {/* Legend — label baru, warna sama */}
                 <div className="px-4 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1.5">
                         <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#16A34A]" />
-                        Sehat
+                        Rumah Layak Huni
                     </span>
                     <span className="flex items-center gap-1.5">
                         <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#DC2626]" />
-                        Kurang Sehat
+                        Rumah Tidak Layak Huni
                     </span>
                     <span className="flex items-center gap-1.5">
                         <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#64748B]" />

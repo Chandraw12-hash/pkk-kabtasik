@@ -71,6 +71,7 @@ class DasawismaDaftarWargaController extends Controller
             // Demografi + rumah tangga (sumber rekap otomatis)
             'jumlah_balita_l' => ['nullable', 'integer', 'min:0'],
             'jumlah_balita_p' => ['nullable', 'integer', 'min:0'],
+            'jumlah_balita_stunting' => ['nullable', 'integer', 'min:0'],
             'jumlah_pus' => ['nullable', 'integer', 'min:0'],
             'jumlah_wus' => ['nullable', 'integer', 'min:0'],
             'jumlah_ibu_hamil' => ['nullable', 'integer', 'min:0'],
@@ -90,6 +91,7 @@ class DasawismaDaftarWargaController extends Controller
             'ikut_kesling' => ['nullable', 'boolean'],
         ]);
         $this->validateGenderCounts($validated);
+        $this->validateStuntingCount($validated);
 
         $record = DaftarWarga::create($validated + [
             'kecamatan' => $user->kecamatan,
@@ -133,6 +135,7 @@ class DasawismaDaftarWargaController extends Controller
             // Demografi + rumah tangga (sumber rekap otomatis)
             'jumlah_balita_l' => ['nullable', 'integer', 'min:0'],
             'jumlah_balita_p' => ['nullable', 'integer', 'min:0'],
+            'jumlah_balita_stunting' => ['nullable', 'integer', 'min:0'],
             'jumlah_pus' => ['nullable', 'integer', 'min:0'],
             'jumlah_wus' => ['nullable', 'integer', 'min:0'],
             'jumlah_ibu_hamil' => ['nullable', 'integer', 'min:0'],
@@ -152,6 +155,7 @@ class DasawismaDaftarWargaController extends Controller
             'ikut_kesling' => ['nullable', 'boolean'],
         ]);
         $this->validateGenderCounts($validated);
+        $this->validateStuntingCount($validated);
 
         $record->update($validated + [
             'status' => 'pending',
@@ -211,6 +215,23 @@ class DasawismaDaftarWargaController extends Controller
         if ($genderCount > (int) $validated['jumlah_anggota']) {
             throw ValidationException::withMessages([
                 'jumlah_anggota' => 'Jumlah Laki-laki dan Perempuan tidak boleh melebihi jumlah anggota.',
+            ]);
+        }
+    }
+
+    /**
+     * Stunting tak boleh melebihi total balita (L+P).
+     * P=0 sah: 0 balita + 0 stunting lolos, stunting > 0 tanpa balita ditolak.
+     */
+    private function validateStuntingCount(array $validated): void
+    {
+        $totalBalita = (int) ($validated['jumlah_balita_l'] ?? 0)
+            + (int) ($validated['jumlah_balita_p'] ?? 0);
+        $stunting = (int) ($validated['jumlah_balita_stunting'] ?? 0);
+
+        if ($stunting > $totalBalita) {
+            throw ValidationException::withMessages([
+                'jumlah_balita_stunting' => 'Jumlah balita stunting tidak boleh melebihi total balita (L+P).',
             ]);
         }
     }

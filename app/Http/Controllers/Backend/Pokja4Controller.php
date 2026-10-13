@@ -10,8 +10,6 @@ use App\Models\Pokja4DataProgram;
 use App\Models\Pokja4KegiatanPosyandu;
 use App\Models\Pokja4KunjunganPyd;
 use App\Models\Pokja4Rekapitulasi;
-use App\Models\Pokja4DataDukung;
-use App\Models\Pokja4DataProgram;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -54,26 +52,17 @@ class Pokja4Controller extends Controller
             ->orderBy('kecamatan')
             ->get();
 
-<<<<<<< HEAD
         // Laporan Data Dukung Pokja IV dari aplikasi mobile (read-only di admin).
         $dataDukung = Pokja4DataDukung::query()
             ->where('tahun', $tahun)
             ->orderBy('kecamatan')
-=======
-        $dataDukung = Pokja4DataDukung::query()
-            ->where('tahun', $tahun)
-            ->orderBy('kecamatan')
             ->orderBy('semester')
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
             ->get();
 
         $dataProgram = Pokja4DataProgram::query()
             ->where('tahun', $tahun)
             ->orderBy('kecamatan')
-<<<<<<< HEAD
-=======
             ->orderBy('semester')
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
             ->get();
 
         $tahunList = Pokja4::query()

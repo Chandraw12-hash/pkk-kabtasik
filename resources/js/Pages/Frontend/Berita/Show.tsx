@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import Navbar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
 import {
     Calendar,
     ChevronRight,
+    ChevronLeft,
     ArrowLeft,
     Newspaper,
     User,
@@ -13,6 +14,12 @@ import {
     MapPin,
     Clock,
 } from "lucide-react";
+
+interface BeritaFoto {
+    id: number;
+    foto_url?: string | null;
+    foto?: string | null;
+}
 
 interface BeritaItem {
     id: number;
@@ -24,6 +31,7 @@ interface BeritaItem {
     kecamatan?: string | null;
     foto?: string | null;
     foto_url?: string | null;
+    fotos?: BeritaFoto[];
     created_at?: string;
     created_at_formatted?: string;
     user?: { name: string };
@@ -96,6 +104,29 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
         }
     };
 
+    const imageSrc = berita ? getImageSrc(berita) : null;
+
+    // Galeri geser: cover + foto tambahan (maks 5), tanpa duplikat.
+    // (Di atas early-return agar urutan hooks stabil.)
+    const galeri = useMemo(() => {
+        const list: string[] = [];
+        if (imageSrc) list.push(imageSrc);
+        for (const f of berita?.fotos || []) {
+            const u =
+                f.foto_url || (f.foto ? `/storage/${f.foto}` : null);
+            if (u && !list.includes(u)) list.push(u);
+        }
+        return list;
+    }, [berita]);
+
+    const [fotoIdx, setFotoIdx] = useState(0);
+    const sentuhX = useRef<number | null>(null);
+    const idxAktif = galeri.length > 0 ? fotoIdx % galeri.length : 0;
+    const geser = (arah: number) =>
+        setFotoIdx(
+            (i) => (i + arah + galeri.length) % Math.max(galeri.length, 1)
+        );
+
     if (!berita) {
         return (
             <div className="min-h-screen flex flex-col bg-white pt-14">
@@ -122,8 +153,6 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
         );
     }
 
-    const imageSrc = getImageSrc(berita);
-
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 overflow-x-hidden">
             <Head title={`${berita.judul} — PKK Kabupaten Tasikmalaya`} />
@@ -131,7 +160,25 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
 
             {/* ===== HERO (FIXED: navbar transparan friendly) ===== */}
             <header className="relative w-full min-h-[340px] sm:min-h-[380px] lg:min-h-[440px] flex items-end overflow-hidden">
-                {imageSrc ? (
+                {/* Hero ikut foto aktif galeri (crossfade, sama kayak geser bawah) */}
+                {galeri.length > 0 ? (
+                    galeri.map((src, i) => (
+                        <img
+                            key={i}
+                            src={src}
+                            alt=""
+                            aria-hidden={i !== idxAktif}
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                                i === idxAktif
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                            }`}
+                            onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                            }}
+                        />
+                    ))
+                ) : imageSrc ? (
                     <img
                         src={imageSrc}
                         alt=""
@@ -219,20 +266,101 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                         {/* Artikel */}
                         <article className="lg:col-span-8 min-w-0">
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                                {/* Foto di dalam konten */}
-                                {imageSrc && (
-                                    <div className="w-full aspect-[16/10] sm:aspect-[16/9] bg-slate-100">
-                                        <img
-                                            src={imageSrc}
-                                            alt={berita.judul}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                (
-                                                    e.currentTarget
-                                                        .parentElement as HTMLElement
-                                                ).style.display = "none";
+                                {/* Galeri geser — cover + maks 4 tambahan */}
+                                {galeri.length > 0 && (
+                                    <div>
+                                        <div
+                                            className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-slate-100 overflow-hidden select-none"
+                                            onTouchStart={(e) => {
+                                                sentuhX.current =
+                                                    e.touches[0].clientX;
                                             }}
-                                        />
+                                            onTouchEnd={(e) => {
+                                                if (sentuhX.current === null)
+                                                    return;
+                                                const delta =
+                                                    e.changedTouches[0]
+                                                        .clientX -
+                                                    sentuhX.current;
+                                                sentuhX.current = null;
+                                                if (delta > 40) geser(-1);
+                                                else if (delta < -40)
+                                                    geser(1);
+                                            }}
+                                        >
+                                            {galeri.map((src, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={src}
+                                                    alt={
+                                                        i === 0
+                                                            ? berita.judul
+                                                            : `${berita.judul} — foto ${i + 1}`
+                                                    }
+                                                    draggable={false}
+                                                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                                                        i === idxAktif
+                                                            ? "opacity-100"
+                                                            : "opacity-0 pointer-events-none"
+                                                    }`}
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display =
+                                                            "none";
+                                                    }}
+                                                />
+                                            ))}
+
+                                            {galeri.length > 1 && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => geser(-1)}
+                                                        aria-label="Foto sebelumnya"
+                                                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-900/50 text-white hover:bg-slate-900/70 transition-colors"
+                                                    >
+                                                        <ChevronLeft size={18} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => geser(1)}
+                                                        aria-label="Foto berikutnya"
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-900/50 text-white hover:bg-slate-900/70 transition-colors"
+                                                    >
+                                                        <ChevronRight size={18} />
+                                                    </button>
+                                                    <span className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-slate-900/60 text-white text-[11px] font-bold">
+                                                        {idxAktif + 1}/{galeri.length}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {galeri.length > 1 && (
+                                            <div className="flex gap-2 p-3 overflow-x-auto">
+                                                {galeri.map((src, i) => (
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setFotoIdx(i)
+                                                        }
+                                                        aria-label={`Lihat foto ${i + 1}`}
+                                                        className={`shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                                                            i === idxAktif
+                                                                ? "border-[#0072BC]"
+                                                                : "border-transparent opacity-60 hover:opacity-100"
+                                                        }`}
+                                                    >
+                                                        <img
+                                                            src={src}
+                                                            alt=""
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

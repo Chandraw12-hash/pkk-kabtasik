@@ -46,6 +46,26 @@ class Berita extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Galeri foto tambahan (maks 4, urut naik). Cover tetap di kolom foto.
+     */
+    public function fotos()
+    {
+        return $this->hasMany(BeritaFoto::class, 'berita_id')->orderBy('urutan');
+    }
+
+    /**
+     * Daftar URL galeri (tanpa cover). Dipanggil eksplisit $berita->galeri.
+     */
+    public function getGaleriAttribute(): array
+    {
+        return $this->fotos
+            ->map(fn ($f) => $f->foto_url)
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     // ============================================================
     // ACCESSORS
     // ============================================================

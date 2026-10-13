@@ -251,10 +251,6 @@ class LaporanKegiatanController extends Controller
             case 'IV-POSYANDU':
                 $this->updateKegiatanPosyandu($kecamatan, $dataAngka);
                 break;
-<<<<<<< HEAD
-            case 'IV-REKAP':
-                $this->updateRekapitulasi($kecamatan, $dataAngka);
-                break;
             case 'IV-DATADUKUNG':
                 // Form Flutter "Laporan Data Dukung" mengirim A+B sekaligus.
                 \App\Services\Pokja4DataDukungSyncService::syncDataDukung($laporan);
@@ -265,18 +261,6 @@ class LaporanKegiatanController extends Controller
                 \App\Services\Pokja4DataDukungSyncService::syncDataProgram($laporan);
                 break;
             default:
-=======
-        case 'IV-REKAP':
-            $this->updateRekapitulasi($kecamatan, $dataAngka);
-            break;
-        case 'IV-DATA-DUKUNG':
-            $this->updateDataDukung($kecamatan, $dataAngka);
-            break;
-        case 'IV-DATA-PROGRAM':
-            $this->updateDataProgram($kecamatan, $dataAngka);
-            break;
-        default:
->>>>>>> 622b2a4 (menambahkan sheet laporan di admin kabupaten untuk pokja1)
                 Log::warning('⚠️ Kategori Pokja tidak dikenal: ' . $pokja);
         }
     }

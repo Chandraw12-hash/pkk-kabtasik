@@ -4,7 +4,7 @@ import Card from "@/Components/UI/Card";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft, Save, X, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, X, Image as ImageIcon, Images } from "lucide-react";
 
 const KATEGORI_OPTIONS = [
     "Kegiatan",
@@ -55,6 +55,12 @@ const KECAMATAN_OPTIONS = [
     "Taraju",
 ];
 
+interface BeritaFoto {
+    id: number;
+    foto_url?: string | null;
+    foto?: string | null;
+}
+
 interface Berita {
     id: number;
     judul: string;
@@ -63,6 +69,7 @@ interface Berita {
     kategori: string;
     kecamatan: string | null;
     foto: string | null;
+    fotos?: BeritaFoto[];
     status_publikasi: boolean;
 }
 
@@ -83,9 +90,18 @@ export default function EditBerita({
         kecamatan: berita.kecamatan || "",
         konten: berita.konten || "",
         foto: null as File | null,
+        galeri: [] as File[],
+        hapus_galeri: [] as number[],
         remove_image: false,
         status_publikasi: berita.status_publikasi ?? true,
     });
+
+    const galeriLama = (berita.fotos || []).filter(
+        (f) => !data.hapus_galeri.includes(f.id)
+    );
+    const maksGaleri = 4;
+    const sisaSlot = Math.max(0, maksGaleri - galeriLama.length);
+    const [galeriBaruPreview, setGaleriBaruPreview] = useState<string[]>([]);
 
     const [previewImage, setPreviewImage] = useState<string | null>(
         berita.foto ? `/storage/${berita.foto}` : null
@@ -119,6 +135,26 @@ export default function EditBerita({
         setPreviewImage(null);
         setData("foto", null);
         setData("remove_image", true);
+    };
+
+    const handleGaleriBaru = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []).filter((f) =>
+            f.type.startsWith("image/")
+        );
+        const gabung = [...data.galeri, ...files].slice(0, sisaSlot);
+        setData("galeri", gabung);
+        setGaleriBaruPreview(gabung.map((f) => URL.createObjectURL(f)));
+        e.target.value = "";
+    };
+
+    const hapusGaleriBaru = (idx: number) => {
+        const gabung = data.galeri.filter((_, i) => i !== idx);
+        setData("galeri", gabung);
+        setGaleriBaruPreview(gabung.map((f) => URL.createObjectURL(f)));
+    };
+
+    const tandaiHapusGaleriLama = (id: number) => {
+        setData("hapus_galeri", [...data.hapus_galeri, id]);
     };
 
     const selectClass =
@@ -269,6 +305,87 @@ export default function EditBerita({
                                     {errors.foto}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Galeri tambahan */}
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Foto Galeri (maks {maksGaleri} — total 5 sama cover)
+                            </label>
+                            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30 p-4">
+                                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
+                                    <Images size={16} />
+                                    <span>
+                                        {galeriLama.length + data.galeri.length}/{maksGaleri} terisi
+                                        {sisaSlot > 0
+                                            ? ` — masih bisa tambah ${sisaSlot}`
+                                            : " — penuh"}
+                                    </span>
+                                </div>
+                                {(galeriLama.length > 0 || galeriBaruPreview.length > 0) && (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                                        {galeriLama.map((f) => (
+                                            <div key={`lama-${f.id}`} className="relative group">
+                                                <img
+                                                    src={f.foto_url || (f.foto ? `/storage/${f.foto}` : "")}
+                                                    alt="Galeri"
+                                                    className="w-full h-24 object-cover rounded-lg border border-slate-200"
+                                                />
+                                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-900/60 text-white">
+                                                    Tersimpan
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => tandaiHapusGaleriLama(f.id)}
+                                                    className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
+                                                    title="Hapus foto ini saat disimpan"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {galeriBaruPreview.map((src, i) => (
+                                            <div key={`baru-${i}`} className="relative group">
+                                                <img
+                                                    src={src}
+                                                    alt={`Galeri baru ${i + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border border-teal-300"
+                                                />
+                                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-teal-600/80 text-white">
+                                                    Baru
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => hapusGaleriBaru(i)}
+                                                    className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
+                                                    title="Batalkan foto ini"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {sisaSlot > 0 ? (
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleGaleriBaru}
+                                        className={`${selectClass} file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all cursor-pointer`}
+                                    />
+                                ) : (
+                                    <p className="text-xs text-slate-400">
+                                        Slot penuh — hapus salah satu foto dulu untuk tambah baru.
+                                    </p>
+                                )}
+                                {data.hapus_galeri.length > 0 && (
+                                    <p className="text-xs text-rose-500 mt-2">
+                                        {data.hapus_galeri.length} foto lama akan dihapus saat disimpan.
+                                    </p>
+                                )}
+                            </div>
+                            {errors.galeri && <div className="text-rose-500 text-xs mt-1">{errors.galeri}</div>}
                         </div>
 
                         {/* Konten */}

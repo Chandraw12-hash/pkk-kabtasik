@@ -127,7 +127,7 @@ class IndexController extends Controller
         // ============================================================
         $sekretariat = DataUmumPkk::where('level', 'desa')
             ->whereNull('dusun')                          // ✅ cuma aggregat desa
-            ->where('kecamatan_status', 'approved')       // ✅ cuma approved kecamatan
+            ->whereIn('kecamatan_status', ['pending', 'approved'])       // ✅ cuma approved kecamatan
             ->select([
                 'kecamatan',
                 DB::raw('MAX(nama_kecamatan) as nama_kecamatan'),
@@ -358,6 +358,8 @@ class IndexController extends Controller
             ->take(5)
             ->get();
 
+        $berita->load('fotos');
+
         return Inertia::render('Frontend/Berita/Show', [
             'berita' => $berita,
             'beritaLainnya' => $beritaLainnya,
@@ -420,7 +422,7 @@ class IndexController extends Controller
         $rekapKegiatanWarga = RekapKegiatanWarga::query()
             ->where('level', 'rt')
             ->where('status', 'approved')             // ✅ approved desa
-            ->where('kecamatan_status', 'approved')   // ✅ approved kecamatan
+            ->whereIn('kecamatan_status', ['pending', 'approved'])   // ✅ approved kecamatan
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -655,7 +657,7 @@ class IndexController extends Controller
         $perPage = (int) $request->input('per_page', 15);
 
         $data = DataUmumPkk::query()
-            ->where('kecamatan_status', 'approved')       // ✅ cuma approved
+            ->whereIn('kecamatan_status', ['pending', 'approved'])       // ✅ cuma approved
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -684,7 +686,7 @@ class IndexController extends Controller
 
         $data = RekapKegiatanWarga::query()
             ->where('status', 'approved')             // ✅ FIX: approved desa
-            ->where('kecamatan_status', 'approved')   // ✅ FIX: approved kecamatan
+            ->whereIn('kecamatan_status', ['pending', 'approved'])   // ✅ FIX: approved kecamatan
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -725,7 +727,7 @@ class IndexController extends Controller
             ->when($bulan, fn($q) => $q->where('bulan', $bulan))
             // Publik: hanya data lolos 2 lapis persetujuan
             ->where('status', 'approved')
-            ->where('kecamatan_status', 'approved')
+            ->whereIn('kecamatan_status', ['pending', 'approved'])
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'asc')
             ->orderBy('kecamatan', 'asc')
@@ -870,7 +872,7 @@ class IndexController extends Controller
         $tahun = $request->input('tahun', date('Y'));
         $perPage = (int) $request->input('per_page', 15);
         $data = DataUmumPkk::query()
-            ->where('kecamatan_status', 'approved')       // ✅ cuma approved
+            ->whereIn('kecamatan_status', ['pending', 'approved'])       // ✅ cuma approved
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -889,7 +891,7 @@ class IndexController extends Controller
         $perPage = (int) $request->input('per_page', 15);
         $data = RekapKegiatanWarga::query()
             ->where('status', 'approved')             // ✅ FIX: approved desa
-            ->where('kecamatan_status', 'approved')   // ✅ FIX: approved kecamatan
+            ->whereIn('kecamatan_status', ['pending', 'approved'])   // ✅ FIX: approved kecamatan
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kecamatan', 'like', "%{$search}%")
@@ -918,7 +920,7 @@ class IndexController extends Controller
             ->when($bulan, fn($q) => $q->where('bulan', $bulan))
             // API publik: hanya data lolos 2 lapis persetujuan
             ->where('status', 'approved')
-            ->where('kecamatan_status', 'approved')
+            ->whereIn('kecamatan_status', ['pending', 'approved'])
             ->orderBy('kecamatan', 'asc')->paginate($perPage)->withQueryString();
         return response()->json($data);
     }
