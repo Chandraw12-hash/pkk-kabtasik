@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Kembaran 2026_10_08_000002 (hasil merge 2 branch): tabel dibuat
+        // di sana. Skip agar migrate tetap jalan di semua mesin.
+        if (Schema::hasTable('pokja4_data_program')) {
+            return;
+        }
+
         Schema::create('pokja4_data_program', function (Blueprint $table) {
             $table->id();
             $table->string('kecamatan');
