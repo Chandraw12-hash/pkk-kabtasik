@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\DaftarWarga;
-use Database\Seeders\AdminDesaSeeder;
+use App\Models\WilayahDesa;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -96,8 +96,8 @@ class PetaSebaranController extends Controller
             'pins' => $pins,
             'stats' => $stats,
             'filters' => $request->only(['kecamatan', 'desa', 'kriteria', 'stunting', 'bumil']),
-            'kecamatanList' => array_keys(AdminDesaSeeder::DATA_DESA),
-            'desaByKecamatan' => AdminDesaSeeder::DATA_DESA,
+            'kecamatanList' => WilayahDesa::kecamatanList(),
+            'desaByKecamatan' => WilayahDesa::dataDesa(),
         ]);
     }
 }

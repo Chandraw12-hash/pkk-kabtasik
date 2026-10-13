@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Models\User;
+use App\Models\WilayahDesa;
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
@@ -14,20 +15,6 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
-    /**
-     * 39 Kecamatan Kabupaten Tasikmalaya
-     */
-    private const KECAMATAN_LIST = [
-        'Bantarkalong', 'Bojongasih', 'Bojonggambir', 'Ciawi', 'Cibalong',
-        'Cigalontang', 'Cikalong', 'Cikatomas', 'Cineam', 'Cipatujah',
-        'Cisayong', 'Culamega', 'Gunungtanjung', 'Jamanis', 'Jatiwaras',
-        'Kadipaten', 'Karangjaya', 'Karangnunggal', 'Leuwisari', 'Mangunreja',
-        'Manonjaya', 'Padakembang', 'Pagerageung', 'Pancatengah', 'Parungponteng',
-        'Puspahiang', 'Rajapolah', 'Salawu', 'Salopa', 'Sariwangi',
-        'Singaparna', 'Sodonghilir', 'Sukahening', 'Sukaraja', 'Sukarame',
-        'Sukaratu', 'Sukaresik', 'Tanjungjaya', 'Taraju',
-    ];
-
     // ⚠️ HAPUS constructor middleware — pindah ke route
     // (Laravel 11 udah ga support $this->middleware() di constructor)
 
@@ -111,7 +98,7 @@ class UserController extends Controller
 
         return Inertia::render('Backend/Users/Create', [
             'roles' => $roles,
-            'kecamatanList' => self::KECAMATAN_LIST,
+            'kecamatanList' => WilayahDesa::kecamatanList(),
             'desaByKecamatan' => $this->desaByKecamatan(),
             'prefill' => $prefill,
         ]);
@@ -129,7 +116,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
             'roles.*' => ['required', 'string', Rule::exists('roles', 'name')],
-            'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(self::KECAMATAN_LIST)],
+            'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(WilayahDesa::kecamatanList())],
             'desa' => ['nullable', 'string', 'max:255'],
             'nama_desa' => 'nullable|string|max:255',
             'kader_id' => 'nullable|integer|exists:kader,id',
@@ -179,7 +166,7 @@ class UserController extends Controller
             'user' => $user->load(['roles']),
             'roles' => $roles,
             'userRoles' => $user->getRoleNames(),
-            'kecamatanList' => self::KECAMATAN_LIST,
+            'kecamatanList' => WilayahDesa::kecamatanList(),
             'desaByKecamatan' => $this->desaByKecamatan(),
         ]);
     }
@@ -196,7 +183,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'roles' => 'required|array',
             'roles.*' => ['required', 'string', Rule::exists('roles', 'name')],
-            'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(self::KECAMATAN_LIST)],
+            'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(WilayahDesa::kecamatanList())],
             'desa' => ['nullable', 'string', 'max:255'],
             'nama_desa' => 'nullable|string|max:255',
         ]);
@@ -363,9 +350,10 @@ class UserController extends Controller
 
     private function desaByKecamatan(): array
     {
-        // Master lengkap 351 desa (seeder), bukan turunan akun admin desa
-        // yang bisa bolong — agar validasi desa dasawisma selalu punya acuan.
-        return \Database\Seeders\AdminDesaSeeder::DATA_DESA;
+        // Master tabel wilayah_desa (UI super-admin), fallback konstanta
+        // seeder bila tabel kosong — agar validasi desa dasawisma
+        // selalu punya acuan.
+        return WilayahDesa::dataDesa();
     }
 
     private function validateUserRegion(Request $request, array $roles): void
@@ -378,7 +366,7 @@ class UserController extends Controller
 
         $rules = [];
         if ($needsKecamatan) {
-            $rules['kecamatan'] = ['required', Rule::in(self::KECAMATAN_LIST)];
+            $rules['kecamatan'] = ['required', Rule::in(WilayahDesa::kecamatanList())];
         }
 
         if ($needsDesa) {

@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Database\Seeders\AdminDesaSeeder;
+use App\Models\WilayahDesa;
 use Illuminate\Http\Request;
 
 class WilayahController extends Controller
 {
     /**
      * GET /api/wilayah/kecamatan
-     * Master 39 kecamatan Kab. Tasikmalaya (public).
+     * Master kecamatan Kab. Tasikmalaya dari tabel wilayah_desa (public).
      */
     public function kecamatan()
     {
         return response()->json([
             'success' => true,
-            'data' => array_keys(AdminDesaSeeder::DATA_DESA),
+            'data' => WilayahDesa::kecamatanList(),
         ]);
     }
 
@@ -28,7 +28,7 @@ class WilayahController extends Controller
      */
     public function desa(Request $request)
     {
-        $map = AdminDesaSeeder::DATA_DESA;
+        $map = WilayahDesa::dataDesa();
         $kecamatan = trim((string) $request->query('kecamatan', ''));
 
         if ($kecamatan === '') {

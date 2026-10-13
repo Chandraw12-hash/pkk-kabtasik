@@ -12,6 +12,7 @@ use App\Http\Controllers\Backend\KaderController;
 use App\Http\Controllers\Backend\GaleriController;
 use App\Http\Controllers\Backend\BeritaController;
 use App\Http\Controllers\Backend\BackupController;
+use App\Http\Controllers\Backend\WilayahController;
 use App\Http\Controllers\Backend\LandingContentController;
 
 // Controller Sekretariat & Pokja
@@ -356,6 +357,19 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
         Route::post('/restore', [BackupController::class, 'restore'])->name('restore');
         Route::get('/download/{filename}', [BackupController::class, 'download'])->name('download');
         Route::delete('/{filename}', [BackupController::class, 'destroy'])->name('destroy');
+    });
+
+    // ============================================================
+    // MASTER WILAYAH — SUPER ADMIN ONLY
+    // Tambah kecamatan/desa (pemekaran) + nonaktifkan. Tanpa rename/hapus
+    // agar referensi string kecamatan/desa di data lama tetap utuh.
+    // ============================================================
+    Route::middleware('role:super-admin')->prefix('wilayah')->name('wilayah.')->group(function () {
+        Route::get('/', [WilayahController::class, 'index'])->name('index');
+        Route::post('/kecamatan', [WilayahController::class, 'storeKecamatan'])->name('store-kecamatan');
+        Route::post('/desa', [WilayahController::class, 'storeDesa'])->name('store-desa');
+        Route::patch('/desa/{id}/toggle', [WilayahController::class, 'toggleDesa'])->name('toggle-desa');
+        Route::patch('/kecamatan/toggle', [WilayahController::class, 'toggleKecamatan'])->name('toggle-kecamatan');
     });
 
     // ============================================================

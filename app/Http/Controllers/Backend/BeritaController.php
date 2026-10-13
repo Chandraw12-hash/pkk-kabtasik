@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
+use App\Models\WilayahDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -11,51 +12,8 @@ use Inertia\Inertia;
 
 class BeritaController extends Controller
 {
-    /**
-     * 39 KECAMATAN KABUPATEN TASIKMALAYA (RESMI, sesuai Permendagri No. 137 Tahun 2017)
-     * Diurutkan alfabet A-Z
-     */
-    private const KECAMATAN_LIST = [
-        'Bantarkalong',
-        'Bojongasih',
-        'Bojonggambir',
-        'Ciawi',
-        'Cibalong',
-        'Cigalontang',
-        'Cikalong',
-        'Cikatomas',
-        'Cineam',
-        'Cipatujah',
-        'Cisayong',
-        'Culamega',
-        'Gunungtanjung',
-        'Jamanis',
-        'Jatiwaras',
-        'Kadipaten',
-        'Karangjaya',
-        'Karangnunggal',
-        'Leuwisari',
-        'Mangunreja',
-        'Manonjaya',
-        'Padakembang',
-        'Pagerageung',
-        'Pancatengah',
-        'Parungponteng',
-        'Puspahiang',
-        'Rajapolah',
-        'Salawu',
-        'Salopa',
-        'Sariwangi',
-        'Singaparna',
-        'Sodonghilir',
-        'Sukahening',
-        'Sukaraja',
-        'Sukarame',
-        'Sukaratu',
-        'Sukaresik',
-        'Tanjungjaya',
-        'Taraju',
-    ];
+    // Master kecamatan: tabel wilayah_desa (UI super-admin), fallback seeder.
+    // Konstanta duplikat dihapus 14 Okt 2026 — satu sumber kebenaran.
 
     /**
      * Pesan validasi Bahasa Indonesia (reusable)
@@ -148,7 +106,7 @@ class BeritaController extends Controller
     public function create()
     {
         return Inertia::render('Backend/Berita/Create', [
-            'kecamatanList' => self::KECAMATAN_LIST,
+            'kecamatanList' => WilayahDesa::kecamatanList(),
         ]);
     }
 
@@ -238,7 +196,7 @@ class BeritaController extends Controller
     {
         return Inertia::render('Backend/Berita/Edit', [
             'berita' => $berita->load('fotos'),
-            'kecamatanList' => self::KECAMATAN_LIST,
+            'kecamatanList' => WilayahDesa::kecamatanList(),
         ]);
     }
 

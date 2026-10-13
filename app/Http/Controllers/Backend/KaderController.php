@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kader;
+use App\Models\WilayahDesa;
 use App\Exports\KaderExport;
-use Database\Seeders\AdminDesaSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -89,8 +89,8 @@ class KaderController extends Controller
 
         return Inertia::render('Backend/Kader/Edit', [
             'kader' => $kader,
-            'kecamatanList' => array_keys(AdminDesaSeeder::DATA_DESA),
-            'desaByKecamatan' => AdminDesaSeeder::DATA_DESA,
+            'kecamatanList' => WilayahDesa::kecamatanList(),
+            'desaByKecamatan' => WilayahDesa::dataDesa(),
         ]);
     }
 
@@ -103,7 +103,7 @@ class KaderController extends Controller
             'nik'               => 'nullable|string|max:20|unique:kader,nik,' . $id,
             'jabatan'           => 'required|in:Ketua,Wakil Ketua,Sekretaris,Bendahara,Ketua Pokja I,Ketua Pokja II,Ketua Pokja III,Ketua Pokja IV,Anggota',
             'pokja'             => 'nullable|in:I,II,III,IV,Sekretariat,DASAWISMA',
-            'kecamatan'         => ['nullable', 'string', 'max:255', Rule::in(array_keys(AdminDesaSeeder::DATA_DESA))],
+            'kecamatan'         => ['nullable', 'string', 'max:255', Rule::in(WilayahDesa::kecamatanList())],
             'desa_kelurahan'    => 'nullable|string|max:255',
             'no_hp'             => 'nullable|string|max:20',
             'alamat'            => 'nullable|string',

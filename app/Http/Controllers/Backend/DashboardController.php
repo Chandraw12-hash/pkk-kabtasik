@@ -260,10 +260,8 @@ class DashboardController extends Controller
             ->toArray();
 
         // Cakupan: kecamatan yang sudah punya data rekap/laporan approved.
-        $master = [];
-        if (class_exists(\Database\Seeders\AdminDesaSeeder::class)) {
-            $master = array_keys(\Database\Seeders\AdminDesaSeeder::DATA_DESA);
-        }
+        // Master dari tabel wilayah_desa (UI super-admin), fallback seeder.
+        $master = \App\Models\WilayahDesa::kecamatanList();
         $covered = collect();
         foreach ([Pokja1::class, Pokja2::class, Pokja3::class, Pokja4::class] as $model) {
             $covered = $covered->merge($model::query()->select('kecamatan')->distinct()->pluck('kecamatan')->all());

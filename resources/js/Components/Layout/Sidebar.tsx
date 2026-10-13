@@ -104,6 +104,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const hasBeritaPending = routeExists("be.berita.pending");
     const hasStrukturOrganisasi = routeExists("be.struktur-organisasi.index");
     const hasBackup = routeExists("be.backup.index");
+    const hasWilayah = routeExists("be.wilayah.index");
     const hasActivityLogs = routeExists("be.activity-logs.index");
     const hasSystem = routeExists("be.system.index");
 
@@ -773,6 +774,19 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             Super Admin
                         </p>
                         <div className="space-y-1">
+                            {hasWilayah && (
+                                <Link
+                                    href={route("be.wilayah.index")}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                        isCurrentRoute("be.wilayah.*")
+                                            ? "bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <MapIcon size={18} />
+                                    <span>Master Wilayah</span>
+                                </Link>
+                            )}
                             {hasBackup && (
                                 <Link
                                     href={route("be.backup.index")}
