@@ -15,8 +15,10 @@ class PetaSebaranController extends Controller
      * PETA SEBARAN — pin rumah dasawisma (khusus kabupaten/super-admin).
      * Pin = baris daftar_warga yang punya latitude+longitude.
      * Layer oranye = rumah dengan balita stunting (jumlah_balita_stunting > 0),
-     * prioritas di atas hijau/merah. Angka stunting agregat Pokja 4
-     * (pokja4_data_program) tak punya koordinat jadi tak dipakai di sini.
+     * prioritas di atas hijau/merah. Layer bumil (pink) tampil sebagai
+     * filter + badge + stats (tak mengubah warna dot).
+     * Angka stunting agregat Pokja 4 (pokja4_data_program) tak punya
+     * koordinat jadi tak dipakai di sini.
      */
     public function index(Request $request)
     {
@@ -25,7 +27,12 @@ class PetaSebaranController extends Controller
             'desa' => ['nullable', 'string', 'max:255'],
             'kriteria' => ['nullable', Rule::in(['Sehat', 'Kurang Sehat'])],
             'stunting' => ['nullable', Rule::in(['semua', 'ada', 'tidak'])],
+            'bumil' => ['nullable', Rule::in(['semua', 'ada', 'tidak'])],
         ]);
+
+        // Ibu hamil aktif (status_ibu=hamil, tolak dikecualikan) per KK.
+        $bumilScope = fn ($q) => $q->where('status_ibu', 'hamil')
+            ->where('status', '!=', 'rejected');
 
         $base = DaftarWarga::query()->whereNotNull('latitude')->whereNotNull('longitude');
 
@@ -42,6 +49,14 @@ class PetaSebaranController extends Controller
                     });
                 }
             })
+            ->when($validated['bumil'] ?? null, function ($q, $s) use ($bumilScope) {
+                if ($s === 'ada') {
+                    $q->whereHas('bumil', $bumilScope);
+                } elseif ($s === 'tidak') {
+                    $q->whereDoesntHave('bumil', $bumilScope);
+                }
+            })
+            ->withCount(['bumil as bumil_hamil_count' => $bumilScope])
             ->orderBy('kecamatan')
             ->orderBy('desa')
             ->limit(10000)
@@ -56,6 +71,7 @@ class PetaSebaranController extends Controller
                 'lng' => (float) $r->longitude,
                 'kriteria' => $r->kriteria_rumah,
                 'stunting' => (int) ($r->jumlah_balita_stunting ?? 0),
+                'bumil' => (int) ($r->bumil_hamil_count ?? 0),
                 'status' => $r->status,
             ]);
 
@@ -72,12 +88,14 @@ class PetaSebaranController extends Controller
             'sehat' => (clone $base)->where('kriteria_rumah', 'Sehat')->count(),
             'kurang_sehat' => (clone $base)->where('kriteria_rumah', 'Kurang Sehat')->count(),
             'stunting' => (clone $base)->where('jumlah_balita_stunting', '>', 0)->count(),
+            'bumil' => (clone $base)->whereHas('bumil', fn ($q) => $q
+                ->where('status_ibu', 'hamil')->where('status', '!=', 'rejected'))->count(),
         ];
 
         return Inertia::render('Backend/PetaSebaran/Index', [
             'pins' => $pins,
             'stats' => $stats,
-            'filters' => $request->only(['kecamatan', 'desa', 'kriteria', 'stunting']),
+            'filters' => $request->only(['kecamatan', 'desa', 'kriteria', 'stunting', 'bumil']),
             'kecamatanList' => array_keys(AdminDesaSeeder::DATA_DESA),
             'desaByKecamatan' => AdminDesaSeeder::DATA_DESA,
         ]);

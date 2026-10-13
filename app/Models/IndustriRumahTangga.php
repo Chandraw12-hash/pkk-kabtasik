@@ -12,10 +12,13 @@ class IndustriRumahTangga extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'jenis_industri',
+        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'kategori', 'jenis_industri',
         'pemilik', 'jumlah_tenaga_kerja', 'omzet', 'status', 'approved_by',
         'approved_at', 'rejected_reason', 'created_by',
     ];
+
+    /** Kategori Excel Format Dasa Wisma: pangan, sandang, konveksi, jasa lainnya. */
+    public const KATEGORI = ['pangan', 'sandang', 'konveksi', 'jasa lainnya'];
 
     protected function casts(): array
     {

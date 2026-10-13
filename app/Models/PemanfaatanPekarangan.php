@@ -12,10 +12,13 @@ class PemanfaatanPekarangan extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'jenis_tanaman',
+        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'kategori', 'jenis_tanaman',
         'luas_m2', 'jumlah_kk', 'hasil', 'status', 'approved_by', 'approved_at',
         'rejected_reason', 'created_by',
     ];
+
+    /** Kategori Excel Format Dasa Wisma: peternakan s.d. tanaman keras lainnya. */
+    public const KATEGORI = ['peternakan', 'perikanan', 'warung hidup', 'toga', 'tanaman keras lainnya'];
 
     protected function casts(): array
     {

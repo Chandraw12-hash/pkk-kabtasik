@@ -74,6 +74,14 @@ class DaftarWarga extends Model
         return $this->hasMany(CatatanKeluarga::class, 'daftar_warga_id');
     }
 
+    /**
+     * Catatan ibu (bumil) yang tertaut ke KK ini — sumber layer sebaran bumil.
+     */
+    public function bumil(): HasMany
+    {
+        return $this->hasMany(RekapBumilDasaWisma::class, 'daftar_warga_id');
+    }
+
     public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', 'approved');

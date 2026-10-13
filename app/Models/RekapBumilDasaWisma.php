@@ -12,7 +12,7 @@ class RekapBumilDasaWisma extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'tahun', 'nama', 'suami_nama', 'umur', 'hamile',
+        'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'daftar_warga_id', 'tahun', 'nama', 'suami_nama', 'umur', 'hamile',
         'anak_ke', 'jarak_hamil', 'tinggi_badan', 'berat_badan', 'lingkar_lengan',
         'hb', 'tekanan_darah', 'imunisasi', 'fe', 'keterangan', 'status', 'approved_by',
         'approved_at', 'rejected_reason', 'created_by',
@@ -47,6 +47,15 @@ class RekapBumilDasaWisma extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * KK asal ibu (dipilih di form HP dari daftar KK dasawisma).
+     * Nullable: input manual tanpa KK tetap sah.
+     */
+    public function daftarWarga(): BelongsTo
+    {
+        return $this->belongsTo(DaftarWarga::class, 'daftar_warga_id');
     }
 
     public function createdBy(): BelongsTo

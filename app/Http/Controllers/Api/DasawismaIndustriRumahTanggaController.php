@@ -7,6 +7,7 @@ use App\Models\IndustriRumahTangga;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 // Alur sama seperti DasawismaDaftarWargaController:
 // kader (dasawisma) input via Flutter -> status pending ->
@@ -142,6 +143,7 @@ class DasawismaIndustriRumahTanggaController extends Controller
             'rw' => ['nullable', 'string', 'max:20'],
             'rt' => ['nullable', 'string', 'max:20'],
             'dasawisma' => ['nullable', 'string', 'max:255'],
+            'kategori' => ['nullable', Rule::in(\App\Models\IndustriRumahTangga::KATEGORI)],
             'jenis_industri' => ['required', 'string', 'max:255'],
             'pemilik' => ['required', 'string', 'max:255'],
             'jumlah_tenaga_kerja' => ['required', 'integer', 'min:0'],

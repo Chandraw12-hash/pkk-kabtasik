@@ -50,6 +50,11 @@ class DasawismaCatatanKeluargaController extends Controller
             });
         }
 
+        // Sumber dropdown Nama Suami di form bumil HP: anggota 1 KK.
+        if ($request->filled('daftar_warga_id')) {
+            $query->where('daftar_warga_id', $request->integer('daftar_warga_id'));
+        }
+
         return response()->json([
             'success' => true,
             'data' => $query->paginate(min(max($request->integer('per_page', 50), 1), 100)),

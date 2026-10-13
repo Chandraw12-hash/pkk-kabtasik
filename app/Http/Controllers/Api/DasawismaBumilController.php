@@ -91,6 +91,7 @@ class DasawismaBumilController extends Controller
 
         $validated = $request->validate($this->rules());
         $this->ensureNoDuplicate($user, $validated);
+        $this->ensureOwnRegionKK($user, $validated['daftar_warga_id'] ?? null);
 
         $record = RekapBumilDasaWisma::create($validated + [
             'kecamatan' => $user->kecamatan,
@@ -116,6 +117,7 @@ class DasawismaBumilController extends Controller
         $record = $this->ownedEditableRecord($user, $id);
         $validated = $request->validate($this->rules());
         $this->ensureNoDuplicate($user, $validated, $record->id);
+        $this->ensureOwnRegionKK($user, $validated['daftar_warga_id'] ?? null);
 
         $record->update($validated + [
             'status' => 'pending',
@@ -155,6 +157,7 @@ class DasawismaBumilController extends Controller
             'rw' => ['nullable', 'string', 'max:20'],
             'rt' => ['nullable', 'string', 'max:20'],
             'dasawisma' => ['nullable', 'string', 'max:255'],
+            'daftar_warga_id' => ['nullable', 'integer', 'exists:daftar_wargas,id'],
             'nama' => ['required', 'string', 'max:255'],
             'suami_nama' => ['nullable', 'string', 'max:255'],
             'umur' => ['nullable', 'integer', 'min:10', 'max:60'],
@@ -247,6 +250,25 @@ class DasawismaBumilController extends Controller
             403,
             'Akun Dasawisma belum memiliki kecamatan dan desa. Hubungi Admin Desa.',
         );
+    }
+
+    /**
+     * KK pilihan harus milik wilayah akun (cegah comot KK desa lain).
+     * Null = input manual tanpa KK, lolos.
+     */
+    private function ensureOwnRegionKK(User $user, mixed $kkId): void
+    {
+        if ($kkId === null || $kkId === '') {
+            return;
+        }
+
+        $ada = \App\Models\DaftarWarga::query()
+            ->whereKey((int) $kkId)
+            ->where('kecamatan', $user->kecamatan)
+            ->where('desa', $user->desa)
+            ->exists();
+
+        abort_unless($ada, 403, 'KK terpilih di luar wilayah Anda.');
     }
 
     private function ownedEditableRecord(User $user, int $id): RekapBumilDasaWisma

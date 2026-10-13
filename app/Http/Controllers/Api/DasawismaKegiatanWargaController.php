@@ -144,6 +144,7 @@ class DasawismaKegiatanWargaController extends Controller
             'rt' => ['nullable', 'string', 'max:20'],
             'dasawisma' => ['nullable', 'string', 'max:255'],
             'kegiatan' => ['required', Rule::in(['up2k', 'pekarangan', 'industri', 'kesehatan', 'lainnya'])],
+            'rincian' => ['nullable', Rule::in(\App\Models\KegiatanWarga::RINCIAN)],
             'jumlah_peserta' => ['required', 'integer', 'min:0'],
             'tanggal' => ['nullable', 'date'],
             'keterangan' => ['nullable', 'string', 'max:2000'],

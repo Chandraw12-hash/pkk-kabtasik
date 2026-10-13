@@ -7,6 +7,7 @@ use App\Models\PemanfaatanPekarangan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 // Alur sama seperti DasawismaDaftarWargaController:
 // kader (dasawisma) input via Flutter -> status pending ->
@@ -142,6 +143,7 @@ class DasawismaPemanfaatanPekaranganController extends Controller
             'rw' => ['nullable', 'string', 'max:20'],
             'rt' => ['nullable', 'string', 'max:20'],
             'dasawisma' => ['nullable', 'string', 'max:255'],
+            'kategori' => ['nullable', Rule::in(\App\Models\PemanfaatanPekarangan::KATEGORI)],
             'jenis_tanaman' => ['required', 'string', 'max:255'],
             'luas_m2' => ['nullable', 'numeric', 'min:0'],
             'jumlah_kk' => ['required', 'integer', 'min:0'],

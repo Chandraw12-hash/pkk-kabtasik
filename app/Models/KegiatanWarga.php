@@ -13,8 +13,20 @@ class KegiatanWarga extends Model
 
     protected $fillable = [
         'kecamatan', 'desa', 'dusun', 'rt', 'rw', 'dasawisma', 'kegiatan',
+        'rincian',
         'jumlah_peserta', 'keterangan', 'tanggal', 'status', 'approved_by',
         'approved_at', 'rejected_reason', 'created_by',
+    ];
+
+    /** Rincian Excel KEGIATAN WARGA (info tambahan, rekap tetap kolom kegiatan). */
+    public const RINCIAN = [
+        'Penghayatan dan Pengamalan Pancasila',
+        'Kerjabakti',
+        'Rukun Kematian',
+        'Kegiatan Keagamaan',
+        'Jimpitan',
+        'Arisan',
+        'Lain-lain',
     ];
 
     protected function casts(): array
