@@ -176,8 +176,9 @@ class BackupController extends Controller
      */
     public function upload(Request $request)
     {
+        // 🔒 Maks 50 MB (51200 KB): cegah upload dump raksasa yang DoS disk.
         $request->validate([
-            'file' => 'required|file|mimetypes:text/plain,text/sql,application/sql,application/octet-stream|max:524288',
+            'file' => 'required|file|mimetypes:text/plain,text/sql,application/sql,application/octet-stream|max:51200',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -237,6 +238,19 @@ class BackupController extends Controller
             return redirect()->route('be.backup.index')->with('error', 'File backup tidak ditemukan.');
         }
 
+        // 🔒 Restore dibatasi 50 MB: file lebih besar rawan timeout & penuhi disk.
+        $size = Storage::disk('local')->size($path);
+        if ($size > 50 * 1024 * 1024) {
+            return redirect()->route('be.backup.index')->with('error', 'Restore dibatalkan: file backup melebihi 50 MB.');
+        }
+
+        // 🔒 Pastikan koneksi DB aplikasi BUKAN superuser Postgres.
+        // Restore via role superuser (mis. `postgres`) memberi dampak berlebih
+        // jika file SQL disusupi perintah berbahaya — tolak sejak awal.
+        if ($this->databaseRoleIsSuperuser()) {
+            return redirect()->route('be.backup.index')->with('error', 'Restore dibatalkan: role database aplikasi adalah superuser. Gunakan role terbatas (non-superuser).');
+        }
+
         $lock = Cache::lock('db-restore', 600);
         if (! $lock->get()) {
             return redirect()->route('be.backup.index')->with('error', 'Ada proses restore lain yang sedang berjalan.');
@@ -261,6 +275,29 @@ class BackupController extends Controller
             return redirect()->route('be.backup.index')->with('error', "Restore gagal: {$e->getMessage()}");
         } finally {
             $lock->release();
+        }
+    }
+
+    /**
+     * Cek apakah role DB yang dipakai aplikasi adalah superuser Postgres.
+     * Return true = superuser (restore harus ditolak). Gagal cek = false
+     * agar tidak memblokir lingkungan non-Postgres, tapi dicatat ke log.
+     */
+    protected function databaseRoleIsSuperuser(): bool
+    {
+        try {
+            $row = DB::selectOne('SELECT usesuper FROM pg_user WHERE usename = current_user');
+            if ($row === null) {
+                return false;
+            }
+
+            $flag = $row->usesuper ?? false;
+
+            return $flag === true || $flag === 1 || $flag === '1' || $flag === 't';
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
         }
     }
 

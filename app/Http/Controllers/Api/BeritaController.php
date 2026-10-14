@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
+use App\Support\ContentSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -39,6 +40,8 @@ class BeritaController extends Controller
         $data = $request->all();
         $data['slug'] = Str::slug($request->judul) . '-' . uniqid();
         $data['status'] = 'pending';
+        // 🔒 Sanitasi HTML: <script>/event-handler/javascript: dibuang server-side.
+        $data['konten'] = ContentSanitizer::clean($request->input('konten', ''));
         $data['user_id'] = $request->user()->id;
         $data['created_by'] = $request->user()->id;
 
@@ -153,6 +156,11 @@ class BeritaController extends Controller
         }
 
         $data = $request->all();
+
+        // 🔒 Sanitasi HTML saat update milik sendiri.
+        if ($request->has('konten')) {
+            $data['konten'] = ContentSanitizer::clean($request->input('konten', ''));
+        }
 
         if ($request->has('judul') && $request->judul !== $berita->judul) {
             $data['slug'] = Str::slug($request->judul) . '-' . uniqid();
@@ -311,8 +319,8 @@ class BeritaController extends Controller
                 'id' => $berita->id,
                 'judul' => $berita->judul,
                 'slug' => $berita->slug,
-                'konten' => $berita->konten,
-                'deskripsi' => strip_tags($berita->konten),
+                'konten' => ContentSanitizer::clean($berita->konten),
+                'deskripsi' => strip_tags(ContentSanitizer::clean($berita->konten)),
                 'kategori' => $berita->kategori,
                 'kecamatan' => $berita->kecamatan,
                 'foto_url' => $berita->foto_url ?? null,
@@ -447,6 +455,13 @@ class BeritaController extends Controller
 
     public function pending(Request $request)
     {
+        // 🔒 Antrean pending hanya untuk admin kabupaten / super-admin.
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'super-admin']),
+            403,
+            'Hanya admin yang dapat melihat antrean berita.'
+        );
+
         $berita = Berita::where('status', 'pending')
             ->with('user:id,name,username,kecamatan')
             ->orderBy('created_at', 'asc')
@@ -474,6 +489,14 @@ class BeritaController extends Controller
      */
     public function approve(Request $request, $id)
     {
+        // 🔒 Hanya admin kabupaten / super-admin yang boleh approve via API.
+        // Akun mobile (pokja1-4, dasawisma) wajib ditolak 403.
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'super-admin']),
+            403,
+            'Hanya admin yang dapat menyetujui berita.'
+        );
+
         $berita = Berita::find($id);
 
         if (!$berita) {
@@ -512,7 +535,7 @@ class BeritaController extends Controller
 
         // Update konten jika ada
         if ($request->has('deskripsi') && !empty($request->deskripsi)) {
-            $updateData['konten'] = $request->deskripsi;
+            $updateData['konten'] = ContentSanitizer::clean($request->input('deskripsi'));
         }
 
         $berita->update($updateData);
@@ -529,6 +552,13 @@ class BeritaController extends Controller
      */
     public function reject(Request $request, $id)
     {
+        // 🔒 Hanya admin kabupaten / super-admin yang boleh reject via API.
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'super-admin']),
+            403,
+            'Hanya admin yang dapat menolak berita.'
+        );
+
         $berita = Berita::find($id);
 
         if (!$berita) {
@@ -570,12 +600,13 @@ class BeritaController extends Controller
 
     private function formatBerita($item)
     {
+        $konten = ContentSanitizer::clean($item->konten);
         return [
             'id' => $item->id,
             'judul' => $item->judul,
             'slug' => $item->slug,
-            'konten' => $item->konten,
-            'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
+            'konten' => $konten,
+            'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($konten), 0, 150),
             'kategori' => $item->kategori,
             'kecamatan' => $item->kecamatan,
             'foto_url' => $item->foto_url ?? null,
@@ -590,12 +621,13 @@ class BeritaController extends Controller
 
     private function formatBeritaPublic($item)
     {
+        $konten = ContentSanitizer::clean($item->konten);
         return [
             'id' => $item->id,
             'judul' => $item->judul,
             'slug' => $item->slug,
-            'konten' => $item->konten,
-            'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($item->konten), 0, 150),
+            'konten' => $konten,
+            'deskripsi_singkat' => $item->deskripsi_singkat ?? substr(strip_tags($konten), 0, 150),
             'kategori' => $item->kategori,
             'kecamatan' => $item->kecamatan,
             'foto_url' => $item->foto_url ?? null,
@@ -617,23 +649,30 @@ class BeritaController extends Controller
 
     /**
      * 🔥 FIX: Upload base64 image - SUPPORT TANPA PREFIX
+     * Batas: maks 2 MB (decoded), tolak GIF (animasi rawan + boros).
      */
     private function uploadBase64Image($base64Image)
     {
         // 🔥 CEK APAKAH ADA PREFIX data:image
         if (strpos($base64Image, 'data:image') !== false) {
-            $base64Image = explode(',', $base64Image)[1];
+            $parts = explode(',', $base64Image, 2);
+            $base64Image = $parts[1] ?? '';
         }
 
         // 🔥 HAPUS WHITESPACE
         $base64Image = trim($base64Image);
 
-        // 🔥 DECODE
-        $image = base64_decode($base64Image);
+        // 🔥 DECODE (strict: tolak karakter non-base64)
+        $image = base64_decode($base64Image, true);
 
         // 🔥 CEK APAKAH DECODE BERHASIL
         if ($image === false) {
             throw new \Exception('Gagal mendecode base64 image');
+        }
+
+        // 🔒 BATAS 2 MB (cek hasil decode, bukan panjang string base64).
+        if (strlen($image) > 2 * 1024 * 1024) {
+            throw new \Exception('Ukuran foto maksimal 2 MB');
         }
 
         // 🔥 CEK APAKAH IMAGE VALID
@@ -646,7 +685,10 @@ class BeritaController extends Controller
         } elseif ($mimeType === 'image/webp') {
             $extension = 'webp';
         } elseif ($mimeType === 'image/gif') {
-            $extension = 'gif';
+            // 🔒 GIF ditolak: animasi bisa disalahgunakan + ukuran boros.
+            throw new \Exception('Format GIF tidak diperbolehkan (gunakan JPG/PNG/WEBP)');
+        } elseif (! in_array($mimeType, ['image/jpeg', 'image/jpg'], true)) {
+            throw new \Exception('Format gambar tidak didukung (gunakan JPG/PNG/WEBP)');
         }
 
         $filename = 'berita-' . time() . '-' . uniqid() . '.' . $extension;

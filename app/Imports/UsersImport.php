@@ -7,6 +7,8 @@ use App\Models\WilayahDesa;
 use App\Services\KaderAccountSync;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Spatie\Permission\Models\Role;
@@ -101,8 +103,10 @@ class UsersImport implements ToCollection, WithHeadingRow
             || User::where('email', $email)->exists()) {
             return "Email {$email} sudah dipakai.";
         }
-        if (mb_strlen($password) < 8) {
-            return 'Password minimal 8 karakter.';
+        // Samakan dengan Password::defaults() (min 10 + mixedCase + angka).
+        $pwCheck = Validator::make(['password' => $password], ['password' => Password::defaults()]);
+        if ($pwCheck->fails()) {
+            return 'Password lemah: min 10 karakter, huruf besar-kecil, dan angka.';
         }
         if ($peran === []) {
             return 'Peran kosong/tidak dikenal.';

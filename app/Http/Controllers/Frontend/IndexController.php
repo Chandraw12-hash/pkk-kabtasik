@@ -23,6 +23,7 @@ use App\Models\DataUmumPkk;
 use App\Models\RekapKegiatanWarga;
 use App\Models\RekapBumil;
 
+use App\Support\ContentSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -359,6 +360,9 @@ class IndexController extends Controller
             ->get();
 
         $berita->load('fotos');
+        // 🔒 Sanitasi server-side agar dangerouslySetInnerHTML di Show.tsx jinak
+        // walau baris lama masih menyimpan <script>/event-handler.
+        $berita->konten = ContentSanitizer::clean($berita->konten);
 
         return Inertia::render('Frontend/Berita/Show', [
             'berita' => $berita,

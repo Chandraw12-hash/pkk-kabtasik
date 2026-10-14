@@ -21,18 +21,23 @@ use App\Http\Controllers\Api\WilayahController;
 use App\Http\Controllers\Api\NotifikasiController;
 
 // ─── WILAYAH (PUBLIC — master dropdown kecamatan → desa mobile) ───
-Route::get('/wilayah/kecamatan', [WilayahController::class, 'kecamatan']);
-Route::get('/wilayah/desa', [WilayahController::class, 'desa']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/wilayah/kecamatan', [WilayahController::class, 'kecamatan']);
+    Route::get('/wilayah/desa', [WilayahController::class, 'desa']);
+});
 
 // ============================================
 // PUBLIC ROUTES (TANPA AUTH)
 // ============================================
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 // ─── LAPORAN KEGIATAN (PUBLIC) ────────────────────────────────
 // ⚠️ PENTING: Route SPESIFIK didaftarkan DULU, baru wildcard {id}
-Route::get('/laporan-kegiatan', [LaporanKegiatanController::class, 'index']);
+// 🔒 Throttle 60/menit: endpoint publik rawan scraping/brute-force enumerasi.
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/laporan-kegiatan', [LaporanKegiatanController::class, 'index']);
+});
 
 // ✅ FIX: Route my-laporan & saya di ATAS — sebelum {id}
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,40 +46,52 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ❌ Route {id} di BAWAH — biar ga "makan" route spesifik
-Route::get('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'show']);
+Route::get('/laporan-kegiatan/{id}', [LaporanKegiatanController::class, 'show'])->middleware('throttle:60,1');
 
 // ─── BERITA (PUBLIC) ──────────────────────────────────────────
-Route::get('/berita/kecamatan-teraktif', [BeritaController::class, 'kecamatanTeraktif']);
-Route::get('/berita/kecamatan/list', [BeritaController::class, 'getKecamatan']);
-Route::get('/berita', [BeritaController::class, 'index']);
-Route::get('/berita/latest', [BeritaController::class, 'latest']);
-Route::get('/berita/kategori/{kategori}', [BeritaController::class, 'byKategori']);
-Route::get('/berita/kecamatan/{kecamatan}', [BeritaController::class, 'byKecamatan']);
-Route::get('/berita/{slug}', [BeritaController::class, 'show']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/berita/kecamatan-teraktif', [BeritaController::class, 'kecamatanTeraktif']);
+    Route::get('/berita/kecamatan/list', [BeritaController::class, 'getKecamatan']);
+    Route::get('/berita', [BeritaController::class, 'index']);
+    Route::get('/berita/latest', [BeritaController::class, 'latest']);
+    Route::get('/berita/kategori/{kategori}', [BeritaController::class, 'byKategori']);
+    Route::get('/berita/kecamatan/{kecamatan}', [BeritaController::class, 'byKecamatan']);
+    Route::get('/berita/{slug}', [BeritaController::class, 'show']);
+});
 
 // ─── GALERI (PUBLIC) ──────────────────────────────────────────
-Route::get('/galeri', [GaleriController::class, 'index']);
-Route::get('/galeri/{id}', [GaleriController::class, 'show']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/galeri', [GaleriController::class, 'index']);
+    Route::get('/galeri/{id}', [GaleriController::class, 'show']);
+});
 
 // ─── AGENDA (PUBLIC) ──────────────────────────────────────────
-Route::get('/agenda', [AgendaApiController::class, 'index']);
-Route::get('/agenda/calendar', [AgendaApiController::class, 'calendar']);
-Route::get('/agenda/{id}', [AgendaApiController::class, 'show']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/agenda', [AgendaApiController::class, 'index']);
+    Route::get('/agenda/calendar', [AgendaApiController::class, 'calendar']);
+    Route::get('/agenda/{id}', [AgendaApiController::class, 'show']);
+});
 
 // ✅ TAMBAH — DATA UMUM PKK (PUBLIC)
-Route::get('/data-umum-pkk/rekap', [DataUmumPkkApiController::class, 'rekap']);
-Route::get('/data-umum-pkk', [DataUmumPkkApiController::class, 'index']);
-Route::get('/data-umum-pkk/{id}', [DataUmumPkkApiController::class, 'show']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/data-umum-pkk/rekap', [DataUmumPkkApiController::class, 'rekap']);
+    Route::get('/data-umum-pkk', [DataUmumPkkApiController::class, 'index']);
+    Route::get('/data-umum-pkk/{id}', [DataUmumPkkApiController::class, 'show']);
+});
 
 // ✅ TAMBAH — REKAP KEGIATAN WARGA (PUBLIC)
-Route::get('/rekap-kegiatan-warga/rekap', [RekapKegiatanWargaApiController::class, 'rekap']);
-Route::get('/rekap-kegiatan-warga', [RekapKegiatanWargaApiController::class, 'index']);
-Route::get('/rekap-kegiatan-warga/{id}', [RekapKegiatanWargaApiController::class, 'show']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/rekap-kegiatan-warga/rekap', [RekapKegiatanWargaApiController::class, 'rekap']);
+    Route::get('/rekap-kegiatan-warga', [RekapKegiatanWargaApiController::class, 'index']);
+    Route::get('/rekap-kegiatan-warga/{id}', [RekapKegiatanWargaApiController::class, 'show']);
+});
 
 // ✅ TAMBAH — REKAP BUMIL (PUBLIC)
-Route::get('/rekap-bumil/rekap', [RekapBumilApiController::class, 'rekap']);
-Route::get('/rekap-bumil', [RekapBumilApiController::class, 'index']);
-Route::get('/rekap-bumil/{id}', [RekapBumilApiController::class, 'show']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/rekap-bumil/rekap', [RekapBumilApiController::class, 'rekap']);
+    Route::get('/rekap-bumil', [RekapBumilApiController::class, 'index']);
+    Route::get('/rekap-bumil/{id}', [RekapBumilApiController::class, 'show']);
+});
 
 // ============================================
 // PROTECTED ROUTES (BUTUH AUTH)
@@ -187,21 +204,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/rekap-bumil', [RekapBumilApiController::class, 'store']);
     Route::put('/rekap-bumil/{id}', [RekapBumilApiController::class, 'update']);
     Route::delete('/rekap-bumil/{id}', [RekapBumilApiController::class, 'destroy']);
-});
-
-// ============================================
-// TEST ROUTE
-// ============================================
-Route::get('/test-routes', function () {
-    $routes = [];
-    foreach (Route::getRoutes() as $route) {
-        if (str_contains($route->uri(), 'laporan')) {
-            $routes[] = [
-                'method' => implode('|', $route->methods()),
-                'uri' => $route->uri(),
-                'name' => $route->getName(),
-            ];
-        }
-    }
-    return response()->json($routes);
 });

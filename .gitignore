@@ -22,3 +22,15 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Secrets & file lokal — jangan pernah di-track git.
+/akun_pkk_*.xlsx
+/backup.sql
+/pokja2_backup_*.json
+/check_constraint.php
+/change_bg*.cjs
+/remove_hero.cjs
+/replace_hero.cjs
+/composer.json.backup
+/laravel
+/skills-lock.json

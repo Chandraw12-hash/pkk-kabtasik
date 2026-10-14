@@ -50,6 +50,13 @@ class LaporanKegiatanController extends Controller
     // ============================================================
     public function adminIndex(Request $request)
     {
+        // 🔒 Daftar semua laporan (termasuk pending) hanya untuk admin.
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'super-admin']),
+            403,
+            'Hanya admin yang dapat melihat semua laporan.'
+        );
+
         $query = LaporanKegiatan::with('user')
             ->orderBy('created_at', 'desc');
 
@@ -742,6 +749,14 @@ class LaporanKegiatanController extends Controller
 
     public function approve(Request $request, $id)
     {
+        // 🔒 Hanya admin kabupaten / super-admin yang boleh approve via API.
+        // Akun mobile (pokja1-4, dasawisma) wajib ditolak 403.
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'super-admin']),
+            403,
+            'Hanya admin yang dapat menyetujui laporan.'
+        );
+
         try {
             $laporan = LaporanKegiatan::findOrFail($id);
 
@@ -783,6 +798,13 @@ class LaporanKegiatanController extends Controller
 
     public function reject(Request $request, $id)
     {
+        // 🔒 Hanya admin kabupaten / super-admin yang boleh reject via API.
+        abort_unless(
+            $request->user()->hasAnyRole(['admin', 'super-admin']),
+            403,
+            'Hanya admin yang dapat menolak laporan.'
+        );
+
         try {
             $laporan = LaporanKegiatan::findOrFail($id);
 

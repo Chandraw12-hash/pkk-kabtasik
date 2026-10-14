@@ -47,7 +47,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Token mobile kedaluwarsa 30 hari (43200 menit) agar token bocor
+    // tidak berlaku selamanya. First-party session tidak terpengaruh.
+    'expiration' => 43200,
 
     /*
     |--------------------------------------------------------------------------

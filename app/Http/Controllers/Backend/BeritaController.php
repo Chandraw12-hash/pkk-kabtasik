@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use App\Models\WilayahDesa;
+use App\Support\ContentSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -157,7 +158,7 @@ class BeritaController extends Controller
         $berita = Berita::create([
             'judul' => $validated['judul'],
             'slug' => Str::slug($validated['judul']) . '-' . time(),
-            'konten' => $validated['konten'],
+            'konten' => ContentSanitizer::clean($validated['konten']),
             'kategori' => $validated['kategori'],
             'kecamatan' => $validated['kecamatan'] ?? null,
             'status' => $status,
@@ -288,7 +289,7 @@ class BeritaController extends Controller
         $berita->update([
             'judul' => $validated['judul'],
             'slug' => Str::slug($validated['judul']) . '-' . $berita->id . '-' . time(),
-            'konten' => $validated['konten'],
+            'konten' => ContentSanitizer::clean($validated['konten']),
             'kategori' => $validated['kategori'],
             'kecamatan' => $validated['kecamatan'] ?? null,
             'status' => $status,
@@ -416,7 +417,7 @@ class BeritaController extends Controller
         }
 
         if ($request->filled('deskripsi')) {
-            $updateData['konten'] = $request->deskripsi;
+            $updateData['konten'] = ContentSanitizer::clean($request->input('deskripsi'));
         }
 
         $berita->update($updateData);

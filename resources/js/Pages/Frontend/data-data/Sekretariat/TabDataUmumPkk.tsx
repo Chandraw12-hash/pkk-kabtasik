@@ -49,7 +49,7 @@ export default function TabDataUmumPkk({
 
     const numericFields: (keyof DataUmumItem)[] = [
         "jumlah_dusun", "jumlah_pkk_rw", "jumlah_pkk_rt", "jumlah_dasa_wisma",
-        "jumlah_krt", "jumlah_kk", "jiwa_l", "jiwa_p", "jiwa_tidak_terpilah",
+        "jumlah_krt", "jumlah_kk", "jiwa_l", "jiwa_p",
         "tp_pkk_l", "tp_pkk_p",
         "kader_umum_l", "kader_umum_p", "kader_khusus_l", "kader_khusus_p",
         "sekretariat_honorer_l", "sekretariat_honorer_p",
@@ -166,7 +166,7 @@ export default function TabDataUmumPkk({
                                 <th rowSpan={3} className="p-2 border-r border-slate-400 text-center font-bold sticky left-[40px] bg-slate-300 z-10 min-w-[150px]">Nama Kecamatan</th>
                                 <th colSpan={4} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300">Jumlah Kelompok</th>
                                 <th colSpan={2} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300">Jumlah</th>
-                                <th colSpan={3} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300">Jumlah Jiwa</th>
+                                <th colSpan={2} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300">Jumlah Jiwa</th>
                                 <th colSpan={6} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300">Jumlah Kader</th>
                                 <th colSpan={4} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300">Jumlah Tenaga Sekretariat</th>
                                 <th rowSpan={3} className="p-2 border-r border-slate-400 text-center font-bold bg-slate-300 min-w-[80px]">Ket</th>
@@ -182,7 +182,6 @@ export default function TabDataUmumPkk({
                                 <th rowSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">KK</th>
                                 <th rowSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">L</th>
                                 <th rowSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">P</th>
-                                <th rowSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">Belum terpilah</th>
                                 <th colSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">Anggota TP PKK</th>
                                 <th colSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">Umum</th>
                                 <th colSpan={2} className="p-1 border-r border-slate-400 text-center font-semibold">Khusus</th>
@@ -207,7 +206,7 @@ export default function TabDataUmumPkk({
 
                         <tbody className="divide-y divide-slate-200 text-slate-700">
                             {filteredData.length === 0 ? (
-                                <tr><td colSpan={22} className="text-center py-12 text-slate-400">Belum ada data umum PKK.</td></tr>
+                                <tr><td colSpan={21} className="text-center py-12 text-slate-400">Belum ada data umum PKK.</td></tr>
                             ) : (
                                 filteredData.map((item, index) => (
                                     <tr key={`${item.nama_kecamatan}-${index}`} className="hover:bg-slate-50">
@@ -223,7 +222,6 @@ export default function TabDataUmumPkk({
                                         {cell(item.jumlah_kk)}
                                         {cell(item.jiwa_l)}
                                         {cell(item.jiwa_p)}
-                                        {cell(item.jiwa_tidak_terpilah)}
                                         {cell(item.tp_pkk_l)}
                                         {cell(item.tp_pkk_p)}
                                         {cell(item.kader_umum_l)}

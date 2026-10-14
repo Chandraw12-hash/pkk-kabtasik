@@ -113,7 +113,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', Password::defaults(), 'confirmed'],
             'roles' => 'required|array',
             'roles.*' => ['required', 'string', Rule::exists('roles', 'name')],
             'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(WilayahDesa::kecamatanList())],
@@ -222,7 +222,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => ['nullable', Password::defaults(), 'confirmed'],
             'roles' => 'required|array',
             'roles.*' => ['required', 'string', Rule::exists('roles', 'name')],
             'kecamatan' => ['nullable', 'string', 'max:255', Rule::in(WilayahDesa::kecamatanList())],
@@ -312,7 +312,7 @@ class UserController extends Controller
         $this->guardSuperAdminTarget($user);
 
         $validated = $request->validate([
-            'password' => ['required', 'string', 'min:10', 'confirmed'],
+            'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
         $user->forceFill(['password' => Hash::make($validated['password'])])->save();

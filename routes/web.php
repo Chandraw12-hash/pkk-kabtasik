@@ -124,42 +124,44 @@ Route::as('fe.')->group(function () {
     Route::get('/rekap-bumil', [IndexController::class, 'rekapBumilPublic'])->name('rekap-bumil');
 
     // ✅ EXPORT POKJA IV — 4 route
+    // 🔒 Throttle 60/menit: export publik rawan di-scrape massal.
     Route::get('/pokja-4/export', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-pokja-4-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4Export($tahun), $filename);
-    })->name('pokja4.export');
+    })->name('pokja4.export')->middleware('throttle:60,1');
 
     Route::get('/pokja-4/export-pyd', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-kunjungan-pyd-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4KunjunganPydExport($tahun), $filename);
-    })->name('pokja4.export-pyd');
+    })->name('pokja4.export-pyd')->middleware('throttle:60,1');
 
     Route::get('/pokja-4/export-posyandu', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-kegiatan-posyandu-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4KegiatanPosyanduExport($tahun), $filename);
-    })->name('pokja4.export-posyandu');
+    })->name('pokja4.export-posyandu')->middleware('throttle:60,1');
 
     Route::get('/pokja-4/export-rekap', function () {
         $tahun = request('tahun', date('Y'));
         $filename = 'data-rekapitulasi-' . $tahun . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4RekapitulasiExport($tahun), $filename);
-    })->name('pokja4.export-rekap');
+    })->name('pokja4.export-rekap')->middleware('throttle:60,1');
 
     Route::get('/pokja-4/export-data-dukung', function () {
         $tahun = request('tahun', date('Y'));
         $semester = request('semester', ((int) date('n') <= 6 ? 'I' : 'II'));
         $filename = 'data-dukung-pokja-4-' . $tahun . '-smt' . $semester . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new Pokja4DataDukungExport($tahun, $semester), $filename);
-    })->name('pokja4.export-data-dukung');
+    })->name('pokja4.export-data-dukung')->middleware('throttle:60,1');
 });
 
 // ============================================
 // API ROUTES (JSON untuk AJAX/Axios/Mobile)
+// 🔒 Throttle 60/menit untuk semua JSON publik.
 // ============================================
-Route::prefix('api')->name('api.')->group(function () {
+Route::prefix('api')->name('api.')->middleware('throttle:60,1')->group(function () {
     Route::get('/sekretariat', [IndexController::class, 'sekretariatJson'])->name('sekretariat');
     Route::get('/pokja-1', [IndexController::class, 'pokja1Json'])->name('pokja1');
     Route::get('/pokja-2', [IndexController::class, 'pokja2Json'])->name('pokja2');

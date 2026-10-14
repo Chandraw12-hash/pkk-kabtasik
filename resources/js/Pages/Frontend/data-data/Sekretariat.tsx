@@ -554,7 +554,7 @@ export default function Sekretariat({ data, filters }: Props) {
                                     </th>
                                     <th
                                         className="p-2 border-r border-slate-200 text-center font-semibold"
-                                        colSpan={3}
+                                        colSpan={2}
                                     >
                                         Jumlah Jiwa
                                     </th>
@@ -585,7 +585,6 @@ export default function Sekretariat({ data, filters }: Props) {
                                     <th className="p-2 border-r border-slate-200 text-center">KK</th>
                                     <th className="p-2 border-r border-slate-200 text-center">L</th>
                                     <th className="p-2 border-r border-slate-200 text-center">P</th>
-                                    <th className="p-2 border-r border-slate-200 text-center">Belum terpilah</th>
                                     <th className="p-2 border-r border-slate-200 text-center">L</th>
                                     <th className="p-2 border-r border-slate-200 text-center">P</th>
                                     <th className="p-2 border-r border-slate-200 text-center">L</th>
@@ -598,7 +597,7 @@ export default function Sekretariat({ data, filters }: Props) {
                                 {filteredData.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={15}
+                                            colSpan={14}
                                             className="text-center py-12 text-slate-400"
                                         >
                                             Belum ada data kecamatan yang tersimpan di database.
@@ -633,9 +632,6 @@ export default function Sekretariat({ data, filters }: Props) {
                                             </td>
                                             <td className="p-3 border-r border-slate-100 text-center">
                                                 {item.jiwa_p || 0}
-                                            </td>
-                                            <td className="p-3 border-r border-slate-100 text-center">
-                                                {item.jiwa_tidak_terpilah || 0}
                                             </td>
                                             <td className="p-3 border-r border-slate-100 text-center">
                                                 {item.tp_pkk_l || 0}
