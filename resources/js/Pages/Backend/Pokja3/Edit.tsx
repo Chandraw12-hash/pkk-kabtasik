@@ -5,233 +5,156 @@ import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { ArrowLeft, Save } from "lucide-react";
+import { Pokja3FormBody, POKJA3_NUMERIK_KEYS } from "./formFields";
 
-interface Pokja3Record {
+interface Pokja3Item {
     id: number;
-    kategori: string | null;
-    kecamatan: string;
-    nama_kecamatan: string;
-    rumah_sehat: number | null;
-    rumah_tidak_sehat: number | null;
-    pemanfaatan_pekarangan: number | null;
-    industri_rumah_tangga: number | null;
+    kategori?: string;
+    kecamatan?: string;
+    nama_kecamatan?: string;
+    judul_kegiatan?: string;
+    deskripsi?: string;
+    keterangan?: string;
+    [key: string]: any;
 }
 
-interface Props {
-    pokja: Pokja3Record;
+interface EditProps {
+    pokja: Pokja3Item;
 }
 
-interface FormData {
-    kategori: string;
-    kecamatan: string;
-    nama_kecamatan: string;
-    rumah_sehat: number;
-    rumah_tidak_sehat: number;
-    pemanfaatan_pekarangan: number;
-    industri_rumah_tangga: number;
-}
-
-const numericFields: Array<{
-    key: keyof Pick<
-        FormData,
-        | "rumah_sehat"
-        | "rumah_tidak_sehat"
-        | "pemanfaatan_pekarangan"
-        | "industri_rumah_tangga"
-    >;
-    label: string;
-}> = [
-    { key: "rumah_sehat", label: "Rumah sehat" },
-    { key: "rumah_tidak_sehat", label: "Rumah tidak sehat" },
-    { key: "pemanfaatan_pekarangan", label: "Pemanfaatan pekarangan" },
-    { key: "industri_rumah_tangga", label: "Industri rumah tangga" },
-];
-
-export default function Edit({ pokja }: Props) {
-    const { data, setData, put, processing, errors } = useForm<FormData>({
+export default function Edit({ pokja }: EditProps) {
+    const initial: Record<string, any> = {
+        _method: "put" as const,
         kategori: pokja.kategori || "Umum",
         kecamatan: pokja.kecamatan || "",
         nama_kecamatan: pokja.nama_kecamatan || "",
-        rumah_sehat: pokja.rumah_sehat ?? 0,
-        rumah_tidak_sehat: pokja.rumah_tidak_sehat ?? 0,
-        pemanfaatan_pekarangan: pokja.pemanfaatan_pekarangan ?? 0,
-        industri_rumah_tangga: pokja.industri_rumah_tangga ?? 0,
-    });
-
-    const submit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        put(route("be.pokja3.update", pokja.id));
+        judul_kegiatan: pokja.judul_kegiatan || "",
+        deskripsi: pokja.deskripsi || "",
+        keterangan: pokja.keterangan || "",
     };
+    for (const key of POKJA3_NUMERIK_KEYS) initial[key] = pokja[key] ?? 0;
 
-    const inputClass =
-        "w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
+    const { data, setData, post, processing, errors } = useForm(initial);
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route("be.pokja3.update", pokja.id));
+    };
 
     return (
         <MainLayout>
             <Head title="Edit Data Pokja III" />
 
-            <div className="mb-8 flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-8">
                 <Link
                     href={route("be.pokja3.index")}
-                    aria-label="Kembali ke daftar Pokja III"
-                    className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all dark:hover:bg-slate-700"
                 >
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
                         Edit Data Pokja III
                     </h1>
-                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                        Perbarui rekapitulasi Pokja III untuk kecamatan.
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        Kader, pangan, industri & rumah — format sama seperti tabel publik (20 kolom)
                     </p>
                 </div>
             </div>
 
             <form onSubmit={submit} className="space-y-6">
-                <Card className="space-y-5 p-5 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
-                    <div>
-                        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                            Identitas data
-                        </h2>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Periksa kategori dan kecamatan sebelum menyimpan.
-                        </p>
-                    </div>
-
-                    <div className="grid gap-5 md:grid-cols-2">
+                <Card className="p-6 dark:bg-slate-800 dark:border-slate-700 space-y-5">
+                    <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                        Identitas
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label
-                                htmlFor="kategori"
-                                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
-                            >
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Kecamatan <span className="text-rose-500">*</span>
+                            </label>
+                            <TextInput
+                                placeholder="Contoh: Singaparna"
+                                value={data.kecamatan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kecamatan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.kecamatan && <div className="text-red-500 text-xs mt-1">{errors.kecamatan}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Nama Kecamatan <span className="text-rose-500">*</span>
+                            </label>
+                            <TextInput
+                                placeholder="Contoh: Singaparna"
+                                value={data.nama_kecamatan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("nama_kecamatan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.nama_kecamatan && <div className="text-red-500 text-xs mt-1">{errors.nama_kecamatan}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                                 Kategori
                             </label>
                             <TextInput
-                                id="kategori"
+                                placeholder="Umum"
                                 value={data.kategori}
-                                onChange={(event) =>
-                                    setData("kategori", event.target.value)
-                                }
-                                className={inputClass}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kategori", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.kategori && (
-                                <p className="mt-1.5 text-xs text-rose-500">
-                                    {errors.kategori}
-                                </p>
-                            )}
+                            {errors.kategori && <div className="text-red-500 text-xs mt-1">{errors.kategori}</div>}
                         </div>
-
                         <div>
-                            <label
-                                htmlFor="kecamatan"
-                                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
-                            >
-                                Kecamatan
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Judul Kegiatan
                             </label>
                             <TextInput
-                                id="kecamatan"
-                                value={data.kecamatan}
-                                onChange={(event) =>
-                                    setData("kecamatan", event.target.value)
-                                }
-                                className={inputClass}
+                                placeholder="Contoh: Sosialisasi Hatinya PKK"
+                                value={data.judul_kegiatan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("judul_kegiatan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.kecamatan && (
-                                <p className="mt-1.5 text-xs text-rose-500">
-                                    {errors.kecamatan}
-                                </p>
-                            )}
+                            {errors.judul_kegiatan && <div className="text-red-500 text-xs mt-1">{errors.judul_kegiatan}</div>}
                         </div>
-
                         <div className="md:col-span-2">
-                            <label
-                                htmlFor="nama_kecamatan"
-                                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
-                            >
-                                Nama kecamatan
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Deskripsi
+                            </label>
+                            <textarea
+                                value={data.deskripsi}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setData("deskripsi", e.target.value)}
+                                rows={3}
+                                placeholder="Penjelasan singkat..."
+                                className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 outline-none transition-all resize-none"
+                            />
+                            {errors.deskripsi && <div className="text-red-500 text-xs mt-1">{errors.deskripsi}</div>}
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Keterangan (kolom 20 di tabel publik)
                             </label>
                             <TextInput
-                                id="nama_kecamatan"
-                                value={data.nama_kecamatan}
-                                onChange={(event) =>
-                                    setData(
-                                        "nama_kecamatan",
-                                        event.target.value
-                                    )
-                                }
-                                className={inputClass}
+                                placeholder="Contoh: -"
+                                value={data.keterangan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("keterangan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.nama_kecamatan && (
-                                <p className="mt-1.5 text-xs text-rose-500">
-                                    {errors.nama_kecamatan}
-                                </p>
-                            )}
+                            {errors.keterangan && <div className="text-red-500 text-xs mt-1">{errors.keterangan}</div>}
                         </div>
                     </div>
                 </Card>
 
-                <Card className="space-y-5 p-5 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
-                    <div>
-                        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                            Rekapitulasi Pokja III
-                        </h2>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            Isi jumlah sesuai data yang tercatat.
-                        </p>
-                    </div>
-
-                    <div className="grid gap-5 sm:grid-cols-2">
-                        {numericFields.map((field) => (
-                            <div key={field.key}>
-                                <label
-                                    htmlFor={field.key}
-                                    className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
-                                >
-                                    {field.label}
-                                </label>
-                                <TextInput
-                                    id={field.key}
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    value={data[field.key]}
-                                    onChange={(event) =>
-                                        setData(
-                                            field.key,
-                                            Number(event.target.value)
-                                        )
-                                    }
-                                    className={inputClass}
-                                />
-                                {errors[field.key] && (
-                                    <p className="mt-1.5 text-xs text-rose-500">
-                                        {errors[field.key]}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                <Card className="p-6 dark:bg-slate-800 dark:border-slate-700 space-y-6">
+                    <Pokja3FormBody data={data} setData={setData} errors={errors} />
                 </Card>
 
-                <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        href={route("be.pokja3.index")}
-                    >
+                <div className="flex items-center justify-end gap-3">
+                    <Button type="button" variant="secondary" href={route("be.pokja3.index")}>
                         Batal
                     </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={processing}
-                        className="flex items-center gap-2"
-                    >
+                    <Button type="submit" variant="primary" disabled={processing} className="flex items-center gap-2">
                         <Save size={16} />
-                        <span>
-                            {processing ? "Menyimpan..." : "Simpan perubahan"}
-                        </span>
+                        {processing ? "Menyimpan..." : "Simpan Perubahan"}
                     </Button>
                 </div>
             </form>

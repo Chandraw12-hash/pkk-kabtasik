@@ -1,7 +1,7 @@
 // Satu sheet/tab: A. Data Dukung + B. Data Program.
 // Tampilan tabel kolom persis format laporan (1 tabel per kecamatan).
-// Kontrak key kolom (snake_case) disepakati dengan backend.
-// TODO(backend): kirim `data_dukung` + `data_program` via Inertia + JSON.
+// Kontrak key kolom (snake_case) disepakati dengan backend
+// (dikirim via Inertia + JSON oleh Pokja4Controller@index).
 import React, { useEffect, useMemo, useState } from "react";
 import Card from "@/Components/UI/Card";
 import TabPageLayout from "./TabPageLayout";
@@ -23,7 +23,6 @@ interface Props {
     semester: string;
     semesters?: string[];
     onSemesterChange: (semester: string) => void;
-    isPreview?: boolean;
 }
 
 const dukungIndicators: Array<{ key: string; label: string }> = [
@@ -360,7 +359,6 @@ export default function DataDukung({
     semester,
     semesters = SEMESTERS,
     onSemesterChange,
-    isPreview = false,
 }: Props) {
     // Kecamatan terpilih: 1 kecamatan = tabel A + B nya nyatu.
     const [selectedKec, setSelectedKec] = useState("semua");
@@ -488,11 +486,6 @@ export default function DataDukung({
                         {str(kop.kabupaten_kota ?? "Kab. Tasikmalaya")} ·
                         Semester {semester} Tahun {year}
                     </p>
-                    {isPreview && (
-                        <p className="mt-1 inline-block rounded-md bg-amber-100 px-2 py-0.5 font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                            Data contoh (preview) — backend belum tersambung
-                        </p>
-                    )}
                 </div>
             </div>
 

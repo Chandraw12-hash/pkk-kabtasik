@@ -5,57 +5,51 @@ import Button from "@/Components/UI/Button";
 import Card from "@/Components/UI/Card";
 import { Head, useForm, Link } from "@inertiajs/react";
 import { ArrowLeft, Save, ImagePlus, X } from "lucide-react";
-import type { Pokja1Type } from "@/types/pokja1";
+import { Pokja1FormBody, POKJA1_PROGRAMS } from "./formFields";
+
+interface Pokja1Item {
+    id: number;
+    kecamatan?: string;
+    nama_kecamatan?: string;
+    nama_wilayah?: string;
+    tahun?: number;
+    kader_umum?: number;
+    kader_khusus?: number;
+    keterangan?: string;
+    judul_kegiatan?: string;
+    deskripsi?: string;
+    kategori?: string;
+    foto?: string | null;
+    [key: string]: any;
+}
 
 interface EditProps {
-    pokja: Pokja1Type;
-}
-
-interface Pokja1FormData {
-    _method: "put";
-    judul_kegiatan: string;
-    deskripsi: string;
-    kategori: string;
-    kecamatan: string;
-    pkbn_l: number;
-    pkbn_p: number;
-    pkdrt_l: number;
-    pkdrt_p: number;
-    pola_asuh_l: number;
-    pola_asuh_p: number;
-    lansia_l: number;
-    lansia_p: number;
-    kader_pokja1_l: number;
-    kader_pokja1_p: number;
-    foto: File | null;
-    [key: string]: string | number | File | null;
-}
-
-interface NumericGroup {
-    label: string;
-    keyL: keyof Pokja1FormData;
-    keyP: keyof Pokja1FormData;
+    pokja: Pokja1Item;
 }
 
 export default function Edit({ pokja }: EditProps) {
-    const { data, setData, post, processing, errors } = useForm<Pokja1FormData>({
-        _method: "put",
+    const initial: Record<string, any> = {
+        _method: "put" as const,
+        kecamatan: pokja.kecamatan || "",
+        nama_kecamatan: pokja.nama_kecamatan || "",
+        nama_wilayah: (pokja as any).nama_wilayah || "",
+        tahun: pokja.tahun ?? new Date().getFullYear(),
+        kader_umum: pokja.kader_umum ?? 0,
+        kader_khusus: pokja.kader_khusus ?? 0,
+        keterangan: pokja.keterangan || "",
         judul_kegiatan: pokja.judul_kegiatan || "",
         deskripsi: pokja.deskripsi || "",
         kategori: pokja.kategori || "",
-        kecamatan: pokja.kecamatan || "",
-        pkbn_l: pokja.pkbn_l ?? 0,
-        pkbn_p: pokja.pkbn_p ?? 0,
-        pkdrt_l: pokja.pkdrt_l ?? 0,
-        pkdrt_p: pokja.pkdrt_p ?? 0,
-        pola_asuh_l: pokja.pola_asuh_l ?? 0,
-        pola_asuh_p: pokja.pola_asuh_p ?? 0,
-        lansia_l: pokja.lansia_l ?? 0,
-        lansia_p: pokja.lansia_p ?? 0,
-        kader_pokja1_l: pokja.kader_pokja1_l ?? 0,
-        kader_pokja1_p: pokja.kader_pokja1_p ?? 0,
-        foto: null,
-    });
+        foto: null as File | null,
+    };
+    for (const p of POKJA1_PROGRAMS) {
+        initial[`${p.key}_kegiatan`] = (pokja as any)[`${p.key}_kegiatan`] || "";
+        initial[`${p.key}_volume`] = (pokja as any)[`${p.key}_volume`] ?? 0;
+        initial[`${p.key}_metode`] = (pokja as any)[`${p.key}_metode`] || "";
+        initial[`${p.key}_sasaran`] = (pokja as any)[`${p.key}_sasaran`] ?? 0;
+    }
+
+    const { data, setData, post, processing, errors } = useForm(initial);
 
     const [preview, setPreview] = useState<string | null>(
         pokja.foto ? `/storage/${pokja.foto}` : null
@@ -78,15 +72,6 @@ export default function Edit({ pokja }: EditProps) {
         post(route("be.pokja1.update", pokja.id));
     };
 
-    // Grup field angka L/P supaya form tidak terasa seperti daftar input datar
-    const numericGroups: NumericGroup[] = [
-        { label: "PKBN", keyL: "pkbn_l", keyP: "pkbn_p" },
-        { label: "PKDRT", keyL: "pkdrt_l", keyP: "pkdrt_p" },
-        { label: "Pola Asuh Anak", keyL: "pola_asuh_l", keyP: "pola_asuh_p" },
-        { label: "Lansia", keyL: "lansia_l", keyP: "lansia_p" },
-        { label: "Kader Pokja I", keyL: "kader_pokja1_l", keyP: "kader_pokja1_p" },
-    ];
-
     return (
         <MainLayout>
             <Head title="Edit Data Pokja I" />
@@ -103,7 +88,7 @@ export default function Edit({ pokja }: EditProps) {
                         Edit Data Pokja I
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Perbarui data kegiatan dan rekapitulasi Pokja I
+                        Kader & 6 program — format sama seperti tabel publik
                     </p>
                 </div>
             </div>
@@ -111,69 +96,72 @@ export default function Edit({ pokja }: EditProps) {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Card className="p-6 dark:bg-slate-800 dark:border-slate-700 space-y-5">
                     <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                        Informasi Kegiatan
+                        Identitas & Kader
                     </h2>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                            Judul Kegiatan
-                        </label>
-                        <TextInput
-                            value={data.judul_kegiatan}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("judul_kegiatan", e.target.value)}
-                            placeholder="Contoh: Sosialisasi PKBN Kecamatan Cihideung"
-                            className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                        />
-                        {errors.judul_kegiatan && (
-                            <p className="text-xs text-rose-500 mt-1.5">{errors.judul_kegiatan}</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                            Deskripsi
-                        </label>
-                        <textarea
-                            value={data.deskripsi}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setData("deskripsi", e.target.value)}
-                            rows={4}
-                            placeholder="Jelaskan detail kegiatan atau catatan tambahan..."
-                            className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-3 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none"
-                        />
-                        {errors.deskripsi && (
-                            <p className="text-xs text-rose-500 mt-1.5">{errors.deskripsi}</p>
-                        )}
-                    </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                                Kategori
+                                Kecamatan <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                value={data.kategori}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kategori", e.target.value)}
-                                placeholder="Contoh: Kesehatan"
-                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                            />
-                            {errors.kategori && (
-                                <p className="text-xs text-rose-500 mt-1.5">{errors.kategori}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                                Kecamatan
-                            </label>
-                            <TextInput
+                                placeholder="Contoh: Singaparna"
                                 value={data.kecamatan}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kecamatan", e.target.value)}
-                                placeholder="Contoh: Bandung Kulon"
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
-                            {errors.kecamatan && (
-                                <p className="text-xs text-rose-500 mt-1.5">{errors.kecamatan}</p>
-                            )}
+                            {errors.kecamatan && <div className="text-red-500 text-xs mt-1">{errors.kecamatan}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Tahun
+                            </label>
+                            <TextInput
+                                type="number"
+                                min="2000"
+                                max="2100"
+                                value={data.tahun}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("tahun", Number(e.target.value))}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.tahun && <div className="text-red-500 text-xs mt-1">{errors.tahun}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Kader Umum
+                            </label>
+                            <TextInput
+                                type="number"
+                                min="0"
+                                value={data.kader_umum}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kader_umum", e.target.value === "" ? 0 : Number(e.target.value))}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.kader_umum && <div className="text-red-500 text-xs mt-1">{errors.kader_umum}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Kader Khusus
+                            </label>
+                            <TextInput
+                                type="number"
+                                min="0"
+                                value={data.kader_khusus}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kader_khusus", e.target.value === "" ? 0 : Number(e.target.value))}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.kader_khusus && <div className="text-red-500 text-xs mt-1">{errors.kader_khusus}</div>}
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Keterangan (kolom Keterangan di tabel publik)
+                            </label>
+                            <TextInput
+                                placeholder="Contoh: -"
+                                value={data.keterangan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("keterangan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.keterangan && <div className="text-red-500 text-xs mt-1">{errors.keterangan}</div>}
                         </div>
                     </div>
 
@@ -230,50 +218,9 @@ export default function Edit({ pokja }: EditProps) {
 
                 <Card className="p-6 dark:bg-slate-800 dark:border-slate-700 space-y-5">
                     <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                        Data Rekapitulasi
+                        6 Program Kerja
                     </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        {numericGroups.map((group) => (
-                            <div key={group.label} className="border border-slate-100 dark:border-slate-700 rounded-xl p-4">
-                                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3">
-                                    {group.label}
-                                </p>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Laki-laki</label>
-                                        <TextInput
-                                            type="number"
-                                            min="0"
-                                            value={data[group.keyL] as number}
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                                setData(group.keyL, Number(e.target.value))
-                                            }
-                                            className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                                        />
-                                        {errors[group.keyL] && (
-                                            <p className="text-xs text-rose-500 mt-1">{errors[group.keyL]}</p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Perempuan</label>
-                                        <TextInput
-                                            type="number"
-                                            min="0"
-                                            value={data[group.keyP] as number}
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                                setData(group.keyP, Number(e.target.value))
-                                            }
-                                            className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
-                                        />
-                                        {errors[group.keyP] && (
-                                            <p className="text-xs text-rose-500 mt-1">{errors[group.keyP]}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <Pokja1FormBody data={data} setData={setData} errors={errors} />
                 </Card>
 
                 <div className="flex items-center justify-end gap-3">

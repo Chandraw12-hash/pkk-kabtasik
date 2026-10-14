@@ -283,7 +283,6 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                                                     alt={item.judul}
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => {
-                                                        console.log("Gambar error:", item.gambar_url);
                                                         e.currentTarget.style.display = "none";
                                                         const parent = e.currentTarget.parentElement;
                                                         if (parent) {
@@ -424,7 +423,6 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                             alt="Preview"
                             className="max-w-full max-h-[80vh] object-contain"
                             onError={(e) => {
-                                console.log("Preview error:", selectedImage);
                                 e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%2394a3b8' font-size='16' font-family='sans-serif'%3EGambar tidak ditemukan%3C/text%3E%3C/svg%3E";
                             }}
                         />

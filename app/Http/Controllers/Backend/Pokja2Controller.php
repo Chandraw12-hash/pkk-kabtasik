@@ -14,6 +14,44 @@ use Inertia\Inertia;
 
 class Pokja2Controller extends Controller
 {
+    /**
+     * Kolom angka format publik (tabel website): Pendidikan + Kader +
+     * Koperasi + 3 pelatihan tambahan yang tampil di Index backend.
+     */
+    private const NUMERIK = [
+        'warga_buta_l', 'warga_buta_p',
+        'kelompok_belajar_paket_a', 'warga_belajar_paket_a',
+        'kelompok_belajar_paket_b', 'warga_belajar_paket_b',
+        'kelompok_belajar_paket_c', 'warga_belajar_paket_c',
+        'kf', 'warga_belajar_kf', 'paud', 'taman_bacaan',
+        'kelompok_bkb', 'peserta_bkb', 'ibu_set_bkb', 'ape_bkb',
+        'kelompok_simulasi_bkb', 'tutor_kf', 'tutor_paud', 'kader_bkb',
+        'kelompok_kader_koperasi', 'kader_keterampilan',
+        'kader_dilatih_pengelolaan', 'kader_dilatih_tp_pkk', 'kader_dilatih_damas',
+        'lp3_pkk', 'tp3_pkk', 'damas_pkk',
+        'up2k_pemula_kelompok', 'up2k_pemula_peserta',
+        'up2k_madya_kelompok', 'up2k_madya_peserta',
+        'up2k_utama_kelompok', 'up2k_utama_peserta',
+        'up2k_mandiri_kelompok', 'up2k_mandiri_peserta',
+        'koperasi_berbadan_hukum', 'anggota_koperasi',
+    ];
+
+    private function baseRules(): array
+    {
+        $rules = [
+            'kategori' => 'required|string|max:255',
+            'kecamatan' => 'required|string|max:255',
+            'nama_kecamatan' => 'nullable|string|max:255',
+            'judul_kegiatan' => 'nullable|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+        ];
+        foreach (self::NUMERIK as $field) {
+            $rules[$field] = 'nullable|integer|min:0';
+        }
+
+        return $rules;
+    }
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -41,13 +79,9 @@ class Pokja2Controller extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'kategori' => 'required|string|max:255',
-            'kecamatan' => 'required|string|max:255',
-            'nama_kecamatan' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validate($this->baseRules());
 
-        Pokja2::create($request->all());
+        Pokja2::create($validated);
 
         return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil ditambahkan.');
     }
@@ -59,12 +93,9 @@ class Pokja2Controller extends Controller
 
     public function update(Request $request, Pokja2 $pokja2)
     {
-        $request->validate([
-            'kategori' => 'required|string|max:255',
-            'kecamatan' => 'required|string|max:255',
-        ]);
+        $validated = $request->validate($this->baseRules());
 
-        $pokja2->update($request->all());
+        $pokja2->update($validated);
 
         return redirect()->route('be.pokja2.index')->with('success', 'Data Pokja II berhasil diperbarui.');
     }

@@ -7,7 +7,7 @@ import Badge from "@/Components/UI/Badge";
 import Table from "@/Components/Data/Table";
 import Pagination from "@/Components/Data/Pagination";
 import Card from "@/Components/UI/Card";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, useForm, router } from "@inertiajs/react";
 import {
     Search,
     Edit2,
@@ -25,10 +25,26 @@ import {
     KeyRound,
     Eye,
     Clock,
+    Upload,
+    Download,
+    FileSpreadsheet,
+    X,
 } from "lucide-react";
 import { PaginatedData, User } from "@/types/model";
 import { usePage } from "@inertiajs/react";
 import axios from "axios";
+
+interface ImportRowError {
+    baris: number;
+    username: string;
+    alasan: string;
+}
+
+interface ImportResult {
+    created: number;
+    skipped: number;
+    errors: ImportRowError[];
+}
 
 interface IndexProps {
     users: PaginatedData<User>;
@@ -77,6 +93,7 @@ const getRoleBadge = (roleName: string) => {
 
 export default function Index({ users, filters = {} }: IndexProps) {
     const { permissions, roles } = usePage<any>().props.auth || { permissions: [], roles: [] };
+    const flashResult = (usePage<any>().props.flash as any)?.import_result as ImportResult | undefined;
     const isSuperAdmin = (roles || []).includes("super-admin");
     const [search, setSearch] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(Number(filters.per_page) || 10);
@@ -87,6 +104,10 @@ export default function Index({ users, filters = {} }: IndexProps) {
     const [showResetModal, setShowResetModal] = useState<User | null>(null);
     const [newPassword, setNewPassword] = useState("");
     const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [importing, setImporting] = useState(false);
+    const [hideResult, setHideResult] = useState(false);
 
     const { delete: destroy, processing, patch, post } = useForm({});
 
@@ -182,6 +203,21 @@ export default function Index({ users, filters = {} }: IndexProps) {
         setStatusFilter("");
     };
 
+    const handleImport = () => {
+        if (!importFile) return;
+        setImporting(true);
+        router.post(route("be.users.import"), { file: importFile }, {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowImportModal(false);
+                setImportFile(null);
+                setHideResult(false);
+                fetchData(route("be.users.index"));
+            },
+            onFinish: () => setImporting(false),
+        });
+    };
+
     const roleOptions = [
         { value: "", label: "Semua Role" },
         { value: "super-admin", label: "Super Admin" },
@@ -215,15 +251,67 @@ export default function Index({ users, filters = {} }: IndexProps) {
                         Kelola akses dan akun pengguna sistem PKK
                     </p>
                 </div>
-                <Button
-                    variant="primary"
-                    href={route("be.users.create")}
-                    className="shadow-lg shadow-teal-100 dark:shadow-none bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
-                >
-                    <UserPlus size={16} />
-                    <span>Tambah Pengguna</span>
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                        variant="secondary"
+                        href={route("be.users.template")}
+                        target="_blank"
+                        className="flex items-center gap-2"
+                        title="Unduh template Excel import"
+                    >
+                        <Download size={16} />
+                        <span>Template</span>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowImportModal(true)}
+                        className="flex items-center gap-2"
+                        title="Import banyak akun dari Excel"
+                    >
+                        <Upload size={16} />
+                        <span>Import</span>
+                    </Button>
+                    <Button
+                        variant="primary"
+                        href={route("be.users.create")}
+                        className="shadow-lg shadow-teal-100 dark:shadow-none bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
+                    >
+                        <UserPlus size={16} />
+                        <span>Tambah Pengguna</span>
+                    </Button>
+                </div>
             </div>
+
+            {/* Hasil import terakhir */}
+            {flashResult && !hideResult && (
+                <div className={`mb-6 p-4 rounded-2xl border text-sm ${flashResult.skipped > 0 ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200" : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200"}`}>
+                    <div className="flex items-start gap-3">
+                        <FileSpreadsheet size={18} className="shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold">
+                                Import selesai: {flashResult.created} akun dibuat, {flashResult.skipped} baris dilewati.
+                            </p>
+                            {flashResult.errors.length > 0 && (
+                                <ul className="list-disc ml-4 mt-2 space-y-1 text-[13px] max-h-40 overflow-y-auto">
+                                    {flashResult.errors.map((e, i) => (
+                                        <li key={i}>
+                                            Baris {e.baris} (@{e.username}): {e.alasan}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setHideResult(true)}
+                            className="p-1 rounded-lg hover:bg-black/5 transition-all"
+                            title="Tutup"
+                        >
+                            <X size={15} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Card */}
             <Card className="dark:bg-slate-800 dark:border-slate-700">
@@ -608,6 +696,63 @@ export default function Index({ users, filters = {} }: IndexProps) {
                                 className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
                             >
                                 <span>Simpan Password</span>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Import Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        onClick={() => !importing && setShowImportModal(false)}
+                    />
+                    <div className="relative bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md p-6">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">
+                            Import Pengguna
+                        </h3>
+                        <p className="text-sm text-slate-500 mb-4">
+                            Upload Excel sesuai template. Baris gagal dilewati + dilaporkan, tidak menggagalkan sisanya.
+                        </p>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 mb-4 space-y-1">
+                            <p className="font-bold text-slate-600 dark:text-slate-300">Kolom template:</p>
+                            <p><span className="font-mono font-semibold">nama, username, email, password</span> (wajib, min 8)</p>
+                            <p><span className="font-mono font-semibold">peran</span> (wajib — cth: dasawisma / pokja2 / kecamatan)</p>
+                            <p><span className="font-mono font-semibold">kecamatan, desa</span> (wajib untuk kecamatan & admin desa & dasawisma)</p>
+                            <p><span className="font-mono font-semibold">no_hp</span> (opsional)</p>
+                        </div>
+                        <input
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            disabled={importing}
+                            onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+                            className="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 dark:file:bg-teal-900/30 dark:file:text-teal-300 mb-4"
+                        />
+                        {importFile && (
+                            <p className="text-xs text-slate-500 mb-4">
+                                Dipilih: <span className="font-semibold">{importFile.name}</span>
+                            </p>
+                        )}
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    setShowImportModal(false);
+                                    setImportFile(null);
+                                }}
+                                disabled={importing}
+                            >
+                                <span>Batal</span>
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleImport}
+                                disabled={!importFile || importing}
+                                className="bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-100 dark:shadow-none"
+                            >
+                                <Upload size={15} />
+                                <span>{importing ? "Mengimpor..." : "Mulai Import"}</span>
                             </Button>
                         </div>
                     </div>

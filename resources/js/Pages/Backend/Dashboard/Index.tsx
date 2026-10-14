@@ -392,10 +392,16 @@ export default function Dashboard({
                     </div>
                     {/* ✅ LONCENG NOTIFIKASI */}
                     <NotificationBell />
-                    <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <a
+                        href="/dashboard/sekretariat/export"
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Unduh rekap agregat sekretariat (CSV, data approved)"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
                         <Download size={16} />
                         Unduh Rekap
-                    </button>
+                    </a>
                 </div>
             </div>
 

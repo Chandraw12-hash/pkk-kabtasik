@@ -30,7 +30,6 @@ function pauseAllAudio() {
             if (!audio.paused) {
                 audio.pause();
                 audio.currentTime = 0;
-                console.log("Audio paused:", audio.src);
             }
         });
 

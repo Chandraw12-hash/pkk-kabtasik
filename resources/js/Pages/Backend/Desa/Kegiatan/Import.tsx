@@ -11,7 +11,6 @@ export default function Import() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0] ?? null;
-        console.log('📁 File dipilih:', selectedFile);
         setFile(selectedFile);
         setError(null);
     };
@@ -19,16 +18,12 @@ export default function Import() {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        console.log('🚀 Submit — file:', file, 'processing:', processing);
-
         if (!file) {
-            console.log('❌ File null');
             setError('Pilih file Excel dulu');
             return;
         }
 
         if (processing) {
-            console.log('⏳ Masih processing');
             return;
         }
 
@@ -38,26 +33,21 @@ export default function Import() {
         const formData = new FormData();
         formData.append('file', file);
 
-        console.log('📤 POST /desa/kegiatan/import');
-
         router.post('/desa/kegiatan/import', formData, {
             forceFormData: true,
             preserveScroll: true,
 
-            onSuccess: (page) => {
-                console.log('✅ Success:', page);
+            onSuccess: () => {
                 setFile(null);
                 setProcessing(false);
             },
 
-            onError: (errors) => {
-                console.error('❌ Error:', errors);
+            onError: () => {
                 setError('Import gagal. Cek file Excel.');
                 setProcessing(false);
             },
 
             onFinish: () => {
-                console.log('🏁 Finish');
                 setProcessing(false);
             },
         });

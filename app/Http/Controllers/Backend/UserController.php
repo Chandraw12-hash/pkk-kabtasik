@@ -153,6 +153,48 @@ class UserController extends Controller
     }
 
     /**
+     * TEMPLATE IMPORT — Excel contoh + petunjuk kolom (super-admin).
+     */
+    public function template()
+    {
+        $roles = \Spatie\Permission\Models\Role::orderBy('name')->pluck('name')->all();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\UsersTemplateExport($roles, WilayahDesa::kecamatanList()),
+            'template-import-pengguna.xlsx'
+        );
+    }
+
+    /**
+     * IMPORT MASSAL — buat banyak akun sekaligus dari Excel.
+     * Baris gagal dilewati + dilaporkan (tidak menggagalkan 1 file).
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ], [
+            'file.required' => 'Pilih file Excel dulu.',
+            'file.mimes' => 'File harus .xlsx / .xls / .csv.',
+            'file.max' => 'Ukuran file maksimal 5 MB.',
+        ]);
+
+        $import = new \App\Imports\UsersImport(auth()->user());
+        \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('file'));
+        $hasil = $import->result();
+
+        ActivityLogger::log(
+            'user.import',
+            null,
+            "Import pengguna: {$hasil['created']} dibuat, {$hasil['skipped']} dilewati ({$request->file('file')->getClientOriginalName()})"
+        );
+
+        return redirect()->route('be.users.index')
+            ->with('success', "Import selesai: {$hasil['created']} akun dibuat, {$hasil['skipped']} baris dilewati.")
+            ->with('import_result', $hasil);
+    }
+
+    /**
      * EDIT — Form edit user
      */
     public function edit(User $user)

@@ -372,14 +372,14 @@ export default function Index({
             color: "#DC2626",
             Icon: AlertTriangle,
         },
-        { label: "Ada stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING, Icon: Baby },
+        { label: "Ada Balita Stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING, Icon: Baby },
         { label: "Ada Ibu Hamil", count: stats?.bumil ?? 0, color: WARNA_BUMIL, Icon: Heart },
     ];
 
     const legend = [
         { label: "Rumah Layak Huni", count: stats?.sehat ?? 0, color: "#16A34A" },
         { label: "Rumah Tidak Layak Huni", count: stats?.kurang_sehat ?? 0, color: "#DC2626" },
-        { label: "Ada balita stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING },
+        { label: "Ada Balita Stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING },
         { label: "Belum diisi", count: belumDiisi, color: WARNA_NETRAL },
     ];
 

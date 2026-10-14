@@ -175,7 +175,7 @@ export default function Create() {
                         <TextInput
                             value={data.lokasi}
                             onChange={(e) => setData("lokasi", e.target.value)}
-                            placeholder="Contoh: Aula Kecamatan Cihideung"
+                            placeholder="Contoh: Aula Kecamatan Singaparna"
                             className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                         />
                         {errors.lokasi && (

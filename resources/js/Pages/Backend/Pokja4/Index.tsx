@@ -10,7 +10,6 @@ import KunjunganPyd from "./KunjunganPyd";
 import KegiatanPosyandu from "./KegiatanPosyandu";
 import Rekapitulasi from "./Rekapitulasi";
 import DataDukung from "./DataDukung";
-import { dummyDataDukung, dummyDataProgram } from "./Pokja4LaporanDummy";
 import { Pokja4DataRow } from "./Pokja4TabUtils";
 import DataDisclosure from "./DataDisclosure";
 import {
@@ -43,10 +42,7 @@ interface PageProps {
     kunjungan_pyd?: Pokja4DataRow[];
     kegiatan_posyandu?: Pokja4DataRow[];
     rekapitulasi?: Pokja4DataRow[];
-    // TODO(backend): diisi oleh teman backend via Inertia + JSON fetchData.
-    // Sengaja optional agar UI tetap jalan sebelum backend tersambung.
-    // `laporan_loaded: true` = backend sudah mengirim (walau datanya kosong),
-    // sehingga preview dummy dimatikan dan tampil empty-state asli.
+    // Data laporan dari backend (Pokja4Controller@index, Inertia + JSON).
     data_dukung?: Pokja4DataRow[];
     data_program?: Pokja4DataRow[];
     laporan_loaded?: boolean;
@@ -147,21 +143,13 @@ export default function Index({
     const [kunjunganData, setKunjunganData] = useState(kunjungan_pyd);
     const [posyanduData, setPosyanduData] = useState(kegiatan_posyandu);
     const [rekapitulasiData, setRekapitulasiData] = useState(rekapitulasi);
-    // TODO(backend): hapus fallback dummy + flag ini setelah API mengirim
-    // `data_dukung` / `data_program` asli. Selama backend belum mengirim
-    // (props kosong dan tidak ada flag), tampil preview dummy agar layout
-    // bisa direview. Begitu backend mengirim key-nya (walau array kosong),
-    // dummy dimatikan dan tampil data/empty-state asli.
-    const initialLaporanLoaded =
-        data_dukung.length > 0 ||
-        data_program.length > 0 ||
-        laporan_loaded === true;
-    const [laporanLoaded, setLaporanLoaded] = useState(initialLaporanLoaded);
+    // Backend selalu mengirim `data_dukung` / `data_program` asli + flag
+    // `laporan_loaded` — tidak ada lagi fallback dummy.
     const [dataDukungData, setDataDukungData] = useState<Pokja4DataRow[]>(
-        initialLaporanLoaded ? data_dukung : dummyDataDukung
+        data_dukung
     );
     const [dataProgramData, setDataProgramData] = useState<Pokja4DataRow[]>(
-        initialLaporanLoaded ? data_program : dummyDataProgram
+        data_program
     );
     const [availableYears, setAvailableYears] = useState(tahunList);
 
@@ -188,18 +176,13 @@ export default function Index({
                     setKunjunganData(res.data.kunjungan_pyd || []);
                     setPosyanduData(res.data.kegiatan_posyandu || []);
                     setRekapitulasiData(res.data.rekapitulasi || []);
-                    // Backend sudah mengirim key-nya (walau array kosong):
-                    // matikan preview dummy, tampil data/empty-state asli.
+                    // Backend mengirim key-nya (walau array kosong):
+                    // tampil data/empty-state asli.
                     if (res.data.data_dukung !== undefined) {
                         setDataDukungData(res.data.data_dukung || []);
-                        setLaporanLoaded(true);
                     }
                     if (res.data.data_program !== undefined) {
                         setDataProgramData(res.data.data_program || []);
-                        setLaporanLoaded(true);
-                    }
-                    if (res.data.laporan_loaded === true) {
-                        setLaporanLoaded(true);
                     }
                     setAvailableYears(res.data.tahunList || []);
                 }
@@ -240,15 +223,8 @@ export default function Index({
         setKunjunganData(kunjungan_pyd);
         setPosyanduData(kegiatan_posyandu);
         setRekapitulasiData(rekapitulasi);
-        if (
-            data_dukung.length > 0 ||
-            data_program.length > 0 ||
-            laporan_loaded === true
-        ) {
-            setDataDukungData(data_dukung);
-            setDataProgramData(data_program);
-            setLaporanLoaded(true);
-        }
+        setDataDukungData(data_dukung);
+        setDataProgramData(data_program);
         setAvailableYears(tahunList);
     }, [pokjas, kunjungan_pyd, kegiatan_posyandu, rekapitulasi, data_dukung, data_program, laporan_loaded, tahunList]);
 
@@ -592,7 +568,6 @@ export default function Index({
                         semester={semester}
                         semesters={["I", "II"]}
                         onSemesterChange={setSemester}
-                        isPreview={!laporanLoaded}
                     />
                 </section>
             )}

@@ -44,6 +44,9 @@ class Pokja3 extends Model
         'industri_pangan',
         'industri_sandang',
         'industri_jasa',
+
+        // Kolom 20 tabel publik
+        'keterangan',
     ];
 
     protected $casts = [

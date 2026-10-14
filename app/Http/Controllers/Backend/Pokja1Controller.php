@@ -96,25 +96,40 @@ class Pokja1Controller extends Controller
         return Inertia::render('Backend/Pokja1/Create');
     }
 
-    public function store(Request $request)
+    /**
+     * 6 program format publik (KISAH/KILAS/KRISAN/KIAT/KISAK/PKBN),
+     * masing-masing: kegiatan, volume, metode, sasaran.
+     */
+    private const PROGRAMS = ['kisah', 'kilas', 'krisan', 'kiat', 'kisak', 'pkbn'];
+
+    private function baseRules(): array
     {
-        $validated = $request->validate([
-            'judul_kegiatan' => 'required|string|max:255',
+        $rules = [
+            'kecamatan'      => 'required|string|max:100',
+            'nama_kecamatan' => 'nullable|string|max:100',
+            'nama_wilayah'   => 'nullable|string|max:100',
+            'tahun'          => 'nullable|integer|min:2000|max:2100',
+            'kader_umum'     => 'nullable|integer|min:0',
+            'kader_khusus'   => 'nullable|integer|min:0',
+            'keterangan'     => 'nullable|string',
+            'judul_kegiatan' => 'nullable|string|max:255',
             'deskripsi'      => 'nullable|string',
             'kategori'       => 'nullable|string|max:100',
-            'kecamatan'      => 'nullable|string|max:100',
-            'pkbn_l'         => 'nullable|integer|min:0',
-            'pkbn_p'         => 'nullable|integer|min:0',
-            'pkdrt_l'        => 'nullable|integer|min:0',
-            'pkdrt_p'        => 'nullable|integer|min:0',
-            'pola_asuh_l'    => 'nullable|integer|min:0',
-            'pola_asuh_p'    => 'nullable|integer|min:0',
-            'lansia_l'       => 'nullable|integer|min:0',
-            'lansia_p'       => 'nullable|integer|min:0',
-            'kader_pokja1_l' => 'nullable|integer|min:0',
-            'kader_pokja1_p' => 'nullable|integer|min:0',
             'foto'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+        ];
+        foreach (self::PROGRAMS as $program) {
+            $rules["{$program}_kegiatan"] = 'nullable|string|max:255';
+            $rules["{$program}_volume"]   = 'nullable|integer|min:0';
+            $rules["{$program}_metode"]   = 'nullable|string|max:255';
+            $rules["{$program}_sasaran"]  = 'nullable|integer|min:0';
+        }
+
+        return $rules;
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate($this->baseRules());
 
         if ($request->hasFile('foto')) {
             $validated['foto'] = $request->file('foto')->store('pokja1-photos', 'public');
@@ -137,23 +152,7 @@ class Pokja1Controller extends Controller
 
     public function update(Request $request, Pokja1 $pokja1)
     {
-        $validated = $request->validate([
-            'judul_kegiatan' => 'required|string|max:255',
-            'deskripsi'      => 'nullable|string',
-            'kategori'       => 'nullable|string|max:100',
-            'kecamatan'      => 'nullable|string|max:100',
-            'pkbn_l'         => 'nullable|integer|min:0',
-            'pkbn_p'         => 'nullable|integer|min:0',
-            'pkdrt_l'        => 'nullable|integer|min:0',
-            'pkdrt_p'        => 'nullable|integer|min:0',
-            'pola_asuh_l'    => 'nullable|integer|min:0',
-            'pola_asuh_p'    => 'nullable|integer|min:0',
-            'lansia_l'       => 'nullable|integer|min:0',
-            'lansia_p'       => 'nullable|integer|min:0',
-            'kader_pokja1_l' => 'nullable|integer|min:0',
-            'kader_pokja1_p' => 'nullable|integer|min:0',
-            'foto'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+        $validated = $request->validate($this->baseRules());
 
         if ($request->hasFile('foto')) {
             if ($pokja1->foto && Storage::disk('public')->exists($pokja1->foto)) {

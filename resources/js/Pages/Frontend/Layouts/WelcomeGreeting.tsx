@@ -62,17 +62,11 @@ export default function WelcomeGreeting() {
             const alreadyShown =
                 sessionStorage.getItem(WELCOME_SHOWN_KEY) === "true";
 
-            console.log(
-                "🔍 CEK sessionStorage saat mount:",
-                sessionStorage.getItem(WELCOME_SHOWN_KEY)
-            );
-
             if (alreadyShown) {
                 hasPlayedRef.current = true;
-                console.log("🔇 Welcome sudah pernah diputar — dilewati");
             }
-        } catch (err) {
-            console.warn("⚠️ sessionStorage tidak bisa diakses:", err);
+        } catch {
+            // sessionStorage tidak tersedia (mode privat) — abaikan.
         }
     }, []);
 
@@ -85,7 +79,6 @@ export default function WelcomeGreeting() {
 
         mars.addEventListener("ended", () => {
             isMarsPausedRef.current = false;
-            console.log("⏹️ MARS ENDED");
         });
 
         const welcome = new Audio(WELCOME_AUDIO_SRC);
@@ -122,11 +115,9 @@ export default function WelcomeGreeting() {
                 if (mars && !mars.paused) {
                     mars.pause();
                     isMarsPausedRef.current = true;
-                    console.log("⏹️ MARS PAUSED —", currentUrl);
                 }
                 if (welcome && !welcome.paused) {
                     welcome.pause();
-                    console.log("⏹️ WELCOME PAUSED —", currentUrl);
                 }
                 return;
             }
@@ -142,11 +133,8 @@ export default function WelcomeGreeting() {
                     mars.play()
                         .then(() => {
                             isMarsPausedRef.current = false;
-                            console.log("▶️ MARS RESUME —", currentUrl);
                         })
-                        .catch(() => {
-                            console.log("⚠️ GAGAL RESUME");
-                        });
+                        .catch(() => {});
                 }
             }
         };
@@ -167,7 +155,6 @@ export default function WelcomeGreeting() {
 
             // 🔥 Kalau interaksi BUKAN di Beranda → jangan mainkan lagu
             if (!isBerandaPage()) {
-                console.log("🔇 Interaksi di luar Beranda — lagu tidak diputar");
                 return;
             }
 
@@ -176,9 +163,8 @@ export default function WelcomeGreeting() {
 
             try {
                 sessionStorage.setItem(WELCOME_SHOWN_KEY, "true");
-                console.log("✅ sessionStorage SET");
-            } catch (err) {
-                console.warn("⚠️ Gagal set sessionStorage:", err);
+            } catch {
+                // sessionStorage tidak tersedia — abaikan.
             }
 
             const welcomeAudio = welcomeAudioRef.current;
@@ -201,7 +187,6 @@ export default function WelcomeGreeting() {
                     marsAudioRef.current.currentTime = 0;
                     marsAudioRef.current.play().catch(() => {});
                 }
-                console.log("▶️ MARS PLAY (1x)");
             };
 
             welcomeAudio.addEventListener("ended", handleEnded);

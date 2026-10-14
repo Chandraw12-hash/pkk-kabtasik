@@ -284,6 +284,8 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     Route::middleware('permission:create-user')->group(function () {
         Route::get('users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/template', [UserController::class, 'template'])->name('users.template');
+        Route::post('users/import', [UserController::class, 'import'])->name('users.import');
     });
     Route::middleware('permission:edit-user')->group(function () {
         Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');

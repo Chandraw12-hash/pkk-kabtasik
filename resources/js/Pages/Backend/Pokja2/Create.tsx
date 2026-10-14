@@ -5,106 +5,143 @@ import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { ArrowLeft, Save } from "lucide-react";
+import { Pokja2FormBody, POKJA2_NUMERIK_KEYS } from "./formFields";
 
 export default function Create() {
-    const { data, setData, post, processing, errors } = useForm({
+    const initial: Record<string, any> = {
         kategori: "",
+        kecamatan: "",
+        nama_kecamatan: "",
         judul_kegiatan: "",
         deskripsi: "",
-    });
-
-    const submit = (e) => {
-        e.preventDefault();
-        post(route("be.pokja1.store"));
+        keterangan: "",
     };
+    for (const key of POKJA2_NUMERIK_KEYS) initial[key] = 0;
 
-    const selectClass =
-        "w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 block py-3 px-4 transition-all outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600";
+    const { data, setData, post, processing, errors } = useForm(initial);
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route("be.pokja2.store"));
+    };
 
     return (
         <MainLayout>
-            <Head title="Tambah Data Pokja I" />
+            <Head title="Tambah Data Pokja II" />
 
             <div className="flex items-center gap-3 mb-8">
                 <Link
-                    href={route("be.pokja1.index")}
+                    href={route("be.pokja2.index")}
                     className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all dark:hover:bg-slate-700"
                 >
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
-                        Tambah Data Pokja I
+                        Tambah Data Pokja II
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Tambah data kegiatan atau program kerja Pokja I TP PKK
+                        Pendidikan, kader khusus & koperasi — format sama seperti tabel publik
                     </p>
                 </div>
             </div>
 
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
-                <form onSubmit={submit} className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+            <form onSubmit={submit} className="space-y-6">
+                <Card className="p-6 dark:bg-slate-800 dark:border-slate-700 space-y-5">
+                    <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                        Identitas
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                                 Kategori <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                placeholder="Contoh: Penghayatan Pancasila, Gotong Royong, dll"
+                                placeholder="Contoh: Pendidikan"
                                 value={data.kategori}
-                                onChange={(e) => setData("kategori", e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kategori", e.target.value)}
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
                             {errors.kategori && <div className="text-red-500 text-xs mt-1">{errors.kategori}</div>}
                         </div>
-
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Judul Kegiatan <span className="text-rose-500">*</span>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Kecamatan <span className="text-rose-500">*</span>
                             </label>
                             <TextInput
-                                placeholder="Contoh: Penyuluhan Pola Asuh Anak dan Remaja"
+                                placeholder="Contoh: Singaparna"
+                                value={data.kecamatan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("kecamatan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.kecamatan && <div className="text-red-500 text-xs mt-1">{errors.kecamatan}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Nama Kecamatan
+                            </label>
+                            <TextInput
+                                placeholder="Contoh: Singaparna"
+                                value={data.nama_kecamatan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("nama_kecamatan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.nama_kecamatan && <div className="text-red-500 text-xs mt-1">{errors.nama_kecamatan}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Judul Kegiatan
+                            </label>
+                            <TextInput
+                                placeholder="Contoh: Rekapitulasi Pokja II"
                                 value={data.judul_kegiatan}
-                                onChange={(e) => setData("judul_kegiatan", e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("judul_kegiatan", e.target.value)}
                                 className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
                             />
                             {errors.judul_kegiatan && <div className="text-red-500 text-xs mt-1">{errors.judul_kegiatan}</div>}
                         </div>
-
                         <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Deskripsi / Keterangan
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Deskripsi
                             </label>
                             <textarea
                                 value={data.deskripsi}
-                                onChange={(e) => setData("deskripsi", e.target.value)}
-                                rows={4}
-                                placeholder="Penjelasan singkat mengenai kegiatan..."
-                                className={selectClass}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setData("deskripsi", e.target.value)}
+                                rows={3}
+                                placeholder="Penjelasan singkat..."
+                                className="w-full text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 outline-none transition-all resize-none"
                             />
                             {errors.deskripsi && <div className="text-red-500 text-xs mt-1">{errors.deskripsi}</div>}
                         </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                Keterangan (kolom KET. di tabel publik)
+                            </label>
+                            <TextInput
+                                placeholder="Contoh: -"
+                                value={data.keterangan}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData("keterangan", e.target.value)}
+                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            />
+                            {errors.keterangan && <div className="text-red-500 text-xs mt-1">{errors.keterangan}</div>}
+                        </div>
                     </div>
+                </Card>
 
-                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                        <Link
-                            href={route("be.pokja1.index")}
-                            className="px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
-                        >
-                            Batal
-                        </Link>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={processing}
-                            className="flex items-center gap-2"
-                        >
-                            <Save size={16} />
-                            <span>Simpan Data</span>
-                        </Button>
-                    </div>
-                </form>
-            </Card>
+                <Card className="p-6 dark:bg-slate-800 dark:border-slate-700 space-y-6">
+                    <Pokja2FormBody data={data} setData={setData} errors={errors} />
+                </Card>
+
+                <div className="flex items-center justify-end gap-3">
+                    <Button type="button" variant="secondary" href={route("be.pokja2.index")}>
+                        Batal
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={processing} className="flex items-center gap-2">
+                        <Save size={16} />
+                        {processing ? "Menyimpan..." : "Simpan Data"}
+                    </Button>
+                </div>
+            </form>
         </MainLayout>
     );
 }
