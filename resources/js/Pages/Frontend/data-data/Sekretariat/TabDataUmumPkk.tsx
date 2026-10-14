@@ -134,7 +134,7 @@ export default function TabDataUmumPkk({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                     ["Total KK", sum("jumlah_kk"), Home],
-                    ["Total Jiwa", sum("jiwa_l") + sum("jiwa_p") + sum("jiwa_tidak_terpilah"), Users],
+                    ["Total Jiwa", sum("jiwa_l") + sum("jiwa_p"), Users],
                     ["Total Kader", sum("tp_pkk_l") + sum("tp_pkk_p") + sum("kader_umum_l") + sum("kader_umum_p") + sum("kader_khusus_l") + sum("kader_khusus_p"), UserRound],
                     ["Total Sekretariat", sum("sekretariat_honorer_l") + sum("sekretariat_honorer_p") + sum("sekretariat_bantuan_l") + sum("sekretariat_bantuan_p"), BriefcaseBusiness],
                 ].map(([label, value, Icon]) => (

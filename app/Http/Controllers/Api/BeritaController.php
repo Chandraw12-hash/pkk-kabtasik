@@ -648,59 +648,129 @@ class BeritaController extends Controller
     }
 
     /**
-     * 🔥 FIX: Upload base64 image - SUPPORT TANPA PREFIX
-     * Batas: maks 2 MB (decoded), tolak GIF (animasi rawan + boros).
+     * Upload base64 image — sumber DSLR (20-50 MB) via HP.
+     * Terima sampai 30 MB, lalu perkecil di server via GD: sisi terpanjang
+     * maks 1920px, simpan JPEG q80 (±300-600 KB). GIF ditolak.
+     * Syarat php.ini saat deploy: post_max_size & upload_max_filesize 32M,
+     * memory_limit 512M (kanvas DSLR 50 MP ≈ 200 MB di RAM).
      */
     private function uploadBase64Image($base64Image)
     {
-        // 🔥 CEK APAKAH ADA PREFIX data:image
+        // CEK APAKAH ADA PREFIX data:image
         if (strpos($base64Image, 'data:image') !== false) {
             $parts = explode(',', $base64Image, 2);
             $base64Image = $parts[1] ?? '';
         }
 
-        // 🔥 HAPUS WHITESPACE
+        // HAPUS WHITESPACE
         $base64Image = trim($base64Image);
 
-        // 🔥 DECODE (strict: tolak karakter non-base64)
+        // DECODE (strict: tolak karakter non-base64)
         $image = base64_decode($base64Image, true);
 
-        // 🔥 CEK APAKAH DECODE BERHASIL
+        // CEK APAKAH DECODE BERHASIL
         if ($image === false) {
             throw new \Exception('Gagal mendecode base64 image');
         }
 
-        // 🔒 BATAS 2 MB (cek hasil decode, bukan panjang string base64).
-        if (strlen($image) > 2 * 1024 * 1024) {
-            throw new \Exception('Ukuran foto maksimal 2 MB');
+        // BATAS MASUK 30 MB (file DSLR; cek hasil decode, bukan panjang string).
+        if (strlen($image) > 30 * 1024 * 1024) {
+            throw new \Exception('Ukuran foto maksimal 30 MB');
         }
 
-        // 🔥 CEK APAKAH IMAGE VALID
-        // Tentukan extension berdasarkan magic bytes
-        $extension = 'jpg';
-        $mimeType = $this->getMimeTypeFromBase64($base64Image);
-
-        if ($mimeType === 'image/png') {
-            $extension = 'png';
-        } elseif ($mimeType === 'image/webp') {
-            $extension = 'webp';
-        } elseif ($mimeType === 'image/gif') {
-            // 🔒 GIF ditolak: animasi bisa disalahgunakan + ukuran boros.
+        // CEK IMAGE VALID + tolak GIF sejak magic bytes.
+        $info = @getimagesizefromstring($image);
+        if ($info === false) {
+            throw new \Exception('File bukan gambar yang valid (gunakan JPG/PNG/WEBP)');
+        }
+        if ($info[2] === IMAGETYPE_GIF) {
             throw new \Exception('Format GIF tidak diperbolehkan (gunakan JPG/PNG/WEBP)');
-        } elseif (! in_array($mimeType, ['image/jpeg', 'image/jpg'], true)) {
+        }
+        if (! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
             throw new \Exception('Format gambar tidak didukung (gunakan JPG/PNG/WEBP)');
         }
 
-        $filename = 'berita-' . time() . '-' . uniqid() . '.' . $extension;
-        $path = storage_path('app/public/berita/' . $filename);
-
-        if (!file_exists(storage_path('app/public/berita'))) {
-            mkdir(storage_path('app/public/berita'), 0775, true);
+        // Batas 50 megapiksel agar GD tidak makan RAM berlebih di server.
+        if ($info[0] * $info[1] > 50 * 1000 * 1000) {
+            throw new \Exception('Resolusi foto terlalu besar, kecilkan dulu sebelum upload');
         }
 
-        file_put_contents($path, $image);
+        $src = @imagecreatefromstring($image);
+        if ($src === false) {
+            throw new \Exception('Gambar rusak dan tidak bisa diproses');
+        }
+
+        try {
+            $width = imagesx($src);
+            $height = imagesy($src);
+
+            // Koreksi orientasi EXIF (foto portrait kamera).
+            $src = $this->applyExifOrientation($src, $image);
+            $width = imagesx($src);
+            $height = imagesy($src);
+
+            // Perkecil bila sisi terpanjang > 1920px.
+            $maxSide = 1920;
+            if (max($width, $height) > $maxSide) {
+                $ratio = $maxSide / max($width, $height);
+                $newWidth = (int) round($width * $ratio);
+                $newHeight = (int) round($height * $ratio);
+                $dst = imagecreatetruecolor($newWidth, $newHeight);
+                imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                imagedestroy($src);
+                $src = $dst;
+            }
+
+            $dir = storage_path('app/public/berita');
+            if (!file_exists($dir)) {
+                mkdir($dir, 0775, true);
+            }
+            $filename = 'berita-' . time() . '-' . uniqid() . '.jpg';
+            $path = $dir . '/' . $filename;
+            if (! imagejpeg($src, $path, 80)) {
+                throw new \Exception('Gagal menyimpan foto');
+            }
+        } finally {
+            if (isset($src) && $src instanceof \GdImage) {
+                imagedestroy($src);
+            }
+        }
 
         return 'berita/' . $filename;
+    }
+
+    /**
+     * Putar kanvas sesuai tag EXIF Orientation (1, 3, 6, 8).
+     *
+     * @param \GdImage $src
+     * @return \GdImage
+     */
+    private function applyExifOrientation($src, string $bytes)
+    {
+        if (! function_exists('exif_read_data')) {
+            return $src;
+        }
+        $tmp = tempnam(sys_get_temp_dir(), 'exif');
+        if ($tmp === false) {
+            return $src;
+        }
+        file_put_contents($tmp, $bytes);
+        $exif = @exif_read_data($tmp);
+        @unlink($tmp);
+        if (! is_array($exif) || ! isset($exif['Orientation'])) {
+            return $src;
+        }
+        $rotated = match ((int) $exif['Orientation']) {
+            3 => imagerotate($src, 180, 0),
+            6 => imagerotate($src, -90, 0),
+            8 => imagerotate($src, 90, 0),
+            default => $src,
+        };
+        if ($rotated !== $src) {
+            imagedestroy($src);
+        }
+
+        return $rotated;
     }
 
     /**

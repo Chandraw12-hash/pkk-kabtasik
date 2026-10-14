@@ -15,13 +15,13 @@ import {
     RotateCcw,
     Plus,
     Image as ImageIcon,
-    Eye,
     CheckCircle,
     XCircle,
-    Image
+    Image as ImageIconFallback,
 } from "lucide-react";
 import { PaginatedData } from "@/types/model";
 import axios from "axios";
+import { toast } from "sonner";
 
 interface Infografis {
     id: number;
@@ -61,19 +61,35 @@ const emptyPagination: PaginatedData<Infografis> = {
     last_page: 1,
 };
 
-export default function Index({ infografis, kategoriList = [], filters = {} }: IndexProps) {
+export default function Index({
+    infografis,
+    kategoriList = [],
+    filters = {},
+}: IndexProps) {
     const [search, setSearch] = useState(filters.search || "");
-    const [kategoriFilter, setKategoriFilter] = useState(filters.kategori || "");
-    const [perPage, setPerPage] = useState<number>(Number(filters.per_page) || 10);
+    const [kategoriFilter, setKategoriFilter] = useState(
+        filters.kategori || ""
+    );
+    const [perPage, setPerPage] = useState<number>(
+        Number(filters.per_page) || 10
+    );
+
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState<Infografis | null>(null);
+
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const [showToggleModal, setShowToggleModal] = useState(false);
+    const [toggleTarget, setToggleTarget] = useState<Infografis | null>(null);
+    const [isToggling, setIsToggling] = useState(false);
 
     const [localData, setLocalData] = useState<PaginatedData<Infografis>>(
         infografis?.data ? infografis : emptyPagination
     );
+
     const [isLoading, setIsLoading] = useState(false);
     const isFirstRender = useRef(true);
 
@@ -86,27 +102,33 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
     const fetchData = () => {
         setIsLoading(true);
 
-        const url = route("be.infografis.index");
-        const params = {
-            search: search || undefined,
-            kategori: kategoriFilter || undefined,
-            per_page: perPage,
-        };
-
         axios
-            .get(url, {
-                params,
-                headers: { Accept: "application/json" },
+            .get(route("be.infografis.index"), {
+                params: {
+                    search: search || undefined,
+                    kategori: kategoriFilter || undefined,
+                    per_page: perPage,
+                },
+                headers: {
+                    Accept: "application/json",
+                },
             })
             .then((res) => {
-                if (res.data && typeof res.data === "object" && "data" in res.data) {
+                if (
+                    res.data &&
+                    typeof res.data === "object" &&
+                    "data" in res.data
+                ) {
                     setLocalData(res.data);
                 }
             })
             .catch((err) => {
-                console.error("Error fetching data:", err);
+                console.error("Error fetching infografis:", err);
+                toast.error("Gagal memuat data infografis.");
             })
-            .finally(() => setIsLoading(false));
+            .finally(() => {
+                setIsLoading(false);
+            });
     };
 
     useEffect(() => {
@@ -127,36 +149,92 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
         setShowDeleteModal(true);
     };
 
-    // 🔥 FIX: PAKE ROUTER.DELETE
     const handleDelete = () => {
-        if (!selectedItem) return;
+        if (!selectedItem || isDeleting) return;
 
         setIsDeleting(true);
 
-        router.delete(route("be.infografis.destroy", selectedItem.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setShowDeleteModal(false);
-                setSelectedItem(null);
-                setIsDeleting(false);
-                fetchData();
-            },
-            onError: (errors) => {
-                console.error("Delete error:", errors);
-                alert("Gagal menghapus infografis!");
-                setIsDeleting(false);
-            },
-        });
+        router.delete(
+            route("be.infografis.destroy", selectedItem.id),
+            {
+                preserveScroll: true,
+
+                onSuccess: () => {
+                    setShowDeleteModal(false);
+                    setSelectedItem(null);
+
+                    toast.success("Infografis berhasil dihapus.");
+
+                    fetchData();
+                },
+
+                onError: (errors) => {
+                    console.error("Delete error:", errors);
+
+                    toast.error("Gagal menghapus infografis.", {
+                        description:
+                            "Periksa kembali data atau koneksi server.",
+                    });
+                },
+
+                onFinish: () => {
+                    setIsDeleting(false);
+                },
+            }
+        );
     };
 
-    const toggleStatus = (item: Infografis) => {
-        axios.patch(route("be.infografis.toggle-status", item.id))
-            .then(() => {
-                fetchData();
-            })
-            .catch((err) => {
-                console.error("Error toggling status:", err);
-            });
+    const openToggleModal = (item: Infografis) => {
+        setToggleTarget(item);
+        setShowToggleModal(true);
+    };
+
+    const handleToggleConfirm = () => {
+        if (!toggleTarget || isToggling) return;
+
+        const akanAktif = toggleTarget.status !== "active";
+        const nama = toggleTarget.judul;
+
+        setIsToggling(true);
+
+        router.patch(
+            route("be.infografis.toggle-status", toggleTarget.id),
+            {},
+            {
+                preserveScroll: true,
+
+                onSuccess: () => {
+                    toast.success(
+                        akanAktif
+                            ? "Infografis berhasil diaktifkan."
+                            : "Infografis berhasil dinonaktifkan.",
+                        {
+                            description: akanAktif
+                                ? `Infografis "${nama}" sekarang dapat tampil di halaman publik.`
+                                : `Infografis "${nama}" tidak lagi tampil di halaman publik.`,
+                        }
+                    );
+
+                    setShowToggleModal(false);
+                    setToggleTarget(null);
+
+                    fetchData();
+                },
+
+                onError: (errors) => {
+                    console.error("Toggle status error:", errors);
+
+                    toast.error("Gagal mengubah status infografis.", {
+                        description:
+                            "Silakan coba kembali beberapa saat lagi.",
+                    });
+                },
+
+                onFinish: () => {
+                    setIsToggling(false);
+                },
+            }
+        );
     };
 
     const handleReset = () => {
@@ -166,22 +244,32 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
     };
 
     const handlePageChange = (url: string | null) => {
-        if (!url) return;
+        if (!url || isLoading) return;
 
         setIsLoading(true);
+
         axios
             .get(url, {
-                headers: { Accept: "application/json" },
+                headers: {
+                    Accept: "application/json",
+                },
             })
             .then((res) => {
-                if (res.data && typeof res.data === "object" && "data" in res.data) {
+                if (
+                    res.data &&
+                    typeof res.data === "object" &&
+                    "data" in res.data
+                ) {
                     setLocalData(res.data);
                 }
             })
             .catch((err) => {
                 console.error("Error fetching page:", err);
+                toast.error("Gagal memuat halaman infografis.");
             })
-            .finally(() => setIsLoading(false));
+            .finally(() => {
+                setIsLoading(false);
+            });
     };
 
     const openImageModal = (url: string) => {
@@ -193,35 +281,37 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
         <MainLayout>
             <Head title="Manajemen Infografis" />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            {/* Header */}
+            <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight dark:text-slate-200">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-200">
                         Manajemen Infografis
                     </h1>
+
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Kelola gambar infografis yang tampil di halaman publik
+                        Kelola gambar infografis yang tampil di halaman publik.
                     </p>
                 </div>
 
                 <Button
                     variant="primary"
                     href={route("be.infografis.create")}
-                    className="shadow-lg shadow-teal-100 dark:shadow-none flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
+                    className="flex items-center gap-2 bg-teal-600 shadow-lg shadow-teal-100 hover:bg-teal-700 dark:shadow-none"
                 >
                     <Plus size={16} />
                     <span>Tambah Infografis</span>
                 </Button>
             </div>
 
-            <Card className="dark:bg-slate-800 dark:border-slate-700 dark:shadow-slate-700/50 overflow-hidden">
-                {/* Filter Section */}
-                <div className="p-6 border-b border-slate-50 dark:border-slate-700">
+            <Card className="overflow-hidden dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-700/50">
+                {/* Filter */}
+                <div className="border-b border-slate-50 p-6 dark:border-slate-700">
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="relative flex-1 min-w-[180px] max-w-md">
+                        <div className="relative min-w-[180px] max-w-md flex-1">
                             <TextInput
                                 iconLeft={<Search size={18} />}
                                 placeholder="Cari judul infografis..."
-                                className="w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                                className="w-full dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                                 containerClassName="relative w-full"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
@@ -230,16 +320,23 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
 
                         <select
                             value={kategoriFilter}
-                            onChange={(e) => setKategoriFilter(e.target.value)}
-                            className="text-sm rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 px-3.5 py-2.5 focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
+                            onChange={(e) =>
+                                setKategoriFilter(e.target.value)
+                            }
+                            className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                         >
                             <option value="">Semua Kategori</option>
-                            {kategoriList.map((k) => (
-                                <option key={k} value={k}>{k}</option>
+
+                            {kategoriList.map((kategori) => (
+                                <option key={kategori} value={kategori}>
+                                    {kategori}
+                                </option>
                             ))}
                         </select>
 
-                        {(search || kategoriFilter || perPage !== 10) && (
+                        {(search ||
+                            kategoriFilter ||
+                            perPage !== 10) && (
                             <Button
                                 variant="secondary"
                                 onClick={handleReset}
@@ -253,49 +350,78 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-hidden">
+                <div className="overflow-x-auto">
                     <Table
                         isLoading={isLoading}
                         columns={[
                             {
                                 header: "#",
-                                className: "text-center text-sm font-medium text-slate-400 dark:text-slate-200 w-14",
-                                headerClassName: "text-center w-14",
-                                render: (_: Infografis, index: number) => {
-                                    const currentPage = localData.current_page ?? 1;
-                                    const perPageVal = localData.per_page ?? 10;
-                                    return (currentPage - 1) * perPageVal + index + 1;
+                                className:
+                                    "w-14 text-center text-sm font-medium text-slate-400 dark:text-slate-200",
+                                headerClassName: "w-14 text-center",
+                                render: (
+                                    _item: Infografis,
+                                    index: number
+                                ) => {
+                                    const currentPage =
+                                        localData.current_page ?? 1;
+                                    const perPageValue =
+                                        localData.per_page ?? 10;
+
+                                    return (
+                                        (currentPage - 1) *
+                                            perPageValue +
+                                        index +
+                                        1
+                                    );
                                 },
                             },
                             {
                                 header: "Gambar",
-                                className: "text-center w-20",
-                                headerClassName: "text-center w-20",
+                                className: "w-20 text-center",
+                                headerClassName: "w-20 text-center",
                                 render: (item: Infografis) => (
                                     <div className="flex justify-center">
                                         {item.gambar_url ? (
                                             <button
-                                                onClick={() => openImageModal(item.gambar_url!)}
-                                                className="w-14 h-14 rounded-lg overflow-hidden border border-slate-200 hover:shadow-md transition-shadow relative"
+                                                type="button"
+                                                onClick={() =>
+                                                    openImageModal(
+                                                        item.gambar_url!
+                                                    )
+                                                }
+                                                className="relative h-14 w-14 overflow-hidden rounded-lg border border-slate-200 transition-shadow hover:shadow-md"
+                                                title="Lihat gambar"
                                             >
                                                 <img
                                                     src={item.gambar_url}
                                                     alt={item.judul}
-                                                    className="w-full h-full object-cover"
+                                                    className="h-full w-full object-cover"
                                                     onError={(e) => {
-                                                        e.currentTarget.style.display = "none";
-                                                        const parent = e.currentTarget.parentElement;
-                                                        if (parent) {
-                                                            const fallback = parent.querySelector('.fallback-icon');
-                                                            if (fallback) fallback.classList.remove('hidden');
-                                                        }
+                                                        e.currentTarget.style.display =
+                                                            "none";
+
+                                                        const fallback =
+                                                            e.currentTarget
+                                                                .parentElement
+                                                                ?.querySelector(
+                                                                    ".fallback-icon"
+                                                                );
+
+                                                        fallback?.classList.remove(
+                                                            "hidden"
+                                                        );
                                                     }}
                                                 />
-                                                <Image size={20} className="fallback-icon hidden text-slate-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+
+                                                <ImageIconFallback
+                                                    size={20}
+                                                    className="fallback-icon absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 text-slate-400"
+                                                />
                                             </button>
                                         ) : (
-                                            <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
-                                                <Image size={20} />
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-700">
+                                                <ImageIcon size={20} />
                                             </div>
                                         )}
                                     </div>
@@ -307,15 +433,20 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                                 headerClassName: "w-auto",
                                 render: (item: Infografis) => (
                                     <div className="min-w-0">
-                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                                        <p className="truncate text-sm font-bold text-slate-700 dark:text-slate-200">
                                             {item.judul}
                                         </p>
-                                        <div className="flex items-center gap-2 mt-1">
+
+                                        <div className="mt-1 flex items-center gap-2">
                                             {item.kategori && (
-                                                <Badge type="info" className="text-[10px]">
+                                                <Badge
+                                                    type="info"
+                                                    className="text-[10px]"
+                                                >
                                                     {item.kategori}
                                                 </Badge>
                                             )}
+
                                             <span className="text-[10px] text-slate-400">
                                                 Urutan: {item.urutan || 0}
                                             </span>
@@ -325,41 +456,68 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                             },
                             {
                                 header: "Status",
-                                className: "text-center w-28",
-                                headerClassName: "text-center w-28",
+                                className: "w-28 text-center",
+                                headerClassName: "w-28 text-center",
                                 render: (item: Infografis) => (
-                                    <Badge type={item.status === 'active' ? 'success' : 'default'}>
-                                        {item.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                                    <Badge
+                                        type={
+                                            item.status === "active"
+                                                ? "success"
+                                                : "default"
+                                        }
+                                    >
+                                        {item.status === "active"
+                                            ? "Aktif"
+                                            : "Nonaktif"}
                                     </Badge>
                                 ),
                             },
                             {
                                 header: "Aksi",
-                                headerClassName: "text-center w-36",
-                                className: "text-center w-36",
+                                headerClassName: "w-36 text-center",
+                                className: "w-36 text-center",
                                 render: (item: Infografis) => (
                                     <div className="flex items-center justify-center gap-1">
                                         <button
-                                            onClick={() => toggleStatus(item)}
-                                            className={`p-2 rounded-lg transition-all ${
-                                                item.status === 'active'
-                                                    ? 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
-                                                    : 'text-slate-400 hover:text-green-600 hover:bg-green-50'
+                                            type="button"
+                                            onClick={() =>
+                                                openToggleModal(item)
+                                            }
+                                            className={`rounded-lg p-2 transition-all ${
+                                                item.status === "active"
+                                                    ? "text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20"
+                                                    : "text-slate-400 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/20"
                                             }`}
-                                            title={item.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
+                                            title={
+                                                item.status === "active"
+                                                    ? "Nonaktifkan"
+                                                    : "Aktifkan"
+                                            }
                                         >
-                                            {item.status === 'active' ? <XCircle size={15} /> : <CheckCircle size={15} />}
+                                            {item.status === "active" ? (
+                                                <XCircle size={15} />
+                                            ) : (
+                                                <CheckCircle size={15} />
+                                            )}
                                         </button>
+
                                         <Link
-                                            href={route("be.infografis.edit", item.id)}
-                                            className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all"
+                                            href={route(
+                                                "be.infografis.edit",
+                                                item.id
+                                            )}
+                                            className="rounded-lg p-2 text-slate-400 transition-all hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/20"
                                             title="Edit"
                                         >
                                             <Edit2 size={15} />
                                         </Link>
+
                                         <button
-                                            onClick={() => openDeleteModal(item)}
-                                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                            type="button"
+                                            onClick={() =>
+                                                openDeleteModal(item)
+                                            }
+                                            className="rounded-lg p-2 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20"
                                             title="Hapus"
                                         >
                                             <Trash2 size={15} />
@@ -373,7 +531,7 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                 </div>
 
                 {/* Pagination */}
-                <div className="p-6 border-t border-slate-50 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20 dark:bg-slate-700/20">
+                <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-50 bg-slate-50/20 p-6 dark:border-slate-700 dark:bg-slate-700/20 md:flex-row">
                     <p className="text-sm text-slate-500 dark:text-slate-200">
                         Menampilkan{" "}
                         <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -392,10 +550,15 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
 
                     <div className="flex items-center gap-3 text-sm text-slate-400">
                         <span>Tampilkan</span>
+
                         <select
                             value={perPage}
-                            onChange={(e) => setPerPage(parseInt(e.target.value, 10))}
-                            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 block py-1.5 px-3 transition-all outline-none cursor-pointer dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600"
+                            onChange={(e) =>
+                                setPerPage(
+                                    parseInt(e.target.value, 10)
+                                )
+                            }
+                            className="block cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                         >
                             <option value={5}>5</option>
                             <option value={10}>10</option>
@@ -414,27 +577,70 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
             {/* Image Preview Modal */}
             {showImageModal && selectedImage && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
                     onClick={() => setShowImageModal(false)}
                 >
-                    <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-xl overflow-hidden shadow-2xl">
+                    <div
+                        className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-xl bg-white shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <img
                             src={selectedImage}
-                            alt="Preview"
-                            className="max-w-full max-h-[80vh] object-contain"
+                            alt="Preview infografis"
+                            className="max-h-[80vh] max-w-full object-contain"
                             onError={(e) => {
-                                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%2394a3b8' font-size='16' font-family='sans-serif'%3EGambar tidak ditemukan%3C/text%3E%3C/svg%3E";
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.alt =
+                                    "Gambar tidak ditemukan";
                             }}
                         />
+
                         <button
+                            type="button"
                             onClick={() => setShowImageModal(false)}
-                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors flex items-center justify-center"
+                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+                            title="Tutup preview"
                         >
                             ✕
                         </button>
                     </div>
                 </div>
             )}
+
+            {/* Toggle Status Modal */}
+            <ConfirmationModal
+                show={showToggleModal}
+                processing={isToggling}
+                title={
+                    toggleTarget?.status === "active"
+                        ? "Nonaktifkan Infografis"
+                        : "Aktifkan Infografis"
+                }
+                message={
+                    toggleTarget
+                        ? toggleTarget.status === "active"
+                            ? `Infografis "${toggleTarget.judul}" tidak akan tampil di publik. Lanjutkan nonaktifkan?`
+                            : `Infografis "${toggleTarget.judul}" akan tampil di publik. Lanjutkan aktifkan?`
+                        : "Ubah status infografis ini?"
+                }
+                confirmText={
+                    toggleTarget?.status === "active"
+                        ? "Ya, Nonaktifkan"
+                        : "Ya, Aktifkan"
+                }
+                confirmVariant={
+                    toggleTarget?.status === "active"
+                        ? "warning"
+                        : "success"
+                }
+                onConfirm={handleToggleConfirm}
+                onCancel={() => {
+                    if (isToggling) return;
+
+                    setShowToggleModal(false);
+                    setToggleTarget(null);
+                }}
+            />
 
             {/* Delete Modal */}
             <ConfirmationModal
@@ -448,6 +654,8 @@ export default function Index({ infografis, kategoriList = [], filters = {} }: I
                 }
                 onConfirm={handleDelete}
                 onCancel={() => {
+                    if (isDeleting) return;
+
                     setShowDeleteModal(false);
                     setSelectedItem(null);
                 }}

@@ -133,7 +133,7 @@ export default function EditGaleri({ galeri }: EditProps) {
                                             Klik untuk unggah foto
                                         </p>
                                         <p className="text-xs text-slate-400 dark:text-slate-500">
-                                            PNG, JPG, JPEG (Maks. 2MB)
+                                            PNG, JPG, JPEG (Maks. 30MB)
                                         </p>
                                     </div>
                                 </label>

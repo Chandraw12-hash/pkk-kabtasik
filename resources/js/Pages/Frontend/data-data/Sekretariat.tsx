@@ -213,13 +213,13 @@ export default function Sekretariat({ data, filters }: Props) {
     });
 
     // ==================== METRIC CARDS ====================
+    // Jiwa tak-terpilah sengaja dikecualikan dari total (instruksi operator).
     const totalKK = filteredData.reduce((acc, curr) => acc + (Number(curr.jumlah_kk) || 0), 0);
     const totalJiwa = filteredData.reduce(
         (acc, curr) =>
             acc +
             (Number(curr.jiwa_l) || 0) +
-            (Number(curr.jiwa_p) || 0) +
-            (Number(curr.jiwa_tidak_terpilah) || 0),
+            (Number(curr.jiwa_p) || 0),
         0
     );
     const totalKaderUmum = filteredData.reduce(
@@ -236,10 +236,6 @@ export default function Sekretariat({ data, filters }: Props) {
     // dan "KK" dikeluarkan dari grafik gender karena memang tidak punya pecahan L/P.
     const sumJiwaL = items.reduce((acc, curr) => acc + (Number(curr.jiwa_l) || 0), 0);
     const sumJiwaP = items.reduce((acc, curr) => acc + (Number(curr.jiwa_p) || 0), 0);
-    const sumJiwaTidakTerpilah = items.reduce(
-        (acc, curr) => acc + (Number(curr.jiwa_tidak_terpilah) || 0),
-        0
-    );
     const sumKaderUmumL = items.reduce((acc, curr) => acc + (Number(curr.kader_umum_l) || 0), 0);
     const sumKaderUmumP = items.reduce((acc, curr) => acc + (Number(curr.kader_umum_p) || 0), 0);
     const sumKaderKhususL = items.reduce((acc, curr) => acc + (Number(curr.kader_khusus_l) || 0), 0);
@@ -488,13 +484,6 @@ export default function Sekretariat({ data, filters }: Props) {
                                         <span className="text-slate-600 font-medium">Perempuan (P):</span>
                                         <span className="font-bold text-slate-900">
                                             {sumJiwaP.toLocaleString("id-ID")}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-4 h-4 bg-slate-300 rounded-md"></span>
-                                        <span className="text-slate-600 font-medium">Belum terpilah:</span>
-                                        <span className="font-bold text-slate-900">
-                                            {sumJiwaTidakTerpilah.toLocaleString("id-ID")}
                                         </span>
                                     </div>
                                     <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
