@@ -4,16 +4,22 @@ import Card from "@/Components/UI/Card";
 import TextInput from "@/Components/Form/TextInput";
 import Button from "@/Components/UI/Button";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft, Save, UploadCloud, X, Calendar } from "lucide-react";
+import { ArrowLeft, Save, UploadCloud, X, Calendar, Images } from "lucide-react";
 
 export default function CreateGaleri() {
     const { data, setData, post, processing, errors } = useForm({
         judul: "",
         tanggal: "",
         foto: null as File | null,
+        galeri: [] as File[],
     });
 
     const [preview, setPreview] = useState<string | null>(null);
+    const [galeriPreview, setGaleriPreview] = useState<string[]>([]);
+
+    // Galeri: maks 4 tambahan (total 5 sama cover). Kalau tak ada cover,
+    // foto galeri pertama otomatis jadi cover di server.
+    const maksGaleri = 4;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,6 +45,20 @@ export default function CreateGaleri() {
         // Reset input file agar bisa pilih file yang sama lagi
         const fileInput = document.getElementById("file-upload") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
+    };
+
+    const handleGaleriChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        const gabung = [...data.galeri, ...files].slice(0, maksGaleri);
+        setData("galeri", gabung);
+        setGaleriPreview(gabung.map((f) => URL.createObjectURL(f)));
+    };
+
+    const hapusGaleri = (idx: number) => {
+        const gabung = data.galeri.filter((_, i) => i !== idx);
+        setData("galeri", gabung);
+        setGaleriPreview(gabung.map((f) => URL.createObjectURL(f)));
     };
 
     const inputClass =
@@ -101,7 +121,7 @@ export default function CreateGaleri() {
 
                         <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
-                                Upload Foto <span className="text-rose-500">*</span>
+                                Foto Sampul <span className="font-normal text-slate-400">(opsional bila sudah pilih galeri)</span>
                             </label>
 
                             {/* Input file asli disembunyikan */}
@@ -145,6 +165,54 @@ export default function CreateGaleri() {
                                 </div>
                             )}
                             {errors.foto && <div className="text-red-500 text-xs mt-1">{errors.foto}</div>}
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Foto Tambahan (maks {maksGaleri} — total 5 sama sampul)
+                            </label>
+                            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30 p-4">
+                                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
+                                    <Images size={16} />
+                                    <span>
+                                        {data.galeri.length}/{maksGaleri} foto dipilih
+                                        {data.foto
+                                            ? " (+ 1 sampul)"
+                                            : " (foto pertama jadi sampul otomatis)"}
+                                    </span>
+                                </div>
+                                {galeriPreview.length > 0 && (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                                        {galeriPreview.map((src, i) => (
+                                            <div key={i} className="relative group">
+                                                <img
+                                                    src={src}
+                                                    alt={`Galeri ${i + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border border-slate-200"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => hapusGaleri(i)}
+                                                    className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
+                                                    title="Hapus foto ini"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {data.galeri.length < maksGaleri && (
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleGaleriChange}
+                                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all cursor-pointer"
+                                    />
+                                )}
+                            </div>
+                            {errors.galeri && <div className="text-red-500 text-xs mt-1">{errors.galeri}</div>}
                         </div>
                     </div>
 

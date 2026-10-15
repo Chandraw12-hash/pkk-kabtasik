@@ -11,11 +11,18 @@ import {
     ChevronRight,
 } from "lucide-react";
 
+interface GaleriFotoItem {
+    id: number;
+    foto: string;
+    foto_url?: string | null;
+}
+
 interface GaleriItem {
     id: number;
     judul: string;
     foto: string | null;
     foto_url?: string | null;
+    fotos?: GaleriFotoItem[];
     created_at?: string;
     tanggal?: string;
 }
@@ -44,12 +51,24 @@ const getImageSrc = (item: GaleriItem): string => {
     return FALLBACK;
 };
 
+/** Daftar foto satu kegiatan: sampul + tambahan (cermin Berita Show). */
+const getItemPhotos = (item: GaleriItem): string[] => {
+    const list: string[] = [getImageSrc(item)];
+    for (const f of item.fotos || []) {
+        const src = f.foto_url || (f.foto ? `/storage/${f.foto}` : FALLBACK);
+        if (!list.includes(src)) list.push(src);
+    }
+    return list;
+};
+
 export default function GaleriKegiatan({
     galeri,
     filters = {},
 }: GaleriKegiatanProps) {
     const [searchQuery, setSearchQuery] = useState(filters.search || "");
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [photoIndex, setPhotoIndex] = useState(0);
+    const touchX = React.useRef<number | null>(null);
 
     const dataItems = galeri?.data || [];
     const hasData = dataItems.length > 0;
@@ -58,6 +77,8 @@ export default function GaleriKegiatan({
         isLightboxOpen && dataItems[lightboxIndex]
             ? dataItems[lightboxIndex]
             : null;
+    const activePhotos = activeItem ? getItemPhotos(activeItem) : [];
+    const activePhoto = activePhotos[Math.min(photoIndex, Math.max(activePhotos.length - 1, 0))] || FALLBACK;
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,19 +104,22 @@ export default function GaleriKegiatan({
         }
     };
 
-    const openLightbox = (index: number) => setLightboxIndex(index);
-    const closeLightbox = () => setLightboxIndex(null);
-
-    const showPrev = () => {
-        if (lightboxIndex === null || dataItems.length === 0) return;
-        setLightboxIndex(
-            (lightboxIndex - 1 + dataItems.length) % dataItems.length
-        );
+    const openLightbox = (index: number) => {
+        setLightboxIndex(index);
+        setPhotoIndex(0);
+    };
+    const closeLightbox = () => {
+        setLightboxIndex(null);
+        setPhotoIndex(0);
     };
 
-    const showNext = () => {
-        if (lightboxIndex === null || dataItems.length === 0) return;
-        setLightboxIndex((lightboxIndex + 1) % dataItems.length);
+    const showPrevPhoto = () => {
+        if (activePhotos.length === 0) return;
+        setPhotoIndex((photoIndex - 1 + activePhotos.length) % activePhotos.length);
+    };
+    const showNextPhoto = () => {
+        if (activePhotos.length === 0) return;
+        setPhotoIndex((photoIndex + 1) % activePhotos.length);
     };
 
     useEffect(() => {
@@ -103,8 +127,8 @@ export default function GaleriKegiatan({
 
         const onKey = (e: KeyboardEvent) => {
             if (e.key === "Escape") closeLightbox();
-            if (e.key === "ArrowLeft") showPrev();
-            if (e.key === "ArrowRight") showNext();
+            if (e.key === "ArrowLeft") showPrevPhoto();
+            if (e.key === "ArrowRight") showNextPhoto();
         };
 
         document.body.style.overflow = "hidden";
@@ -183,6 +207,7 @@ export default function GaleriKegiatan({
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                                 {dataItems.map((item, index) => {
                                     const imageSrc = getImageSrc(item);
+                                    const jumlahFoto = getItemPhotos(item).length;
                                     return (
                                         <button
                                             key={item.id}
@@ -201,6 +226,12 @@ export default function GaleriKegiatan({
                                                 }}
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            {jumlahFoto > 1 && (
+                                                <span className="absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-bold bg-slate-900/70 text-white rounded-md flex items-center gap-1">
+                                                    <Images size={10} />
+                                                    {jumlahFoto}
+                                                </span>
+                                            )}
                                             <div className="absolute bottom-0 left-0 right-0 p-2.5 translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
                                                 <p className="text-[11px] sm:text-xs font-medium text-white line-clamp-2 leading-snug">
                                                     {item.judul}
@@ -299,21 +330,21 @@ export default function GaleriKegiatan({
                             <X size={18} />
                         </button>
 
-                        {dataItems.length > 1 && (
+                        {activePhotos.length > 1 && (
                             <>
                                 <button
                                     type="button"
-                                    onClick={showPrev}
+                                    onClick={showPrevPhoto}
                                     className="absolute left-1 sm:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center z-20"
-                                    aria-label="Sebelumnya"
+                                    aria-label="Foto sebelumnya"
                                 >
                                     <ChevronLeft size={20} />
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={showNext}
+                                    onClick={showNextPhoto}
                                     className="absolute right-1 sm:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center z-20"
-                                    aria-label="Berikutnya"
+                                    aria-label="Foto berikutnya"
                                 >
                                     <ChevronRight size={20} />
                                 </button>
@@ -321,13 +352,45 @@ export default function GaleriKegiatan({
                         )}
 
                         <div className="bg-white rounded-xl overflow-hidden shadow-xl">
-                            <div className="bg-slate-100 max-h-[72vh] flex items-center justify-center">
+                            <div
+                                className="bg-slate-100 max-h-[72vh] flex items-center justify-center"
+                                onTouchStart={(e) => {
+                                    touchX.current = e.touches[0].clientX;
+                                }}
+                                onTouchEnd={(e) => {
+                                    if (touchX.current === null) return;
+                                    const dx = e.changedTouches[0].clientX - touchX.current;
+                                    touchX.current = null;
+                                    if (dx < -40) showNextPhoto();
+                                    else if (dx > 40) showPrevPhoto();
+                                }}
+                            >
                                 <img
-                                    src={getImageSrc(activeItem)}
+                                    key={activePhoto}
+                                    src={activePhoto}
                                     alt={activeItem.judul}
                                     className="w-full h-auto max-h-[72vh] object-contain"
                                 />
                             </div>
+                            {activePhotos.length > 1 && (
+                                <div className="flex items-center justify-center gap-1.5 px-4 pt-3">
+                                    {activePhotos.map((src, i) => (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => setPhotoIndex(i)}
+                                            className={`w-12 h-9 rounded-md overflow-hidden border-2 transition-all ${
+                                                i === photoIndex
+                                                    ? "border-[#0072BC]"
+                                                    : "border-transparent opacity-60 hover:opacity-100"
+                                            }`}
+                                            aria-label={`Foto ${i + 1}`}
+                                        >
+                                            <img src={src} alt="" className="w-full h-full object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                             <div className="px-4 py-3 border-t border-slate-100 flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">
@@ -342,7 +405,7 @@ export default function GaleriKegiatan({
                                     </p>
                                 </div>
                                 <span className="text-[11px] text-slate-400 shrink-0 tabular-nums pt-0.5">
-                                    {lightboxIndex! + 1} / {dataItems.length}
+                                    {photoIndex + 1} / {activePhotos.length}
                                 </span>
                             </div>
                         </div>

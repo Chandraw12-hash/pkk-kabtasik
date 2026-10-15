@@ -76,15 +76,27 @@ const LABEL: Record<string, string> = {
     "Kurang Sehat": "Rumah Tidak Layak Huni",
 };
 
+const iconCache = new Map<string, L.DivIcon>();
 const dotIcon = (kriteria: string | null, stunting = 0) => {
     const warna =
         stunting > 0 ? WARNA_STUNTING : WARNA[kriteria ?? ""] || WARNA_NETRAL;
-    return L.divIcon({
+    const cached = iconCache.get(warna);
+    if (cached) return cached;
+    // Pin berbentuk tetesan dengan ikon rumah putih di dalamnya.
+    // Ujung bawah pin = titik koordinat sebenarnya.
+    const icon = L.divIcon({
         className: "",
-        html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${warna};border:3px solid #fff;box-shadow:0 0 0 1px ${warna}66,0 2px 6px rgba(15,23,42,.35)"></span>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
+        html:
+            `<svg width="34" height="42" viewBox="0 0 34 42" xmlns="http://www.w3.org/2000/svg" style="display:block;filter:drop-shadow(0 2px 3px rgba(15,23,42,.4))">` +
+            `<path d="M17 40.5C17 40.5 3 26.5 3 16.5a14 14 0 1 1 28 0C31 26.5 17 40.5 17 40.5z" fill="${warna}" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>` +
+            `<g transform="translate(9.8 9.3) scale(0.6)"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z" fill="#fff"/></g>` +
+            `</svg>`,
+        iconSize: [34, 42],
+        iconAnchor: [17, 41],
+        popupAnchor: [0, -38],
     });
+    iconCache.set(warna, icon);
+    return icon;
 };
 
 const esc = (s: string | null | undefined) =>
@@ -98,7 +110,7 @@ const nilai = (s: string | null | undefined) =>
     s && s.trim() ? esc(s) : `<span class="pp-empty">Belum diisi</span>`;
 
 // ─── Isi popup ────────────────────────────────────────────────
-const popupHtml = (p: Pin) => {
+const popupHtml = (p: Pin, sama = 0) => {
     const stunting = p.stunting ?? 0;
     const bumil = p.bumil ?? 0;
     const warna = WARNA[p.kriteria ?? ""] || WARNA_NETRAL;
@@ -123,6 +135,9 @@ const popupHtml = (p: Pin) => {
             `<span class="pp-mono">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</span>`,
         ) +
         `</dl>` +
+        (sama > 0
+            ? `<p class="pp-warn">${sama} rumah lain memakai titik koordinat yang sama. Periksa kembali lokasi GPS-nya.</p>`
+            : "") +
         `<div class="pp-health">` +
         `<div class="pp-tile" style="${
             stunting > 0
@@ -167,19 +182,24 @@ const POPUP_CSS = `
 .pp-tile{display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 6px;border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFC}
 .pp-tile-num{font-size:18px;font-weight:700;line-height:1}
 .pp-tile-lbl{font-size:11px;color:#475569;line-height:1.2}
+.pp-warn{margin:4px 16px 0;padding:6px 9px;border-radius:8px;background:#FFFBEB;border:1px solid #FDE68A;color:#92400E;font-size:11px;line-height:1.4}
 .pp-btn{display:block;margin:10px 16px 14px;padding:8px 12px;border-radius:8px;background:#0072BC;color:#fff!important;font-size:12px;font-weight:600;text-align:center;text-decoration:none}
 .pp-btn:hover{background:#005F9B}
 .cl{display:flex;align-items:center;justify-content:center;border-radius:50%;background:#0F766E;color:#fff;font-weight:700;border:3px solid #fff;box-shadow:0 0 0 2px #0F766E55,0 2px 8px rgba(15,23,42,.35)}
 .leaflet-control-fokus a{display:flex;align-items:center;justify-content:center;width:34px;height:34px;color:#334155;cursor:pointer}
 `;
 
+// Cluster hanya dipakai saat peta masih menampilkan area luas.
+// Mulai zoom ini ke atas, setiap rumah tampil langsung sebagai ikon rumah.
+const ZOOM_IKON_RUMAH = 16;
+
 const clusterIcon = (cluster: L.MarkerCluster) => {
     const n = cluster.getChildCount();
-    const size = n < 10 ? 34 : n < 100 ? 40 : 48;
+    const size = n < 10 ? 36 : n < 100 ? 42 : n < 1000 ? 50 : 58;
     return L.divIcon({
         html: `<div class="cl" style="width:${size}px;height:${size}px;font-size:${
-            n < 100 ? 13 : 12
-        }px">${n}</div>`,
+            n < 1000 ? 13 : 12
+        }px">${n.toLocaleString("id-ID")}</div>`,
         className: "",
         iconSize: [size, size],
     });
@@ -196,23 +216,55 @@ function ClusterLayer({ points }: { points: Pin[] }) {
         }
         const group = L.markerClusterGroup({
             showCoverageOnHover: false,
-            maxClusterRadius: 48,
+            maxClusterRadius: 50,
+            disableClusteringAtZoom: ZOOM_IKON_RUMAH,
+            chunkedLoading: true,
             iconCreateFunction: clusterIcon,
         });
+
+        // Rumah dengan koordinat (hampir) sama disebar melingkar supaya
+        // semuanya tetap terlihat. Koordinat asli tetap tampil di popup.
+        const buckets = new Map<string, Pin[]>();
         points.forEach((p) => {
-            const m = L.marker([p.lat, p.lng], {
-                icon: dotIcon(p.kriteria, p.stunting ?? 0),
-            });
-            m.bindPopup(popupHtml(p), {
-                minWidth: 290,
-                maxWidth: 290,
-                keepInView: true,
-                autoPanPaddingTopLeft: L.point(24, 24),
-                autoPanPaddingBottomRight: L.point(24, 24),
-                offset: L.point(0, -4),
-            });
-            group.addLayer(m);
+            const key = `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
+            const list = buckets.get(key);
+            if (list) list.push(p);
+            else buckets.set(key, [p]);
         });
+
+        // Jarak sebaran dihitung untuk zoom 17 (sekitar 30 meter)
+        const degPerPx = 360 / (256 * Math.pow(2, 17));
+        const markers: L.Marker[] = [];
+
+        buckets.forEach((list) => {
+            const total = list.length;
+            list.forEach((p, idx) => {
+                let lat = p.lat;
+                let lng = p.lng;
+                if (total > 1) {
+                    const radius = Math.max(28, (total * 36) / (2 * Math.PI));
+                    const ang = (2 * Math.PI * idx) / total - Math.PI / 2;
+                    const cosLat = Math.cos((p.lat * Math.PI) / 180);
+                    lat = p.lat - Math.sin(ang) * radius * degPerPx * cosLat;
+                    lng = p.lng + Math.cos(ang) * radius * degPerPx;
+                }
+                const m = L.marker([lat, lng], {
+                    icon: dotIcon(p.kriteria, p.stunting ?? 0),
+                });
+                // Popup dibuat saat diklik saja, bukan untuk semua marker sekaligus
+                m.bindPopup(() => popupHtml(p, total - 1), {
+                    minWidth: 290,
+                    maxWidth: 290,
+                    keepInView: true,
+                    autoPanPaddingTopLeft: L.point(24, 24),
+                    autoPanPaddingBottomRight: L.point(24, 24),
+                    offset: L.point(0, -4),
+                });
+                markers.push(m);
+            });
+        });
+
+        group.addLayers(markers);
         group.addTo(map);
         groupRef.current = group;
         return () => {
@@ -372,14 +424,14 @@ export default function Index({
             color: "#DC2626",
             Icon: AlertTriangle,
         },
-        { label: "Ada Balita Stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING, Icon: Baby },
-        { label: "Ada Ibu Hamil", count: stats?.bumil ?? 0, color: WARNA_BUMIL, Icon: Heart },
+        { label: "Ada stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING, Icon: Baby },
+        { label: "Ada bumil", count: stats?.bumil ?? 0, color: WARNA_BUMIL, Icon: Heart },
     ];
 
     const legend = [
         { label: "Rumah Layak Huni", count: stats?.sehat ?? 0, color: "#16A34A" },
         { label: "Rumah Tidak Layak Huni", count: stats?.kurang_sehat ?? 0, color: "#DC2626" },
-        { label: "Ada Balita Stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING },
+        { label: "Ada balita stunting", count: stats?.stunting ?? 0, color: WARNA_STUNTING },
         { label: "Belum diisi", count: belumDiisi, color: WARNA_NETRAL },
     ];
 

@@ -15,6 +15,7 @@ interface Galeri {
     deskripsi: string | null;
     foto: string;
     tanggal?: string;
+    fotos_count?: number;
 }
 
 interface IndexProps {
@@ -180,13 +181,20 @@ export default function Index({ galeris, filters = {} }: IndexProps) {
                                             {((localGaleris.current_page - 1) * localGaleris.per_page) + index + 1}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            {item.foto ? (
-                                                <img src={`/storage/${item.foto}`} alt={item.judul} className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mx-auto" />
-                                            ) : (
-                                                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 mx-auto">
-                                                    <ImageIcon size={20} />
-                                                </div>
-                                            )}
+                                            <div className="relative w-12 mx-auto">
+                                                {item.foto ? (
+                                                    <img src={`/storage/${item.foto}`} alt={item.judul} className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mx-auto" />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 mx-auto">
+                                                        <ImageIcon size={20} />
+                                                    </div>
+                                                )}
+                                                {(item.fotos_count ?? 0) > 0 && (
+                                                    <span className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-teal-600 text-white rounded-full shadow" title={`${item.fotos_count} foto tambahan`}>
+                                                        +{item.fotos_count}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                                             {item.judul || "-"}

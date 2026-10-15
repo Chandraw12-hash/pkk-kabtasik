@@ -291,7 +291,7 @@ class IndexController extends Controller
 
     public function galeriKegiatan(Request $request)
     {
-        $galeri = Galeri::when($request->search, function ($query) use ($request) {
+        $galeri = Galeri::with('fotos')->when($request->search, function ($query) use ($request) {
             return $query->where('judul', 'like', '%' . $request->search . '%');
         })->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
 
