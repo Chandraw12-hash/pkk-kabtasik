@@ -216,6 +216,8 @@ Route::middleware(['auth'])->prefix('dashboard')->name('be.')->group(function ()
     // ============================================================
     Route::prefix('sekretariat')->name('sekretariat.')->group(function () {
         Route::get('/', [DataUmumSekretariatController::class, 'index'])->name('index');
+        Route::get('/tambah', [DataUmumSekretariatController::class, 'create'])->name('create');
+        Route::post('/', [DataUmumSekretariatController::class, 'store'])->name('store');
         Route::get('/kegiatan', [DataUmumSekretariatController::class, 'kegiatan'])->name('kegiatan');
         Route::get('/bumil', [DataUmumSekretariatController::class, 'bumil'])->name('bumil');
         Route::get('/export', [DataUmumSekretariatController::class, 'export'])->name('export');

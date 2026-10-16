@@ -234,6 +234,102 @@ class DataUmumSekretariatController extends Controller
     }
 
     // ============================================================
+    // TAMBAH DATA — input langsung kabupaten (upsert agregat NULL).
+    // Baris yang dibuat: level=desa, dusun=NULL, status+kecamatan_status
+    // =approved, sehingga langsung masuk roll-up tabel + publik + export.
+    // Bila (kecamatan, desa, tahun) sudah ada (dari alur desa), angkanya
+    // DITIMPA — dicatat di log aktivitas. Inilah bedanya dengan Pokja:
+    // sekretariat tidak punya antrean pending, kabupaten = penentu akhir.
+    // ============================================================
+    public function create()
+    {
+        return Inertia::render('Backend/Sekretariat/Create', [
+            'kecamatanList' => \App\Models\WilayahDesa::kecamatanList(),
+            'desaByKecamatan' => \App\Models\WilayahDesa::dataDesa(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $angka = [
+            'jumlah_dusun', 'jumlah_pkk_rw', 'jumlah_pkk_rt', 'jumlah_dasa_wisma',
+            'jumlah_krt', 'jumlah_kk', 'jiwa_l', 'jiwa_p', 'jiwa_tidak_terpilah',
+            'tp_pkk_l', 'tp_pkk_p', 'kader_umum_l', 'kader_umum_p',
+            'kader_khusus_l', 'kader_khusus_p', 'sekretariat_honorer_l', 'sekretariat_honorer_p',
+            'sekretariat_bantuan_l', 'sekretariat_bantuan_p',
+        ];
+        $rules = [
+            'kecamatan' => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::in(\App\Models\WilayahDesa::kecamatanList())],
+            'desa' => ['required', 'string', 'max:255'],
+            'tahun' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'keterangan' => ['nullable', 'string'],
+        ];
+        foreach ($angka as $field) {
+            $rules[$field] = ['nullable', 'integer', 'min:0'];
+        }
+        $validated = $request->validate($rules, [
+            'kecamatan.required' => 'Pilih kecamatan.',
+            'kecamatan.in' => 'Pilih kecamatan yang terdaftar di master wilayah.',
+            'desa.required' => 'Pilih desa.',
+        ]);
+
+        // Desa harus milik kecamatan yang dipilih (cermin validasi akun).
+        $available = \App\Models\WilayahDesa::desaOf($validated['kecamatan']);
+        if (!in_array($validated['desa'], $available, true)) {
+            return redirect()->back()->withErrors([
+                'desa' => "Desa {$validated['desa']} tidak ada di {$validated['kecamatan']}.",
+            ])->withInput();
+        }
+
+        $user = auth()->user();
+        $ada = DataUmumPkk::where('kecamatan', $validated['kecamatan'])
+            ->where('desa', $validated['desa'])
+            ->where('tahun', $validated['tahun'])
+            ->where('level', 'desa')
+            ->whereNull('dusun')
+            ->exists();
+
+        $data = [
+            'nama_kecamatan' => $validated['kecamatan'],
+            'nama_desa' => $validated['desa'],
+            'level' => 'desa',
+            'dusun' => null,
+            'nama_dusun' => null,
+            // Tabel data_umum_pkk tak punya kolom status desa (hanya
+            // kecamatan_status) — agregat kabupaten langsung approved.
+            'kecamatan_status' => 'approved',
+            'kecamatan_approved_by' => $user->id,
+            'kecamatan_approved_at' => now(),
+            'kecamatan_rejected_reason' => null,
+            'keterangan' => $validated['keterangan'] ?? null,
+            'updated_by' => $user->id,
+        ];
+        foreach ($angka as $field) {
+            $data[$field] = (int) ($validated[$field] ?? 0);
+        }
+
+        DataUmumPkk::updateOrCreate(
+            [
+                'kecamatan' => $validated['kecamatan'],
+                'desa' => $validated['desa'],
+                'tahun' => $validated['tahun'],
+                'level' => 'desa',
+            ] + ['dusun' => null],
+            $data + ['created_by' => $user->id],
+        );
+        \App\Services\ActivityLogger::log(
+            'sekretariat.upsert',
+            null,
+            ($ada ? 'Timpa' : 'Tambah') . " agregat {$validated['desa']} ({$validated['kecamatan']}, {$validated['tahun']}) oleh kabupaten"
+        );
+
+        return redirect()->route('be.sekretariat.index', ['tahun' => $validated['tahun']])
+            ->with('success', $ada
+                ? "Angka {$validated['desa']} diperbarui (menimpa data alur desa)."
+                : "Data {$validated['desa']} ditambahkan dan langsung tampil di publik.");
+    }
+
+    // ============================================================
     // EXPORT — Data Umum PKK (CSV)
     // ✅ Filter kecamatan_status = approved
     // ============================================================

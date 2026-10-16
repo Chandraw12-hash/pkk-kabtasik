@@ -73,17 +73,27 @@ class RolePermissionSeeder extends Seeder
         // Role Dasawisma khusus Web
         Role::firstOrCreate(['name' => 'dasawisma', 'guard_name' => 'web']);
 
-        // ─── 4. BUAT USER ADMIN ──────────────────────────────────
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@pkk.test'],
-            [
-                'name' => 'Admin Kabupaten',
-                'username' => 'adminpkk',
-                'password' => bcrypt('password123'),
-                'status' => 'active',
-            ]
-        );
-        $admin->syncRoles([$adminRole]);
+        // ─── 4. BUAT 5 USER ADMIN KABUPATEN ─────────────────────
+        $admins = [
+            ['username' => 'adminpkkA', 'name' => 'Admin Kabupaten A'],
+            ['username' => 'adminpkkB', 'name' => 'Admin Kabupaten B'],
+            ['username' => 'adminpkkC', 'name' => 'Admin Kabupaten C'],
+            ['username' => 'adminpkkD', 'name' => 'Admin Kabupaten D'],
+            ['username' => 'adminpkkE', 'name' => 'Admin Kabupaten E'],
+        ];
+
+        foreach ($admins as $data) {
+            $user = User::updateOrCreate(
+                ['username' => $data['username']],
+                [
+                    'name' => $data['name'],
+                    'email' => $data['username'] . '@pkk.test',
+                    'password' => bcrypt('password123'),
+                    'status' => 'active',
+                ]
+            );
+            $user->syncRoles([$adminRole]);
+        }
 
         // ─── 5. BUAT AKUN POKJA PER BIDANG ─────────────────────
         foreach ($pokjaRoles as $roleName => $label) {
@@ -117,9 +127,15 @@ class RolePermissionSeeder extends Seeder
         $this->command->info('========================================');
         $this->command->info('📋 INFO LOGIN APLIKASI');
         $this->command->info('========================================');
-        $this->command->info('Admin Kabupaten : adminpkk / password123');
-        $this->command->info('Dasawisma (Web) : dasawisma / password123');
-        $this->command->info('Pokja I (Mobile): pokja1 / password123');
+        $this->command->info('Admin Kabupaten:');
+        $this->command->info('  adminpkkA / password123');
+        $this->command->info('  adminpkkB / password123');
+        $this->command->info('  adminpkkC / password123');
+        $this->command->info('  adminpkkD / password123');
+        $this->command->info('  adminpkkE / password123');
+        $this->command->info('');
+        $this->command->info('Dasawisma (Web)  : dasawisma / password123');
+        $this->command->info('Pokja I (Mobile) : pokja1 / password123');
         $this->command->info('Pokja II (Mobile): pokja2 / password123');
         $this->command->info('Pokja III (Mobile): pokja3 / password123');
         $this->command->info('Pokja IV (Mobile): pokja4 / password123');

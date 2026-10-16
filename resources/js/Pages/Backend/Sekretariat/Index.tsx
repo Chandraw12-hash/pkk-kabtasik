@@ -13,6 +13,7 @@ import {
     Download,
     FileText,
     MapPin,
+    Plus,
 } from "lucide-react";
 import axios from "axios";
 
@@ -170,6 +171,14 @@ export default function Index({
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
+                        variant="primary"
+                        href={route("be.sekretariat.create")}
+                        className="flex items-center gap-2 shadow-lg shadow-teal-100 dark:shadow-none bg-teal-600 hover:bg-teal-700"
+                    >
+                        <Plus size={16} />
+                        <span>Tambah Data</span>
+                    </Button>
+                    <Button
                         variant="secondary"
                         href={`/dashboard/sekretariat/export?tahun=${tahun}`}
                         target="_blank"
@@ -189,10 +198,11 @@ export default function Index({
                 />
                 <div className="text-sm">
                     <p className="font-semibold text-blue-800 dark:text-blue-300">
-                        Data read-only
+                        Data agregat per desa
                     </p>
                     <p className="text-blue-700 dark:text-blue-400 mt-0.5">
-                        Data ini diinput oleh Admin Desa melalui panel desa.
+                        Berasal dari alur desa (otomatis setelah ACC kecamatan).
+                        Kabupaten juga bisa input langsung via Tambah Data.
                     </p>
                 </div>
             </div>
