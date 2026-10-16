@@ -66,6 +66,7 @@ export default function CreateBerita({ kecamatanList = [] }: CreateBeritaProps) 
         judul: "",
         kategori: "Kegiatan",
         kecamatan: "",
+        tanggal: new Date().toISOString().slice(0, 10),
         konten: "",
         foto: null as File | null,
         galeri: [] as File[],
@@ -172,6 +173,19 @@ export default function CreateBerita({ kecamatanList = [] }: CreateBeritaProps) 
                                 ))}
                             </select>
                             {errors.kecamatan && <div className="text-rose-500 text-xs mt-1">{errors.kecamatan}</div>}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Tanggal Kegiatan
+                            </label>
+                            <input
+                                type="date"
+                                value={data.tanggal}
+                                onChange={(e) => setData("tanggal", e.target.value)}
+                                className={selectClass}
+                            />
+                            {errors.tanggal && <div className="text-rose-500 text-xs mt-1">{errors.tanggal}</div>}
                         </div>
 
                         <div className="md:col-span-2">

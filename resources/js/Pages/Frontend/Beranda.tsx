@@ -146,9 +146,11 @@ const HERO_LOGOS = [
 ];
 
 const HERO_SLIDES = [
-    { id: 1, src: "/assets/images/hero.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya" },
-    { id: 2, src: "/assets/images/hero2.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya" },
-    { id: 3, src: "/assets/images/hero3.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya" },
+    // position: titik fokus crop per foto (slide 1 jangkar bawah agar kaki
+    // kelihatan; slide lain normal tengah).
+    { id: 1, src: "/assets/images/hero.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya", position: "object-[50%_100%]" },
+    { id: 2, src: "/assets/images/hero2.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya", position: "object-center" },
+    { id: 3, src: "/assets/images/hero3.jpg", alt: "Kegiatan PKK Kabupaten Tasikmalaya", position: "object-center" },
 ];
 
 // ============================================================
@@ -490,7 +492,7 @@ export default function Welcome({
                             <img
                                 src={slide.src}
                                 alt={slide.alt}
-                                className="w-full h-full object-cover object-center"
+                                className={`w-full h-full object-cover ${slide.position || "object-center"}`}
                                 loading={idx === 0 ? "eager" : "lazy"}
                                 onError={(event) => {
                                     const target = event.currentTarget;
@@ -509,21 +511,21 @@ export default function Welcome({
                 </div>
 
                 <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 text-center pt-20 pb-16 sm:pt-24 sm:pb-20">
-                    <span className="inline-block text-white text-[10px] sm:text-xs font-bold tracking-[0.16em] uppercase mb-3 sm:mb-4 px-4 py-1.5 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+                    {/* <span className="inline-block text-white text-[10px] sm:text-xs font-bold tracking-[0.16em] uppercase mb-3 sm:mb-4 px-4 py-1.5 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                         Tim Penggerak PKK Kabupaten Tasikmalaya
-                    </span>
+                    </span> */}
 
                     <h1 className="text-[1.65rem] leading-[1.2] sm:text-4xl md:text-5xl font-semibold text-white mb-3 sm:mb-5 tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]">
                         Membangun Keluarga<br />
                         Sejahtera &amp; Mandiri<br />
-                        bersama TP PKK
+                        bersama Tim Penggerak PKK
                     </h1>
 
                     <p className="text-slate-100 text-sm sm:text-base leading-relaxed max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-7 drop-shadow-[0_1px_8px_rgba(0,0,0,0.6)]">
                         Media informasi resmi Tim Penggerak PKK Kabupaten Tasikmalaya dalam mewujudkan pemberdayaan dan kesejahteraan keluarga.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-[240px] sm:max-w-none mx-auto">
+                    {/* <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 max-w-[240px] sm:max-w-none mx-auto">
                         <Link
                             href="/profil/sejarah"
                             className="inline-flex items-center justify-center gap-2 min-h-[44px] bg-[#0072BC] hover:bg-[#FFC72C] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-[#FFC72C] focus:ring-offset-2 border border-[#FFC72C]/30"
@@ -538,7 +540,7 @@ export default function Welcome({
                         >
                             Lihat Data PKK
                         </Link>
-                    </div>
+                    </div> */}
 
                     <div
                         className="logo-marquee-container"

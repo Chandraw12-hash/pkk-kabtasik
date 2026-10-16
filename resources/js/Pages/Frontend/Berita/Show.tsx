@@ -32,6 +32,7 @@ interface BeritaItem {
     foto?: string | null;
     foto_url?: string | null;
     fotos?: BeritaFoto[];
+    tanggal?: string | null;
     created_at?: string;
     created_at_formatted?: string;
     user?: { name: string };
@@ -232,7 +233,7 @@ export default function Show({ berita, beritaLainnya = [] }: Props) {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs sm:text-sm text-white/85">
                         <span className="inline-flex items-center gap-1.5">
                             <Calendar size={14} className="opacity-80" />
-                            {formatTanggal(berita.created_at)}
+                            {formatTanggal(berita.tanggal || berita.created_at)}
                         </span>
                         <span className="inline-flex items-center gap-1.5">
                             <Clock size={14} className="opacity-80" />

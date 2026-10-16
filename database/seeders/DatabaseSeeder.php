@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             DasawismaSeeder::class, // 1 akun dasawisma per desa (351)
             PokjaPengurusSeeder::class, // 30 akun pengurus Pokja I-IV
             SuperAdminSeeder::class,
+            GaleriSeeder::class, // 8 galeri launching (foto lokal)
+            BeritaSeeder::class, // 6 berita launching (foto lokal)
         ]);
     }
 }

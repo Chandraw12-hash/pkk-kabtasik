@@ -68,6 +68,7 @@ interface Berita {
     konten: string;
     kategori: string;
     kecamatan: string | null;
+    tanggal: string | null;
     foto: string | null;
     fotos?: BeritaFoto[];
     status_publikasi: boolean;
@@ -88,6 +89,7 @@ export default function EditBerita({
         judul: berita.judul || "",
         kategori: berita.kategori || "Kegiatan",
         kecamatan: berita.kecamatan || "",
+        tanggal: berita.tanggal ? String(berita.tanggal).slice(0, 10) : "",
         konten: berita.konten || "",
         foto: null as File | null,
         galeri: [] as File[],
@@ -261,6 +263,26 @@ export default function EditBerita({
                             {errors.kecamatan && (
                                 <div className="text-rose-500 text-xs mt-1">
                                     {errors.kecamatan}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Tanggal Kegiatan */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+                                Tanggal Kegiatan
+                            </label>
+                            <input
+                                type="date"
+                                value={data.tanggal}
+                                onChange={(e) =>
+                                    setData("tanggal", e.target.value)
+                                }
+                                className={selectClass}
+                            />
+                            {errors.tanggal && (
+                                <div className="text-rose-500 text-xs mt-1">
+                                    {errors.tanggal}
                                 </div>
                             )}
                         </div>
